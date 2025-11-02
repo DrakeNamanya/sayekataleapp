@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/notification_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart';
 import '../../models/product.dart';
@@ -95,6 +96,8 @@ class _DashboardHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
+    final notificationService = NotificationService();
+    final userId = user?.id ?? '';
 
     // Mock data - Supplier metrics
     final todayRevenue = 1850000.0; // UGX
@@ -156,37 +159,44 @@ class _DashboardHome extends StatelessWidget {
                             ),
                             Row(
                               children: [
-                                Stack(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => const PSANotificationsScreen()),
-                                        );
-                                      },
-                                    ),
-                                    Positioned(
-                                      right: 8,
-                                      top: 8,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
+                                StreamBuilder<int>(
+                                  stream: notificationService.streamUnreadCount(userId),
+                                  builder: (context, snapshot) {
+                                    final unreadCount = snapshot.data ?? 0;
+                                    return Stack(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => const PSANotificationsScreen()),
+                                            );
+                                          },
                                         ),
-                                        child: const Text(
-                                          '7',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                        if (unreadCount > 0)
+                                          Positioned(
+                                            right: 8,
+                                            top: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 ),
                                 Stack(
                                   children: [
