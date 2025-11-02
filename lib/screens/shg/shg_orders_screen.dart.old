@@ -1,0 +1,766 @@
+import 'package:flutter/material.dart';
+import '../../utils/app_theme.dart';
+import '../../models/order.dart';
+
+class SHGOrdersScreen extends StatefulWidget {
+  const SHGOrdersScreen({super.key});
+
+  @override
+  State<SHGOrdersScreen> createState() => _SHGOrdersScreenState();
+}
+
+class _SHGOrdersScreenState extends State<SHGOrdersScreen> {
+  OrderStatus _selectedStatus = OrderStatus.placed;
+  
+  // Mock customer data (in real app, would fetch from Firebase)
+  final Map<String, Map<String, String>> _customerData = {
+    'sme1': {'name': 'John Nama', 'phone': '+256752987654'},
+    'sme2': {'name': 'Sarah Mukasa', 'phone': '+256772123456'},
+    'sme3': {'name': 'David Okello', 'phone': '+256701234567'},
+  };
+  
+  // Mock orders data with proper Order model structure
+  final List<Order> _allOrders = [
+    Order(
+      id: 'ORD001',
+      customerId: 'sme1',
+      farmId: 'farmer1',
+      items: [
+        OrderItem(
+          productId: 'prod1',
+          productName: 'Broilers',
+          quantity: 50,
+          unitPrice: 12000,
+          total: 600000,
+        ),
+      ],
+      subtotal: 600000,
+      deliveryFee: 5000,
+      serviceFee: 30000,
+      total: 635000,
+      paymentMethod: PaymentMethod.mtnMomo,
+      paymentStatus: PaymentStatus.pending,
+      statusTimeline: [
+        OrderStatusTimeline(
+          status: OrderStatus.placed,
+          timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        ),
+      ],
+      estimatedDelivery: 'Tomorrow, 2:00 PM',
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    Order(
+      id: 'ORD002',
+      customerId: 'sme2',
+      farmId: 'farmer1',
+      items: [
+        OrderItem(
+          productId: 'prod2',
+          productName: 'Fresh Tomatoes',
+          quantity: 20,
+          unitPrice: 4000,
+          total: 80000,
+        ),
+      ],
+      subtotal: 80000,
+      deliveryFee: 5000,
+      serviceFee: 4000,
+      total: 89000,
+      paymentMethod: PaymentMethod.airtelMoney,
+      paymentStatus: PaymentStatus.completed,
+      statusTimeline: [
+        OrderStatusTimeline(
+          status: OrderStatus.placed,
+          timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.accepted,
+          timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
+        ),
+      ],
+      estimatedDelivery: 'Today, 5:00 PM',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    Order(
+      id: 'ORD003',
+      customerId: 'sme3',
+      farmId: 'farmer1',
+      items: [
+        OrderItem(
+          productId: 'prod3',
+          productName: 'Ground Nuts',
+          quantity: 10,
+          unitPrice: 8000,
+          total: 80000,
+        ),
+      ],
+      subtotal: 80000,
+      deliveryFee: 5000,
+      serviceFee: 4000,
+      total: 89000,
+      paymentMethod: PaymentMethod.mtnMomo,
+      paymentStatus: PaymentStatus.completed,
+      statusTimeline: [
+        OrderStatusTimeline(
+          status: OrderStatus.placed,
+          timestamp: DateTime.now().subtract(const Duration(days: 3)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.accepted,
+          timestamp: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.preparing,
+          timestamp: DateTime.now().subtract(const Duration(days: 2, hours: 20)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.ready,
+          timestamp: DateTime.now().subtract(const Duration(days: 2, hours: 18)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.outForDelivery,
+          timestamp: DateTime.now().subtract(const Duration(days: 2, hours: 15)),
+        ),
+        OrderStatusTimeline(
+          status: OrderStatus.delivered,
+          timestamp: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      ],
+      estimatedDelivery: null,
+      riderName: 'James Mutesi',
+      riderPhone: '+256789012345',
+      riderId: 'rider1',
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ];
+
+  List<Order> get _filteredOrders {
+    return _allOrders.where((order) => order.currentStatus == _selectedStatus).toList();
+  }
+
+  int _getOrderCount(OrderStatus status) {
+    return _allOrders.where((order) => order.currentStatus == status).length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Orders Received'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _StatusChip(
+                    label: 'Placed',
+                    status: OrderStatus.placed,
+                    count: _getOrderCount(OrderStatus.placed),
+                    isSelected: _selectedStatus == OrderStatus.placed,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.placed),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: 'Accepted',
+                    status: OrderStatus.accepted,
+                    count: _getOrderCount(OrderStatus.accepted),
+                    isSelected: _selectedStatus == OrderStatus.accepted,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.accepted),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: 'Preparing',
+                    status: OrderStatus.preparing,
+                    count: _getOrderCount(OrderStatus.preparing),
+                    isSelected: _selectedStatus == OrderStatus.preparing,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.preparing),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: 'Ready',
+                    status: OrderStatus.ready,
+                    count: _getOrderCount(OrderStatus.ready),
+                    isSelected: _selectedStatus == OrderStatus.ready,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.ready),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: 'Delivered',
+                    status: OrderStatus.delivered,
+                    count: _getOrderCount(OrderStatus.delivered),
+                    isSelected: _selectedStatus == OrderStatus.delivered,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.delivered),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(
+                    label: 'Cancelled',
+                    status: OrderStatus.cancelled,
+                    count: _getOrderCount(OrderStatus.cancelled),
+                    isSelected: _selectedStatus == OrderStatus.cancelled,
+                    onTap: () => setState(() => _selectedStatus = OrderStatus.cancelled),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: _filteredOrders.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 80,
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No ${_selectedStatus.displayName.toLowerCase()} orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _filteredOrders.length,
+              itemBuilder: (context, index) {
+                final order = _filteredOrders[index];
+                final customerInfo = _customerData[order.customerId];
+                return _OrderCard(
+                  order: order,
+                  customerName: customerInfo?['name'] ?? 'Unknown Customer',
+                  customerPhone: customerInfo?['phone'] ?? 'No phone',
+                  onAccept: () => _acceptOrder(order),
+                  onReject: () => _rejectOrder(order),
+                  onMarkPreparing: () => _markPreparing(order),
+                  onMarkReady: () => _markReady(order),
+                );
+              },
+            ),
+    );
+  }
+
+  void _acceptOrder(Order order) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Accept Order'),
+        content: Text('Accept order #${order.id}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                // Add accepted status to timeline
+                order.statusTimeline.add(
+                  OrderStatusTimeline(
+                    status: OrderStatus.accepted,
+                    timestamp: DateTime.now(),
+                  ),
+                );
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Order #${order.id} accepted!'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+            },
+            child: const Text('Accept Order'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _rejectOrder(Order order) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Order'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Reject order #${order.id}?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Reason (optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                // Add cancelled status to timeline
+                order.statusTimeline.add(
+                  OrderStatusTimeline(
+                    status: OrderStatus.cancelled,
+                    timestamp: DateTime.now(),
+                  ),
+                );
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Order #${order.id} rejected'),
+                  backgroundColor: AppTheme.errorColor,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+            ),
+            child: const Text('Reject Order'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _markPreparing(Order order) {
+    setState(() {
+      order.statusTimeline.add(
+        OrderStatusTimeline(
+          status: OrderStatus.preparing,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Order #${order.id} is now being prepared'),
+        backgroundColor: AppTheme.primaryColor,
+      ),
+    );
+  }
+
+  void _markReady(Order order) {
+    setState(() {
+      order.statusTimeline.add(
+        OrderStatusTimeline(
+          status: OrderStatus.ready,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Order #${order.id} is ready for pickup/delivery'),
+        backgroundColor: AppTheme.successColor,
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final OrderStatus status;
+  final int count;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StatusChip({
+    required this.label,
+    required this.status,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text('$label ($count)'),
+      selected: isSelected,
+      onSelected: (_) => onTap(),
+      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+      checkmarkColor: AppTheme.primaryColor,
+      labelStyle: TextStyle(
+        color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+}
+
+class _OrderCard extends StatelessWidget {
+  final Order order;
+  final String customerName;
+  final String customerPhone;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+  final VoidCallback onMarkPreparing;
+  final VoidCallback onMarkReady;
+
+  const _OrderCard({
+    required this.order,
+    required this.customerName,
+    required this.customerPhone,
+    required this.onAccept,
+    required this.onReject,
+    required this.onMarkPreparing,
+    required this.onMarkReady,
+  });
+
+  Color _getStatusColor() {
+    switch (order.currentStatus) {
+      case OrderStatus.placed:
+        return AppTheme.warningColor;
+      case OrderStatus.accepted:
+      case OrderStatus.preparing:
+        return AppTheme.primaryColor;
+      case OrderStatus.ready:
+      case OrderStatus.outForDelivery:
+        return Colors.blue;
+      case OrderStatus.delivered:
+        return AppTheme.successColor;
+      case OrderStatus.cancelled:
+        return AppTheme.errorColor;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          // Order Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _getStatusColor().withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Order #${order.id}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDateTime(order.createdAt),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    order.currentStatus.displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Customer Information
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200),
+              ),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.blue.shade100,
+                  radius: 24,
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.blue.shade700,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Customer',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        customerName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            customerPhone,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.phone_in_talk),
+                  color: AppTheme.primaryColor,
+                  onPressed: () {
+                    // In real app: launch phone call
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Order Items
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Items:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...order.items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          color: AppTheme.primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.productName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Qty: ${item.quantity} × UGX ${item.unitPrice.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'UGX ${item.total.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+                const Divider(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'UGX ${order.total.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.payment,
+                      size: 16,
+                      color: AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      order.paymentMethod.displayName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Action Buttons
+          if (order.currentStatus == OrderStatus.placed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onReject,
+                      icon: const Icon(Icons.close),
+                      label: const Text('Reject'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.errorColor,
+                        side: BorderSide(color: AppTheme.errorColor),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: onAccept,
+                      icon: const Icon(Icons.check),
+                      label: const Text('Accept'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          if (order.currentStatus == OrderStatus.accepted)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: ElevatedButton.icon(
+                onPressed: onMarkPreparing,
+                icon: const Icon(Icons.restaurant),
+                label: const Text('Start Preparing'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  minimumSize: const Size(double.infinity, 45),
+                ),
+              ),
+            ),
+
+          if (order.currentStatus == OrderStatus.preparing)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: ElevatedButton.icon(
+                onPressed: onMarkReady,
+                icon: const Icon(Icons.inventory),
+                label: const Text('Mark as Ready'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.successColor,
+                  minimumSize: const Size(double.infinity, 45),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = now.difference(dateTime);
+
+    if (diff.inDays == 0) {
+      if (diff.inHours == 0) {
+        return '${diff.inMinutes} minutes ago';
+      }
+      return '${diff.inHours} hours ago';
+    } else if (diff.inDays == 1) {
+      return 'Yesterday';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+  }
+}

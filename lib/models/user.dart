@@ -4,6 +4,7 @@ class AppUser {
   final String id; // Auto-generated: SHG-XXXXX, SME-XXXXX, PSA-XXXXX
   final String name;
   final String phone;
+  final String? email; // Email address for authentication
   final UserRole role;
   final String? profileImage;
   final String? nationalId;
@@ -24,6 +25,7 @@ class AppUser {
     required this.id,
     required this.name,
     required this.phone,
+    this.email,
     required this.role,
     this.profileImage,
     this.nationalId,
@@ -60,12 +62,25 @@ class AppUser {
   }
 
   factory AppUser.fromFirestore(Map<String, dynamic> data, String id) {
+    // Helper function to parse DateTime from Firestore Timestamp or String
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      // Handle Firestore Timestamp
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return null;
+    }
+    
     return AppUser(
       id: id,
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
+      email: data['email'],
       role: UserRole.values.firstWhere(
-        (e) => e.toString() == 'UserRole.${data['role']}',
+        (e) => e.toString().toLowerCase() == 'userrole.${(data['role'] as String).toLowerCase()}',
         orElse: () => UserRole.shg,
       ),
       profileImage: data['profile_image'],
@@ -86,19 +101,15 @@ class AppUser {
           ? Location.fromMap(data['location'])
           : null,
       isProfileComplete: data['is_profile_complete'] ?? false,
-      profileCompletionDeadline: data['profile_completion_deadline'] != null
-          ? DateTime.parse(data['profile_completion_deadline'])
-          : null,
+      profileCompletionDeadline: parseDateTime(data['profile_completion_deadline']),
       isVerified: data['is_verified'] ?? false,
       verificationStatus: VerificationStatus.values.firstWhere(
         (e) => e.toString() == 'VerificationStatus.${data['verification_status']}',
         orElse: () => VerificationStatus.pending,
       ),
-      verifiedAt: data['verified_at'] != null
-          ? DateTime.parse(data['verified_at'])
-          : null,
-      createdAt: DateTime.parse(data['created_at']),
-      updatedAt: DateTime.parse(data['updated_at']),
+      verifiedAt: parseDateTime(data['verified_at']),
+      createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
+      updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -106,6 +117,7 @@ class AppUser {
     return {
       'name': name,
       'phone': phone,
+      'email': email,
       'role': role.toString().split('.').last,
       'profile_image': profileImage,
       'national_id': nationalId,
@@ -183,7 +195,6 @@ extension UserRoleExtension on UserRole {
 enum Sex {
   male,
   female,
-  other,
 }
 
 extension SexExtension on Sex {
@@ -193,8 +204,6 @@ extension SexExtension on Sex {
         return 'Male';
       case Sex.female:
         return 'Female';
-      case Sex.other:
-        return 'Other';
     }
   }
 }

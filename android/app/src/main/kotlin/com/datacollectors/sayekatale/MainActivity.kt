@@ -1,4 +1,4 @@
-package com.poultrylink.poultry_link
+package com.datacollectors.sayekatale
 
 import io.flutter.embedding.android.FlutterActivity
 

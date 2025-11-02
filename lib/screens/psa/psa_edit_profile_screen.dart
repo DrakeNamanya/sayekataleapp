@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/uganda_business_validators.dart';
 import '../../widgets/location_picker_widget.dart';
 import '../../widgets/uganda_phone_field.dart';
 
@@ -22,6 +23,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   final _legalNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _tinNumberController = TextEditingController();
+  final _businessRegistrationController = TextEditingController();
   final _unbsRegistrationController = TextEditingController();
   final _mobileMoneyController = TextEditingController();
   
@@ -311,37 +313,83 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // TIN Number
+            // TIN Number with proper validation
             TextFormField(
               controller: _tinNumberController,
               decoration: const InputDecoration(
                 labelText: 'TIN Number (Tax Identification Number) *',
                 prefixIcon: Icon(Icons.assignment_outlined),
-                hintText: 'Enter TIN number',
+                hintText: 'Enter 10-digit TIN (e.g., 1000123456)',
+                helperText: 'Uganda Revenue Authority (URA) TIN - 10 digits',
               ),
               keyboardType: TextInputType.number,
+              maxLength: 10,
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'TIN number is required';
+                return UgandaBusinessValidators.validateTIN(value);
+              },
+              onChanged: (value) {
+                // Show TIN entity type when valid TIN is entered
+                if (value.length == 10) {
+                  final entityType = UgandaBusinessValidators.getTINEntityType(value);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('TIN Type: $entityType'),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: AppTheme.successColor,
+                      ),
+                    );
+                  }
                 }
-                return null;
               },
             ),
             const SizedBox(height: 16),
 
-            // UNBS Registration Number
+            // Business Registration Number (URSB Certificate)
+            TextFormField(
+              controller: _businessRegistrationController,
+              decoration: const InputDecoration(
+                labelText: 'Business Registration Number *',
+                prefixIcon: Icon(Icons.business_center_outlined),
+                hintText: 'Enter 14-digit registration number',
+                helperText: 'From URSB Certificate of Incorporation - 14 digits',
+              ),
+              keyboardType: TextInputType.number,
+              maxLength: 14,
+              validator: (value) {
+                return UgandaBusinessValidators.validateBusinessReg(value);
+              },
+              onChanged: (value) {
+                // Auto-format Business Reg as user types
+                if (value.length == 14) {
+                  final formatted = UgandaBusinessValidators.formatBusinessReg(value);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Business Reg: $formatted'),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: AppTheme.successColor,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // UNBS Registration Number (Product Certification)
             TextFormField(
               controller: _unbsRegistrationController,
               decoration: const InputDecoration(
-                labelText: 'UNBS Registration Number *',
+                labelText: 'UNBS Registration Number (Optional)',
                 prefixIcon: Icon(Icons.verified_outlined),
                 hintText: 'Uganda National Bureau of Standards',
+                helperText: 'Product certification number (if applicable)',
               ),
               textCapitalization: TextCapitalization.characters,
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'UNBS registration number is required';
-                }
+                // Made optional since not all PSA businesses need UNBS certification
+                return null;
                 return null;
               },
             ),

@@ -1,18 +1,859 @@
 import 'package:flutter/material.dart';
-import '../../utils/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/order_service.dart';
+import '../../models/order.dart' as app_order;
 
-class SHGOrdersScreen extends StatelessWidget {
+class SHGOrdersScreen extends StatefulWidget {
   const SHGOrdersScreen({super.key});
 
   @override
+  State<SHGOrdersScreen> createState() => _SHGOrdersScreenState();
+}
+
+class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProviderStateMixin {
+  final OrderService _orderService = OrderService();
+  late TabController _tabController;
+  
+  final List<String> _statusFilters = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Completed'];
+  String _selectedFilter = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final farmerId = authProvider.currentUser!.id;
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Orders Received'),
+        title: const Text('My Orders'),
+        centerTitle: true,
+        elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.pending_actions), text: 'Pending'),
+            Tab(icon: Icon(Icons.check_circle), text: 'Active'),
+            Tab(icon: Icon(Icons.history), text: 'History'),
+          ],
+        ),
       ),
-      body: Center(
-        child: Text('SHG Orders Screen - Coming Soon'),
+      body: Column(
+        children: [
+          _buildRevenueCard(farmerId),
+          _buildFilterChips(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrdersList(farmerId, [app_order.OrderStatus.pending]),
+                _buildOrdersList(farmerId, [
+                  app_order.OrderStatus.confirmed,
+                  app_order.OrderStatus.preparing,
+                  app_order.OrderStatus.ready,
+                  app_order.OrderStatus.inTransit,
+                ]),
+                _buildOrdersList(farmerId, [
+                  app_order.OrderStatus.delivered,
+                  app_order.OrderStatus.completed,
+                  app_order.OrderStatus.cancelled,
+                  app_order.OrderStatus.rejected,
+                ]),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildRevenueCard(String farmerId) {
+    return FutureBuilder<double>(
+      future: _orderService.getFarmerRevenue(farmerId),
+      builder: (context, snapshot) {
+        final revenue = snapshot.data ?? 0.0;
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green[700]!, Colors.green[500]!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Revenue',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'UGX ${NumberFormat('#,###').format(revenue)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _statusFilters.length,
+        itemBuilder: (context, index) {
+          final filter = _statusFilters[index];
+          final isSelected = _selectedFilter == filter;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(filter),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _selectedFilter = filter;
+                });
+              },
+              backgroundColor: Colors.white,
+              selectedColor: Colors.green[100],
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.green[800] : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOrdersList(String farmerId, List<app_order.OrderStatus> statusFilter) {
+    return StreamBuilder<List<app_order.Order>>(
+      stream: _orderService.streamFarmerOrders(farmerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error: ${snapshot.error}'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => setState(() {}),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        var orders = snapshot.data ?? [];
+
+        // Apply status filter
+        orders = orders.where((order) => statusFilter.contains(order.status)).toList();
+
+        // Apply chip filter
+        if (_selectedFilter != 'All') {
+          final filterStatus = app_order.OrderStatus.values.firstWhere(
+            (s) => s.toString().split('.').last.toLowerCase() == _selectedFilter.toLowerCase(),
+            orElse: () => app_order.OrderStatus.pending,
+          );
+          orders = orders.where((order) => order.status == filterStatus).toList();
+        }
+
+        if (orders.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No orders found',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Orders from buyers will appear here',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            return _buildOrderCard(order);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderCard(app_order.Order order) {
+    final statusColor = _getStatusColor(order.status);
+    final statusIcon = _getStatusIcon(order.status);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showOrderDetailsDialog(order),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Order #${order.id.substring(0, 8).toUpperCase()}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatStatus(order.status),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 12),
+              
+              // Buyer Info
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.blue[100],
+                    child: Icon(Icons.person, color: Colors.blue[800]),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          order.buyerName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          order.buyerPhone,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Order Items Summary
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.shopping_basket, size: 18, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${order.items.length} item(s)',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'UGX ${NumberFormat('#,###').format(order.totalAmount)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Action Buttons
+              if (order.status == app_order.OrderStatus.pending) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _rejectOrder(order),
+                        icon: const Icon(Icons.close, size: 18),
+                        label: const Text('Reject'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _confirmOrder(order),
+                        icon: const Icon(Icons.check, size: 18),
+                        label: const Text('Accept Order'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              
+              if (order.status == app_order.OrderStatus.confirmed) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _updateStatus(order, app_order.OrderStatus.preparing),
+                    icon: const Icon(Icons.restaurant, size: 18),
+                    label: const Text('Mark as Preparing'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+              
+              if (order.status == app_order.OrderStatus.preparing) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _updateStatus(order, app_order.OrderStatus.ready),
+                    icon: const Icon(Icons.check_circle, size: 18),
+                    label: const Text('Mark as Ready'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+              
+              if (order.status == app_order.OrderStatus.ready) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _updateStatus(order, app_order.OrderStatus.inTransit),
+                    icon: const Icon(Icons.local_shipping, size: 18),
+                    label: const Text('Mark as In Transit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+              
+              if (order.status == app_order.OrderStatus.inTransit) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _updateStatus(order, app_order.OrderStatus.delivered),
+                    icon: const Icon(Icons.done_all, size: 18),
+                    label: const Text('Mark as Delivered'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showOrderDetailsDialog(app_order.Order order) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Order Details',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                const SizedBox(height: 12),
+                
+                // Order ID
+                _buildDetailRow('Order ID', '#${order.id.substring(0, 12).toUpperCase()}'),
+                _buildDetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
+                _buildDetailRow('Status', _formatStatus(order.status)),
+                
+                const SizedBox(height: 16),
+                const Text(
+                  'Buyer Information',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow('Name', order.buyerName),
+                _buildDetailRow('Phone', order.buyerPhone),
+                
+                if (order.deliveryAddress != null) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Delivery Details',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildDetailRow('Address', order.deliveryAddress!),
+                  if (order.deliveryNotes != null)
+                    _buildDetailRow('Notes', order.deliveryNotes!),
+                ],
+                
+                const SizedBox(height: 16),
+                const Text(
+                  'Order Items',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                
+                ...order.items.map((item) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          item.productImage,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 50,
+                            height: 50,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.image, color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.productName,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'UGX ${NumberFormat('#,###').format(item.subtotal)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+                
+                const Divider(),
+                const SizedBox(height: 8),
+                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Amount',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'UGX ${NumberFormat('#,###').format(order.totalAmount)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                _buildDetailRow('Payment Method', _formatPaymentMethod(order.paymentMethod)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmOrder(app_order.Order order) async {
+    try {
+      await _orderService.confirmOrder(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Order accepted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectOrder(app_order.Order order) async {
+    final reasonController = TextEditingController();
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Order'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Please provide a reason for rejection:'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Out of stock, Cannot deliver to location',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Reject Order'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _orderService.rejectOrder(
+          order.id,
+          reasonController.text.trim().isNotEmpty 
+            ? reasonController.text.trim() 
+            : 'No reason provided',
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Order rejected'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _updateStatus(app_order.Order order, app_order.OrderStatus newStatus) async {
+    try {
+      await _orderService.updateOrderStatus(order.id, newStatus);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Order status updated to ${_formatStatus(newStatus)}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Color _getStatusColor(app_order.OrderStatus status) {
+    switch (status) {
+      case app_order.OrderStatus.pending:
+        return Colors.orange;
+      case app_order.OrderStatus.confirmed:
+      case app_order.OrderStatus.preparing:
+        return Colors.blue;
+      case app_order.OrderStatus.ready:
+      case app_order.OrderStatus.inTransit:
+        return Colors.purple;
+      case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.completed:
+        return Colors.green;
+      case app_order.OrderStatus.cancelled:
+      case app_order.OrderStatus.rejected:
+        return Colors.red;
+    }
+  }
+
+  IconData _getStatusIcon(app_order.OrderStatus status) {
+    switch (status) {
+      case app_order.OrderStatus.pending:
+        return Icons.pending;
+      case app_order.OrderStatus.confirmed:
+        return Icons.check_circle;
+      case app_order.OrderStatus.preparing:
+        return Icons.restaurant;
+      case app_order.OrderStatus.ready:
+        return Icons.done_all;
+      case app_order.OrderStatus.inTransit:
+        return Icons.local_shipping;
+      case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.completed:
+        return Icons.check_circle_outline;
+      case app_order.OrderStatus.cancelled:
+      case app_order.OrderStatus.rejected:
+        return Icons.cancel;
+    }
+  }
+
+  String _formatStatus(app_order.OrderStatus status) {
+    switch (status) {
+      case app_order.OrderStatus.pending:
+        return 'Pending';
+      case app_order.OrderStatus.confirmed:
+        return 'Confirmed';
+      case app_order.OrderStatus.rejected:
+        return 'Rejected';
+      case app_order.OrderStatus.preparing:
+        return 'Preparing';
+      case app_order.OrderStatus.ready:
+        return 'Ready';
+      case app_order.OrderStatus.inTransit:
+        return 'In Transit';
+      case app_order.OrderStatus.delivered:
+        return 'Delivered';
+      case app_order.OrderStatus.completed:
+        return 'Completed';
+      case app_order.OrderStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  String _formatPaymentMethod(app_order.PaymentMethod method) {
+    switch (method) {
+      case app_order.PaymentMethod.cash:
+        return 'Cash on Delivery';
+      case app_order.PaymentMethod.mobileMoney:
+        return 'Mobile Money';
+      case app_order.PaymentMethod.bankTransfer:
+        return 'Bank Transfer';
+    }
   }
 }

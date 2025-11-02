@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/order.dart';
 import '../../utils/app_theme.dart';
+import 'sme_leave_review_screen.dart';
 
-class SMEOrderDetailScreen extends StatelessWidget {
+class SMEOrderDetailScreen extends StatefulWidget {
   final Order order;
   
   const SMEOrderDetailScreen({super.key, required this.order});
+
+  @override
+  State<SMEOrderDetailScreen> createState() => _SMEOrderDetailScreenState();
+}
+
+class _SMEOrderDetailScreenState extends State<SMEOrderDetailScreen> {
+  String? _deliveryPhotoPath;
   
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
@@ -23,12 +32,133 @@ class SMEOrderDetailScreen extends StatelessWidget {
         return AppTheme.errorColor;
     }
   }
+
+  Future<void> _takeDeliveryPhoto() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? photo = await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1920,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
+    
+    if (photo != null) {
+      setState(() {
+        _deliveryPhotoPath = photo.path;
+      });
+      
+      // Show confirmation dialog
+      if (mounted) {
+        _showConfirmReceivedDialog();
+      }
+    }
+  }
+
+  void _showConfirmReceivedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delivery'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_deliveryPhotoPath != null) ...[
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    _deliveryPhotoPath!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(Icons.check_circle, size: 64, color: Colors.green),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            const Text(
+              'Confirm that you have received this order in good condition?',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Payment of UGX ${widget.order.total.toStringAsFixed(0)} will be released to the farmer.',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _markAsReceived();
+              Navigator.pop(context);
+            },
+            child: const Text('Confirm Received'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _markAsReceived() {
+    // In a real app, this would update the order status in Firebase
+    // For now, we show a success message
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Order marked as received!',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Payment of UGX ${widget.order.total.toStringAsFixed(0)} released to farmer',
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Commission: UGX 1,000 deducted',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+        backgroundColor: AppTheme.successColor,
+        duration: const Duration(seconds: 5),
+      ),
+    );
+    
+    // Navigate back
+    Navigator.pop(context);
+  }
   
   @override
   Widget build(BuildContext context) {
+    final bool canMarkReceived = widget.order.currentStatus != OrderStatus.delivered && 
+                                  widget.order.currentStatus != OrderStatus.cancelled;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order #${order.id}'),
+        title: Text('Order #${widget.order.id}'),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -41,8 +171,8 @@ class SMEOrderDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    _getStatusColor(order.currentStatus),
-                    _getStatusColor(order.currentStatus).withValues(alpha: 0.7),
+                    _getStatusColor(widget.order.currentStatus),
+                    _getStatusColor(widget.order.currentStatus).withValues(alpha: 0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -51,24 +181,24 @@ class SMEOrderDetailScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Icon(
-                    _getStatusIcon(order.currentStatus),
+                    _getStatusIcon(widget.order.currentStatus),
                     size: 64,
                     color: Colors.white,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    order.currentStatus.displayName,
+                    widget.order.currentStatus.displayName,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  if (order.estimatedDelivery != null)
+                  if (widget.order.estimatedDelivery != null)
                     ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Estimated delivery: ${order.estimatedDelivery}',
+                        'Estimated delivery: ${widget.order.estimatedDelivery}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
@@ -95,7 +225,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _OrderTimeline(statusTimeline: order.statusTimeline),
+                  _OrderTimeline(statusTimeline: widget.order.statusTimeline),
                 ],
               ),
             ),
@@ -103,7 +233,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // Delivery Information
-            if (order.riderName != null)
+            if (widget.order.riderName != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
@@ -137,7 +267,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    order.riderName!,
+                                    widget.order.riderName!,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -145,7 +275,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    order.riderPhone!,
+                                    widget.order.riderPhone!,
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: AppTheme.textSecondary,
@@ -190,7 +320,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          ...order.items.map((item) => Padding(
+                          ...widget.order.items.map((item) => Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,22 +408,22 @@ class SMEOrderDetailScreen extends StatelessWidget {
                         children: [
                           _SummaryRow(
                             label: 'Subtotal',
-                            value: 'UGX ${order.subtotal.toStringAsFixed(0)}',
+                            value: 'UGX ${widget.order.subtotal.toStringAsFixed(0)}',
                           ),
                           const SizedBox(height: 8),
                           _SummaryRow(
                             label: 'Delivery Fee',
-                            value: 'UGX ${order.deliveryFee.toStringAsFixed(0)}',
+                            value: 'UGX ${widget.order.deliveryFee.toStringAsFixed(0)}',
                           ),
                           const SizedBox(height: 8),
                           _SummaryRow(
                             label: 'Service Fee',
-                            value: 'UGX ${order.serviceFee.toStringAsFixed(0)}',
+                            value: 'UGX ${widget.order.serviceFee.toStringAsFixed(0)}',
                           ),
                           const Divider(height: 24),
                           _SummaryRow(
                             label: 'Total',
-                            value: 'UGX ${order.total.toStringAsFixed(0)}',
+                            value: 'UGX ${widget.order.total.toStringAsFixed(0)}',
                             isBold: true,
                             valueColor: AppTheme.primaryColor,
                           ),
@@ -314,7 +444,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                order.paymentMethod.displayName,
+                                widget.order.paymentMethod.displayName,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -328,7 +458,7 @@ class SMEOrderDetailScreen extends StatelessWidget {
                               Icon(
                                 Icons.check_circle,
                                 size: 20,
-                                color: _getPaymentStatusColor(order.paymentStatus),
+                                color: _getPaymentStatusColor(widget.order.paymentStatus),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -339,11 +469,11 @@ class SMEOrderDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                order.paymentStatus.toString().split('.').last.toUpperCase(),
+                                widget.order.paymentStatus.toString().split('.').last.toUpperCase(),
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: _getPaymentStatusColor(order.paymentStatus),
+                                  color: _getPaymentStatusColor(widget.order.paymentStatus),
                                 ),
                               ),
                             ],
@@ -357,9 +487,106 @@ class SMEOrderDetailScreen extends StatelessWidget {
             ),
             
             const SizedBox(height: 24),
+            
+            // Leave Review Section (for delivered orders)
+            if (widget.order.currentStatus == OrderStatus.delivered)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'How was your experience?',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      color: Colors.amber.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  color: Colors.amber.shade700,
+                                  size: 32,
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'Help other buyers by sharing your experience with this farmer',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SMELeaveReviewScreen(
+                                      order: widget.order,
+                                      farmerName: 'Farmer Name', // In real app: fetch from farmer ID
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.rate_review),
+                              label: const Text('Leave a Review'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber.shade700,
+                                minimumSize: const Size(double.infinity, 45),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            const SizedBox(height: 100), // Extra space for bottom button
           ],
         ),
       ),
+      bottomNavigationBar: canMarkReceived
+          ? Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: ElevatedButton.icon(
+                  onPressed: _takeDeliveryPhoto,
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Mark as Received & Take Photo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.successColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
   

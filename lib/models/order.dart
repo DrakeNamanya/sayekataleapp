@@ -1,218 +1,301 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Order status enum
+enum OrderStatus {
+  pending,       // Order placed, waiting for farmer confirmation
+  confirmed,     // Farmer accepted the order
+  rejected,      // Farmer rejected the order
+  preparing,     // Farmer is preparing the order
+  ready,         // Order is ready for pickup/delivery
+  inTransit,     // Order is being delivered
+  delivered,     // Order delivered to buyer
+  completed,     // Transaction completed
+  cancelled,     // Order cancelled by buyer
+}
+
+/// Payment method enum
+enum PaymentMethod {
+  cash,          // Cash on delivery
+  mobileMoney,   // Mobile Money (MTN, Airtel)
+  bankTransfer,  // Bank transfer
+}
+
+/// Order model for marketplace transactions
 class Order {
-  final String id;
-  final String customerId;
-  final String farmId;
-  final List<OrderItem> items;
-  final double subtotal;
-  final double deliveryFee;
-  final double serviceFee;
-  final double total;
-  final PaymentMethod paymentMethod;
-  final PaymentStatus paymentStatus;
-  final List<OrderStatusTimeline> statusTimeline;
-  final String? estimatedDelivery;
-  final String? riderId;
-  final String? riderName;
-  final String? riderPhone;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String id;                    // Firestore document ID
+  final String buyerId;               // User ID of buyer (SME)
+  final String buyerName;             // Buyer's name
+  final String buyerPhone;            // Buyer's phone
+  final String farmerId;              // User ID of farmer (SHG)
+  final String farmerName;            // Farmer's name
+  final String farmerPhone;           // Farmer's phone
+  final List<OrderItem> items;        // List of products in order
+  final double totalAmount;           // Total order amount
+  final OrderStatus status;           // Current order status
+  final PaymentMethod paymentMethod;  // Payment method
+  final String? deliveryAddress;      // Delivery address
+  final String? deliveryNotes;        // Special delivery instructions
+  final DateTime createdAt;           // When order was placed
+  final DateTime updatedAt;           // Last update time
+  final DateTime? confirmedAt;        // When farmer confirmed
+  final DateTime? rejectedAt;         // When farmer rejected
+  final DateTime? deliveredAt;        // When order was delivered
+  final String? rejectionReason;      // Reason for rejection
 
   Order({
     required this.id,
-    required this.customerId,
-    required this.farmId,
+    required this.buyerId,
+    required this.buyerName,
+    required this.buyerPhone,
+    required this.farmerId,
+    required this.farmerName,
+    required this.farmerPhone,
     required this.items,
-    required this.subtotal,
-    required this.deliveryFee,
-    required this.serviceFee,
-    required this.total,
+    required this.totalAmount,
+    required this.status,
     required this.paymentMethod,
-    required this.paymentStatus,
-    required this.statusTimeline,
-    this.estimatedDelivery,
-    this.riderId,
-    this.riderName,
-    this.riderPhone,
+    this.deliveryAddress,
+    this.deliveryNotes,
     required this.createdAt,
     required this.updatedAt,
+    this.confirmedAt,
+    this.rejectedAt,
+    this.deliveredAt,
+    this.rejectionReason,
   });
 
-  OrderStatus get currentStatus =>
-      statusTimeline.isNotEmpty ? statusTimeline.last.status : OrderStatus.placed;
-
+  /// Create Order from Firestore document
   factory Order.fromFirestore(Map<String, dynamic> data, String id) {
+    // Helper function to parse DateTime
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return null;
+    }
+
     return Order(
       id: id,
-      customerId: data['customer_id'] ?? '',
-      farmId: data['farm_id'] ?? '',
+      buyerId: data['buyer_id'] ?? '',
+      buyerName: data['buyer_name'] ?? '',
+      buyerPhone: data['buyer_phone'] ?? '',
+      farmerId: data['farmer_id'] ?? '',
+      farmerName: data['farmer_name'] ?? '',
+      farmerPhone: data['farmer_phone'] ?? '',
       items: (data['items'] as List<dynamic>?)
-              ?.map((item) => OrderItem.fromMap(item))
+              ?.map((item) => OrderItem.fromMap(item as Map<String, dynamic>))
               .toList() ??
           [],
-      subtotal: (data['subtotal'] ?? 0.0).toDouble(),
-      deliveryFee: (data['delivery_fee'] ?? 0.0).toDouble(),
-      serviceFee: (data['service_fee'] ?? 0.0).toDouble(),
-      total: (data['total'] ?? 0.0).toDouble(),
+      totalAmount: (data['total_amount'] ?? 0).toDouble(),
+      status: OrderStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == data['status'],
+        orElse: () => OrderStatus.pending,
+      ),
       paymentMethod: PaymentMethod.values.firstWhere(
-        (e) => e.toString() == 'PaymentMethod.${data['payment_method']}',
+        (e) => e.toString().split('.').last == data['payment_method'],
         orElse: () => PaymentMethod.cash,
       ),
-      paymentStatus: PaymentStatus.values.firstWhere(
-        (e) => e.toString() == 'PaymentStatus.${data['payment_status']}',
-        orElse: () => PaymentStatus.pending,
-      ),
-      statusTimeline: (data['status_timeline'] as List<dynamic>?)
-              ?.map((item) => OrderStatusTimeline.fromMap(item))
-              .toList() ??
-          [],
-      estimatedDelivery: data['estimated_delivery'],
-      riderId: data['rider_id'],
-      riderName: data['rider_name'],
-      riderPhone: data['rider_phone'],
-      createdAt: DateTime.parse(data['created_at']),
-      updatedAt: DateTime.parse(data['updated_at']),
+      deliveryAddress: data['delivery_address'],
+      deliveryNotes: data['delivery_notes'],
+      createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
+      updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
+      confirmedAt: parseDateTime(data['confirmed_at']),
+      rejectedAt: parseDateTime(data['rejected_at']),
+      deliveredAt: parseDateTime(data['delivered_at']),
+      rejectionReason: data['rejection_reason'],
     );
   }
 
+  /// Convert Order to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
-      'customer_id': customerId,
-      'farm_id': farmId,
+      'buyer_id': buyerId,
+      'buyer_name': buyerName,
+      'buyer_phone': buyerPhone,
+      'farmer_id': farmerId,
+      'farmer_name': farmerName,
+      'farmer_phone': farmerPhone,
       'items': items.map((item) => item.toMap()).toList(),
-      'subtotal': subtotal,
-      'delivery_fee': deliveryFee,
-      'service_fee': serviceFee,
-      'total': total,
+      'total_amount': totalAmount,
+      'status': status.toString().split('.').last,
       'payment_method': paymentMethod.toString().split('.').last,
-      'payment_status': paymentStatus.toString().split('.').last,
-      'status_timeline': statusTimeline.map((item) => item.toMap()).toList(),
-      'estimated_delivery': estimatedDelivery,
-      'rider_id': riderId,
-      'rider_name': riderName,
-      'rider_phone': riderPhone,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'delivery_address': deliveryAddress,
+      'delivery_notes': deliveryNotes,
+      'created_at': Timestamp.fromDate(createdAt),
+      'updated_at': Timestamp.fromDate(updatedAt),
+      'confirmed_at': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
+      'rejected_at': rejectedAt != null ? Timestamp.fromDate(rejectedAt!) : null,
+      'delivered_at': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'rejection_reason': rejectionReason,
     };
+  }
+
+  /// Create a copy with modified fields
+  Order copyWith({
+    String? id,
+    String? buyerId,
+    String? buyerName,
+    String? buyerPhone,
+    String? farmerId,
+    String? farmerName,
+    String? farmerPhone,
+    List<OrderItem>? items,
+    double? totalAmount,
+    OrderStatus? status,
+    PaymentMethod? paymentMethod,
+    String? deliveryAddress,
+    String? deliveryNotes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? confirmedAt,
+    DateTime? rejectedAt,
+    DateTime? deliveredAt,
+    String? rejectionReason,
+  }) {
+    return Order(
+      id: id ?? this.id,
+      buyerId: buyerId ?? this.buyerId,
+      buyerName: buyerName ?? this.buyerName,
+      buyerPhone: buyerPhone ?? this.buyerPhone,
+      farmerId: farmerId ?? this.farmerId,
+      farmerName: farmerName ?? this.farmerName,
+      farmerPhone: farmerPhone ?? this.farmerPhone,
+      items: items ?? this.items,
+      totalAmount: totalAmount ?? this.totalAmount,
+      status: status ?? this.status,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deliveryNotes: deliveryNotes ?? this.deliveryNotes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      rejectedAt: rejectedAt ?? this.rejectedAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+    );
   }
 }
 
+/// Individual item in an order
 class OrderItem {
   final String productId;
   final String productName;
+  final String productImage;
+  final double price;
+  final String unit;
   final int quantity;
-  final double unitPrice;
-  final double total;
+  final double subtotal;
 
   OrderItem({
     required this.productId,
     required this.productName,
+    required this.productImage,
+    required this.price,
+    required this.unit,
     required this.quantity,
-    required this.unitPrice,
-    required this.total,
+    required this.subtotal,
   });
 
+  /// Create OrderItem from map
   factory OrderItem.fromMap(Map<String, dynamic> data) {
     return OrderItem(
       productId: data['product_id'] ?? '',
       productName: data['product_name'] ?? '',
-      quantity: data['quantity'] ?? 0,
-      unitPrice: (data['unit_price'] ?? 0.0).toDouble(),
-      total: (data['total'] ?? 0.0).toDouble(),
+      productImage: data['product_image'] ?? '',
+      price: (data['price'] ?? 0).toDouble(),
+      unit: data['unit'] ?? 'kg',
+      quantity: data['quantity'] ?? 1,
+      subtotal: (data['subtotal'] ?? 0).toDouble(),
     );
   }
 
+  /// Convert OrderItem to map
   Map<String, dynamic> toMap() {
     return {
       'product_id': productId,
       'product_name': productName,
+      'product_image': productImage,
+      'price': price,
+      'unit': unit,
       'quantity': quantity,
-      'unit_price': unitPrice,
-      'total': total,
+      'subtotal': subtotal,
     };
   }
 }
 
-class OrderStatusTimeline {
-  final OrderStatus status;
-  final DateTime timestamp;
-
-  OrderStatusTimeline({
-    required this.status,
-    required this.timestamp,
-  });
-
-  factory OrderStatusTimeline.fromMap(Map<String, dynamic> data) {
-    return OrderStatusTimeline(
-      status: OrderStatus.values.firstWhere(
-        (e) => e.toString() == 'OrderStatus.${data['status']}',
-        orElse: () => OrderStatus.placed,
-      ),
-      timestamp: DateTime.parse(data['timestamp']),
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'status': status.toString().split('.').last,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
-}
-
-enum OrderStatus {
-  placed,
-  accepted,
-  preparing,
-  ready,
-  outForDelivery,
-  delivered,
-  cancelled,
-}
-
-enum PaymentMethod {
-  mtnMomo,
-  airtelMoney,
-  cash,
-}
-
-enum PaymentStatus {
-  pending,
-  processing,
-  completed,
-  failed,
-  refunded,
-}
-
+/// Extension for OrderStatus display
 extension OrderStatusExtension on OrderStatus {
   String get displayName {
     switch (this) {
-      case OrderStatus.placed:
-        return 'Order Placed';
-      case OrderStatus.accepted:
-        return 'Farmer Accepted';
+      case OrderStatus.pending:
+        return 'Pending Confirmation';
+      case OrderStatus.confirmed:
+        return 'Confirmed';
+      case OrderStatus.rejected:
+        return 'Rejected';
       case OrderStatus.preparing:
         return 'Preparing';
       case OrderStatus.ready:
-        return 'Order Ready';
-      case OrderStatus.outForDelivery:
-        return 'Out for Delivery';
+        return 'Ready for Pickup';
+      case OrderStatus.inTransit:
+        return 'In Transit';
       case OrderStatus.delivered:
         return 'Delivered';
+      case OrderStatus.completed:
+        return 'Completed';
       case OrderStatus.cancelled:
         return 'Cancelled';
     }
   }
+
+  String get description {
+    switch (this) {
+      case OrderStatus.pending:
+        return 'Waiting for farmer to accept';
+      case OrderStatus.confirmed:
+        return 'Farmer accepted your order';
+      case OrderStatus.rejected:
+        return 'Farmer rejected this order';
+      case OrderStatus.preparing:
+        return 'Farmer is preparing your order';
+      case OrderStatus.ready:
+        return 'Order is ready for collection';
+      case OrderStatus.inTransit:
+        return 'Order is on the way';
+      case OrderStatus.delivered:
+        return 'Order has been delivered';
+      case OrderStatus.completed:
+        return 'Transaction completed';
+      case OrderStatus.cancelled:
+        return 'Order was cancelled';
+    }
+  }
 }
 
+/// Extension for PaymentMethod display
 extension PaymentMethodExtension on PaymentMethod {
   String get displayName {
     switch (this) {
-      case PaymentMethod.mtnMomo:
-        return 'MTN Mobile Money';
-      case PaymentMethod.airtelMoney:
-        return 'Airtel Money';
       case PaymentMethod.cash:
         return 'Cash on Delivery';
+      case PaymentMethod.mobileMoney:
+        return 'Mobile Money';
+      case PaymentMethod.bankTransfer:
+        return 'Bank Transfer';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'Pay with cash when you receive the order';
+      case PaymentMethod.mobileMoney:
+        return 'Pay with MTN or Airtel Money';
+      case PaymentMethod.bankTransfer:
+        return 'Transfer to farmer\'s bank account';
     }
   }
 }

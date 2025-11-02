@@ -3,13 +3,13 @@
 /// 
 /// NIN Format: 14 characters total
 /// - First character: 'C' (Citizen) or 'A' (Legal Foreign Resident)
-/// - Remaining 13 characters: Digits (0-9)
-/// - Example: CM90100000001234 (Citizen) or AM90100000001234 (Foreign Resident)
+/// - Remaining 13 characters: Alphanumeric (Letters A-Z and Digits 0-9)
+/// - Example: CM12AB34CD56EF78 (Citizen) or AF98XY76ZW54QR32 (Foreign Resident)
 
 class NINValidator {
   // Regular expression for NIN validation
-  // Format: C or A followed by exactly 13 digits
-  static final RegExp _ninRegex = RegExp(r'^[CA]\d{13}$');
+  // Format: C or A followed by exactly 13 alphanumeric characters
+  static final RegExp _ninRegex = RegExp(r'^[CA][A-Z0-9]{13}$');
   
   /// Validates if a NIN follows the correct format
   /// Returns true if valid, false otherwise
@@ -81,10 +81,10 @@ class NINValidator {
       return 'NIN must start with C (Citizen) or A (Foreign Resident)';
     }
     
-    // Check if remaining 13 characters are digits
+    // Check if remaining 13 characters are alphanumeric (letters and digits)
     final remainingChars = cleanNin.substring(1);
-    if (!RegExp(r'^\d{13}$').hasMatch(remainingChars)) {
-      return 'NIN must have 13 digits after the first letter';
+    if (!RegExp(r'^[A-Z0-9]{13}$').hasMatch(remainingChars)) {
+      return 'NIN must have 13 alphanumeric characters (letters and digits) after the first letter';
     }
     
     return null; // Valid
@@ -204,7 +204,7 @@ class UserVerificationService {
     // 1. Validate NIN format
     final ninFormatValid = NINValidator.isValidFormat(nin);
     if (!ninFormatValid) {
-      issues.add('Invalid NIN format. Must be C/A followed by 13 digits.');
+      issues.add('Invalid NIN format. Must be C/A followed by 13 alphanumeric characters.');
     }
     
     // 2. Check name matching between ID photo and NIN

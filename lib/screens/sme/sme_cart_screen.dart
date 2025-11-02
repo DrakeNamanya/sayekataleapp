@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/cart_item.dart';
 import '../../models/order.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../utils/app_theme.dart';
+import 'sme_checkout_screen.dart';
 
 class SMECartScreen extends StatefulWidget {
   const SMECartScreen({super.key});
@@ -13,7 +15,7 @@ class SMECartScreen extends StatefulWidget {
 }
 
 class _SMECartScreenState extends State<SMECartScreen> {
-  PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMomo;
+  PaymentMethod _selectedPaymentMethod = PaymentMethod.mobileMoney;
   
   @override
   Widget build(BuildContext context) {
@@ -103,14 +105,14 @@ class _SMECartScreenState extends State<SMECartScreen> {
                       final cartItem = cartProvider.cartItems[index];
                       return _CartItemCard(
                         cartItem: cartItem,
-                        onQuantityChanged: (newQuantity) {
-                          cartProvider.updateQuantity(
-                            cartItem.product.id,
+                        onQuantityChanged: (newQuantity) async {
+                          await cartProvider.updateQuantity(
+                            cartItem.id,
                             newQuantity,
                           );
                         },
-                        onRemove: () {
-                          cartProvider.removeItem(cartItem.product.id);
+                        onRemove: () async {
+                          await cartProvider.removeItem(cartItem.id);
                         },
                       );
                     },
@@ -163,7 +165,12 @@ class _SMECartScreenState extends State<SMECartScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              _showCheckoutDialog(context, cartProvider, authProvider);
+                              // Navigate to checkout screen
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SMECheckoutScreen(),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -319,12 +326,12 @@ class _SMECartScreenState extends State<SMECartScreen> {
   
   String _getPaymentMethodDescription(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.mtnMomo:
-        return 'Pay with MTN Mobile Money';
-      case PaymentMethod.airtelMoney:
-        return 'Pay with Airtel Money';
+      case PaymentMethod.mobileMoney:
+        return 'Pay with Mobile Money (MTN/Airtel)';
       case PaymentMethod.cash:
         return 'Pay cash on delivery';
+      case PaymentMethod.bankTransfer:
+        return 'Pay via bank transfer';
     }
   }
   
@@ -347,13 +354,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
     }
     
     // Group items by farm
-    final itemsByFarm = <String, List<CartItem>>{};
-    for (final item in cartProvider.cartItems) {
-      if (!itemsByFarm.containsKey(item.product.farmId)) {
-        itemsByFarm[item.product.farmId] = [];
-      }
-      itemsByFarm[item.product.farmId]!.add(item);
-    }
+    final itemsByFarm = cartProvider.groupByFarmer();
     
     // Create orders (one per farm)
     Navigator.pop(context); // Close checkout dialog
@@ -448,7 +449,6 @@ class _CartItemCard extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    final product = cartItem.product;
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -478,7 +478,7 @@ class _CartItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.name,
+                    cartItem.productName,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -486,7 +486,7 @@ class _CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'UGX ${product.price.toStringAsFixed(0)}/${product.unit}',
+                    'UGX ${cartItem.price.toStringAsFixed(0)}/${cartItem.unit}',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.primaryColor,
@@ -529,9 +529,7 @@ class _CartItemCard extends StatelessWidget {
                             ),
                             IconButton(
                               icon: const Icon(Icons.add, size: 18),
-                              onPressed: cartItem.quantity < product.stockQuantity
-                                  ? () => onQuantityChanged(cartItem.quantity + 1)
-                                  : null,
+                              onPressed: () => onQuantityChanged(cartItem.quantity + 1),
                               padding: const EdgeInsets.all(4),
                               constraints: const BoxConstraints(
                                 minWidth: 32,
@@ -566,7 +564,7 @@ class _CartItemCard extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Remove Item'),
-                    content: Text('Remove ${product.name} from cart?'),
+                    content: Text('Remove ${cartItem.productName} from cart?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),

@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../utils/app_theme.dart';
 import 'sme_farmer_detail_screen.dart';
+import 'sme_browse_map_view.dart';
 
 class SMEBrowseProductsScreen extends StatefulWidget {
   const SMEBrowseProductsScreen({super.key});
@@ -365,8 +366,24 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Browse Products'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Back to Dashboard',
+        ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SMEBrowseMapView(),
+                ),
+              );
+            },
+            tooltip: 'Map View',
+          ),
           IconButton(
             icon: Icon(_showFarmersOnly ? Icons.grid_view : Icons.list),
             onPressed: () {

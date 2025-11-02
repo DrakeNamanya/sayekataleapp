@@ -189,7 +189,11 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                     itemCount: _filteredProducts.length,
                     itemBuilder: (context, index) {
                       final product = _filteredProducts[index];
-                      return _ProductCard(product: product);
+                      return _ProductCard(
+                        product: product,
+                        farmerId: widget.farmer.id,
+                        farmerName: widget.farmer.name,
+                      );
                     },
                   ),
           ),
@@ -277,8 +281,14 @@ class _CategoryChip extends StatelessWidget {
 
 class _ProductCard extends StatelessWidget {
   final Product product;
+  final String farmerId;
+  final String farmerName;
   
-  const _ProductCard({required this.product});
+  const _ProductCard({
+    required this.product,
+    required this.farmerId,
+    required this.farmerName,
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -379,8 +389,31 @@ class _ProductCard extends StatelessWidget {
                     child: Column(
                       children: [
                         InkWell(
-                          onTap: () {
-                            cartProvider.addItem(product);
+                          onTap: () async {
+                            try {
+                              await cartProvider.addItem(
+                                product,
+                                farmerId: farmerId,
+                                farmerName: farmerName,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Added 1 more ${product.name}'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           },
                           child: Icon(
                             Icons.add,
@@ -396,8 +429,30 @@ class _ProductCard extends StatelessWidget {
                           ),
                         ),
                         InkWell(
-                          onTap: () {
-                            cartProvider.removeItem(product.id);
+                          onTap: () async {
+                            try {
+                              final currentQty = cartProvider.getItemQuantity(product.id);
+                              if (currentQty > 1) {
+                                // Find cart item ID
+                                final cartItem = cartProvider.cartItems
+                                    .firstWhere((item) => item.productId == product.id);
+                                await cartProvider.updateQuantity(cartItem.id, currentQty - 1);
+                              } else {
+                                // Remove item completely
+                                final cartItem = cartProvider.cartItems
+                                    .firstWhere((item) => item.productId == product.id);
+                                await cartProvider.removeItem(cartItem.id);
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           },
                           child: Icon(
                             Icons.remove,
@@ -411,14 +466,32 @@ class _ProductCard extends StatelessWidget {
                 else
                   ElevatedButton.icon(
                     onPressed: product.stockQuantity > 0 && product.stockQuantity > 0
-                        ? () {
-                            cartProvider.addItem(product);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${product.name} added to cart'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
+                        ? () async {
+                            try {
+                              await cartProvider.addItem(
+                                product,
+                                farmerId: farmerId,
+                                farmerName: farmerName,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${product.name} added to cart'),
+                                    duration: const Duration(seconds: 1),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           }
                         : null,
                     icon: const Icon(Icons.add_shopping_cart, size: 18),

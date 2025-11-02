@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/features_guide_dialog.dart';
 import 'sme_browse_products_screen.dart';
 import 'sme_cart_screen.dart';
 import 'sme_orders_screen.dart';
@@ -33,6 +34,12 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
       const SMEFavoritesScreen(),
       const SMEProfileScreen(),
     ];
+    
+    // Load cart when dashboard initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      cartProvider.loadCart();
+    });
   }
 
   @override
@@ -114,6 +121,16 @@ class _DashboardHome extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const FeaturesGuideDialog(isSHG: false),
+              );
+            },
+            tooltip: 'Features Guide',
+          ),
           Stack(
             children: [
               IconButton(
@@ -225,6 +242,88 @@ class _DashboardHome extends StatelessWidget {
                     readOnly: true,
                   ),
                 ),
+                
+                // New Features Banner
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade600, Colors.purple.shade600],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        // Navigate to Browse with map view access
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SMEBrowseProductsScreen(),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.auto_awesome,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '🗺️ NEW: Map View Available!',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Find farmers by location • Tap Browse → Map icon',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
                 // Stats Overview
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),

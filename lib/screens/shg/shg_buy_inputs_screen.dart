@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../utils/app_theme.dart';
 import '../../models/product.dart';
+import '../../providers/cart_provider.dart';
 
 class SHGBuyInputsScreen extends StatefulWidget {
   const SHGBuyInputsScreen({super.key});
@@ -425,12 +427,30 @@ class _ProductCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Add to cart
+                        final cartProvider = Provider.of<CartProvider>(context, listen: false);
+                        cartProvider.addItem(product);
+                        
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${product.name} added to cart'),
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text('${product.name} added to cart'),
+                                ),
+                              ],
+                            ),
                             backgroundColor: AppTheme.successColor,
                             duration: const Duration(seconds: 2),
+                            action: SnackBarAction(
+                              label: 'VIEW CART',
+                              textColor: Colors.white,
+                              onPressed: () {
+                                // Navigate to cart screen
+                                DefaultTabController.of(context).animateTo(2); // Cart tab
+                              },
+                            ),
                           ),
                         );
                       },

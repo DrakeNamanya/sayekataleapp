@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart';
 import '../../models/product.dart';
+import '../../widgets/notification_badge.dart';
+import '../../widgets/features_guide_dialog.dart';
 import 'shg_products_screen.dart';
 import 'shg_orders_screen.dart';
 import 'shg_buy_inputs_screen.dart';
@@ -23,6 +25,7 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
   int _selectedIndex = 0;
   int _unreadNotifications = 5;
   int _unreadMessages = 3;
+  int _newOrders = 2; // New pending orders count
 
   late final List<Widget> _screens;
 
@@ -58,28 +61,34 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
         unselectedItemColor: AppTheme.textSecondary,
         selectedFontSize: 12,
         unselectedFontSize: 11,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
             activeIcon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.inventory_2_outlined),
             activeIcon: Icon(Icons.inventory_2),
             label: 'Products',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
+            icon: NotificationBadge(
+              count: _newOrders,
+              child: const Icon(Icons.receipt_long_outlined),
+            ),
+            activeIcon: NotificationBadge(
+              count: _newOrders,
+              child: const Icon(Icons.receipt_long),
+            ),
             label: 'Orders',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
             label: 'Wallet',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
@@ -123,6 +132,16 @@ class _DashboardHome extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const FeaturesGuideDialog(isSHG: true),
+              );
+            },
+            tooltip: 'Features Guide',
+          ),
           Stack(
             children: [
               IconButton(
@@ -261,6 +280,87 @@ class _DashboardHome extends StatelessWidget {
                     ],
                   ),
                 ),
+                
+                // New Orders Alert
+                if (pendingOrders > 0)
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.shade400,
+                          Colors.deepOrange.shade500,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          // Navigate to Orders tab
+                          DefaultTabController.of(context)?.animateTo(2);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.notification_important,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'New Orders Received!',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'You have $pendingOrders pending order${pendingOrders > 1 ? 's' : ''} waiting for your response',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 
                 // Profile Completion Warning
                 if (!user!.isProfileComplete)
