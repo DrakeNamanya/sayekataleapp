@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/order.dart' as app_order;
 import '../models/cart_item.dart';
+import 'notification_service.dart';
 
 /// Service for managing orders in Firestore
 class OrderService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   // ============================================================================
   // ORDER CREATION (Buyers)
@@ -93,7 +95,23 @@ class OrderService {
           debugPrint('✅ app_order.Order created: ${docRef.id} for farmer $farmerName (UGX ${total.toStringAsFixed(0)})');
         }
 
-        createdOrders.add(order.copyWith(id: docRef.id));
+        final createdOrder = order.copyWith(id: docRef.id);
+        createdOrders.add(createdOrder);
+
+        // Send notification to seller about new order
+        try {
+          await _notificationService.sendNewOrderNotification(
+            sellerId: farmerId,
+            buyerName: buyerName,
+            orderId: docRef.id,
+            totalAmount: total,
+          );
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Failed to send new order notification: $e');
+          }
+          // Don't fail the order creation if notification fails
+        }
       }
 
       return createdOrders;
@@ -258,6 +276,13 @@ class OrderService {
   /// Update order status (general)
   Future<void> updateOrderStatus(String orderId, app_order.OrderStatus newStatus) async {
     try {
+      // Get order details first for notification
+      final orderDoc = await _firestore.collection('orders').doc(orderId).get();
+      if (!orderDoc.exists) {
+        throw Exception('Order not found');
+      }
+      final orderData = orderDoc.data()!;
+
       final updateData = {
         'status': newStatus.toString().split('.').last,
         'updated_at': FieldValue.serverTimestamp(),
@@ -272,6 +297,21 @@ class OrderService {
 
       if (kDebugMode) {
         debugPrint('✅ app_order.Order $orderId status updated to ${newStatus.displayName}');
+      }
+
+      // Send notification to buyer about status update
+      try {
+        await _notificationService.sendOrderStatusNotification(
+          buyerId: orderData['buyer_id'] ?? '',
+          orderId: orderId,
+          status: newStatus.toString().split('.').last,
+          sellerName: orderData['farmer_name'] ?? 'Seller',
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Failed to send order status notification: $e');
+        }
+        // Don't fail the status update if notification fails
       }
     } catch (e) {
       if (kDebugMode) {
