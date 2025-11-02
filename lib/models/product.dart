@@ -33,23 +33,37 @@ class Product {
   bool get isOutOfStock => stockQuantity == 0;
 
   factory Product.fromFirestore(Map<String, dynamic> data, String id) {
+    // Helper function to parse DateTime from Firestore Timestamp or String
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      // Handle Firestore Timestamp
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
     return Product(
       id: id,
-      farmId: data['farm_id'] ?? '',
+      farmId: data['farmer_id'] ?? data['farm_id'] ?? '', // Support both field names
       name: data['name'] ?? '',
       description: data['description'],
       category: ProductCategory.values.firstWhere(
         (e) => e.toString() == 'ProductCategory.${data['category']}',
-        orElse: () => ProductCategory.eggs,
+        orElse: () => ProductCategory.crop,
       ),
       unit: data['unit'] ?? '',
       unitSize: data['unit_size'] ?? 1,
       price: (data['price'] ?? 0.0).toDouble(),
       stockQuantity: data['stock_quantity'] ?? 0,
       lowStockThreshold: data['low_stock_threshold'] ?? 10,
-      images: List<String>.from(data['images'] ?? []),
-      createdAt: DateTime.parse(data['created_at']),
-      updatedAt: DateTime.parse(data['updated_at']),
+      images: data['image_url'] != null 
+        ? [data['image_url']] 
+        : (data['images'] != null ? List<String>.from(data['images']) : []),
+      createdAt: parseDateTime(data['created_at']),
+      updatedAt: parseDateTime(data['updated_at']),
     );
   }
 

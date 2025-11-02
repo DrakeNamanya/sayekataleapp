@@ -102,7 +102,7 @@ class CartScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item.product.name,
+                                      item.productName,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -110,7 +110,7 @@ class CartScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'UGX ${item.product.price.toStringAsFixed(0)} per ${item.product.unit}',
+                                      'UGX ${item.price.toStringAsFixed(0)} per ${item.unit}',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: AppTheme.textSecondary,
@@ -127,7 +127,7 @@ class CartScreen extends StatelessWidget {
                                         icon: const Icon(Icons.remove_circle_outline),
                                         onPressed: () {
                                           cartProvider.updateQuantity(
-                                            item.product.id,
+                                            item.productId,
                                             item.quantity - 1,
                                           );
                                         },
@@ -145,7 +145,7 @@ class CartScreen extends StatelessWidget {
                                         icon: const Icon(Icons.add_circle_outline),
                                         onPressed: () {
                                           cartProvider.updateQuantity(
-                                            item.product.id,
+                                            item.productId,
                                             item.quantity + 1,
                                           );
                                         },
