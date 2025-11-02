@@ -13,6 +13,7 @@ import 'shg_wallet_screen.dart';
 import 'shg_messages_screen.dart';
 import 'shg_profile_screen.dart';
 import 'shg_notifications_screen.dart';
+import 'shg_my_purchases_screen.dart';
 
 class SHGDashboardScreen extends StatefulWidget {
   const SHGDashboardScreen({super.key});
@@ -519,6 +520,26 @@ class _DashboardHome extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _QuickActionCard(
+                              icon: Icons.shopping_bag_outlined,
+                              label: 'My Purchases',
+                              color: Colors.purple,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SHGMyPurchasesScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _QuickActionCard(
                               icon: Icons.account_balance_wallet_outlined,
                               label: 'My Wallet',
                               color: AppTheme.successColor,
@@ -532,6 +553,8 @@ class _DashboardHome extends StatelessWidget {
                               },
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          const Expanded(child: SizedBox()), // Empty space for balance
                         ],
                       ),
                     ],

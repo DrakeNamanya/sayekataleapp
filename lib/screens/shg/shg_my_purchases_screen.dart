@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../models/order.dart' as app_order;
+import '../../utils/app_theme.dart';
 
-class PSAOrdersScreen extends StatefulWidget {
-  const PSAOrdersScreen({super.key});
+class SHGMyPurchasesScreen extends StatefulWidget {
+  const SHGMyPurchasesScreen({super.key});
 
   @override
-  State<PSAOrdersScreen> createState() => _PSAOrdersScreenState();
+  State<SHGMyPurchasesScreen> createState() => _SHGMyPurchasesScreenState();
 }
 
-class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProviderStateMixin {
+class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   late TabController _tabController;
-
-  final List<String> _statusFilters = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Completed'];
-  String _selectedFilter = 'All';
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -34,154 +34,46 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final psaId = authProvider.currentUser!.id;
+    final shgId = authProvider.currentUser!.id;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('My Orders'),
+        title: const Text('My Purchases'),
         centerTitle: true,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.pending_actions), text: 'Pending'),
-            Tab(icon: Icon(Icons.check_circle), text: 'Active'),
+            Tab(icon: Icon(Icons.local_shipping), text: 'Active'),
             Tab(icon: Icon(Icons.history), text: 'History'),
           ],
         ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          _buildRevenueCard(psaId),
-          _buildFilterChips(),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrdersList(psaId, [app_order.OrderStatus.pending]),
-                _buildOrdersList(psaId, [
-                  app_order.OrderStatus.confirmed,
-                  app_order.OrderStatus.preparing,
-                  app_order.OrderStatus.ready,
-                  app_order.OrderStatus.inTransit,
-                ]),
-                _buildOrdersList(psaId, [
-                  app_order.OrderStatus.delivered,
-                  app_order.OrderStatus.completed,
-                  app_order.OrderStatus.cancelled,
-                  app_order.OrderStatus.rejected,
-                ]),
-              ],
-            ),
-          ),
+          _buildOrdersList(shgId, [app_order.OrderStatus.pending]),
+          _buildOrdersList(shgId, [
+            app_order.OrderStatus.confirmed,
+            app_order.OrderStatus.preparing,
+            app_order.OrderStatus.ready,
+            app_order.OrderStatus.inTransit,
+            app_order.OrderStatus.delivered,
+          ]),
+          _buildOrdersList(shgId, [
+            app_order.OrderStatus.completed,
+            app_order.OrderStatus.cancelled,
+            app_order.OrderStatus.rejected,
+          ]),
         ],
       ),
     );
   }
 
-  Widget _buildRevenueCard(String psaId) {
-    return FutureBuilder<double>(
-      future: _orderService.getFarmerRevenue(psaId),
-      builder: (context, snapshot) {
-        final revenue = snapshot.data ?? 0.0;
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue[700]!, Colors.blue[500]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total Revenue',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'UGX ${NumberFormat('#,###').format(revenue)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _statusFilters.length,
-        itemBuilder: (context, index) {
-          final filter = _statusFilters[index];
-          final isSelected = _selectedFilter == filter;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(filter),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFilter = filter;
-                });
-              },
-              backgroundColor: Colors.white,
-              selectedColor: Colors.blue[100],
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.blue[800] : Colors.grey[700],
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildOrdersList(String psaId, List<app_order.OrderStatus> statusFilter) {
+  Widget _buildOrdersList(String shgId, List<app_order.OrderStatus> statusFilter) {
     return StreamBuilder<List<app_order.Order>>(
-      stream: _orderService.streamFarmerOrders(psaId),
+      stream: _orderService.streamBuyerOrders(shgId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -210,21 +102,12 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
         // Apply status filter
         orders = orders.where((order) => statusFilter.contains(order.status)).toList();
 
-        // Apply chip filter
-        if (_selectedFilter != 'All') {
-          final filterStatus = app_order.OrderStatus.values.firstWhere(
-            (s) => s.toString().split('.').last.toLowerCase() == _selectedFilter.toLowerCase(),
-            orElse: () => app_order.OrderStatus.pending,
-          );
-          orders = orders.where((order) => order.status == filterStatus).toList();
-        }
-
         if (orders.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
+                Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
                   'No orders found',
@@ -232,7 +115,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Orders from SHG buyers will appear here',
+                  'Your input purchases will appear here',
                   style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
               ],
@@ -322,12 +205,12 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
               const Divider(),
               const SizedBox(height: 12),
 
-              // SHG Buyer Info
+              // PSA Seller Info
               Row(
                 children: [
                   CircleAvatar(
                     backgroundColor: Colors.green[100],
-                    child: Icon(Icons.groups, color: Colors.green[800]),
+                    child: Icon(Icons.store, color: Colors.green[800]),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -335,26 +218,27 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'SHG Buyer',
+                          'PSA Supplier',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
                           ),
                         ),
                         Text(
-                          order.buyerName,
+                          order.farmerName,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Text(
-                          order.buyerPhone,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                        if (order.farmerPhone.isNotEmpty)
+                          Text(
+                            order.farmerPhone,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -387,102 +271,22 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Colors.green,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Action Buttons
-              if (order.status == app_order.OrderStatus.pending) ...[
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _rejectOrder(order),
-                        icon: const Icon(Icons.close, size: 18),
-                        label: const Text('Reject'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _confirmOrder(order),
-                        icon: const Icon(Icons.check, size: 18),
-                        label: const Text('Accept Order'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
-              if (order.status == app_order.OrderStatus.confirmed) ...[
+              // Confirm Receipt Button (for delivered orders)
+              if (order.status == app_order.OrderStatus.delivered && !order.isReceivedByBuyer) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.preparing),
-                    icon: const Icon(Icons.inventory, size: 18),
-                    label: const Text('Mark as Preparing'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-
-              if (order.status == app_order.OrderStatus.preparing) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.ready),
+                    onPressed: _isProcessing ? null : () => _confirmReceipt(order),
                     icon: const Icon(Icons.check_circle, size: 18),
-                    label: const Text('Mark as Ready'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-
-              if (order.status == app_order.OrderStatus.ready) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.inTransit),
-                    icon: const Icon(Icons.local_shipping, size: 18),
-                    label: const Text('Mark as In Transit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-
-              if (order.status == app_order.OrderStatus.inTransit) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.delivered),
-                    icon: const Icon(Icons.done_all, size: 18),
-                    label: const Text('Mark as Delivered'),
+                    label: const Text('Confirm Receipt'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -495,6 +299,195 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
         ),
       ),
     );
+  }
+
+  Future<void> _confirmReceipt(app_order.Order order) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Confirm Receipt'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Have you received this order in good condition?'),
+            const SizedBox(height: 16),
+            const Text('By confirming:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('✅ Order will be marked as completed'),
+            const Text('✅ Product stock will be updated'),
+            const Text('✅ Receipt will be generated'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not Yet'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Yes, Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isProcessing = true);
+      try {
+        await _orderService.confirmReceipt(order.id);
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Order confirmed! Stock has been updated.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) _showReceipt(order);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Error confirming receipt: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showReceipt(app_order.Order order) {
+    final receipt = _generateReceipt(order);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.receipt_long, color: AppTheme.primaryColor),
+            SizedBox(width: 8),
+            Text('Order Receipt'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Text(
+              receipt,
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: receipt));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Receipt copied to clipboard'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Copy'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _generateReceipt(app_order.Order order) {
+    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final buffer = StringBuffer();
+
+    buffer.writeln('═══════════════════════════════════');
+    buffer.writeln('   SAYEKATALE MARKETPLACE');
+    buffer.writeln('          RECEIPT');
+    buffer.writeln('═══════════════════════════════════');
+    buffer.writeln('');
+    buffer.writeln('Order ID: ${order.id}');
+    buffer.writeln('Date: ${dateFormat.format(order.createdAt)}');
+    buffer.writeln('Status: ${_formatStatus(order.status)}');
+    buffer.writeln('');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('PSA SUPPLIER DETAILS');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('Name: ${order.farmerName}');
+    if (order.farmerPhone.isNotEmpty) {
+      buffer.writeln('Phone: ${order.farmerPhone}');
+    }
+    buffer.writeln('');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('BUYER DETAILS (SHG)');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('Name: ${order.buyerName}');
+    buffer.writeln('Phone: ${order.buyerPhone}');
+    if (order.deliveryAddress != null) {
+      buffer.writeln('Address: ${order.deliveryAddress}');
+    }
+    buffer.writeln('');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('ORDER ITEMS');
+    buffer.writeln('───────────────────────────────────');
+
+    for (var i = 0; i < order.items.length; i++) {
+      final item = order.items[i];
+      buffer.writeln('${i + 1}. ${item.productName}');
+      buffer.writeln('   ${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}');
+      buffer.writeln('   Subtotal: UGX ${NumberFormat('#,###').format(item.subtotal)}');
+      buffer.writeln('');
+    }
+
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('TOTAL: UGX ${NumberFormat('#,###').format(order.totalAmount)}');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('');
+    buffer.writeln('Payment: ${_formatPaymentMethod(order.paymentMethod)}');
+    buffer.writeln('');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('ORDER TIMELINE');
+    buffer.writeln('───────────────────────────────────');
+    buffer.writeln('Placed: ${dateFormat.format(order.createdAt)}');
+    if (order.confirmedAt != null) {
+      buffer.writeln('Confirmed: ${dateFormat.format(order.confirmedAt!)}');
+    }
+    if (order.deliveredAt != null) {
+      buffer.writeln('Delivered: ${dateFormat.format(order.deliveredAt!)}');
+    }
+    if (order.receivedAt != null) {
+      buffer.writeln('Received: ${dateFormat.format(order.receivedAt!)}');
+    }
+    buffer.writeln('');
+    buffer.writeln('═══════════════════════════════════');
+    buffer.writeln('Thank you for your business!');
+    buffer.writeln('═══════════════════════════════════');
+
+    return buffer.toString();
   }
 
   void _showOrderDetailsDialog(app_order.Order order) {
@@ -535,12 +528,13 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
 
                 const SizedBox(height: 16),
                 const Text(
-                  'SHG Buyer Information',
+                  'PSA Supplier Information',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow('Name', order.buyerName),
-                _buildDetailRow('Phone', order.buyerPhone),
+                _buildDetailRow('Name', order.farmerName),
+                if (order.farmerPhone.isNotEmpty)
+                  _buildDetailRow('Phone', order.farmerPhone),
 
                 if (order.deliveryAddress != null) ...[
                   const SizedBox(height: 16),
@@ -608,7 +602,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                         'UGX ${NumberFormat('#,###').format(item.subtotal)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: Colors.green,
                         ),
                       ),
                     ],
@@ -633,7 +627,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Colors.green,
                       ),
                     ),
                   ],
@@ -676,118 +670,6 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
         ],
       ),
     );
-  }
-
-  Future<void> _confirmOrder(app_order.Order order) async {
-    try {
-      await _orderService.confirmOrder(order.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Order accepted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectOrder(app_order.Order order) async {
-    final reasonController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Order'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Please provide a reason for rejection:'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'e.g., Out of stock, Cannot deliver to location',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject Order'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      try {
-        await _orderService.rejectOrder(
-          order.id,
-          reasonController.text.trim().isNotEmpty
-              ? reasonController.text.trim()
-              : 'No reason provided',
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Order rejected'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Error: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _updateStatus(app_order.Order order, app_order.OrderStatus newStatus) async {
-    try {
-      await _orderService.updateOrderStatus(order.id, newStatus);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Order status updated to ${_formatStatus(newStatus)}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   Color _getStatusColor(app_order.OrderStatus status) {

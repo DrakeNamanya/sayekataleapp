@@ -229,6 +229,100 @@ class ProductService {
     });
   }
 
+  /// Stream PSA products (farming inputs) for SHG buyers
+  /// This fetches products from PSA sellers (seeds, fertilizers, equipment)
+  Stream<List<Product>> streamPSAProducts() async* {
+    try {
+      // First, get all PSA user IDs
+      final psaUsersSnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'psa')
+          .get();
+
+      if (psaUsersSnapshot.docs.isEmpty) {
+        if (kDebugMode) {
+          debugPrint('⚠️ No PSA users found in database');
+        }
+        yield [];
+        return;
+      }
+
+      final psaUserIds = psaUsersSnapshot.docs.map((doc) => doc.id).toList();
+
+      if (kDebugMode) {
+        debugPrint('📦 Found ${psaUserIds.length} PSA sellers');
+      }
+
+      // Stream products from PSA sellers
+      // Note: Firestore 'whereIn' has a limit of 10 items, so we batch if needed
+      if (psaUserIds.length <= 10) {
+        yield* _firestore
+            .collection('products')
+            .where('farmer_id', whereIn: psaUserIds)
+            .where('is_available', isEqualTo: true)
+            .snapshots()
+            .map((snapshot) {
+          final products = snapshot.docs.map((doc) {
+            return Product.fromFirestore(doc.data(), doc.id);
+          }).toList();
+
+          // Sort by created date (newest first)
+          products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          return products;
+        });
+      } else {
+        // If more than 10 PSA users, batch the queries
+        yield* _batchStreamPSAProducts(psaUserIds);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error streaming PSA products: $e');
+      }
+      yield [];
+    }
+  }
+
+  /// Helper method to batch stream PSA products (for >10 PSA sellers)
+  Stream<List<Product>> _batchStreamPSAProducts(List<String> psaUserIds) async* {
+    final batches = <List<String>>[];
+    for (var i = 0; i < psaUserIds.length; i += 10) {
+      batches.add(psaUserIds.sublist(
+        i,
+        i + 10 > psaUserIds.length ? psaUserIds.length : i + 10,
+      ));
+    }
+
+    // Stream first batch and merge with subsequent batches
+    await for (final firstBatch in _firestore
+        .collection('products')
+        .where('farmer_id', whereIn: batches[0])
+        .where('is_available', isEqualTo: true)
+        .snapshots()) {
+      final products = firstBatch.docs.map((doc) {
+        return Product.fromFirestore(doc.data(), doc.id);
+      }).toList();
+
+      // Fetch remaining batches
+      for (var i = 1; i < batches.length; i++) {
+        final batchSnapshot = await _firestore
+            .collection('products')
+            .where('farmer_id', whereIn: batches[i])
+            .where('is_available', isEqualTo: true)
+            .get();
+
+        products.addAll(batchSnapshot.docs.map((doc) {
+          return Product.fromFirestore(doc.data(), doc.id);
+        }));
+      }
+
+      // Sort by created date (newest first)
+      products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      yield products;
+    }
+  }
+
   /// Get a single product by ID
   Future<Product?> getProduct(String productId) async {
     try {

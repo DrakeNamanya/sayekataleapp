@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../utils/app_theme.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/product_service.dart';
+import 'shg_input_cart_screen.dart';
 
 class SHGBuyInputsScreen extends StatefulWidget {
   const SHGBuyInputsScreen({super.key});
@@ -12,186 +15,93 @@ class SHGBuyInputsScreen extends StatefulWidget {
 }
 
 class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
+  final ProductService _productService = ProductService();
   ProductCategory _selectedCategory = ProductCategory.crop;
   
-  // Mock PSA products by category
-  final Map<ProductCategory, List<Product>> _psaProducts = {
-    ProductCategory.crop: [
-      Product(
-        id: 'psa1',
-        farmId: 'psa001',
-        name: 'Hybrid Maize Seeds (10kg)',
-        description: 'High-yield hybrid maize seeds',
-        category: ProductCategory.fertilizers,
-        unit: 'bag',
-        unitSize: 10,
-        price: 450000,
-        stockQuantity: 120,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa2',
-        farmId: 'psa001',
-        name: 'NPK Fertilizer (50kg)',
-        description: 'Balanced NPK 17:17:17 fertilizer',
-        category: ProductCategory.fertilizers,
-        unit: 'bag',
-        unitSize: 50,
-        price: 180000,
-        stockQuantity: 85,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa3',
-        farmId: 'psa002',
-        name: 'Pesticide Spray (5L)',
-        description: 'Broad spectrum insecticide',
-        category: ProductCategory.chemicals,
-        unit: 'bottle',
-        unitSize: 5,
-        price: 95000,
-        stockQuantity: 45,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa4',
-        farmId: 'psa001',
-        name: 'Hand Hoe',
-        description: 'Strong steel hand hoe',
-        category: ProductCategory.hoes,
-        unit: 'piece',
-        unitSize: 1,
-        price: 25000,
-        stockQuantity: 200,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.poultry: [
-      Product(
-        id: 'psa5',
-        farmId: 'psa003',
-        name: 'Day-Old Chicks (Broilers)',
-        description: 'Healthy broiler chicks, vaccinated',
-        category: ProductCategory.dayOldChicks,
-        unit: 'piece',
-        unitSize: 1,
-        price: 3500,
-        stockQuantity: 500,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa6',
-        farmId: 'psa003',
-        name: 'Poultry Starter Feed (50kg)',
-        description: 'Complete starter feed for chicks',
-        category: ProductCategory.feeds,
-        unit: 'bag',
-        unitSize: 50,
-        price: 125000,
-        stockQuantity: 75,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa7',
-        farmId: 'psa003',
-        name: 'Poultry Grower Feed (50kg)',
-        description: 'Nutrient-rich grower feed',
-        category: ProductCategory.feeds,
-        unit: 'bag',
-        unitSize: 50,
-        price: 115000,
-        stockQuantity: 60,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa8',
-        farmId: 'psa002',
-        name: 'Poultry Vaccines Kit',
-        description: 'Complete vaccination kit',
-        category: ProductCategory.chemicals,
-        unit: 'kit',
-        unitSize: 1,
-        price: 85000,
-        stockQuantity: 25,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.goats: [
-      Product(
-        id: 'psa9',
-        farmId: 'psa004',
-        name: 'Goat Feed Concentrate (25kg)',
-        description: 'Protein-rich goat feed',
-        category: ProductCategory.feeds,
-        unit: 'bag',
-        unitSize: 25,
-        price: 75000,
-        stockQuantity: 40,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa10',
-        farmId: 'psa004',
-        name: 'Goat Mineral Supplements',
-        description: 'Essential minerals for goats',
-        category: ProductCategory.chemicals,
-        unit: 'kg',
-        unitSize: 1,
-        price: 15000,
-        stockQuantity: 80,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.cows: [
-      Product(
-        id: 'psa11',
-        farmId: 'psa004',
-        name: 'Dairy Cow Feed (50kg)',
-        description: 'High-protein dairy feed',
-        category: ProductCategory.feeds,
-        unit: 'bag',
-        unitSize: 50,
-        price: 145000,
-        stockQuantity: 35,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa12',
-        farmId: 'psa004',
-        name: 'Cattle Dewormer',
-        description: 'Broad spectrum dewormer',
-        category: ProductCategory.chemicals,
-        unit: 'bottle',
-        unitSize: 1,
-        price: 55000,
-        stockQuantity: 20,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-  };
-
-  List<Product> get _filteredProducts {
-    return _psaProducts[_selectedCategory] ?? [];
+  List<Product> _filterProductsByCategory(List<Product> products) {
+    // Filter by selected category - match category groups
+    switch (_selectedCategory) {
+      case ProductCategory.crop:
+        return products.where((p) =>
+            p.category == ProductCategory.fertilizers ||
+            p.category == ProductCategory.chemicals ||
+            p.category == ProductCategory.hoes ||
+            p.category == ProductCategory.crop
+        ).toList();
+      case ProductCategory.poultry:
+        return products.where((p) =>
+            p.category == ProductCategory.dayOldChicks ||
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.poultry
+        ).toList();
+      case ProductCategory.goats:
+        return products.where((p) =>
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.goats
+        ).toList();
+      case ProductCategory.cows:
+        return products.where((p) =>
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.cows
+        ).toList();
+      default:
+        return products;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context);
+    final cartItemCount = cartProvider.itemCount;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Buy Farming Inputs'),
         elevation: 0,
+        actions: [
+          // Cart icon with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SHGInputCartScreen(),
+                    ),
+                  );
+                },
+              ),
+              if (cartItemCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$cartItemCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -235,10 +145,38 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
             ),
           ),
 
-          // Products List
+          // Products List - Stream PSA products
           Expanded(
-            child: _filteredProducts.isEmpty
-                ? Center(
+            child: StreamBuilder<List<Product>>(
+              stream: _productService.streamPSAProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text('Error: ${snapshot.error}'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => setState(() {}),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final allProducts = snapshot.data ?? [];
+                final filteredProducts = _filterProductsByCategory(allProducts);
+
+                if (filteredProducts.isEmpty) {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -248,24 +186,40 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           color: AppTheme.textSecondary.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'No products available',
-                          style: TextStyle(
+                        Text(
+                          allProducts.isEmpty
+                              ? 'No PSA products available yet'
+                              : 'No products in this category',
+                          style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 16,
                           ),
                         ),
+                        if (allProducts.isEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'PSA suppliers will add products soon',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return _ProductCard(product: product);
-                    },
-                  ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = filteredProducts[index];
+                    return _ProductCard(product: product);
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -413,7 +367,7 @@ class _ProductCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        'UGX ${product.price.toStringAsFixed(0)}',
+                        'UGX ${NumberFormat('#,###').format(product.price)}',
                         style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 16,
