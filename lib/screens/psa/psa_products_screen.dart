@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../models/product.dart';
 import '../../utils/app_theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/product_service.dart';
 import 'psa_add_edit_product_screen.dart';
 
 class PSAProductsScreen extends StatefulWidget {
@@ -11,182 +15,45 @@ class PSAProductsScreen extends StatefulWidget {
 }
 
 class _PSAProductsScreenState extends State<PSAProductsScreen> {
+  final ProductService _productService = ProductService();
   ProductCategory _selectedCategory = ProductCategory.crop;
   
-  // Mock PSA products (seeds, fertilizers, equipment, feeds)
-  final Map<ProductCategory, List<Product>> _productsByCategory = {
-    ProductCategory.crop: [
-      Product(
-        id: 'psa_crop1',
-        farmId: 'PSA-00001',
-        name: 'Hybrid Maize Seeds',
-        description: 'High-yield hybrid maize seeds, 10kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 10,
-        price: 45000.0,
-        stockQuantity: 200,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_crop2',
-        farmId: 'PSA-00001',
-        name: 'NPK Fertilizer',
-        description: 'NPK 17-17-17 compound fertilizer, 50kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 50,
-        price: 120000.0,
-        stockQuantity: 150,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_crop3',
-        farmId: 'PSA-00001',
-        name: 'Pesticide Spray',
-        description: 'Multi-purpose pesticide, 1 liter',
-        category: ProductCategory.other,
-        unit: 'liter',
-        unitSize: 1,
-        price: 35000.0,
-        stockQuantity: 80,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_crop4',
-        farmId: 'PSA-00001',
-        name: 'Hand Hoe',
-        description: 'Durable steel hand hoe with wooden handle',
-        category: ProductCategory.other,
-        unit: 'piece',
-        unitSize: 1,
-        price: 15000.0,
-        stockQuantity: 50,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.poultry: [
-      Product(
-        id: 'psa_poultry1',
-        farmId: 'PSA-00001',
-        name: 'Day-Old Chicks',
-        description: 'Broiler day-old chicks, vaccinated',
-        category: ProductCategory.other,
-        unit: 'piece',
-        unitSize: 1,
-        price: 3500.0,
-        stockQuantity: 500,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_poultry2',
-        farmId: 'PSA-00001',
-        name: 'Starter Feed',
-        description: 'Chick starter feed, 50kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 50,
-        price: 85000.0,
-        stockQuantity: 100,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_poultry3',
-        farmId: 'PSA-00001',
-        name: 'Grower Feed',
-        description: 'Broiler grower feed, 50kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 50,
-        price: 90000.0,
-        stockQuantity: 120,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_poultry4',
-        farmId: 'PSA-00001',
-        name: 'Vaccine Kit',
-        description: 'Poultry vaccination kit (100 doses)',
-        category: ProductCategory.other,
-        unit: 'kit',
-        unitSize: 100,
-        price: 55000.0,
-        stockQuantity: 30,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.goats: [
-      Product(
-        id: 'psa_goat1',
-        farmId: 'PSA-00001',
-        name: 'Goat Feed Concentrate',
-        description: 'High-protein goat feed, 50kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 50,
-        price: 75000.0,
-        stockQuantity: 60,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_goat2',
-        farmId: 'PSA-00001',
-        name: 'Mineral Supplements',
-        description: 'Goat mineral lick, 5kg block',
-        category: ProductCategory.other,
-        unit: 'block',
-        unitSize: 5,
-        price: 25000.0,
-        stockQuantity: 40,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-    ProductCategory.cows: [
-      Product(
-        id: 'psa_cow1',
-        farmId: 'PSA-00001',
-        name: 'Dairy Cow Feed',
-        description: 'High-energy dairy feed, 70kg bag',
-        category: ProductCategory.other,
-        unit: 'bag',
-        unitSize: 70,
-        price: 110000.0,
-        stockQuantity: 80,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Product(
-        id: 'psa_cow2',
-        farmId: 'PSA-00001',
-        name: 'Cattle Dewormer',
-        description: 'Broad-spectrum cattle dewormer, 500ml',
-        category: ProductCategory.other,
-        unit: 'bottle',
-        unitSize: 500,
-        price: 45000.0,
-        stockQuantity: 35,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ],
-  };
-  
-  List<Product> get _filteredProducts {
-    return _productsByCategory[_selectedCategory] ?? [];
+  List<Product> _filterProductsByCategory(List<Product> products, ProductCategory category) {
+    // Filter products by main category
+    switch (category) {
+      case ProductCategory.crop:
+        return products.where((p) =>
+            p.category == ProductCategory.fertilizers ||
+            p.category == ProductCategory.chemicals ||
+            p.category == ProductCategory.hoes ||
+            p.category == ProductCategory.crop
+        ).toList();
+      case ProductCategory.poultry:
+        return products.where((p) =>
+            p.category == ProductCategory.dayOldChicks ||
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.poultry
+        ).toList();
+      case ProductCategory.goats:
+        return products.where((p) =>
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.goats
+        ).toList();
+      case ProductCategory.cows:
+        return products.where((p) =>
+            p.category == ProductCategory.feeds ||
+            p.category == ProductCategory.cows
+        ).toList();
+      default:
+        return products;
+    }
   }
   
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final psaId = authProvider.currentUser!.id;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Products'),
@@ -207,70 +74,118 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Category Tabs
-          SizedBox(
-            height: 80,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(16),
-              children: ProductCategoryExtension.mainCategories.map((category) {
-                final isSelected = _selectedCategory == category;
-                final productsInCategory = _productsByCategory[category] ?? [];
-                
-                return _CategoryTab(
-                  category: category,
-                  count: productsInCategory.length,
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          
-          // Products List
-          Expanded(
-            child: _filteredProducts.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 64,
-                          color: AppTheme.textSecondary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No products in this category',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return _ProductCard(
-                        product: product,
-                        onEdit: () => _showEditProductDialog(context, product),
-                        onDelete: () => _showDeleteConfirmation(context, product),
-                      );
-                    },
+      body: StreamBuilder<List<Product>>(
+        stream: _productService.streamFarmerProducts(psaId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Retry'),
                   ),
-          ),
-        ],
+                ],
+              ),
+            );
+          }
+
+          final allProducts = snapshot.data ?? [];
+          final filteredProducts = _filterProductsByCategory(allProducts, _selectedCategory);
+
+          // Count products by category for tabs
+          final categoryCounts = <ProductCategory, int>{};
+          for (final category in ProductCategoryExtension.mainCategories) {
+            categoryCounts[category] = _filterProductsByCategory(allProducts, category).length;
+          }
+
+          return Column(
+            children: [
+              // Category Tabs
+              SizedBox(
+                height: 80,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(16),
+                  children: ProductCategoryExtension.mainCategories.map((category) {
+                    final isSelected = _selectedCategory == category;
+                    final count = categoryCounts[category] ?? 0;
+                    
+                    return _CategoryTab(
+                      category: category,
+                      count: count,
+                      isSelected: isSelected,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              
+              // Products List
+              Expanded(
+                child: filteredProducts.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: AppTheme.textSecondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              allProducts.isEmpty
+                                  ? 'No products yet'
+                                  : 'No products in this category',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            if (allProducts.isEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Click the + button to add your first product',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = filteredProducts[index];
+                          return _ProductCard(
+                            product: product,
+                            onEdit: () => _showEditProductDialog(context, product),
+                            onDelete: () => _showDeleteConfirmation(context, product),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddProductDialog(context),
@@ -305,15 +220,21 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
     );
 
     if (result == true && mounted) {
-      // Product was updated successfully, refresh list
-      setState(() {
-        // In production, this would fetch from API/database
-      });
+      // Product was updated successfully, StreamBuilder will auto-refresh
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Product updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } else if (result == 'deleted' && mounted) {
-      // Product was deleted
-      setState(() {
-        _productsByCategory[_selectedCategory]?.remove(product);
-      });
+      // Product was deleted, StreamBuilder will auto-refresh
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Product deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
   
@@ -329,17 +250,28 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _productsByCategory[_selectedCategory]?.remove(product);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Product deleted'),
-                  backgroundColor: AppTheme.errorColor,
-                ),
-              );
+              try {
+                await _productService.deleteProduct(product.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Product deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('❌ Error deleting product: $e'),
+                      backgroundColor: AppTheme.errorColor,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
