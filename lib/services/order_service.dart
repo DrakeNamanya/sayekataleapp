@@ -324,4 +324,153 @@ class OrderService {
       return 0;
     }
   }
+
+  // ============================================================================
+  // DELIVERY CONFIRMATION (Buyer)
+  // ============================================================================
+
+  /// Buyer confirms receipt of order
+  /// This marks the order as truly completed and triggers stock reduction
+  Future<void> confirmReceipt(String orderId) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('✅ Buyer confirming receipt of order: $orderId');
+      }
+
+      // Get the order first to reduce stock
+      final orderDoc = await _firestore.collection('orders').doc(orderId).get();
+      if (!orderDoc.exists) {
+        throw Exception('Order not found');
+      }
+
+      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderId);
+
+      // Update order status to completed
+      await _firestore.collection('orders').doc(orderId).update({
+        'status': app_order.OrderStatus.completed.toString().split('.').last,
+        'is_received_by_buyer': true,
+        'received_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      // Reduce stock for each product in the order
+      for (final item in order.items) {
+        try {
+          // Get current product stock
+          final productDoc = await _firestore.collection('products').doc(item.productId).get();
+          
+          if (productDoc.exists) {
+            final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
+            final newStock = (currentStock - item.quantity).clamp(0, double.infinity).toInt();
+
+            await _firestore.collection('products').doc(item.productId).update({
+              'stock_quantity': newStock,
+              'is_available': newStock > 0,
+              'updated_at': FieldValue.serverTimestamp(),
+            });
+
+            if (kDebugMode) {
+              debugPrint('📉 Stock reduced for ${item.productName}: $currentStock → $newStock');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Error reducing stock for product ${item.productId}: $e');
+          }
+          // Continue with other products even if one fails
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Order $orderId marked as completed and stock reduced');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error confirming receipt: $e');
+      }
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // SME/BUYER STATISTICS
+  // ============================================================================
+
+  /// Get buyer's monthly spending (current month)
+  Future<double> getBuyerMonthlySpending(String buyerId) async {
+    try {
+      final now = DateTime.now();
+      final firstDayOfMonth = DateTime(now.year, now.month, 1);
+      
+      final orders = await getBuyerOrders(buyerId);
+      
+      // Filter orders from current month that are completed or delivered
+      final monthlyOrders = orders.where((order) {
+        return order.createdAt.isAfter(firstDayOfMonth) &&
+               (order.status == app_order.OrderStatus.completed ||
+                order.status == app_order.OrderStatus.delivered ||
+                order.isReceivedByBuyer);
+      });
+
+      return monthlyOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error calculating monthly spending: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Get completed orders count (received by buyer)
+  Future<int> getBuyerCompletedOrdersCount(String buyerId) async {
+    try {
+      final orders = await getBuyerOrders(buyerId);
+      return orders.where((order) => 
+        order.isReceivedByBuyer || 
+        order.status == app_order.OrderStatus.completed
+      ).length;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting completed orders count: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Get active orders count (not yet received)
+  Future<int> getBuyerActiveOrdersCount(String buyerId) async {
+    try {
+      final orders = await getBuyerOrders(buyerId);
+      return orders.where((order) => 
+        !order.isReceivedByBuyer && 
+        order.status != app_order.OrderStatus.completed &&
+        order.status != app_order.OrderStatus.cancelled &&
+        order.status != app_order.OrderStatus.rejected
+      ).length;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting active orders count: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Get recent orders (completed within 24 hours)
+  Future<List<app_order.Order>> getBuyerRecentOrders(String buyerId) async {
+    try {
+      final orders = await getBuyerOrders(buyerId);
+      final yesterday = DateTime.now().subtract(const Duration(hours: 24));
+      
+      return orders.where((order) => 
+        order.isReceivedByBuyer &&
+        order.receivedAt != null &&
+        order.receivedAt!.isAfter(yesterday)
+      ).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting recent orders: $e');
+      }
+      return [];
+    }
+  }
 }

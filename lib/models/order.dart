@@ -39,8 +39,10 @@ class Order {
   final DateTime updatedAt;           // Last update time
   final DateTime? confirmedAt;        // When farmer confirmed
   final DateTime? rejectedAt;         // When farmer rejected
-  final DateTime? deliveredAt;        // When order was delivered
+  final DateTime? deliveredAt;        // When order was delivered (marked by farmer)
+  final DateTime? receivedAt;         // When buyer confirmed receipt
   final String? rejectionReason;      // Reason for rejection
+  final bool isReceivedByBuyer;       // Buyer confirmed receipt
 
   Order({
     required this.id,
@@ -61,7 +63,9 @@ class Order {
     this.confirmedAt,
     this.rejectedAt,
     this.deliveredAt,
+    this.receivedAt,
     this.rejectionReason,
+    this.isReceivedByBuyer = false,
   });
 
   /// Create Order from Firestore document
@@ -105,7 +109,9 @@ class Order {
       confirmedAt: parseDateTime(data['confirmed_at']),
       rejectedAt: parseDateTime(data['rejected_at']),
       deliveredAt: parseDateTime(data['delivered_at']),
+      receivedAt: parseDateTime(data['received_at']),
       rejectionReason: data['rejection_reason'],
+      isReceivedByBuyer: data['is_received_by_buyer'] ?? false,
     );
   }
 
@@ -129,7 +135,9 @@ class Order {
       'confirmed_at': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
       'rejected_at': rejectedAt != null ? Timestamp.fromDate(rejectedAt!) : null,
       'delivered_at': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'received_at': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null,
       'rejection_reason': rejectionReason,
+      'is_received_by_buyer': isReceivedByBuyer,
     };
   }
 

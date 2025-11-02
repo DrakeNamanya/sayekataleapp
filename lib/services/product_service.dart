@@ -326,4 +326,57 @@ class ProductService {
       return [];
     }
   }
+
+  // ============================================================================
+  // STOCK MANAGEMENT
+  // ============================================================================
+
+  /// Reduce product stock after order delivery
+  Future<void> reduceStock(String productId, int quantity) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('📉 Reducing stock for product $productId by $quantity');
+      }
+
+      final productDoc = await _firestore.collection('products').doc(productId).get();
+      
+      if (!productDoc.exists) {
+        throw Exception('Product not found');
+      }
+
+      final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
+      final newStock = (currentStock - quantity).clamp(0, double.infinity).toInt();
+
+      await _firestore.collection('products').doc(productId).update({
+        'stock_quantity': newStock,
+        'is_available': newStock > 0,  // Mark as unavailable if stock reaches 0
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Stock reduced: $currentStock → $newStock');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error reducing stock: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Get product with current stock information
+  Future<Product?> getProductWithStock(String productId) async {
+    try {
+      final doc = await _firestore.collection('products').doc(productId).get();
+      
+      if (!doc.exists) return null;
+      
+      return Product.fromFirestore(doc.data()!, doc.id);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting product stock: $e');
+      }
+      return null;
+    }
+  }
 }
