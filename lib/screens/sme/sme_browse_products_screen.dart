@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/product.dart';
+import '../../models/product_with_farmer.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/product_service.dart';
+import '../../services/product_with_farmer_service.dart';
 import '../../utils/app_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -16,8 +19,10 @@ class SMEBrowseProductsScreen extends StatefulWidget {
 
 class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   final ProductService _productService = ProductService();
+  final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
   ProductCategory? _selectedCategory;
   String _searchQuery = '';
+  bool _sortByDistance = true;  // Default to sorting by distance
   
   @override
   Widget build(BuildContext context) {
@@ -101,17 +106,50 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   );
                 }
 
-                return GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+                // Load products with farmer details and distance
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final buyerLocation = authProvider.currentUser?.location;
+
+                return FutureBuilder<List<ProductWithFarmer>>(
+                  future: _productWithFarmerService.getProductsWithFarmersAndDistance(
+                    products: products,
+                    buyerLocation: _sortByDistance ? buyerLocation : null,
                   ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    return _buildProductCard(products[index]);
+                  builder: (context, farmerSnapshot) {
+                    if (farmerSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Loading farmer details...'),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final productsWithFarmers = farmerSnapshot.data ?? [];
+
+                    if (productsWithFarmers.isEmpty) {
+                      return const Center(
+                        child: Text('Unable to load product details'),
+                      );
+                    }
+
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.65,  // Adjusted for more content
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: productsWithFarmers.length,
+                      itemBuilder: (context, index) {
+                        return _buildEnhancedProductCard(productsWithFarmers[index]);
+                      },
+                    );
                   },
                 );
               },
@@ -301,6 +339,254 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
         ],
       ),
     );
+  }
+
+  /// Enhanced product card with farmer details and distance
+  Widget _buildEnhancedProductCard(ProductWithFarmer productWithFarmer) {
+    final product = productWithFarmer.product;
+    final farmer = productWithFarmer.farmer;
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image with Distance Badge
+          Expanded(
+            flex: 3,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Stack(
+                children: [
+                  Image.network(
+                    product.images.isNotEmpty
+                        ? product.images.first
+                        : 'https://via.placeholder.com/400x400?text=${Uri.encodeComponent(product.name)}',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 8),
+                            Text(
+                              product.name,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  // Distance Badge
+                  if (productWithFarmer.distanceKm != null)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: productWithFarmer.isLocal
+                              ? Colors.green
+                              : productWithFarmer.isNearby
+                                  ? Colors.orange
+                                  : Colors.blue,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on, size: 12, color: Colors.white),
+                            const SizedBox(width: 2),
+                            Text(
+                              productWithFarmer.distanceText,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Out of Stock Overlay
+                  if (product.isOutOfStock)
+                    Container(
+                      color: Colors.black54,
+                      child: const Center(
+                        child: Text(
+                          'OUT OF STOCK',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Product and Farmer Info
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // Farmer Name
+                  Row(
+                    children: [
+                      const Icon(Icons.person, size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          farmer.name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[700],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  
+                  // District
+                  Row(
+                    children: [
+                      const Icon(Icons.location_city, size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          productWithFarmer.farmerDistrict,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // Stock Info
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_2,
+                        size: 12,
+                        color: product.isLowStock ? Colors.orange : Colors.green,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Stock: ${product.stockQuantity} ${product.unit}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: product.isLowStock ? Colors.orange : Colors.green,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  
+                  // Price
+                  Text(
+                    'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  
+                  // Action Buttons Row
+                  Row(
+                    children: [
+                      // Call Button
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _callFarmer(farmer.phone),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            minimumSize: const Size(0, 32),
+                          ),
+                          child: const Icon(Icons.phone, size: 16),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Add to Cart Button
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: product.isOutOfStock
+                              ? null
+                              : () => _addToCart(product, cartProvider),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            minimumSize: const Size(0, 32),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_shopping_cart, size: 14),
+                              SizedBox(width: 4),
+                              Text('Add', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Call farmer
+  void _callFarmer(String phone) async {
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cannot call $phone')),
+        );
+      }
+    }
   }
 
   void _addToCart(Product product, CartProvider cartProvider) {
