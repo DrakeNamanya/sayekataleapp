@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/product.dart';
 import '../../utils/app_theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/product_service.dart';
 
 class PSAAddEditProductScreen extends StatefulWidget {
   final Product? product; // null for add, non-null for edit
@@ -19,6 +22,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _unitSizeController = TextEditingController();
+  final ProductService _productService = ProductService();
   
   ProductCategory _selectedCategory = ProductCategory.crop;
   String _selectedUnit = 'kg';
@@ -69,30 +73,88 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
       return;
     }
 
+    // Get current PSA user
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final psaUser = authProvider.currentUser;
+    
+    if (psaUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: User not logged in'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // TODO: Implement actual save logic with provider/API
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+      final name = _nameController.text.trim();
+      final description = _descriptionController.text.trim();
+      final price = double.parse(_priceController.text.trim());
+      final stockQuantity = int.parse(_stockController.text.trim());
+      final unitSize = _unitSizeController.text.trim().isNotEmpty 
+          ? int.parse(_unitSizeController.text.trim()) 
+          : 1;
+
+      if (widget.product == null) {
+        // Create new product
+        await _productService.createProduct(
+          farmerId: psaUser.id,
+          farmerName: psaUser.name,
+          name: name,
+          description: description,
+          category: _selectedCategory,
+          price: price,
+          unit: _selectedUnit,
+          unitSize: unitSize,
+          stockQuantity: stockQuantity,
+          imageUrl: _productImagePath,
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Product added successfully!'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      } else {
+        // Update existing product
+        await _productService.updateProduct(
+          productId: widget.product!.id,
+          name: name,
+          description: description,
+          category: _selectedCategory,
+          price: price,
+          unit: _selectedUnit,
+          unitSize: unitSize,
+          stockQuantity: stockQuantity,
+          imageUrl: _productImagePath,
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Product updated successfully!'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.product == null 
-                ? 'Product added successfully!' 
-                : 'Product updated successfully!'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
         Navigator.pop(context, true); // Return true to indicate success
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving product: $e'),
+            content: Text('❌ Error saving product: $e'),
             backgroundColor: AppTheme.errorColor,
           ),
         );
@@ -366,15 +428,30 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context, 'deleted'); // Return to products screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Product deleted'),
-                  backgroundColor: AppTheme.errorColor,
-                ),
-              );
+              
+              try {
+                await _productService.deleteProduct(widget.product!.id);
+                if (mounted) {
+                  Navigator.pop(context, 'deleted'); // Return to products screen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Product deleted successfully'),
+                      backgroundColor: AppTheme.successColor,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('❌ Error deleting product: $e'),
+                      backgroundColor: AppTheme.errorColor,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,

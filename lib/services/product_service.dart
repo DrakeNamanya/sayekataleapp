@@ -20,6 +20,7 @@ class ProductService {
     required double price,
     required String unit,
     required int stockQuantity,
+    int unitSize = 1,
     String? imageUrl,
     String? location,
   }) async {
@@ -36,6 +37,7 @@ class ProductService {
         'category': category.toString().split('.').last,
         'price': price,
         'unit': unit,
+        'unit_size': unitSize,
         'stock_quantity': stockQuantity,
         'low_stock_threshold': 10,
         'image_url': imageUrl ?? 'https://via.placeholder.com/400x400?text=${Uri.encodeComponent(name)}',
@@ -74,6 +76,7 @@ class ProductService {
     ProductCategory? category,
     double? price,
     String? unit,
+    int? unitSize,
     int? stockQuantity,
     String? imageUrl,
     bool? isAvailable,
@@ -92,6 +95,7 @@ class ProductService {
       if (category != null) updates['category'] = category.toString().split('.').last;
       if (price != null) updates['price'] = price;
       if (unit != null) updates['unit'] = unit;
+      if (unitSize != null) updates['unit_size'] = unitSize;
       if (stockQuantity != null) updates['stock_quantity'] = stockQuantity;
       if (imageUrl != null) updates['image_url'] = imageUrl;
       if (isAvailable != null) updates['is_available'] = isAvailable;

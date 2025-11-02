@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/order.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
-import '../../theme/app_theme.dart';
+import '../../utils/app_theme.dart';
 
 /// Screen for tracking order status in real-time
 class OrderTrackingScreen extends StatefulWidget {
