@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/order_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/features_guide_dialog.dart';
 import 'sme_browse_products_screen.dart';
@@ -90,8 +91,64 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
   }
 }
 
-class _DashboardHome extends StatelessWidget {
+class _DashboardHome extends StatefulWidget {
   const _DashboardHome();
+
+  @override
+  State<_DashboardHome> createState() => _DashboardHomeState();
+}
+
+class _DashboardHomeState extends State<_DashboardHome> {
+  // Real statistics
+  double _monthlySpending = 0.0;
+  int _activeOrders = 0;
+  int _completedOrders = 0;
+  int _recentOrdersCount = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRealStatistics();
+    });
+  }
+
+  Future<void> _loadRealStatistics() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.currentUser?.id;
+
+    if (userId == null) {
+      setState(() => _isLoadingStats = false);
+      return;
+    }
+
+    try {
+      final orderService = OrderService();
+
+      // Load all statistics in parallel
+      final results = await Future.wait([
+        orderService.getBuyerMonthlySpending(userId),
+        orderService.getBuyerCompletedOrdersCount(userId),
+        orderService.getBuyerActiveOrdersCount(userId),
+        orderService.getBuyerRecentOrders(userId),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _monthlySpending = results[0] as double;
+          _completedOrders = results[1] as int;
+          _activeOrders = results[2] as int;
+          _recentOrdersCount = (results[3] as List).length;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingStats = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,11 +156,9 @@ class _DashboardHome extends StatelessWidget {
     final cartProvider = Provider.of<CartProvider>(context);
     final user = authProvider.currentUser;
 
-    // Mock data
-    final monthlySpending = 850000.0;
-    final activeOrders = 5;
-    final completedOrders = 23;
-    final savedFarms = 8;
+    final monthlySpending = _monthlySpending;
+    final activeOrders = _activeOrders;
+    final completedOrders = _completedOrders;
 
     return Scaffold(
       appBar: AppBar(
@@ -347,14 +402,28 @@ class _DashboardHome extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'UGX ${monthlySpending.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      _isLoadingStats
+                          ? const SizedBox(
+                              height: 28,
+                              child: Center(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'UGX ${monthlySpending.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
