@@ -17,6 +17,8 @@ class ProductService {
     required String name,
     required String description,
     required ProductCategory category,
+    String? mainCategory,
+    String? subcategory,
     required double price,
     required String unit,
     required int stockQuantity,
@@ -35,6 +37,8 @@ class ProductService {
         'name': name,
         'description': description,
         'category': category.toString().split('.').last,
+        'main_category': mainCategory,
+        'subcategory': subcategory,
         'price': price,
         'unit': unit,
         'unit_size': unitSize,
@@ -74,6 +78,8 @@ class ProductService {
     String? name,
     String? description,
     ProductCategory? category,
+    String? mainCategory,
+    String? subcategory,
     double? price,
     String? unit,
     int? unitSize,
@@ -93,6 +99,8 @@ class ProductService {
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
       if (category != null) updates['category'] = category.toString().split('.').last;
+      if (mainCategory != null) updates['main_category'] = mainCategory;
+      if (subcategory != null) updates['subcategory'] = subcategory;
       if (price != null) updates['price'] = price;
       if (unit != null) updates['unit'] = unit;
       if (unitSize != null) updates['unit_size'] = unitSize;
@@ -475,6 +483,45 @@ class ProductService {
         debugPrint('❌ Error getting product stock: $e');
       }
       return null;
+    }
+  }
+
+  /// Get total products count for a farmer
+  Future<int> getFarmerProductsCount(String farmerId) async {
+    try {
+      final products = await getFarmerProducts(farmerId);
+      return products.length;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting farmer products count: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Get low stock products count for a farmer (stock < 10)
+  Future<int> getFarmerLowStockCount(String farmerId) async {
+    try {
+      final products = await getFarmerProducts(farmerId);
+      return products.where((product) => product.stockQuantity < 10).length;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting low stock count: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Get low stock products for a farmer (stock < 10)
+  Future<List<Product>> getFarmerLowStockProducts(String farmerId) async {
+    try {
+      final products = await getFarmerProducts(farmerId);
+      return products.where((product) => product.stockQuantity < 10).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting low stock products: $e');
+      }
+      return [];
     }
   }
 }

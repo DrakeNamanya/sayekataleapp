@@ -4,7 +4,9 @@ class Product {
   final String name;
   final String? description;
   final ProductCategory category;
-  final String unit; // tray, kg, bird
+  final String? mainCategory; // crop, oilSeeds, poultry, goats, cows
+  final String? subcategory; // tomatoes, broilers, etc.
+  final String unit; // KGs, grams, number, tray, 100kg bag, litre
   final int unitSize; // e.g., 30 eggs/tray
   final double price;
   final int stockQuantity;
@@ -19,6 +21,8 @@ class Product {
     required this.name,
     this.description,
     required this.category,
+    this.mainCategory,
+    this.subcategory,
     required this.unit,
     required this.unitSize,
     required this.price,
@@ -54,6 +58,8 @@ class Product {
         (e) => e.toString() == 'ProductCategory.${data['category']}',
         orElse: () => ProductCategory.crop,
       ),
+      mainCategory: data['main_category'],
+      subcategory: data['subcategory'],
       unit: data['unit'] ?? '',
       unitSize: data['unit_size'] ?? 1,
       price: (data['price'] ?? 0.0).toDouble(),
@@ -73,6 +79,8 @@ class Product {
       'name': name,
       'description': description,
       'category': category.toString().split('.').last,
+      'main_category': mainCategory,
+      'subcategory': subcategory,
       'unit': unit,
       'unit_size': unitSize,
       'price': price,

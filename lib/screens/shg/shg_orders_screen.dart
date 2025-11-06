@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
+import '../../services/message_service.dart';
 import '../../models/order.dart' as app_order;
+import '../common/chat_screen.dart';
 
 class SHGOrdersScreen extends StatefulWidget {
   const SHGOrdersScreen({super.key});
@@ -14,6 +16,7 @@ class SHGOrdersScreen extends StatefulWidget {
 
 class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
+  final MessageService _messageService = MessageService();
   late TabController _tabController;
   
   final List<String> _statusFilters = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Completed'];
@@ -633,6 +636,20 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 ),
                 
                 _buildDetailRow('Payment Method', _formatPaymentMethod(order.paymentMethod)),
+                
+                const SizedBox(height: 20),
+                // Contact Buyer Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _handleContactBuyer(order),
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: const Text('Contact Buyer'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -671,23 +688,107 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
     );
   }
 
+  Future<void> _handleContactBuyer(app_order.Order order) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to contact buyer'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Close order details dialog
+      Navigator.pop(context);
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Create or get conversation
+      final conversation = await _messageService.getOrCreateConversation(
+        user1Id: currentUser.id,
+        user1Name: currentUser.name,
+        user2Id: order.buyerId,
+        user2Name: order.buyerName,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        
+        // Navigate to chat screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              conversationId: conversation.id,
+              otherUserId: order.buyerId,
+              otherUserName: order.buyerName,
+              currentUserId: currentUser.id,
+              currentUserName: currentUser.name,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _confirmOrder(app_order.Order order) async {
     try {
       await _orderService.confirmOrder(order.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Order accepted successfully!'),
+            content: Text('✅ Order accepted successfully!\n📍 Delivery tracking created.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = '❌ Error confirming order';
+        String actionMessage = '';
+        
+        // Check if it's a GPS-related error
+        final errorString = e.toString();
+        if (errorString.contains('GPS_MISSING') || errorString.contains('GPS_INVALID')) {
+          errorMessage = '📍 GPS Location Required';
+          actionMessage = '\n\nYou or the buyer need to add GPS coordinates in Profile Settings to enable delivery tracking.\n\nGo to: Profile → Edit Profile → Add GPS Location';
+        } else {
+          errorMessage = '❌ Error: $e';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Error: $e'),
+            content: Text(errorMessage + actionMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Got it',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
           ),
         );
       }

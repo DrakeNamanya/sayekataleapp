@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../services/message_service.dart';
+import '../../services/firebase_user_service.dart';
+import '../common/chat_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -15,6 +19,86 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
+  final MessageService _messageService = MessageService();
+  final FirebaseUserService _userService = FirebaseUserService();
+
+  Future<void> _handleContactSeller() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to contact seller'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Get seller information
+      final seller = await _userService.getUserById(widget.product.farmId);
+      
+      if (seller == null) {
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Seller information not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Create or get conversation
+      final conversation = await _messageService.getOrCreateConversation(
+        user1Id: currentUser.id,
+        user1Name: currentUser.name,
+        user2Id: seller.id,
+        user2Name: seller.name,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        
+        // Navigate to chat screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              conversationId: conversation.id,
+              otherUserId: seller.id,
+              otherUserName: seller.name,
+              currentUserId: currentUser.id,
+              currentUserName: currentUser.name,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,52 +309,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Total Price',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
+                  // Price and Add to Cart Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Total Price',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            Text(
+                              'UGX ${(widget.product.price * _quantity).toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'UGX ${(widget.product.price * _quantity).toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
-                          ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: widget.product.isOutOfStock
+                              ? null
+                              : () {
+                                  cartProvider.addItem(widget.product, quantity: _quantity);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Added $_quantity x ${widget.product.name} to cart'),
+                                      action: SnackBarAction(
+                                        label: 'View Cart',
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                          icon: const Icon(Icons.shopping_cart_outlined),
+                          label: const Text('Add to Cart'),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: widget.product.isOutOfStock
-                          ? null
-                          : () {
-                              cartProvider.addItem(widget.product, quantity: _quantity);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Added $_quantity x ${widget.product.name} to cart'),
-                                  action: SnackBarAction(
-                                    label: 'View Cart',
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                      icon: const Icon(Icons.shopping_cart_outlined),
-                      label: const Text('Add to Cart'),
+                  const SizedBox(height: 12),
+                  // Message Seller Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleContactSeller,
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: const Text('Message Seller'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        foregroundColor: AppTheme.primaryColor,
+                        side: BorderSide(color: AppTheme.primaryColor),
+                      ),
                     ),
                   ),
                 ],

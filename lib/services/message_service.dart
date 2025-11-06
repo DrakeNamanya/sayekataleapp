@@ -41,6 +41,7 @@ class MessageService {
       }
 
       // Create new conversation if not found
+      final now = DateTime.now().toIso8601String();
       final conversationData = {
         'participant_ids': [user1Id, user2Id],
         'participant_names': {
@@ -53,8 +54,8 @@ class MessageService {
           user1Id: 0,
           user2Id: 0,
         },
-        'created_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
+        'created_at': now,
+        'updated_at': now,
       };
 
       final docRef = await _firestore.collection('conversations').add(conversationData);
@@ -79,12 +80,20 @@ class MessageService {
     return _firestore
         .collection('conversations')
         .where('participant_ids', arrayContains: userId)
-        .orderBy('updated_at', descending: true)
+        // Removed .orderBy() to avoid composite index requirement
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      // Get conversations
+      final conversations = snapshot.docs.map((doc) {
         return Conversation.fromFirestore(doc.data(), doc.id);
       }).toList();
+      
+      // Sort in memory by updated_at (most recent first)
+      conversations.sort((a, b) {
+        return b.updatedAt.compareTo(a.updatedAt);
+      });
+      
+      return conversations;
     });
   }
 
@@ -124,6 +133,7 @@ class MessageService {
       }
 
       // Create message
+      final now = DateTime.now().toIso8601String();
       final messageData = {
         'conversation_id': conversationId,
         'sender_id': senderId,
@@ -132,7 +142,7 @@ class MessageService {
         'type': type.toString().split('.').last,
         'attachment_url': attachmentUrl,
         'is_read': false,
-        'created_at': FieldValue.serverTimestamp(),
+        'created_at': now,
       };
 
       final docRef = await _firestore.collection('messages').add(messageData);
@@ -149,9 +159,9 @@ class MessageService {
 
         await _firestore.collection('conversations').doc(conversationId).update({
           'last_message': content.length > 100 ? '${content.substring(0, 100)}...' : content,
-          'last_message_time': FieldValue.serverTimestamp(),
+          'last_message_time': now,
           'unread_count': newUnreadCount,
-          'updated_at': FieldValue.serverTimestamp(),
+          'updated_at': now,
         });
       }
 
@@ -173,12 +183,20 @@ class MessageService {
     return _firestore
         .collection('messages')
         .where('conversation_id', isEqualTo: conversationId)
-        .orderBy('created_at', descending: false)
+        // Removed .orderBy() to avoid composite index requirement
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      // Get messages
+      final messages = snapshot.docs.map((doc) {
         return Message.fromFirestore(doc.data(), doc.id);
       }).toList();
+      
+      // Sort in memory by created_at (oldest first for chat display)
+      messages.sort((a, b) {
+        return a.createdAt.compareTo(b.createdAt);
+      });
+      
+      return messages;
     });
   }
 
@@ -188,17 +206,17 @@ class MessageService {
     required String userId,
   }) async {
     try {
-      // Get unread messages in this conversation not sent by this user
+      // Get all messages in this conversation (removed second .where() to avoid composite index)
       final querySnapshot = await _firestore
           .collection('messages')
           .where('conversation_id', isEqualTo: conversationId)
-          .where('is_read', isEqualTo: false)
           .get();
 
-      // Filter messages not sent by this user
-      final messagesToMark = querySnapshot.docs.where(
-        (doc) => doc.data()['sender_id'] != userId,
-      ).toList();
+      // Filter unread messages not sent by this user (in memory)
+      final messagesToMark = querySnapshot.docs.where((doc) {
+        final data = doc.data();
+        return data['is_read'] == false && data['sender_id'] != userId;
+      }).toList();
 
       if (messagesToMark.isEmpty) return;
 

@@ -227,24 +227,40 @@ extension DisabilityStatusExtension on DisabilityStatus {
 class Location {
   final double latitude;
   final double longitude;
-  final String district;
-  final String subcounty;
-  final String parish;
-  final String village;
-  final String? address; // Full address for display
+  final String? district;  // Optional - can be null when only GPS provided
+  final String? subcounty; // Optional - can be null when only GPS provided
+  final String? parish;    // Optional - can be null when only GPS provided
+  final String? village;   // Optional - can be null when only GPS provided
+  final String? address;   // Full address for display
 
   Location({
     required this.latitude,
     required this.longitude,
-    required this.district,
-    required this.subcounty,
-    required this.parish,
-    required this.village,
+    this.district,
+    this.subcounty,
+    this.parish,
+    this.village,
     this.address,
   });
   
   String get fullAddress {
-    return address ?? '$village, $parish, $subcounty, $district';
+    if (address != null && address!.isNotEmpty) {
+      return address!;
+    }
+    
+    // Build address from administrative divisions if available
+    final parts = <String>[];
+    if (village != null && village!.isNotEmpty) parts.add(village!);
+    if (parish != null && parish!.isNotEmpty) parts.add(parish!);
+    if (subcounty != null && subcounty!.isNotEmpty) parts.add(subcounty!);
+    if (district != null && district!.isNotEmpty) parts.add(district!);
+    
+    if (parts.isNotEmpty) {
+      return parts.join(', ');
+    }
+    
+    // Fallback to GPS coordinates if no address parts available
+    return 'GPS: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
   }
   
   /// Calculate distance to another location using Haversine formula (in kilometers)

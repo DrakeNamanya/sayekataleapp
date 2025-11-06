@@ -3,12 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/product.dart';
 import '../../models/product_with_farmer.dart';
+import '../../models/product_with_rating.dart';
+import '../../models/farmer_rating.dart';
+import '../../models/browse_filter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/product_with_farmer_service.dart';
+import '../../services/favorite_service.dart';
+import '../../services/rating_service.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/filter_bottom_sheet.dart';
+import '../../widgets/product_skeleton_loader.dart';
+import '../../widgets/hero_carousel.dart';
+import '../customer/product_detail_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+enum ViewMode { grid, list }
 
 class SMEBrowseProductsScreen extends StatefulWidget {
   const SMEBrowseProductsScreen({super.key});
@@ -20,33 +32,244 @@ class SMEBrowseProductsScreen extends StatefulWidget {
 class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   final ProductService _productService = ProductService();
   final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
+  final FavoriteService _favoriteService = FavoriteService();
+  final RatingService _ratingService = RatingService();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   ProductCategory? _selectedCategory;
   String _searchQuery = '';
   bool _sortByDistance = true;  // Default to sorting by distance
+  String _sortBy = 'distance';  // 'distance', 'rating', 'price_low', 'price_high'
+  Set<String> _favoriteProductIds = {};  // Track favorite products
+  bool _isSearching = false;  // Track if search bar is active
+  BrowseFilter _activeFilter = const BrowseFilter();  // Active filters
+  ViewMode _viewMode = ViewMode.grid;  // Current view mode
   
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+    _loadViewPreference();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  /// Load user's favorite products
+  Future<void> _loadFavorites() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.currentUser?.id;
+    if (userId != null) {
+      final favoriteIds = await _favoriteService.getUserFavoriteProductIds(userId);
+      setState(() {
+        _favoriteProductIds = favoriteIds.toSet();
+      });
+    }
+  }
+
+  /// Sort products based on selected option
+  void _sortProducts(List<ProductWithRating> products) {
+    switch (_sortBy) {
+      case 'rating':
+        products.sort((a, b) {
+          final aRating = a.averageRating ?? 0.0;
+          final bRating = b.averageRating ?? 0.0;
+          if (aRating == bRating) {
+            // Secondary sort by total ratings
+            final aTotal = a.totalRatings ?? 0;
+            final bTotal = b.totalRatings ?? 0;
+            return bTotal.compareTo(aTotal);
+          }
+          return bRating.compareTo(aRating);
+        });
+        break;
+      case 'price_low':
+        products.sort((a, b) => 
+          a.productWithFarmer.product.price.compareTo(b.productWithFarmer.product.price));
+        break;
+      case 'price_high':
+        products.sort((a, b) => 
+          b.productWithFarmer.product.price.compareTo(a.productWithFarmer.product.price));
+        break;
+      case 'distance':
+      default:
+        // Already sorted by distance in ProductWithFarmerService
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browse Products'),
-        centerTitle: true,
+        title: _isSearching ? _buildSearchField() : const Text('Browse Products'),
+        centerTitle: !_isSearching,
         elevation: 0,
+        leading: _isSearching
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = false;
+                    _searchController.clear();
+                    _searchQuery = '';
+                  });
+                },
+              )
+            : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(),
+          // Sort dropdown
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            tooltip: 'Sort by',
+            onSelected: (value) {
+              setState(() {
+                _sortBy = value;
+              });
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'distance',
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 18, 
+                      color: _sortBy == 'distance' ? AppTheme.primaryColor : Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('Distance', 
+                      style: TextStyle(
+                        fontWeight: _sortBy == 'distance' ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'rating',
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 18, 
+                      color: _sortBy == 'rating' ? AppTheme.primaryColor : Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('Rating', 
+                      style: TextStyle(
+                        fontWeight: _sortBy == 'rating' ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'price_low',
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_upward, size: 18, 
+                      color: _sortBy == 'price_low' ? AppTheme.primaryColor : Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('Price: Low to High', 
+                      style: TextStyle(
+                        fontWeight: _sortBy == 'price_low' ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'price_high',
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_downward, size: 18, 
+                      color: _sortBy == 'price_high' ? AppTheme.primaryColor : Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('Price: High to Low', 
+                      style: TextStyle(
+                        fontWeight: _sortBy == 'price_high' ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Search products',
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+                // Focus the search field after the UI updates
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  _searchFocusNode.requestFocus();
+                });
+              },
+            ),
+          if (!_isSearching)
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  tooltip: 'Filter products',
+                  onPressed: _showFilterSheet,
+                ),
+                if (_activeFilter.hasActiveFilters)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${_activeFilter.activeFilterCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          if (!_isSearching)
+            IconButton(
+              icon: Icon(_viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view),
+              tooltip: _viewMode == ViewMode.grid ? 'Switch to list view' : 'Switch to grid view',
+              onPressed: _toggleViewMode,
+            ),
+          if (_isSearching && _searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: 'Clear search',
+              onPressed: () {
+                _searchController.clear();
+                _searchFocusNode.requestFocus();
+              },
+            ),
         ],
       ),
       body: Column(
         children: [
           _buildCategoryFilter(),
+          _buildActiveFilterChips(),
           Expanded(
             child: StreamBuilder<List<Product>>(
               stream: _productService.streamAllAvailableProducts(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
                 }
 
                 if (snapshot.hasError) {
@@ -74,7 +297,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   products = products.where((p) => p.category == _selectedCategory).toList();
                 }
 
-                // Apply search filter
+                // Apply search filter (product name, description)
                 if (_searchQuery.isNotEmpty) {
                   final query = _searchQuery.toLowerCase();
                   products = products.where((p) =>
@@ -106,7 +329,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   );
                 }
 
-                // Load products with farmer details and distance
+                // Load products with farmer details, distance, and ratings
                 final authProvider = Provider.of<AuthProvider>(context, listen: false);
                 final buyerLocation = authProvider.currentUser?.location;
 
@@ -117,37 +340,130 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   ),
                   builder: (context, farmerSnapshot) {
                     if (farmerSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
+                      return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
+                    }
+
+                    var productsWithFarmers = farmerSnapshot.data ?? [];
+
+                    // Apply farmer name search filter (if search is active)
+                    if (_searchQuery.isNotEmpty) {
+                      final query = _searchQuery.toLowerCase();
+                      productsWithFarmers = productsWithFarmers.where((pwf) {
+                        // Check farmer name
+                        final farmerNameMatch = pwf.farmer.name.toLowerCase().contains(query);
+                        // Check product name (already filtered above, but double-check)
+                        final productNameMatch = pwf.product.name.toLowerCase().contains(query);
+                        // Check description
+                        final descriptionMatch = pwf.product.description?.toLowerCase().contains(query) ?? false;
+                        
+                        return farmerNameMatch || productNameMatch || descriptionMatch;
+                      }).toList();
+                    }
+
+                    if (productsWithFarmers.isEmpty) {
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Loading farmer details...'),
+                            Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'No results found for "${_searchQuery}"'
+                                  : 'Unable to load product details',
+                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (_searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Try different keywords or check spelling',
+                                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _searchFocusNode.requestFocus();
+                                },
+                                icon: const Icon(Icons.clear),
+                                label: const Text('Clear Search'),
+                              ),
+                            ],
                           ],
                         ),
                       );
                     }
 
-                    final productsWithFarmers = farmerSnapshot.data ?? [];
+                    // Load ratings for all farmers
+                    final farmerIds = productsWithFarmers
+                        .map((pwf) => pwf.product.farmId)
+                        .toSet()
+                        .toList();
 
-                    if (productsWithFarmers.isEmpty) {
-                      return const Center(
-                        child: Text('Unable to load product details'),
-                      );
-                    }
+                    return FutureBuilder<Map<String, FarmerRating>>(
+                      future: _ratingService.getFarmerRatings(farmerIds),
+                      builder: (context, ratingSnapshot) {
+                        final ratingsMap = ratingSnapshot.data ?? {};
 
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.65,  // Adjusted for more content
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: productsWithFarmers.length,
-                      itemBuilder: (context, index) {
-                        return _buildEnhancedProductCard(productsWithFarmers[index]);
+                        // Combine products with ratings
+                        var productsWithRatings = productsWithFarmers
+                            .map((pwf) => ProductWithRating(
+                                  productWithFarmer: pwf,
+                                  farmerRating: ratingsMap[pwf.product.farmId],
+                                ))
+                            .toList();
+
+                        // Apply active filters
+                        productsWithRatings = _applyFilters(productsWithRatings);
+
+                        // Sort products based on selected sort option
+                        _sortProducts(productsWithRatings);
+
+                        // Get featured products (top 5 highly rated with sufficient reviews)
+                        final featuredProducts = _getFeaturedProducts(productsWithRatings);
+
+                        // Conditional rendering based on view mode
+                        return CustomScrollView(
+                          slivers: [
+                            // Hero Carousel
+                            if (featuredProducts.isNotEmpty)
+                              SliverToBoxAdapter(
+                                child: HeroCarousel(featuredProducts: featuredProducts),
+                              ),
+                            
+                            // Product Grid or List
+                            _viewMode == ViewMode.grid
+                                ? SliverPadding(
+                                    padding: const EdgeInsets.all(16),
+                                    sliver: SliverGrid(
+                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        childAspectRatio: 0.60,
+                                        crossAxisSpacing: 12,
+                                        mainAxisSpacing: 12,
+                                      ),
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          return _buildEnhancedProductCard(productsWithRatings[index]);
+                                        },
+                                        childCount: productsWithRatings.length,
+                                      ),
+                                    ),
+                                  )
+                                : SliverPadding(
+                                    padding: const EdgeInsets.all(16),
+                                    sliver: SliverList(
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          return _buildListViewCard(productsWithRatings[index]);
+                                        },
+                                        childCount: productsWithRatings.length,
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        );
                       },
                     );
                   },
@@ -341,16 +657,29 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     );
   }
 
-  /// Enhanced product card with farmer details and distance
-  Widget _buildEnhancedProductCard(ProductWithFarmer productWithFarmer) {
+  /// Enhanced product card with farmer details, distance, and ratings
+  Widget _buildEnhancedProductCard(ProductWithRating productWithRating) {
+    final productWithFarmer = productWithRating.productWithFarmer;
     final product = productWithFarmer.product;
     final farmer = productWithFarmer.farmer;
+    final rating = productWithRating.farmerRating;
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
+    return InkWell(
+      onTap: () {
+        // Navigate to product detail screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(product: product),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Image with Distance Badge
@@ -417,6 +746,12 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         ),
                       ),
                     ),
+                  // Favorite Heart Button
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: _buildFavoriteButton(product),
+                  ),
                   // Out of Stock Overlay
                   if (product.isOutOfStock)
                     Container(
@@ -475,6 +810,50 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                     ],
                   ),
                   const SizedBox(height: 2),
+                  
+                  // Rating Display
+                  if (rating != null && rating.totalRatings > 0)
+                    Row(
+                      children: [
+                        _buildStarRating(rating.averageRating),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${rating.totalRatings})',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // Highly Rated Badge
+                        if (rating.isHighlyRated && rating.hasSufficientRatings)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[100],
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.amber[700]!, width: 0.5),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.verified, size: 10, color: Colors.amber[700]),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'Top',
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber[900],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  if (rating != null && rating.totalRatings > 0)
+                    const SizedBox(height: 2),
                   
                   // District
                   Row(
@@ -572,7 +951,290 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
           ),
         ],
       ),
+    ),
     );
+  }
+
+  /// Build list view card with horizontal layout
+  Widget _buildListViewCard(ProductWithRating productWithRating) {
+    final productWithFarmer = productWithRating.productWithFarmer;
+    final product = productWithFarmer.product;
+    final farmer = productWithFarmer.farmer;
+    final rating = productWithRating.farmerRating;
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(product: product),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 2,
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: product.images.isNotEmpty
+                    ? Image.network(
+                        product.images[0],
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 120,
+                            height: 120,
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                          );
+                        },
+                      )
+                    : Container(
+                        width: 120,
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image, size: 40, color: Colors.grey),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              
+              // Product Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Farmer Name
+                    Row(
+                      children: [
+                        const Icon(Icons.person, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            farmer.name,
+                            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Rating
+                    if (rating != null && rating.totalRatings > 0)
+                      Row(
+                        children: [
+                          _buildStarRating(rating.averageRating, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${rating.totalRatings})',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          if (rating.isHighlyRated && rating.hasSufficientRatings) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber[100],
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.amber[700]!, width: 0.5),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.verified, size: 12, color: Colors.amber[700]),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Top',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.amber[900],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    const SizedBox(height: 4),
+                    
+                    // Distance
+                    if (productWithFarmer.distanceKm != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${productWithFarmer.distanceKm!.toStringAsFixed(1)} km away',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 8),
+                    
+                    // Price and Stock
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'UGX ${NumberFormat('#,###').format(product.price)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            Text(
+                              'per ${product.unit}',
+                              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                        
+                        // Add to Cart Button
+                        ElevatedButton.icon(
+                          onPressed: product.isOutOfStock
+                              ? null
+                              : () => _addToCart(product, cartProvider),
+                          icon: const Icon(Icons.add_shopping_cart, size: 18),
+                          label: Text(product.isOutOfStock ? 'Out of Stock' : 'Add'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build star rating display widget
+  Widget _buildStarRating(double rating, {double size = 12}) {
+    final fullStars = rating.floor();
+    final hasHalfStar = (rating - fullStars) >= 0.5;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return Icon(Icons.star, size: size, color: Colors.amber[700]);
+        } else if (index == fullStars && hasHalfStar) {
+          return Icon(Icons.star_half, size: size, color: Colors.amber[700]);
+        } else {
+          return Icon(Icons.star_border, size: size, color: Colors.grey[400]);
+        }
+      }),
+    );
+  }
+
+  /// Build favorite button (heart icon)
+  Widget _buildFavoriteButton(Product product) {
+    final isFavorite = _favoriteProductIds.contains(product.id);
+    
+    return GestureDetector(
+      onTap: () => _toggleFavorite(product),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          size: 20,
+          color: isFavorite ? Colors.red : Colors.grey[600],
+        ),
+      ),
+    );
+  }
+
+  /// Toggle favorite status
+  Future<void> _toggleFavorite(Product product) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.currentUser?.id;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to save favorites')),
+      );
+      return;
+    }
+
+    try {
+      final nowFavorite = await _favoriteService.toggleFavorite(
+        userId: userId,
+        productId: product.id,
+        farmerId: product.farmId,
+      );
+
+      setState(() {
+        if (nowFavorite) {
+          _favoriteProductIds.add(product.id);
+        } else {
+          _favoriteProductIds.remove(product.id);
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              nowFavorite
+                  ? '❤️ Added to favorites'
+                  : 'Removed from favorites',
+            ),
+            backgroundColor: nowFavorite ? Colors.green : Colors.grey[700],
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   /// Call farmer
@@ -649,6 +1311,275 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
             ),
           ],
         );
+      },
+    );
+  }
+
+  /// Show filter bottom sheet
+  Future<void> _showFilterSheet() async {
+    final result = await showModalBottomSheet<BrowseFilter>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterBottomSheet(initialFilter: _activeFilter),
+    );
+
+    if (result != null) {
+      setState(() {
+        _activeFilter = result;
+      });
+    }
+  }
+
+  /// Toggle between grid and list view
+  Future<void> _toggleViewMode() async {
+    setState(() {
+      _viewMode = _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
+    });
+    await _saveViewPreference();
+  }
+
+  /// Load view preference from storage
+  Future<void> _loadViewPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final viewModeString = prefs.getString('browse_view_mode') ?? 'grid';
+    setState(() {
+      _viewMode = viewModeString == 'list' ? ViewMode.list : ViewMode.grid;
+    });
+  }
+
+  /// Save view preference to storage
+  Future<void> _saveViewPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('browse_view_mode', _viewMode == ViewMode.grid ? 'grid' : 'list');
+  }
+
+  /// Apply filters to products
+  List<ProductWithRating> _applyFilters(List<ProductWithRating> products) {
+    var filtered = products;
+
+    // Category filter
+    if (_activeFilter.selectedCategories.isNotEmpty) {
+      filtered = filtered.where((p) {
+        return _activeFilter.selectedCategories.contains(p.productWithFarmer.product.category.name);
+      }).toList();
+    }
+
+    // Price filter
+    if (_activeFilter.minPrice != null) {
+      filtered = filtered.where((p) {
+        final priceInThousands = p.productWithFarmer.product.price / 1000;
+        return priceInThousands >= _activeFilter.minPrice!;
+      }).toList();
+    }
+
+    if (_activeFilter.maxPrice != null) {
+      filtered = filtered.where((p) {
+        final priceInThousands = p.productWithFarmer.product.price / 1000;
+        return priceInThousands <= _activeFilter.maxPrice!;
+      }).toList();
+    }
+
+    // Distance filter
+    if (_activeFilter.maxDistance != null) {
+      filtered = filtered.where((p) {
+        final distance = p.productWithFarmer.distanceKm;
+        return distance != null && distance <= _activeFilter.maxDistance!;
+      }).toList();
+    }
+
+    // Rating filter
+    if (_activeFilter.minRating != null) {
+      filtered = filtered.where((p) {
+        final rating = p.averageRating;
+        return rating != null && rating >= _activeFilter.minRating!;
+      }).toList();
+    }
+
+    // Stock filter
+    if (_activeFilter.inStockOnly) {
+      filtered = filtered.where((p) {
+        return !p.productWithFarmer.product.isOutOfStock;
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  /// Get featured products (highly rated with sufficient reviews)
+  List<ProductWithRating> _getFeaturedProducts(List<ProductWithRating> products) {
+    // Filter products that are highly rated and have sufficient reviews
+    final featured = products.where((p) {
+      final rating = p.farmerRating;
+      return rating != null && 
+             rating.isHighlyRated && 
+             rating.hasSufficientRatings &&
+             !p.productWithFarmer.product.isOutOfStock;
+    }).toList();
+
+    // Sort by rating and review count
+    featured.sort((a, b) {
+      final ratingA = a.farmerRating?.averageRating ?? 0;
+      final ratingB = b.farmerRating?.averageRating ?? 0;
+      final countA = a.farmerRating?.totalRatings ?? 0;
+      final countB = b.farmerRating?.totalRatings ?? 0;
+      
+      // First compare by rating
+      final ratingComparison = ratingB.compareTo(ratingA);
+      if (ratingComparison != 0) return ratingComparison;
+      
+      // If ratings are equal, compare by review count
+      return countB.compareTo(countA);
+    });
+
+    // Return top 5 featured products
+    return featured.take(5).toList();
+  }
+
+  /// Build active filter chips
+  Widget _buildActiveFilterChips() {
+    if (!_activeFilter.hasActiveFilters) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // Category chips
+            ..._activeFilter.selectedCategories.map((categoryName) {
+              final category = ProductCategory.values.firstWhere(
+                (c) => c.name == categoryName,
+                orElse: () => ProductCategory.other,
+              );
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: Text(category.displayName),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: () {
+                    setState(() {
+                      final newCategories = Set<String>.from(_activeFilter.selectedCategories);
+                      newCategories.remove(categoryName);
+                      _activeFilter = _activeFilter.copyWith(selectedCategories: newCategories);
+                    });
+                  },
+                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  labelStyle: const TextStyle(fontSize: 12),
+                ),
+              );
+            }),
+
+            // Price chip
+            if (_activeFilter.minPrice != null || _activeFilter.maxPrice != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: Text(
+                    _activeFilter.minPrice != null && _activeFilter.maxPrice != null
+                        ? 'UGX ${_activeFilter.minPrice!.toInt()}K-${_activeFilter.maxPrice!.toInt()}K'
+                        : _activeFilter.minPrice != null
+                            ? '≥ UGX ${_activeFilter.minPrice!.toInt()}K'
+                            : '≤ UGX ${_activeFilter.maxPrice!.toInt()}K',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: () {
+                    setState(() {
+                      _activeFilter = _activeFilter.copyWith(
+                        clearMinPrice: true,
+                        clearMaxPrice: true,
+                      );
+                    });
+                  },
+                  backgroundColor: Colors.green.withValues(alpha: 0.1),
+                ),
+              ),
+
+            // Distance chip
+            if (_activeFilter.maxDistance != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: Text('≤ ${_activeFilter.maxDistance!.toInt()} km', style: const TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: () {
+                    setState(() {
+                      _activeFilter = _activeFilter.copyWith(clearMaxDistance: true);
+                    });
+                  },
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                ),
+              ),
+
+            // Rating chip
+            if (_activeFilter.minRating != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: Text('≥ ${_activeFilter.minRating!.toStringAsFixed(1)}★', style: const TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: () {
+                    setState(() {
+                      _activeFilter = _activeFilter.copyWith(clearMinRating: true);
+                    });
+                  },
+                  backgroundColor: Colors.amber.withValues(alpha: 0.2),
+                ),
+              ),
+
+            // Stock chip
+            if (_activeFilter.inStockOnly)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Chip(
+                  label: const Text('In Stock', style: TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.close, size: 16),
+                  onDeleted: () {
+                    setState(() {
+                      _activeFilter = _activeFilter.copyWith(inStockOnly: false);
+                    });
+                  },
+                  backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                ),
+              ),
+
+            // Clear all button
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _activeFilter = _activeFilter.clear();
+                });
+              },
+              icon: const Icon(Icons.clear_all, size: 16),
+              label: const Text('Clear All', style: TextStyle(fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build search text field for AppBar
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      focusNode: _searchFocusNode,
+      autofocus: true,
+      style: const TextStyle(color: Colors.white),
+      decoration: const InputDecoration(
+        hintText: 'Search products or farmers...',
+        hintStyle: TextStyle(color: Colors.white70),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+      ),
+      textInputAction: TextInputAction.search,
+      onSubmitted: (value) {
+        // Keep focus on the search field
+        _searchFocusNode.requestFocus();
       },
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/product.dart';
+import '../../models/product_category_hierarchy.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
@@ -275,7 +276,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
     final priceController = TextEditingController();
     final stockController = TextEditingController();
     ProductCategory selectedCategory = ProductCategory.crop;
-    String selectedUnit = 'kg';
+    String? selectedMainCategory;
+    String? selectedSubcategory;
+    String selectedUnit = 'KGs';
 
     showDialog(
       context: context,
@@ -286,6 +289,52 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                DropdownButtonFormField<String>(
+                  value: selectedMainCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Main Category *',
+                    hintText: 'Select main category',
+                  ),
+                  items: ProductCategoryHierarchy.categoryMap.keys.map((key) {
+                    String displayName = key;
+                    if (key == 'crop') displayName = 'Crop';
+                    if (key == 'oilSeeds') displayName = 'Oil Seeds';
+                    if (key == 'poultry') displayName = 'Poultry';
+                    if (key == 'goats') displayName = 'Goats';
+                    if (key == 'cows') displayName = 'Cows';
+                    return DropdownMenuItem(
+                      value: key,
+                      child: Text(displayName),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedMainCategory = value;
+                      selectedSubcategory = null; // Reset subcategory
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                if (selectedMainCategory != null)
+                  DropdownButtonFormField<String>(
+                    value: selectedSubcategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Subcategory *',
+                      hintText: 'Select subcategory',
+                    ),
+                    items: ProductCategoryHierarchy.categoryMap[selectedMainCategory]!
+                        .map((subcat) {
+                      return DropdownMenuItem(
+                        value: subcat.value,
+                        child: Text(subcat.displayName),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setDialogState(() => selectedSubcategory = value);
+                    },
+                  ),
+                if (selectedMainCategory != null)
+                  const SizedBox(height: 12),
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
@@ -301,29 +350,6 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     hintText: 'Describe your product',
                   ),
                   maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<ProductCategory>(
-                  value: selectedCategory,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: [
-                    ProductCategory.crop,
-                    ProductCategory.tomatoes,
-                    ProductCategory.onions,
-                    ProductCategory.groundNuts,
-                    ProductCategory.poultry,
-                    ProductCategory.eggs,
-                  ].map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat.toString().split('.').last),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() => selectedCategory = value);
-                    }
-                  },
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -342,8 +368,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: selectedUnit,
-                        decoration: const InputDecoration(labelText: 'Unit'),
-                        items: ['kg', 'piece', 'tray', 'bag', 'bunch']
+                        decoration: const InputDecoration(labelText: 'Unit *'),
+                        items: ProductCategoryHierarchy.unitOptions
                             .map((unit) => DropdownMenuItem(
                                   value: unit,
                                   child: Text(unit),
@@ -379,7 +405,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
               onPressed: () async {
                 if (nameController.text.trim().isEmpty ||
                     priceController.text.trim().isEmpty ||
-                    stockController.text.trim().isEmpty) {
+                    stockController.text.trim().isEmpty ||
+                    selectedMainCategory == null ||
+                    selectedSubcategory == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please fill all required fields'),
@@ -399,6 +427,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     name: nameController.text.trim(),
                     description: descController.text.trim(),
                     category: selectedCategory,
+                    mainCategory: selectedMainCategory,
+                    subcategory: selectedSubcategory,
                     price: double.parse(priceController.text.trim()),
                     unit: selectedUnit,
                     stockQuantity: int.parse(stockController.text.trim()),
@@ -438,6 +468,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
     final priceController = TextEditingController(text: product.price.toString());
     final stockController = TextEditingController(text: product.stockQuantity.toString());
     ProductCategory selectedCategory = product.category;
+    String? selectedMainCategory = product.mainCategory;
+    String? selectedSubcategory = product.subcategory;
     String selectedUnit = product.unit;
 
     showDialog(
@@ -449,38 +481,61 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                DropdownButtonFormField<String>(
+                  value: selectedMainCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Main Category *',
+                    hintText: 'Select main category',
+                  ),
+                  items: ProductCategoryHierarchy.categoryMap.keys.map((key) {
+                    String displayName = key;
+                    if (key == 'crop') displayName = 'Crop';
+                    if (key == 'oilSeeds') displayName = 'Oil Seeds';
+                    if (key == 'poultry') displayName = 'Poultry';
+                    if (key == 'goats') displayName = 'Goats';
+                    if (key == 'cows') displayName = 'Cows';
+                    return DropdownMenuItem(
+                      value: key,
+                      child: Text(displayName),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedMainCategory = value;
+                      selectedSubcategory = null; // Reset subcategory when main category changes
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                if (selectedMainCategory != null)
+                  DropdownButtonFormField<String>(
+                    value: selectedSubcategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Subcategory *',
+                      hintText: 'Select subcategory',
+                    ),
+                    items: ProductCategoryHierarchy.categoryMap[selectedMainCategory]!
+                        .map((subcat) {
+                      return DropdownMenuItem(
+                        value: subcat.value,
+                        child: Text(subcat.displayName),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setDialogState(() => selectedSubcategory = value);
+                    },
+                  ),
+                if (selectedMainCategory != null)
+                  const SizedBox(height: 12),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Product Name'),
+                  decoration: const InputDecoration(labelText: 'Product Name *'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: descController,
                   decoration: const InputDecoration(labelText: 'Description'),
                   maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<ProductCategory>(
-                  value: selectedCategory,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: [
-                    ProductCategory.crop,
-                    ProductCategory.tomatoes,
-                    ProductCategory.onions,
-                    ProductCategory.groundNuts,
-                    ProductCategory.poultry,
-                    ProductCategory.eggs,
-                  ].map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat.toString().split('.').last),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() => selectedCategory = value);
-                    }
-                  },
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -496,8 +551,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: selectedUnit,
-                        decoration: const InputDecoration(labelText: 'Unit'),
-                        items: ['kg', 'piece', 'tray', 'bag', 'bunch']
+                        decoration: const InputDecoration(labelText: 'Unit *'),
+                        items: ProductCategoryHierarchy.unitOptions
                             .map((unit) => DropdownMenuItem(
                                   value: unit,
                                   child: Text(unit),
@@ -534,6 +589,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     name: nameController.text.trim(),
                     description: descController.text.trim(),
                     category: selectedCategory,
+                    mainCategory: selectedMainCategory,
+                    subcategory: selectedSubcategory,
                     price: double.parse(priceController.text.trim()),
                     unit: selectedUnit,
                     stockQuantity: int.parse(stockController.text.trim()),

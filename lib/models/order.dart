@@ -23,12 +23,15 @@ enum PaymentMethod {
 /// Order model for marketplace transactions
 class Order {
   final String id;                    // Firestore document ID
+  final String orderNumber;           // Human-readable order number (e.g., ORD-2024-0001)
   final String buyerId;               // User ID of buyer (SME)
   final String buyerName;             // Buyer's name
   final String buyerPhone;            // Buyer's phone
+  final String? buyerSystemId;        // System ID/NIN of buyer
   final String farmerId;              // User ID of farmer (SHG)
   final String farmerName;            // Farmer's name
   final String farmerPhone;           // Farmer's phone
+  final String? farmerSystemId;       // System ID/NIN of farmer
   final List<OrderItem> items;        // List of products in order
   final double totalAmount;           // Total order amount
   final OrderStatus status;           // Current order status
@@ -43,15 +46,23 @@ class Order {
   final DateTime? receivedAt;         // When buyer confirmed receipt
   final String? rejectionReason;      // Reason for rejection
   final bool isReceivedByBuyer;       // Buyer confirmed receipt
+  final int? rating;                  // Buyer's rating (1-5 stars)
+  final String? review;               // Buyer's review text
+  final String? reviewPhoto;          // Photo of delivered product
+  final DateTime? reviewedAt;         // When review was submitted
+  final bool isFavoriteSeller;        // Is this seller marked as favorite by buyer
 
   Order({
     required this.id,
+    required this.orderNumber,
     required this.buyerId,
     required this.buyerName,
     required this.buyerPhone,
+    this.buyerSystemId,
     required this.farmerId,
     required this.farmerName,
     required this.farmerPhone,
+    this.farmerSystemId,
     required this.items,
     required this.totalAmount,
     required this.status,
@@ -66,6 +77,11 @@ class Order {
     this.receivedAt,
     this.rejectionReason,
     this.isReceivedByBuyer = false,
+    this.rating,
+    this.review,
+    this.reviewPhoto,
+    this.reviewedAt,
+    this.isFavoriteSeller = false,
   });
 
   /// Create Order from Firestore document
@@ -83,12 +99,15 @@ class Order {
 
     return Order(
       id: id,
+      orderNumber: data['order_number'] ?? 'ORD-${id.substring(0, 8).toUpperCase()}',
       buyerId: data['buyer_id'] ?? '',
       buyerName: data['buyer_name'] ?? '',
       buyerPhone: data['buyer_phone'] ?? '',
+      buyerSystemId: data['buyer_system_id'],
       farmerId: data['farmer_id'] ?? '',
       farmerName: data['farmer_name'] ?? '',
       farmerPhone: data['farmer_phone'] ?? '',
+      farmerSystemId: data['farmer_system_id'],
       items: (data['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromMap(item as Map<String, dynamic>))
               .toList() ??
@@ -112,18 +131,26 @@ class Order {
       receivedAt: parseDateTime(data['received_at']),
       rejectionReason: data['rejection_reason'],
       isReceivedByBuyer: data['is_received_by_buyer'] ?? false,
+      rating: data['rating'],
+      review: data['review'],
+      reviewPhoto: data['review_photo'],
+      reviewedAt: parseDateTime(data['reviewed_at']),
+      isFavoriteSeller: data['is_favorite_seller'] ?? false,
     );
   }
 
   /// Convert Order to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
+      'order_number': orderNumber,
       'buyer_id': buyerId,
       'buyer_name': buyerName,
       'buyer_phone': buyerPhone,
+      'buyer_system_id': buyerSystemId,
       'farmer_id': farmerId,
       'farmer_name': farmerName,
       'farmer_phone': farmerPhone,
+      'farmer_system_id': farmerSystemId,
       'items': items.map((item) => item.toMap()).toList(),
       'total_amount': totalAmount,
       'status': status.toString().split('.').last,
@@ -138,18 +165,26 @@ class Order {
       'received_at': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null,
       'rejection_reason': rejectionReason,
       'is_received_by_buyer': isReceivedByBuyer,
+      'rating': rating,
+      'review': review,
+      'review_photo': reviewPhoto,
+      'reviewed_at': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
+      'is_favorite_seller': isFavoriteSeller,
     };
   }
 
   /// Create a copy with modified fields
   Order copyWith({
     String? id,
+    String? orderNumber,
     String? buyerId,
     String? buyerName,
     String? buyerPhone,
+    String? buyerSystemId,
     String? farmerId,
     String? farmerName,
     String? farmerPhone,
+    String? farmerSystemId,
     List<OrderItem>? items,
     double? totalAmount,
     OrderStatus? status,
@@ -161,16 +196,26 @@ class Order {
     DateTime? confirmedAt,
     DateTime? rejectedAt,
     DateTime? deliveredAt,
+    DateTime? receivedAt,
     String? rejectionReason,
+    bool? isReceivedByBuyer,
+    int? rating,
+    String? review,
+    String? reviewPhoto,
+    DateTime? reviewedAt,
+    bool? isFavoriteSeller,
   }) {
     return Order(
       id: id ?? this.id,
+      orderNumber: orderNumber ?? this.orderNumber,
       buyerId: buyerId ?? this.buyerId,
       buyerName: buyerName ?? this.buyerName,
       buyerPhone: buyerPhone ?? this.buyerPhone,
+      buyerSystemId: buyerSystemId ?? this.buyerSystemId,
       farmerId: farmerId ?? this.farmerId,
       farmerName: farmerName ?? this.farmerName,
       farmerPhone: farmerPhone ?? this.farmerPhone,
+      farmerSystemId: farmerSystemId ?? this.farmerSystemId,
       items: items ?? this.items,
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
@@ -182,7 +227,14 @@ class Order {
       confirmedAt: confirmedAt ?? this.confirmedAt,
       rejectedAt: rejectedAt ?? this.rejectedAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,
+      receivedAt: receivedAt ?? this.receivedAt,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      isReceivedByBuyer: isReceivedByBuyer ?? this.isReceivedByBuyer,
+      rating: rating ?? this.rating,
+      review: review ?? this.review,
+      reviewPhoto: reviewPhoto ?? this.reviewPhoto,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      isFavoriteSeller: isFavoriteSeller ?? this.isFavoriteSeller,
     );
   }
 }

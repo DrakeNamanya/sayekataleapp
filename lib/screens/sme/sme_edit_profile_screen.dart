@@ -67,10 +67,11 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
       }
       
       if (user.location != null) {
-        _selectedDistrict = user.location!.district;
-        _selectedSubcounty = user.location!.subcounty;
-        _selectedParish = user.location!.parish;
-        _selectedVillage = user.location!.village;
+        // Treat empty strings as null for proper validation
+        _selectedDistrict = user.location!.district?.isNotEmpty == true ? user.location!.district : null;
+        _selectedSubcounty = user.location!.subcounty?.isNotEmpty == true ? user.location!.subcounty : null;
+        _selectedParish = user.location!.parish?.isNotEmpty == true ? user.location!.parish : null;
+        _selectedVillage = user.location!.village?.isNotEmpty == true ? user.location!.village : null;
         _latitude = user.location!.latitude;
         _longitude = user.location!.longitude;
       }
@@ -164,14 +165,19 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
       return;
     }
 
-    if (_selectedDistrict == null || 
-        _selectedSubcounty == null ||
-        _selectedParish == null ||
-        _selectedVillage == null) {
+    // Location validation: Either GPS coordinates OR complete administrative divisions required
+    final hasGPS = _latitude != null && _longitude != null && _latitude != 0.0 && _longitude != 0.0;
+    final hasAdminDivisions = _selectedDistrict != null && _selectedDistrict!.isNotEmpty &&
+                              _selectedSubcounty != null && _selectedSubcounty!.isNotEmpty &&
+                              _selectedParish != null && _selectedParish!.isNotEmpty &&
+                              _selectedVillage != null && _selectedVillage!.isNotEmpty;
+    
+    if (!hasGPS && !hasAdminDivisions) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Complete location information is required'),
+          content: Text('Please provide either GPS coordinates OR select District/Subcounty/Parish/Village'),
           backgroundColor: AppTheme.errorColor,
+          duration: Duration(seconds: 4),
         ),
       );
       return;
@@ -184,13 +190,15 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
+      // Create location with either GPS-only or complete administrative divisions
       final location = Location(
         latitude: _latitude ?? 0.0,
         longitude: _longitude ?? 0.0,
-        district: _selectedDistrict!,
-        subcounty: _selectedSubcounty!,
-        parish: _selectedParish!,
-        village: _selectedVillage!,
+        district: _selectedDistrict,
+        subcounty: _selectedSubcounty,
+        parish: _selectedParish,
+        village: _selectedVillage,
+        address: null, // Will be auto-generated from GPS or admin divisions
       );
 
       await authProvider.updateProfile(

@@ -4,7 +4,9 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/order_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/message_service.dart';
 import '../../utils/app_theme.dart';
+import '../../models/order.dart' as app_order;
 import '../../widgets/features_guide_dialog.dart';
 import 'sme_browse_products_screen.dart';
 import 'sme_cart_screen.dart';
@@ -46,47 +48,67 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final buyerId = authProvider.currentUser?.id ?? '';
+    final orderService = OrderService();
+
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+      bottomNavigationBar: FutureBuilder<int>(
+        future: orderService.getBuyerActiveOrdersCount(buyerId),
+        builder: (context, snapshot) {
+          final activeOrders = snapshot.data ?? 0;
+          return BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: AppTheme.primaryColor,
+            unselectedItemColor: AppTheme.textSecondary,
+            selectedFontSize: 12,
+            unselectedFontSize: 11,
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                activeIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.store_outlined),
+                activeIcon: Icon(Icons.store),
+                label: 'Browse',
+              ),
+              BottomNavigationBarItem(
+                icon: activeOrders > 0
+                    ? Badge(
+                        label: Text('$activeOrders'),
+                        child: const Icon(Icons.receipt_long_outlined),
+                      )
+                    : const Icon(Icons.receipt_long_outlined),
+                activeIcon: activeOrders > 0
+                    ? Badge(
+                        label: Text('$activeOrders'),
+                        child: const Icon(Icons.receipt_long),
+                      )
+                    : const Icon(Icons.receipt_long),
+                label: 'Orders',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.favorite_outline),
+                activeIcon: Icon(Icons.favorite),
+                label: 'Favorites',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Account',
+              ),
+            ],
+          );
         },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondary,
-        selectedFontSize: 12,
-        unselectedFontSize: 11,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store_outlined),
-            activeIcon: Icon(Icons.store),
-            label: 'Browse',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Account',
-          ),
-        ],
       ),
     );
   }
@@ -157,6 +179,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     final cartProvider = Provider.of<CartProvider>(context);
     final user = authProvider.currentUser;
     final notificationService = NotificationService();
+    final messageService = MessageService();
     final userId = user?.id ?? '';
 
     final monthlySpending = _monthlySpending;
@@ -202,6 +225,49 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const SMENotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.errorColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          StreamBuilder<int>(
+            stream: messageService.streamTotalUnreadCount(userId),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.message_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SMEMessagesScreen(),
                         ),
                       );
                     },
@@ -583,28 +649,45 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           scrollDirection: Axis.horizontal,
                           children: [
                             _CategoryCard(
-                              icon: Icons.egg_outlined,
-                              label: 'Fresh Eggs',
-                              color: AppTheme.accentColor,
-                              onTap: () {},
+                              icon: Icons.agriculture_outlined,
+                              label: 'Crops',
+                              color: Colors.green.shade700,
+                              onTap: () {
+                                // Navigate to browse with crop filter
+                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'crop'});
+                              },
                             ),
                             _CategoryCard(
-                              icon: Icons.restaurant_outlined,
-                              label: 'Broiler Chicken',
-                              color: AppTheme.primaryColor,
-                              onTap: () {},
+                              icon: Icons.egg_outlined,
+                              label: 'Poultry',
+                              color: AppTheme.accentColor,
+                              onTap: () {
+                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'poultry'});
+                              },
+                            ),
+                            _CategoryCard(
+                              icon: Icons.oil_barrel_outlined,
+                              label: 'Oil Seeds',
+                              color: Colors.amber.shade800,
+                              onTap: () {
+                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'oilSeeds'});
+                              },
                             ),
                             _CategoryCard(
                               icon: Icons.pets_outlined,
-                              label: 'Layer Hens',
-                              color: AppTheme.secondaryColor,
-                              onTap: () {},
+                              label: 'Goats',
+                              color: Colors.brown.shade600,
+                              onTap: () {
+                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'goats'});
+                              },
                             ),
                             _CategoryCard(
-                              icon: Icons.grass_outlined,
-                              label: 'Feeds',
-                              color: Colors.green.shade700,
-                              onTap: () {},
+                              icon: Icons.agriculture,
+                              label: 'Cows',
+                              color: AppTheme.primaryColor,
+                              onTap: () {
+                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'cows'});
+                              },
                             ),
                           ],
                         ),
@@ -802,78 +885,135 @@ class _CategoryCard extends StatelessWidget {
 class _RecentOrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Mock recent orders
-    final recentOrders = [
-      {'id': '2156', 'farm': 'Green Valley Farm', 'amount': 48000.0, 'status': 'delivered', 'items': 2},
-      {'id': '2155', 'farm': 'Sunrise Poultry', 'amount': 72000.0, 'status': 'out_for_delivery', 'items': 3},
-      {'id': '2154', 'farm': 'Happy Farms', 'amount': 36000.0, 'status': 'preparing', 'items': 1},
-    ];
+    final authProvider = Provider.of<AuthProvider>(context);
+    final buyerId = authProvider.currentUser?.id ?? '';
+    final orderService = OrderService();
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: recentOrders.length,
-      itemBuilder: (context, index) {
-        final order = recentOrders[index];
-        final status = order['status'] as String;
-        final statusColor = status == 'delivered'
-            ? AppTheme.successColor
-            : status == 'out_for_delivery'
-                ? AppTheme.primaryColor
-                : AppTheme.warningColor;
+    return FutureBuilder<List<app_order.Order>>(
+      future: orderService.getBuyerRecentOrders(buyerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.receipt_long, color: statusColor),
-            ),
-            title: Text(
-              'Order #${order['id']}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text('${order['farm']} • ${order['items']} items'),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'UGX ${(order['amount'] as double).toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Error loading recent orders: ${snapshot.error}'),
+          );
+        }
+
+        final recentOrders = snapshot.data ?? [];
+
+        if (recentOrders.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No recent orders in the last 24 hours',
+                    style: TextStyle(color: Colors.grey),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: recentOrders.take(5).length,
+          itemBuilder: (context, index) {
+            final order = recentOrders[index];
+            final statusColor = _getStatusColor(order.status);
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    status.replaceAll('_', ' ').toUpperCase(),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Icon(Icons.receipt_long, color: statusColor),
                 ),
-              ],
-            ),
-            onTap: () {
-              // Navigate to order details
-            },
-          ),
+                title: Text(
+                  'Order #${order.id.substring(0, 8)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text('${order.farmerName} • ${order.items.length} items'),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'UGX ${order.totalAmount.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        order.status.toString().split('.').last.toUpperCase(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SMEOrdersScreen(),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  Color _getStatusColor(app_order.OrderStatus status) {
+    switch (status) {
+      case app_order.OrderStatus.pending:
+        return AppTheme.warningColor;
+      case app_order.OrderStatus.confirmed:
+      case app_order.OrderStatus.preparing:
+        return AppTheme.primaryColor;
+      case app_order.OrderStatus.ready:
+      case app_order.OrderStatus.inTransit:
+        return Colors.blue;
+      case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.completed:
+        return AppTheme.successColor;
+      case app_order.OrderStatus.cancelled:
+      case app_order.OrderStatus.rejected:
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondary;
+    }
   }
 }

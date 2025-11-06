@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/product.dart';
+import '../../models/product_category_hierarchy.dart';
 import '../../utils/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
@@ -25,11 +26,11 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   final ProductService _productService = ProductService();
   
   ProductCategory _selectedCategory = ProductCategory.crop;
-  String _selectedUnit = 'kg';
+  String? _selectedMainCategory;
+  String? _selectedSubcategory;
+  String _selectedUnit = 'KGs';
   String? _productImagePath;
   bool _isLoading = false;
-
-  final List<String> _units = ['kg', 'bag', 'liter', 'piece', 'bottle', 'box', 'pack', 'kit', 'block'];
 
   @override
   void initState() {
@@ -42,6 +43,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
       _stockController.text = widget.product!.stockQuantity.toString();
       _unitSizeController.text = widget.product!.unitSize.toString();
       _selectedCategory = widget.product!.category;
+      _selectedMainCategory = widget.product!.mainCategory;
+      _selectedSubcategory = widget.product!.subcategory;
       _selectedUnit = widget.product!.unit;
       // _productImagePath = widget.product!.imageUrl; // Product doesn't have imageUrl field yet
     }
@@ -108,6 +111,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           name: name,
           description: description,
           category: _selectedCategory,
+          mainCategory: _selectedMainCategory,
+          subcategory: _selectedSubcategory,
           price: price,
           unit: _selectedUnit,
           unitSize: unitSize,
@@ -130,6 +135,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           name: name,
           description: description,
           category: _selectedCategory,
+          mainCategory: _selectedMainCategory,
+          subcategory: _selectedSubcategory,
           price: price,
           unit: _selectedUnit,
           unitSize: unitSize,
@@ -237,6 +244,72 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Main Category
+            DropdownButtonFormField<String>(
+              value: _selectedMainCategory,
+              decoration: const InputDecoration(
+                labelText: 'Main Category *',
+                prefixIcon: Icon(Icons.category),
+                hintText: 'Select main category',
+              ),
+              items: ProductCategoryHierarchy.categoryMap.keys.map((key) {
+                String displayName = key;
+                if (key == 'crop') displayName = 'Crop';
+                if (key == 'oilSeeds') displayName = 'Oil Seeds';
+                if (key == 'poultry') displayName = 'Poultry';
+                if (key == 'goats') displayName = 'Goats';
+                if (key == 'cows') displayName = 'Cows';
+                return DropdownMenuItem(
+                  value: key,
+                  child: Text(displayName),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedMainCategory = value;
+                  _selectedSubcategory = null; // Reset subcategory
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select a main category';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Subcategory
+            if (_selectedMainCategory != null)
+              DropdownButtonFormField<String>(
+                value: _selectedSubcategory,
+                decoration: const InputDecoration(
+                  labelText: 'Subcategory *',
+                  prefixIcon: Icon(Icons.grain),
+                  hintText: 'Select subcategory',
+                ),
+                items: ProductCategoryHierarchy.categoryMap[_selectedMainCategory]!
+                    .map((subcat) {
+                  return DropdownMenuItem(
+                    value: subcat.value,
+                    child: Text(subcat.displayName),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSubcategory = value;
+                  });
+                },
+                validator: (value) {
+                  if (_selectedMainCategory != null && value == null) {
+                    return 'Please select a subcategory';
+                  }
+                  return null;
+                },
+              ),
+            if (_selectedMainCategory != null)
+              const SizedBox(height: 16),
+
             // Product Name
             TextFormField(
               controller: _nameController,
@@ -249,35 +322,6 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Product name is required';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Category
-            DropdownButtonFormField<ProductCategory>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Category *',
-                prefixIcon: Icon(Icons.category),
-              ),
-              items: ProductCategoryExtension.mainCategories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category.displayName),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                }
-              },
-              validator: (value) {
-                if (value == null) {
-                  return 'Please select a category';
                 }
                 return null;
               },
@@ -330,7 +374,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                       labelText: 'Unit *',
                       prefixIcon: Icon(Icons.scale),
                     ),
-                    items: _units.map((unit) {
+                    items: ProductCategoryHierarchy.unitOptions.map((unit) {
                       return DropdownMenuItem(
                         value: unit,
                         child: Text(unit),

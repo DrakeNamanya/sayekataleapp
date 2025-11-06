@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/notification_service.dart';
+import '../../services/message_service.dart';
+import '../../services/order_service.dart';
+import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart';
 import '../../models/product.dart';
@@ -15,6 +18,7 @@ import 'shg_messages_screen.dart';
 import 'shg_profile_screen.dart';
 import 'shg_notifications_screen.dart';
 import 'shg_my_purchases_screen.dart';
+import '../delivery/delivery_control_screen.dart';
 
 class SHGDashboardScreen extends StatefulWidget {
   const SHGDashboardScreen({super.key});
@@ -25,9 +29,6 @@ class SHGDashboardScreen extends StatefulWidget {
 
 class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
   int _selectedIndex = 0;
-  int _unreadNotifications = 5;
-  int _unreadMessages = 3;
-  int _newOrders = 2; // New pending orders count
 
   late final List<Widget> _screens;
 
@@ -49,76 +50,147 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final farmerId = authProvider.currentUser?.id ?? '';
+    final orderService = OrderService();
+
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+      bottomNavigationBar: FutureBuilder<int>(
+        future: orderService.getFarmerPendingOrdersCount(farmerId),
+        builder: (context, snapshot) {
+          final newOrders = snapshot.data ?? 0;
+          return BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: AppTheme.primaryColor,
+            unselectedItemColor: AppTheme.textSecondary,
+            selectedFontSize: 12,
+            unselectedFontSize: 11,
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                activeIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.inventory_2_outlined),
+                activeIcon: Icon(Icons.inventory_2),
+                label: 'Products',
+              ),
+              BottomNavigationBarItem(
+                icon: NotificationBadge(
+                  count: newOrders,
+                  child: const Icon(Icons.receipt_long_outlined),
+                ),
+                activeIcon: NotificationBadge(
+                  count: newOrders,
+                  child: const Icon(Icons.receipt_long),
+                ),
+                label: 'Orders',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                activeIcon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          );
         },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondary,
-        selectedFontSize: 12,
-        unselectedFontSize: 11,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            activeIcon: Icon(Icons.inventory_2),
-            label: 'Products',
-          ),
-          BottomNavigationBarItem(
-            icon: NotificationBadge(
-              count: _newOrders,
-              child: const Icon(Icons.receipt_long_outlined),
-            ),
-            activeIcon: NotificationBadge(
-              count: _newOrders,
-              child: const Icon(Icons.receipt_long),
-            ),
-            label: 'Orders',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Wallet',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
 }
 
-class _DashboardHome extends StatelessWidget {
+class _DashboardHome extends StatefulWidget {
   final VoidCallback onNavigateToProfile;
   
   const _DashboardHome({required this.onNavigateToProfile});
+
+  @override
+  State<_DashboardHome> createState() => _DashboardHomeState();
+}
+
+class _DashboardHomeState extends State<_DashboardHome> {
+  // Real data from Firebase
+  double _todayEarnings = 0.0;
+  double _weeklyEarnings = 0.0;
+  int _activeOrders = 0;
+  int _pendingOrders = 0;
+  int _lowStockProducts = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRealStats();
+    });
+  }
+
+  Future<void> _loadRealStats() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final farmerId = authProvider.currentUser?.id;
+
+    if (farmerId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final orderService = OrderService();
+      final productService = ProductService();
+
+      // Load all stats in parallel
+      final results = await Future.wait([
+        orderService.getFarmerTodayEarnings(farmerId),
+        orderService.getFarmerWeeklyEarnings(farmerId),
+        orderService.getFarmerActiveOrdersCount(farmerId),
+        orderService.getFarmerPendingOrdersCount(farmerId),
+        productService.getFarmerLowStockCount(farmerId),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _todayEarnings = results[0] as double;
+          _weeklyEarnings = results[1] as double;
+          _activeOrders = results[2] as int;
+          _pendingOrders = results[3] as int;
+          _lowStockProducts = results[4] as int;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
     final notificationService = NotificationService();
+    final messageService = MessageService();
     final userId = user?.id ?? '';
 
-    // Mock data
-    final todayEarnings = 245000.0;
-    final weeklyEarnings = 1250000.0;
-    final activeOrders = 8;
-    final pendingOrders = 3;
-    final lowStockProducts = 2;
+    // Use real data
+    final todayEarnings = _todayEarnings;
+    final weeklyEarnings = _weeklyEarnings;
+    final activeOrders = _activeOrders;
+    final pendingOrders = _pendingOrders;
+    final lowStockProducts = _lowStockProducts;
 
     return Scaffold(
       appBar: AppBar(
@@ -189,41 +261,48 @@ class _DashboardHome extends StatelessWidget {
               );
             },
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.message_outlined),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SHGMessagesScreen(),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primaryColor,
-                    shape: BoxShape.circle,
+          StreamBuilder<int>(
+            stream: messageService.streamTotalUnreadCount(userId),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.message_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SHGMessagesScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                  child: const Text(
-                    '3',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -231,7 +310,7 @@ class _DashboardHome extends StatelessWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await Future.delayed(const Duration(seconds: 1));
+            await _loadRealStats();
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -447,7 +526,7 @@ class _DashboardHome extends StatelessWidget {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: onNavigateToProfile,
+                            onPressed: widget.onNavigateToProfile,
                             icon: const Icon(Icons.edit),
                             label: const Text('Complete Profile Now'),
                             style: ElevatedButton.styleFrom(
@@ -564,7 +643,21 @@ class _DashboardHome extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(child: SizedBox()), // Empty space for balance
+                          Expanded(
+                            child: _QuickActionCard(
+                              icon: Icons.local_shipping,
+                              label: 'My Deliveries',
+                              color: Colors.green,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DeliveryControlScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -836,78 +929,135 @@ class _AlertCard extends StatelessWidget {
 class _RecentOrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Mock recent orders
-    final recentOrders = [
-      {'id': '1245', 'customer': 'John Mukasa', 'amount': 48000.0, 'status': 'pending', 'items': 2},
-      {'id': '1244', 'customer': 'Sarah Nalwoga', 'amount': 36000.0, 'status': 'accepted', 'items': 3},
-      {'id': '1243', 'customer': 'David Okello', 'amount': 72000.0, 'status': 'preparing', 'items': 4},
-    ];
+    final authProvider = Provider.of<AuthProvider>(context);
+    final farmerId = authProvider.currentUser?.id ?? '';
+    final orderService = OrderService();
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: recentOrders.length,
-      itemBuilder: (context, index) {
-        final order = recentOrders[index];
-        final status = order['status'] as String;
-        final statusColor = status == 'pending'
-            ? AppTheme.warningColor
-            : status == 'accepted'
-                ? AppTheme.primaryColor
-                : AppTheme.secondaryColor;
+    return FutureBuilder<List<Order>>(
+      future: orderService.getFarmerRecentOrders(farmerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.receipt_long, color: statusColor),
-            ),
-            title: Text(
-              'Order #${order['id']}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text('${order['customer']} • ${order['items']} items'),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'UGX ${(order['amount'] as double).toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Error loading recent orders: ${snapshot.error}'),
+          );
+        }
+
+        final recentOrders = snapshot.data ?? [];
+
+        if (recentOrders.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No recent orders in the last 24 hours',
+                    style: TextStyle(color: Colors.grey),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: recentOrders.take(5).length, // Show max 5 recent orders
+          itemBuilder: (context, index) {
+            final order = recentOrders[index];
+            final statusColor = _getStatusColor(order.status);
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    status.toUpperCase(),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Icon(Icons.receipt_long, color: statusColor),
                 ),
-              ],
-            ),
-            onTap: () {
-              // Navigate to order details
-            },
-          ),
+                title: Text(
+                  'Order #${order.id.substring(0, 8)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text('${order.buyerName} • ${order.items.length} items'),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'UGX ${order.totalAmount.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        order.status.toString().split('.').last.toUpperCase(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SHGOrdersScreen(),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return AppTheme.warningColor;
+      case OrderStatus.confirmed:
+      case OrderStatus.preparing:
+        return AppTheme.primaryColor;
+      case OrderStatus.ready:
+      case OrderStatus.inTransit:
+        return Colors.blue;
+      case OrderStatus.delivered:
+      case OrderStatus.completed:
+        return AppTheme.successColor;
+      case OrderStatus.cancelled:
+      case OrderStatus.rejected:
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondary;
+    }
   }
 }

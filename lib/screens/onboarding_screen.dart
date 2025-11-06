@@ -456,15 +456,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                 const SizedBox(height: 24),
-                // Test Validation Button
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/validation-test');
-                  },
-                  icon: const Icon(Icons.science_outlined),
-                  label: const Text('Test Validation Updates'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.secondaryColor,
+                // Developer Credit
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Developed by DATACOLLECTORS LTD',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

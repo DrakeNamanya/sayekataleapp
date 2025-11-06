@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/notification_service.dart';
+import '../../services/message_service.dart';
+import '../../services/order_service.dart';
+import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
-import '../../models/order.dart';
+import '../../models/order.dart' as app_order;
 import '../../models/product.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
@@ -14,6 +17,7 @@ import 'psa_financial_screen.dart';
 import 'psa_messages_screen.dart';
 import 'psa_profile_screen.dart';
 import 'psa_notifications_screen.dart';
+import '../delivery/delivery_control_screen.dart';
 
 class PSADashboardScreen extends StatefulWidget {
   const PSADashboardScreen({super.key});
@@ -43,69 +47,154 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final supplierId = authProvider.currentUser?.id ?? '';
+    final orderService = OrderService();
+
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+      bottomNavigationBar: FutureBuilder<int>(
+        future: orderService.getFarmerPendingOrdersCount(supplierId),
+        builder: (context, snapshot) {
+          final pendingOrders = snapshot.data ?? 0;
+          return BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: AppTheme.primaryColor,
+            unselectedItemColor: AppTheme.textSecondary,
+            selectedFontSize: 12,
+            unselectedFontSize: 11,
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                activeIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.store_outlined),
+                activeIcon: Icon(Icons.store),
+                label: 'Products',
+              ),
+              BottomNavigationBarItem(
+                icon: pendingOrders > 0
+                    ? Badge(
+                        label: Text('$pendingOrders'),
+                        child: const Icon(Icons.shopping_bag_outlined),
+                      )
+                    : const Icon(Icons.shopping_bag_outlined),
+                activeIcon: pendingOrders > 0
+                    ? Badge(
+                        label: Text('$pendingOrders'),
+                        child: const Icon(Icons.shopping_bag),
+                      )
+                    : const Icon(Icons.shopping_bag),
+                label: 'Orders',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.inventory_outlined),
+                activeIcon: Icon(Icons.inventory),
+                label: 'Inventory',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          );
         },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondary,
-        selectedFontSize: 12,
-        unselectedFontSize: 11,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store_outlined),
-            activeIcon: Icon(Icons.store),
-            label: 'Products',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            activeIcon: Icon(Icons.shopping_bag),
-            label: 'Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_outlined),
-            activeIcon: Icon(Icons.inventory),
-            label: 'Inventory',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
 }
 
-class _DashboardHome extends StatelessWidget {
+class _DashboardHome extends StatefulWidget {
   const _DashboardHome();
+
+  @override
+  State<_DashboardHome> createState() => _DashboardHomeState();
+}
+
+class _DashboardHomeState extends State<_DashboardHome> {
+  // Real data from Firebase
+  double _todayRevenue = 0.0;
+  double _monthlyRevenue = 0.0;
+  int _activeOrders = 0;
+  int _totalProducts = 0;
+  int _lowStockItems = 0;
+  int _deliveryPending = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRealStats();
+    });
+  }
+
+  Future<void> _loadRealStats() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final supplierId = authProvider.currentUser?.id;
+
+    if (supplierId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final orderService = OrderService();
+      final productService = ProductService();
+
+      // Load all stats in parallel
+      final results = await Future.wait([
+        orderService.getFarmerTodayEarnings(supplierId),
+        orderService.getFarmerRevenue(supplierId), // Monthly is actually total
+        orderService.getFarmerActiveOrdersCount(supplierId),
+        productService.getFarmerProductsCount(supplierId),
+        productService.getFarmerLowStockCount(supplierId),
+        orderService.getFarmerActiveOrdersCount(supplierId), // Using active as pending delivery
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _todayRevenue = results[0] as double;
+          _monthlyRevenue = results[1] as double;
+          _activeOrders = results[2] as int;
+          _totalProducts = results[3] as int;
+          _lowStockItems = results[4] as int;
+          _deliveryPending = results[5] as int;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
     final notificationService = NotificationService();
+    final messageService = MessageService();
+    final orderService = OrderService();
     final userId = user?.id ?? '';
 
-    // Mock data - Supplier metrics
-    final todayRevenue = 1850000.0; // UGX
-    final monthlyRevenue = 24500000.0; // UGX
-    final activeOrders = 15;
-    final totalProducts = 48;
-    final lowStockItems = 6;
-    final deliveryPending = 8;
+    // Use real data
+    final todayRevenue = _todayRevenue;
+    final monthlyRevenue = _monthlyRevenue;
+    final activeOrders = _activeOrders;
+    final totalProducts = _totalProducts;
+    final lowStockItems = _lowStockItems;
+    final deliveryPending = _deliveryPending;
 
     return Scaffold(
       body: CustomScrollView(
@@ -198,37 +287,44 @@ class _DashboardHome extends StatelessWidget {
                                     );
                                   },
                                 ),
-                                Stack(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.message_outlined, color: Colors.white),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (context) => const PSAMessagesScreen()),
-                                        );
-                                      },
-                                    ),
-                                    Positioned(
-                                      right: 8,
-                                      top: 8,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
+                                StreamBuilder<int>(
+                                  stream: messageService.streamTotalUnreadCount(userId),
+                                  builder: (context, snapshot) {
+                                    final unreadCount = snapshot.data ?? 0;
+                                    return Stack(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.message_outlined, color: Colors.white),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => const PSAMessagesScreen()),
+                                            );
+                                          },
                                         ),
-                                        child: const Text(
-                                          '4',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                        if (unreadCount > 0)
+                                          Positioned(
+                                            right: 8,
+                                            top: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -394,12 +490,12 @@ class _DashboardHome extends StatelessWidget {
                       Expanded(
                         child: _QuickActionCard(
                           icon: Icons.local_shipping,
-                          label: 'Delivery',
-                          color: Colors.blue.shade600,
+                          label: 'My Deliveries',
+                          color: Colors.green,
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PSADeliveryScreen()),
+                              MaterialPageRoute(builder: (context) => const DeliveryControlScreen()),
                             );
                           },
                         ),
@@ -473,29 +569,58 @@ class _DashboardHome extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _OrderCard(
-                    orderId: '#ORD-2345',
-                    customerName: 'John Farmer',
-                    products: 'Seeds, Fertilizer',
-                    amount: 450000.0,
-                    status: 'Processing',
-                    statusColor: Colors.orange,
-                  ),
-                  _OrderCard(
-                    orderId: '#ORD-2344',
-                    customerName: 'Mary Agricultural Co.',
-                    products: 'Equipment, Tools',
-                    amount: 1250000.0,
-                    status: 'Ready to Ship',
-                    statusColor: Colors.blue,
-                  ),
-                  _OrderCard(
-                    orderId: '#ORD-2343',
-                    customerName: 'Farm Supply Ltd',
-                    products: 'Pesticides, Sprayer',
-                    amount: 850000.0,
-                    status: 'Delivered',
-                    statusColor: AppTheme.successColor,
+                  FutureBuilder<List<app_order.Order>>(
+                    future: orderService.getFarmerRecentOrders(userId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text('Error loading recent orders: ${snapshot.error}'),
+                        );
+                      }
+
+                      final recentOrders = snapshot.data ?? [];
+
+                      if (recentOrders.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No recent orders in the last 24 hours',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: recentOrders.take(3).map((order) {
+                          return _OrderCard(
+                            orderId: '#${order.id.substring(0, 8)}',
+                            customerName: order.buyerName,
+                            products: order.items.map((item) => item.productName).take(2).join(', '),
+                            amount: order.totalAmount,
+                            status: order.status.toString().split('.').last,
+                            statusColor: _getStatusColor(order.status),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -504,6 +629,27 @@ class _DashboardHome extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(app_order.OrderStatus status) {
+    switch (status) {
+      case app_order.OrderStatus.pending:
+        return AppTheme.warningColor;
+      case app_order.OrderStatus.confirmed:
+      case app_order.OrderStatus.preparing:
+        return AppTheme.primaryColor;
+      case app_order.OrderStatus.ready:
+      case app_order.OrderStatus.inTransit:
+        return Colors.blue;
+      case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.completed:
+        return AppTheme.successColor;
+      case app_order.OrderStatus.cancelled:
+      case app_order.OrderStatus.rejected:
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondary;
+    }
   }
 }
 

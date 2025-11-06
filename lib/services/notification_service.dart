@@ -24,6 +24,7 @@ class NotificationService {
         debugPrint('📢 Creating notification for user: $userId');
       }
 
+      final now = DateTime.now().toIso8601String();
       final notification = {
         'user_id': userId,
         'type': type.toString().split('.').last,
@@ -32,7 +33,7 @@ class NotificationService {
         'action_url': actionUrl,
         'related_id': relatedId,
         'is_read': false,
-        'created_at': FieldValue.serverTimestamp(),
+        'created_at': now,
       };
 
       final docRef = await _firestore.collection('notifications').add(notification);
@@ -59,26 +60,39 @@ class NotificationService {
     return _firestore
         .collection('notifications')
         .where('user_id', isEqualTo: userId)
-        .orderBy('created_at', descending: true)
+        // Removed .orderBy() to avoid potential composite index requirement
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      // Get notifications
+      final notifications = snapshot.docs.map((doc) {
         final data = doc.data();
         return AppNotification.fromFirestore(data, doc.id);
       }).toList();
+      
+      // Sort in memory by created_at (most recent first)
+      notifications.sort((a, b) {
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      
+      return notifications;
     });
   }
 
   /// Get unread notifications count
   Future<int> getUnreadCount(String userId) async {
     try {
+      // Removed second .where() to avoid composite index requirement
       final querySnapshot = await _firestore
           .collection('notifications')
           .where('user_id', isEqualTo: userId)
-          .where('is_read', isEqualTo: false)
           .get();
 
-      return querySnapshot.docs.length;
+      // Filter unread in memory
+      final unreadCount = querySnapshot.docs
+          .where((doc) => doc.data()['is_read'] == false)
+          .length;
+
+      return unreadCount;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error getting unread count: $e');
@@ -92,9 +106,14 @@ class NotificationService {
     return _firestore
         .collection('notifications')
         .where('user_id', isEqualTo: userId)
-        .where('is_read', isEqualTo: false)
+        // Removed second .where() to avoid composite index requirement
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) {
+      // Filter unread in memory
+      return snapshot.docs
+          .where((doc) => doc.data()['is_read'] == false)
+          .length;
+    });
   }
 
   // ============================================================================
@@ -122,21 +141,26 @@ class NotificationService {
   /// Mark all notifications as read for a user
   Future<void> markAllAsRead(String userId) async {
     try {
+      // Removed second .where() to avoid composite index requirement
       final querySnapshot = await _firestore
           .collection('notifications')
           .where('user_id', isEqualTo: userId)
-          .where('is_read', isEqualTo: false)
           .get();
+      
+      // Filter unread in memory
+      final unreadDocs = querySnapshot.docs
+          .where((doc) => doc.data()['is_read'] == false)
+          .toList();
 
       final batch = _firestore.batch();
-      for (var doc in querySnapshot.docs) {
+      for (var doc in unreadDocs) {
         batch.update(doc.reference, {'is_read': true});
       }
 
       await batch.commit();
 
       if (kDebugMode) {
-        debugPrint('✅ Marked ${querySnapshot.docs.length} notifications as read');
+        debugPrint('✅ Marked ${unreadDocs.length} notifications as read');
       }
     } catch (e) {
       if (kDebugMode) {

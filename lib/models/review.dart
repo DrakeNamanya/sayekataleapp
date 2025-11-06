@@ -7,6 +7,7 @@ class Review {
   final String? productId;
   final double rating;
   final String? comment;
+  final List<String> photoUrls;  // Photo URLs for this review
   final DateTime createdAt;
 
   Review({
@@ -18,6 +19,7 @@ class Review {
     this.productId,
     required this.rating,
     this.comment,
+    this.photoUrls = const [],
     required this.createdAt,
   });
 
@@ -31,6 +33,10 @@ class Review {
       productId: data['product_id'],
       rating: (data['rating'] ?? 0.0).toDouble(),
       comment: data['comment'],
+      photoUrls: (data['photo_urls'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       createdAt: DateTime.parse(data['created_at']),
     );
   }
@@ -44,7 +50,11 @@ class Review {
       'product_id': productId,
       'rating': rating,
       'comment': comment,
+      'photo_urls': photoUrls,
       'created_at': createdAt.toIso8601String(),
     };
   }
+  
+  /// Check if review has photos
+  bool get hasPhotos => photoUrls.isNotEmpty;
 }

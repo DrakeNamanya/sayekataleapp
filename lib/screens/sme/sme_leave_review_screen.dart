@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/order.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/photo_upload_widget.dart';
+import '../../services/photo_storage_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/rating_service.dart';
+import '../../models/review.dart';
 
 /// Screen for SME buyers to leave reviews after order delivery
 class SMELeaveReviewScreen extends StatefulWidget {
@@ -20,12 +27,18 @@ class SMELeaveReviewScreen extends StatefulWidget {
 class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
   double _rating = 5.0;
   final TextEditingController _commentController = TextEditingController();
+  final PhotoStorageService _photoService = PhotoStorageService();
+  final RatingService _ratingService = RatingService();
   
   // Review criteria with individual ratings
   double _productQualityRating = 5.0;
   double _communicationRating = 5.0;
   double _deliveryRating = 5.0;
   double _packagingRating = 5.0;
+  
+  // Photos
+  List<XFile> _selectedPhotos = [];
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -33,7 +46,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
     super.dispose();
   }
 
-  void _submitReview() {
+  Future<void> _submitReview() async {
     if (_commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -44,40 +57,118 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
       return;
     }
 
-    // In real app: Save review to Firebase
-    // FarmerReview review = FarmerReview(
-    //   id: FirebaseFirestore.instance.collection('reviews').doc().id,
-    //   farmerId: widget.order.farmId,
-    //   customerId: widget.order.customerId,
-    //   customerName: 'Current User Name',
-    //   rating: _rating,
-    //   comment: _commentController.text.trim(),
-    //   createdAt: DateTime.now(),
-    // );
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Review submitted successfully!',
-              style: TextStyle(fontWeight: FontWeight.bold),
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+      final userName = authProvider.currentUser?.name ?? 'Anonymous';
+
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Create review ID
+      final reviewId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Upload photos if any
+      List<String> photoUrls = [];
+      if (_selectedPhotos.isNotEmpty) {
+        // Show uploading progress
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Uploading photos...'),
+                ],
+              ),
+              duration: Duration(seconds: 30),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Thank you for rating ${widget.farmerName}',
-              style: const TextStyle(fontSize: 13),
+          );
+        }
+
+        photoUrls = await _photoService.uploadReviewPhotos(
+          reviewId: reviewId,
+          photos: _selectedPhotos,
+        );
+      }
+
+      // Create review object
+      final review = Review(
+        id: reviewId,
+        orderId: widget.order.id,
+        userId: userId,
+        userName: userName,
+        farmId: widget.order.farmerId,
+        rating: _rating,
+        comment: _commentController.text.trim(),
+        photoUrls: photoUrls,
+        createdAt: DateTime.now(),
+      );
+
+      // Submit review to Firestore
+      await _ratingService.submitReview(review);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Review submitted successfully!',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Thank you for rating ${widget.farmerName}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                if (photoUrls.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '${photoUrls.length} photo(s) uploaded',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
-        backgroundColor: AppTheme.successColor,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-    
-    Navigator.pop(context, true); // Return true to indicate review submitted
+            backgroundColor: AppTheme.successColor,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      setState(() {
+        _isSubmitting = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting review: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -285,13 +376,29 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
               ),
             ),
             
+            const SizedBox(height: 24),
+            
+            // Photo Upload Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: PhotoUploadWidget(
+                maxPhotos: 5,
+                initialPhotos: _selectedPhotos,
+                onPhotosSelected: (photos) {
+                  setState(() {
+                    _selectedPhotos = photos;
+                  });
+                },
+              ),
+            ),
+            
             const SizedBox(height: 32),
             
             // Submit Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: ElevatedButton(
-                onPressed: _submitReview,
+                onPressed: _isSubmitting ? null : _submitReview,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   minimumSize: const Size(double.infinity, 56),
@@ -299,13 +406,35 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Submit Review',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Submitting...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Text(
+                        'Submit Review',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
             

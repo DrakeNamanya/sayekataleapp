@@ -3,7 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
+import '../../services/message_service.dart';
+import '../../services/delivery_tracking_service.dart';
 import '../../models/order.dart' as app_order;
+import '../common/chat_screen.dart';
+import '../delivery/live_tracking_screen.dart';
+import 'order_review_screen.dart';
 
 class SMEOrdersScreen extends StatefulWidget {
   const SMEOrdersScreen({super.key});
@@ -14,6 +19,8 @@ class SMEOrdersScreen extends StatefulWidget {
 
 class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
+  final MessageService _messageService = MessageService();
+  final DeliveryTrackingService _trackingService = DeliveryTrackingService();
   late TabController _tabController;
 
   @override
@@ -312,11 +319,162 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
+              
+              // Track Delivery Button (for orders in transit)
+              if (order.status == app_order.OrderStatus.confirmed || 
+                  order.status == app_order.OrderStatus.preparing ||
+                  order.status == app_order.OrderStatus.ready ||
+                  order.status == app_order.OrderStatus.inTransit) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _trackDelivery(order),
+                    icon: const Icon(Icons.map, size: 18),
+                    label: const Text('Track Delivery'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              
+              // Rate Order Button (for delivered orders without review)
+              if (order.status == app_order.OrderStatus.delivered && 
+                  order.isReceivedByBuyer && 
+                  order.rating == null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _navigateToReviewScreen(order),
+                    icon: const Icon(Icons.star_outline, size: 18),
+                    label: const Text('Rate This Order'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              
+              // Already Reviewed Badge
+              if (order.rating != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star, size: 16, color: Colors.amber),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'You rated this order ${order.rating} star${order.rating! > 1 ? 's' : ''}',
+                          style: TextStyle(fontSize: 12, color: Colors.amber[900]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Track delivery for order
+  Future<void> _trackDelivery(app_order.Order order) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Get delivery tracking
+      final tracking = await _trackingService.getDeliveryTrackingByOrderId(order.id);
+
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      if (tracking == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Delivery tracking not available yet.\n\n'
+                'This could be because:\n'
+                '• The farmer hasn\'t confirmed your order yet\n'
+                '• GPS coordinates are missing from your profile or the farmer\'s profile\n\n'
+                '📍 To enable tracking: Go to Profile → Edit Profile → Add your GPS location\n\n'
+                'Please check back after the order is confirmed.',
+              ),
+              duration: const Duration(seconds: 6),
+              action: SnackBarAction(
+                label: 'Got it',
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Navigate to live tracking
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LiveTrackingScreen(trackingId: tracking.id),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading if open
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading tracking: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Navigate to review screen and refresh on return
+  Future<void> _navigateToReviewScreen(app_order.Order order) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderReviewScreen(order: order),
+      ),
+    );
+    
+    // Refresh orders list if review was submitted
+    if (result == true && mounted) {
+      setState(() {}); // Trigger rebuild to fetch updated orders
+    }
   }
 
   void _showOrderDetailsDialog(app_order.Order order) {
@@ -486,12 +644,91 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                     ),
                   ),
                 ],
+                
+                const SizedBox(height: 20),
+                // Contact Seller Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _handleContactSeller(order),
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: const Text('Contact Seller'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleContactSeller(app_order.Order order) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to contact seller'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Close order details dialog
+      Navigator.pop(context);
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Create or get conversation
+      final conversation = await _messageService.getOrCreateConversation(
+        user1Id: currentUser.id,
+        user1Name: currentUser.name,
+        user2Id: order.farmerId,
+        user2Name: order.farmerName,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        
+        // Navigate to chat screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              conversationId: conversation.id,
+              otherUserId: order.farmerId,
+              otherUserName: order.farmerName,
+              currentUserId: currentUser.id,
+              currentUserName: currentUser.name,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildDetailRow(String label, String value) {
