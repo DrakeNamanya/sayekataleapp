@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/product.dart';
 import '../../models/product_category_hierarchy.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
+import '../../services/image_picker_service.dart';
+import '../../services/image_storage_service.dart';
 import '../../utils/app_theme.dart';
 
 class SHGProductsScreen extends StatefulWidget {
@@ -279,6 +283,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
     String? selectedMainCategory;
     String? selectedSubcategory;
     String selectedUnit = 'KGs';
+    List<XFile> selectedImages = []; // Store up to 3 images
+    final imagePickerService = ImagePickerService();
 
     showDialog(
       context: context,
@@ -393,6 +399,124 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 16),
+                // Product Photos Section
+                const Text(
+                  'Product Photos (Up to 3)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 100,
+                  child: Row(
+                    children: [
+                      // Display selected images
+                      ...List.generate(
+                        selectedImages.length,
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: FutureBuilder<Uint8List>(
+                                  future: selectedImages[index].readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Image.memory(
+                                        snapshot.data!,
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      );
+                                    }
+                                    return Container(
+                                      width: 100,
+                                      height: 100,
+                                      color: Colors.grey.shade200,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      selectedImages.removeAt(index);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Add photo button
+                      if (selectedImages.length < 3)
+                        InkWell(
+                          onTap: () async {
+                            final image = await imagePickerService.showImageSourceBottomSheet(context);
+                            if (image != null) {
+                              setDialogState(() {
+                                selectedImages.add(image);
+                              });
+                            }
+                          },
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                                width: 2,
+                                style: BorderStyle.solid,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_photo_alternate,
+                                  size: 32,
+                                  color: AppTheme.primaryColor,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Add Photo',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -421,6 +545,32 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                   final authProvider = Provider.of<AuthProvider>(context, listen: false);
                   final user = authProvider.currentUser!;
 
+                  // Upload product images to Firebase Storage
+                  List<String>? imageUrls;
+                  if (selectedImages.isNotEmpty) {
+                    if (kDebugMode) {
+                      debugPrint('📤 Uploading ${selectedImages.length} product images...');
+                    }
+                    
+                    final imageStorageService = ImageStorageService();
+                    imageUrls = await imageStorageService.uploadMultipleImagesFromXFiles(
+                      images: selectedImages,
+                      folder: 'products',
+                      userId: user.id,
+                      compress: true,
+                    ).timeout(
+                      const Duration(seconds: 60),
+                      onTimeout: () {
+                        throw Exception('Image upload timeout - please check your internet connection');
+                      },
+                    );
+                    
+                    if (kDebugMode) {
+                      debugPrint('✅ Uploaded ${imageUrls?.length ?? 0} product images');
+                    }
+                  }
+
+                  // Create product with first image URL (backward compatibility)
                   await _productService.createProduct(
                     farmerId: user.id,
                     farmerName: user.name,
@@ -432,6 +582,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     price: double.parse(priceController.text.trim()),
                     unit: selectedUnit,
                     stockQuantity: int.parse(stockController.text.trim()),
+                    imageUrl: imageUrls?.isNotEmpty == true ? imageUrls!.first : null,
                   );
 
                   if (mounted) {
@@ -444,6 +595,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     );
                   }
                 } catch (e) {
+                  if (kDebugMode) {
+                    debugPrint('❌ Error adding product: $e');
+                  }
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
