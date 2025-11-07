@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
+import '../../services/image_picker_service.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/nin_validator.dart';
 import '../../widgets/location_picker_widget.dart';
@@ -26,6 +27,8 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
   DisabilityStatus _disabilityStatus = DisabilityStatus.no;
   String? _profileImagePath;
   String? _nationalIdPhotoPath;
+  XFile? _profileImageFile; // Local file for display before upload
+  XFile? _nationalIdPhotoFile; // Local file for display before upload
   double? _latitude;
   double? _longitude;
   
@@ -79,20 +82,18 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
   }
 
   Future<void> _pickImage(bool isProfileImage) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
-    );
+    // Use the new ImagePickerService for better UX
+    final imagePickerService = ImagePickerService();
+    final file = await imagePickerService.showImageSourceBottomSheet(context);
 
-    if (image != null) {
+    if (file != null) {
       setState(() {
         if (isProfileImage) {
-          _profileImagePath = image.path;
+          _profileImagePath = file.path;
+          _profileImageFile = file; // Store XFile for display
         } else {
-          _nationalIdPhotoPath = image.path;
+          _nationalIdPhotoPath = file.path;
+          _nationalIdPhotoFile = file; // Store XFile for display
         }
       });
     }
@@ -127,6 +128,70 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
         _ninType = null;
       }
     });
+  }
+
+  /// Build profile image widget that handles both local files and network URLs
+  Future<Widget> _buildProfileImage() async {
+    if (_profileImageFile != null) {
+      // Show local file (newly picked)
+      final bytes = await _profileImageFile!.readAsBytes();
+      return CircleAvatar(
+        radius: 60,
+        backgroundColor: Colors.grey.shade200,
+        backgroundImage: MemoryImage(bytes),
+      );
+    } else if (_profileImagePath != null && _profileImagePath!.startsWith('http')) {
+      // Show network image (existing URL)
+      return CircleAvatar(
+        radius: 60,
+        backgroundColor: Colors.grey.shade200,
+        backgroundImage: NetworkImage(_profileImagePath!),
+      );
+    }
+    
+    // No image
+    return CircleAvatar(
+      radius: 60,
+      backgroundColor: Colors.grey.shade200,
+      child: const Icon(Icons.person, size: 60, color: Colors.grey),
+    );
+  }
+
+  /// Build national ID photo widget that handles both local files and network URLs
+  Future<Widget> _buildNationalIdImage() async {
+    if (_nationalIdPhotoFile != null) {
+      // Show local file (newly picked)
+      final bytes = await _nationalIdPhotoFile!.readAsBytes();
+      return Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 150,
+      );
+    } else if (_nationalIdPhotoPath != null && _nationalIdPhotoPath!.startsWith('http')) {
+      // Show network image (existing URL)
+      return Image.network(
+        _nationalIdPhotoPath!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 150,
+      );
+    }
+    
+    // No image - show placeholder
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_a_photo, size: 48, color: AppTheme.primaryColor),
+          const SizedBox(height: 8),
+          Text(
+            'Tap to add National ID photo',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveProfile() async{
@@ -344,15 +409,18 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage: _profileImagePath != null
-                        ? NetworkImage(_profileImagePath!) as ImageProvider
-                        : null,
-                    child: _profileImagePath == null
-                        ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                        : null,
+                  FutureBuilder<Widget>(
+                    future: _buildProfileImage(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return snapshot.data!;
+                      }
+                      return CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey.shade200,
+                        child: const CircularProgressIndicator(),
+                      );
+                    },
                   ),
                   Positioned(
                     bottom: 0,
@@ -469,25 +537,18 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey.shade400),
                 ),
-                child: _nationalIdPhotoPath != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          _nationalIdPhotoPath!,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo, size: 48, color: Colors.grey.shade600),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap to upload National ID photo',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: FutureBuilder<Widget>(
+                    future: _buildNationalIdImage(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return snapshot.data!;
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 16),
