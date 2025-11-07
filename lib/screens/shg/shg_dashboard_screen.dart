@@ -629,14 +629,14 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         children: [
                           Expanded(
                             child: _QuickActionCard(
-                              icon: Icons.account_balance_wallet_outlined,
-                              label: 'My Wallet',
-                              color: AppTheme.successColor,
+                              icon: Icons.local_shipping_outlined,
+                              label: 'My Deliveries',
+                              color: Colors.blue,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGWalletScreen(),
+                                    builder: (context) => const DeliveryControlScreen(),
                                   ),
                                 );
                               },
@@ -645,14 +645,14 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _QuickActionCard(
-                              icon: Icons.local_shipping,
-                              label: 'My Deliveries',
-                              color: Colors.green,
+                              icon: Icons.account_balance_wallet_outlined,
+                              label: 'My Wallet',
+                              color: AppTheme.successColor,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const DeliveryControlScreen(),
+                                    builder: (context) => const SHGWalletScreen(),
                                   ),
                                 );
                               },
