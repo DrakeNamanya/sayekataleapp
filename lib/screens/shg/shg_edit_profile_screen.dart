@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,6 +24,15 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   final _nationalIdController = TextEditingController();
   final _nameOnIdPhotoController = TextEditingController();
   
+  // Partner information controllers
+  final _heiferAgrihubNameController = TextEditingController();
+  final _heiferSHGNameController = TextEditingController();
+  final _heiferSHGIdController = TextEditingController();
+  final _heiferParticipantIdController = TextEditingController();
+  final _fsmeGroupNameController = TextEditingController();
+  final _fsmeGroupIdController = TextEditingController();
+  final _fsmeParticipantIdController = TextEditingController();
+  
   Sex? _selectedSex;
   DisabilityStatus _disabilityStatus = DisabilityStatus.no;
   String? _profileImagePath;
@@ -41,6 +51,9 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   // NIN validation state
   String? _ninValidationError;
   String? _ninType;
+  
+  // Partner information
+  PartnerType? _selectedPartner;
   
   bool _isLoading = false;
 
@@ -64,6 +77,13 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
       _profileImagePath = user.profileImage;
       _nationalIdPhotoPath = user.nationalIdPhoto;
       
+      if (kDebugMode) {
+        debugPrint('🔄 SHG EDIT PROFILE - Loaded user data:');
+        debugPrint('   - User name: ${user.name}');
+        debugPrint('   - Profile image: ${_profileImagePath ?? "NULL"}');
+        debugPrint('   - National ID photo: ${_nationalIdPhotoPath ?? "NULL"}');
+      }
+      
       // Validate NIN if present
       if (user.nationalId != null && user.nationalId!.isNotEmpty) {
         _validateNIN(user.nationalId!);
@@ -77,6 +97,18 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         _selectedVillage = user.location!.village?.isNotEmpty == true ? user.location!.village : null;
         _latitude = user.location!.latitude;
         _longitude = user.location!.longitude;
+      }
+      
+      // Load partner information
+      if (user.partnerInfo != null) {
+        _selectedPartner = user.partnerInfo!.partner;
+        _heiferAgrihubNameController.text = user.partnerInfo!.heiferAgrihubName ?? '';
+        _heiferSHGNameController.text = user.partnerInfo!.heiferSHGName ?? '';
+        _heiferSHGIdController.text = user.partnerInfo!.heiferSHGId ?? '';
+        _heiferParticipantIdController.text = user.partnerInfo!.heiferParticipantId ?? '';
+        _fsmeGroupNameController.text = user.partnerInfo!.fsmeGroupName ?? '';
+        _fsmeGroupIdController.text = user.partnerInfo!.fsmeGroupId ?? '';
+        _fsmeParticipantIdController.text = user.partnerInfo!.fsmeParticipantId ?? '';
       }
     }
   }
@@ -266,14 +298,73 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         address: null, // Will be auto-generated from GPS or admin divisions
       );
 
+      // Create partner info if selected
+      PartnerInfo? partnerInfo;
+      if (_selectedPartner != null) {
+        partnerInfo = PartnerInfo(
+          partner: _selectedPartner!,
+          heiferAgrihubName: _selectedPartner == PartnerType.heifer 
+              ? _heiferAgrihubNameController.text.trim().isNotEmpty 
+                  ? _heiferAgrihubNameController.text.trim() 
+                  : null
+              : null,
+          heiferSHGName: _selectedPartner == PartnerType.heifer 
+              ? _heiferSHGNameController.text.trim().isNotEmpty 
+                  ? _heiferSHGNameController.text.trim() 
+                  : null
+              : null,
+          heiferSHGId: _selectedPartner == PartnerType.heifer 
+              ? _heiferSHGIdController.text.trim().isNotEmpty 
+                  ? _heiferSHGIdController.text.trim() 
+                  : null
+              : null,
+          heiferParticipantId: _selectedPartner == PartnerType.heifer 
+              ? _heiferParticipantIdController.text.trim().isNotEmpty 
+                  ? _heiferParticipantIdController.text.trim() 
+                  : null
+              : null,
+          fsmeGroupName: _selectedPartner == PartnerType.fsme 
+              ? _fsmeGroupNameController.text.trim().isNotEmpty 
+                  ? _fsmeGroupNameController.text.trim() 
+                  : null
+              : null,
+          fsmeGroupId: _selectedPartner == PartnerType.fsme 
+              ? _fsmeGroupIdController.text.trim().isNotEmpty 
+                  ? _fsmeGroupIdController.text.trim() 
+                  : null
+              : null,
+          fsmeParticipantId: _selectedPartner == PartnerType.fsme 
+              ? _fsmeParticipantIdController.text.trim().isNotEmpty 
+                  ? _fsmeParticipantIdController.text.trim() 
+                  : null
+              : null,
+        );
+      }
+
+      if (kDebugMode) {
+        debugPrint('📤 SHG EDIT PROFILE - Calling updateProfile with:');
+        debugPrint('   - profileImageFile: ${_profileImageFile?.path ?? "null"}');
+        debugPrint('   - profileImagePath: ${_profileImagePath ?? "null"}');
+        debugPrint('   - nationalIdPhotoFile: ${_nationalIdPhotoFile?.path ?? "null"}');
+        debugPrint('   - nationalIdPhotoPath: ${_nationalIdPhotoPath ?? "null"}');
+        debugPrint('   - nationalId: ${_nationalIdController.text.trim().isEmpty ? "EMPTY" : "filled"}');
+        debugPrint('   - nameOnIdPhoto: ${_nameOnIdPhotoController.text.trim().isEmpty ? "EMPTY" : "filled"}');
+        debugPrint('   - sex: ${_selectedSex ?? "null"}');
+        debugPrint('   - location: ${location.district}');
+        debugPrint('   - partnerInfo: ${partnerInfo != null ? partnerInfo.partner.displayName : "null"}');
+      }
+      
       await authProvider.updateProfile(
-        profileImage: _profileImagePath,
+        profileImageFile: _profileImageFile,
+        profileImageUrl: _profileImageFile == null ? _profileImagePath : null,  // Only pass URL if no file
         nationalId: _nationalIdController.text.trim(),
-        nationalIdPhoto: _nationalIdPhotoPath,
+        nationalIdPhotoFile: _nationalIdPhotoFile,
+        nationalIdPhotoUrl: _nationalIdPhotoFile == null ? _nationalIdPhotoPath : null,  // Only pass URL if no file
         nameOnIdPhoto: _nameOnIdPhotoController.text.trim(),
         sex: _selectedSex,
         disabilityStatus: _disabilityStatus,
         location: location,
+        partnerInfo: partnerInfo,
       );
 
       if (mounted) {
@@ -689,6 +780,120 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Partner Information Section
+            const Divider(height: 32),
+            const Text(
+              'Partner Information (Optional)',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Select your partner organization if applicable. This helps us track program effectiveness.',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            
+            // Partner Dropdown
+            DropdownButtonFormField<PartnerType>(
+              value: _selectedPartner,
+              decoration: const InputDecoration(
+                labelText: 'Partner Organization',
+                prefixIcon: Icon(Icons.business),
+                hintText: 'Select partner (optional)',
+              ),
+              items: PartnerType.values.map((partner) {
+                return DropdownMenuItem(
+                  value: partner,
+                  child: Text(partner.displayName),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPartner = value;
+                  // Clear fields when partner changes
+                  if (value != PartnerType.heifer) {
+                    _heiferAgrihubNameController.clear();
+                    _heiferSHGNameController.clear();
+                    _heiferSHGIdController.clear();
+                    _heiferParticipantIdController.clear();
+                  }
+                  if (value != PartnerType.fsme) {
+                    _fsmeGroupNameController.clear();
+                    _fsmeGroupIdController.clear();
+                    _fsmeParticipantIdController.clear();
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Heifer-specific fields
+            if (_selectedPartner == PartnerType.heifer) ...[
+              TextFormField(
+                controller: _heiferAgrihubNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Heifer Agrihub Name',
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _heiferSHGNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Heifer SHG Name',
+                  prefixIcon: Icon(Icons.groups),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _heiferSHGIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Heifer SHG ID',
+                  prefixIcon: Icon(Icons.badge),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _heiferParticipantIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Heifer Participant ID',
+                  prefixIcon: Icon(Icons.person_pin),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
+            // FSME-specific fields
+            if (_selectedPartner == PartnerType.fsme) ...[
+              TextFormField(
+                controller: _fsmeGroupNameController,
+                decoration: const InputDecoration(
+                  labelText: 'FSME Group Name',
+                  prefixIcon: Icon(Icons.groups),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fsmeGroupIdController,
+                decoration: const InputDecoration(
+                  labelText: 'FSME Group ID',
+                  prefixIcon: Icon(Icons.badge),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fsmeParticipantIdController,
+                decoration: const InputDecoration(
+                  labelText: 'FSME Participant ID',
+                  prefixIcon: Icon(Icons.person_pin),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Location Section
             const Divider(height: 32),
             Row(
@@ -797,6 +1002,13 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
     _phoneController.dispose();
     _nationalIdController.dispose();
     _nameOnIdPhotoController.dispose();
+    _heiferAgrihubNameController.dispose();
+    _heiferSHGNameController.dispose();
+    _heiferSHGIdController.dispose();
+    _heiferParticipantIdController.dispose();
+    _fsmeGroupNameController.dispose();
+    _fsmeGroupIdController.dispose();
+    _fsmeParticipantIdController.dispose();
     super.dispose();
   }
 }

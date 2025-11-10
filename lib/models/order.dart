@@ -1,240 +1,361 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Order status enum
-enum OrderStatus {
-  pending,       // Order placed, waiting for farmer confirmation
-  confirmed,     // Farmer accepted the order
-  rejected,      // Farmer rejected the order
-  preparing,     // Farmer is preparing the order
-  ready,         // Order is ready for pickup/delivery
-  inTransit,     // Order is being delivered
-  delivered,     // Order delivered to buyer
-  completed,     // Transaction completed
-  cancelled,     // Order cancelled by buyer
-}
-
-/// Payment method enum
-enum PaymentMethod {
-  cash,          // Cash on delivery
-  mobileMoney,   // Mobile Money (MTN, Airtel)
-  bankTransfer,  // Bank transfer
-}
-
-/// Order model for marketplace transactions
+/// Order model for tracking purchases between users
 class Order {
-  final String id;                    // Firestore document ID
-  final String orderNumber;           // Human-readable order number (e.g., ORD-2024-0001)
-  final String buyerId;               // User ID of buyer (SME)
-  final String buyerName;             // Buyer's name
-  final String buyerPhone;            // Buyer's phone
-  final String? buyerSystemId;        // System ID/NIN of buyer
-  final String farmerId;              // User ID of farmer (SHG)
-  final String farmerName;            // Farmer's name
-  final String farmerPhone;           // Farmer's phone
-  final String? farmerSystemId;       // System ID/NIN of farmer
-  final List<OrderItem> items;        // List of products in order
-  final double totalAmount;           // Total order amount
-  final OrderStatus status;           // Current order status
-  final PaymentMethod paymentMethod;  // Payment method
-  final String? deliveryAddress;      // Delivery address
-  final String? deliveryNotes;        // Special delivery instructions
-  final DateTime createdAt;           // When order was placed
-  final DateTime updatedAt;           // Last update time
-  final DateTime? confirmedAt;        // When farmer confirmed
-  final DateTime? rejectedAt;         // When farmer rejected
-  final DateTime? deliveredAt;        // When order was delivered (marked by farmer)
-  final DateTime? receivedAt;         // When buyer confirmed receipt
-  final String? rejectionReason;      // Reason for rejection
-  final bool isReceivedByBuyer;       // Buyer confirmed receipt
-  final int? rating;                  // Buyer's rating (1-5 stars)
-  final String? review;               // Buyer's review text
-  final String? reviewPhoto;          // Photo of delivered product
-  final DateTime? reviewedAt;         // When review was submitted
-  final bool isFavoriteSeller;        // Is this seller marked as favorite by buyer
+  final String id;
+  final OrderType type;
+  final String buyerId;
+  final String buyerName;
+  final String buyerPhone;
+  final String sellerId;
+  final String sellerName;
+  final String sellerPhone;
+  final List<OrderItem> items;
+  final double subtotal;
+  final double serviceFee;
+  final double totalAmount;
+  final OrderStatus status;
+  final PaymentMethod paymentMethod;
+  final String? transactionId;
+  final String deliveryAddress;
+  final String? deliveryNotes;
+  final DateTime createdAt;
+  final DateTime? deliveredAt;
+  final DateTime? confirmedAt;
+  final DateTime? cancelledAt;
+  final String? cancellationReason;
+  final bool codRequiresBothConfirmation;
+  final DateTime? buyerConfirmedAt;
+  final DateTime? sellerConfirmedAt;
+  final int codRemindersSent;
+  final Map<String, dynamic> metadata;
+  
+  // Review and rating fields (legacy order system)
+  final double? rating;          // Customer rating (1-5 stars)
+  final String? rejectionReason; // Reason for order rejection
+  final bool? isFavoriteSeller;  // Whether seller is marked as favorite
+  
+  // Backward compatibility fields (legacy order system)
+  final String? farmerId;       // Alias for sellerId
+  final String? farmerName;     // Alias for sellerName
+  final String? farmerPhone;    // Alias for sellerPhone
+  final DateTime? receivedAt;   // Alias for confirmedAt
+  final bool? isReceivedByBuyer; // Alias for confirmed status
+  final String? orderNumber;    // Optional order number
 
   Order({
     required this.id,
-    required this.orderNumber,
+    required this.type,
     required this.buyerId,
     required this.buyerName,
     required this.buyerPhone,
-    this.buyerSystemId,
-    required this.farmerId,
-    required this.farmerName,
-    required this.farmerPhone,
-    this.farmerSystemId,
+    required this.sellerId,
+    required this.sellerName,
+    required this.sellerPhone,
     required this.items,
+    required this.subtotal,
+    required this.serviceFee,
     required this.totalAmount,
     required this.status,
     required this.paymentMethod,
-    this.deliveryAddress,
+    this.transactionId,
+    required this.deliveryAddress,
     this.deliveryNotes,
-    required this.createdAt,
-    required this.updatedAt,
-    this.confirmedAt,
-    this.rejectedAt,
-    this.deliveredAt,
-    this.receivedAt,
-    this.rejectionReason,
-    this.isReceivedByBuyer = false,
+    // Review and rating fields
     this.rating,
-    this.review,
-    this.reviewPhoto,
-    this.reviewedAt,
-    this.isFavoriteSeller = false,
-  });
+    this.rejectionReason,
+    this.isFavoriteSeller,
+    // Backward compatibility fields
+    String? farmerId,
+    String? farmerName,
+    String? farmerPhone,
+    DateTime? receivedAt,
+    bool? isReceivedByBuyer,
+    this.orderNumber,
+    required this.createdAt,
+    this.deliveredAt,
+    this.confirmedAt,
+    this.cancelledAt,
+    this.cancellationReason,
+    this.codRequiresBothConfirmation = false,
+    this.buyerConfirmedAt,
+    this.sellerConfirmedAt,
+    this.codRemindersSent = 0,
+    this.metadata = const {},
+  }) :  // Initialize backward compatibility fields
+        farmerId = farmerId ?? sellerId,
+        farmerName = farmerName ?? sellerName,
+        farmerPhone = farmerPhone ?? sellerPhone,
+        receivedAt = receivedAt ?? confirmedAt,
+        isReceivedByBuyer = isReceivedByBuyer ?? (confirmedAt != null);
 
-  /// Create Order from Firestore document
-  factory Order.fromFirestore(Map<String, dynamic> data, String id) {
-    // Helper function to parse DateTime
-    DateTime? parseDateTime(dynamic value) {
-      if (value == null) return null;
-      if (value is DateTime) return value;
-      if (value is String) return DateTime.parse(value);
-      if (value.runtimeType.toString().contains('Timestamp')) {
-        return (value as dynamic).toDate();
+  // Check if COD confirmation deadline is approaching (within 48 hours)
+  bool get isCodDeadlineApproaching {
+    if (paymentMethod != PaymentMethod.cashOnDelivery) return false;
+    if (status != OrderStatus.deliveredPendingConfirmation) return false;
+    
+    final hoursElapsed = DateTime.now().difference(deliveredAt!).inHours;
+    return hoursElapsed >= 24 && hoursElapsed < 48;
+  }
+
+  // Check if COD confirmation deadline has passed
+  bool get isCodDeadlinePassed {
+    if (paymentMethod != PaymentMethod.cashOnDelivery) return false;
+    if (status != OrderStatus.deliveredPendingConfirmation) return false;
+    
+    final hoursElapsed = DateTime.now().difference(deliveredAt!).inHours;
+    return hoursElapsed >= 48;
+  }
+
+  // Check if both parties have confirmed COD
+  bool get isCodFullyConfirmed {
+    return buyerConfirmedAt != null && sellerConfirmedAt != null;
+  }
+
+  // Convert to Firestore format
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'type': type.toString().split('.').last,
+      // CRITICAL: Save in BOTH camelCase and snake_case for compatibility
+      'buyerId': buyerId,
+      'buyer_id': buyerId, // ✅ Snake case for queries
+      'buyerName': buyerName,
+      'buyer_name': buyerName, // ✅ Snake case for queries
+      'buyerPhone': buyerPhone,
+      'buyer_phone': buyerPhone, // ✅ Snake case for queries
+      'sellerId': sellerId,
+      'seller_id': sellerId, // ✅ Snake case for queries
+      'sellerName': sellerName,
+      'seller_name': sellerName, // ✅ Snake case for queries
+      'sellerPhone': sellerPhone,
+      'seller_phone': sellerPhone, // ✅ Snake case for queries
+      'items': items.map((item) => item.toFirestore()).toList(),
+      'subtotal': subtotal,
+      'serviceFee': serviceFee,
+      'service_fee': serviceFee, // ✅ Snake case for queries
+      'totalAmount': totalAmount,
+      'total_amount': totalAmount, // ✅ Snake case for queries
+      'status': status.toString().split('.').last,
+      'paymentMethod': paymentMethod.toString().split('.').last,
+      'payment_method': paymentMethod.toString().split('.').last, // ✅ Snake case
+      'transactionId': transactionId,
+      'transaction_id': transactionId, // ✅ Snake case
+      'deliveryAddress': deliveryAddress,
+      'delivery_address': deliveryAddress, // ✅ Snake case
+      'deliveryNotes': deliveryNotes,
+      'delivery_notes': deliveryNotes, // ✅ Snake case
+      'createdAt': Timestamp.fromDate(createdAt),
+      'created_at': Timestamp.fromDate(createdAt), // ✅ Snake case
+      'deliveredAt': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'delivered_at': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null, // ✅ Snake case
+      'confirmedAt': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
+      'confirmed_at': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null, // ✅ Snake case
+      'cancelledAt': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null,
+      'cancelled_at': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null, // ✅ Snake case
+      'cancellationReason': cancellationReason,
+      'cancellation_reason': cancellationReason, // ✅ Snake case
+      'codRequiresBothConfirmation': codRequiresBothConfirmation,
+      'cod_requires_both_confirmation': codRequiresBothConfirmation, // ✅ Snake case
+      'buyerConfirmedAt': buyerConfirmedAt != null ? Timestamp.fromDate(buyerConfirmedAt!) : null,
+      'buyer_confirmed_at': buyerConfirmedAt != null ? Timestamp.fromDate(buyerConfirmedAt!) : null, // ✅ Snake case
+      'sellerConfirmedAt': sellerConfirmedAt != null ? Timestamp.fromDate(sellerConfirmedAt!) : null,
+      'seller_confirmed_at': sellerConfirmedAt != null ? Timestamp.fromDate(sellerConfirmedAt!) : null, // ✅ Snake case
+      'codRemindersSent': codRemindersSent,
+      'cod_reminders_sent': codRemindersSent, // ✅ Snake case
+      'metadata': metadata,
+      
+      // Review and rating fields (both formats)
+      'rating': rating,
+      'rejectionReason': rejectionReason,
+      'rejection_reason': rejectionReason, // ✅ Snake case
+      'isFavoriteSeller': isFavoriteSeller,
+      'is_favorite_seller': isFavoriteSeller, // ✅ Snake case
+      
+      // Backward compatibility fields (both formats)
+      'farmerId': farmerId,
+      'farmer_id': farmerId, // ✅ CRITICAL: Required for getFarmerOrders query
+      'farmerName': farmerName,
+      'farmer_name': farmerName, // ✅ Snake case
+      'farmerPhone': farmerPhone,
+      'farmer_phone': farmerPhone, // ✅ Snake case
+      'receivedAt': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null,
+      'received_at': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null, // ✅ Snake case
+      'isReceivedByBuyer': isReceivedByBuyer,
+      'is_received_by_buyer': isReceivedByBuyer, // ✅ Snake case
+      'orderNumber': orderNumber,
+      'order_number': orderNumber, // ✅ Snake case
+    };
+  }
+
+  // Create from Firestore document
+  factory Order.fromFirestore(Map<String, dynamic> data, String docId) {
+    // Smart type inference for backward compatibility
+    OrderType orderType;
+    final typeString = data['type'] ?? data['order_type'];
+    
+    if (typeString != null) {
+      // Type is explicitly stored
+      orderType = OrderType.values.firstWhere(
+        (e) => e.toString().split('.').last == typeString,
+        orElse: () => OrderType.smeToShgProductPurchase, // Default
+      );
+    } else {
+      // Infer type based on service fee (for old orders without explicit type)
+      final fee = (data['serviceFee'] ?? data['service_fee'] ?? 0).toDouble();
+      if (fee > 0) {
+        // If there's a service fee, it's likely SHG→PSA (UGX 7,000)
+        orderType = OrderType.shgToPsaInputPurchase;
+      } else {
+        // No fee = SME→SHG (FREE)
+        orderType = OrderType.smeToShgProductPurchase;
       }
-      return null;
     }
-
+    
     return Order(
-      id: id,
-      orderNumber: data['order_number'] ?? 'ORD-${id.substring(0, 8).toUpperCase()}',
-      buyerId: data['buyer_id'] ?? '',
-      buyerName: data['buyer_name'] ?? '',
-      buyerPhone: data['buyer_phone'] ?? '',
-      buyerSystemId: data['buyer_system_id'],
-      farmerId: data['farmer_id'] ?? '',
-      farmerName: data['farmer_name'] ?? '',
-      farmerPhone: data['farmer_phone'] ?? '',
-      farmerSystemId: data['farmer_system_id'],
+      id: data['id'] ?? docId,
+      type: orderType,
+      // Read from both camelCase and snake_case
+      buyerId: data['buyerId'] ?? data['buyer_id'] ?? '',
+      buyerName: data['buyerName'] ?? data['buyer_name'] ?? '',
+      buyerPhone: data['buyerPhone'] ?? data['buyer_phone'] ?? '',
+      sellerId: data['sellerId'] ?? data['seller_id'] ?? data['farmerId'] ?? data['farmer_id'] ?? '',
+      sellerName: data['sellerName'] ?? data['seller_name'] ?? data['farmerName'] ?? data['farmer_name'] ?? '',
+      sellerPhone: data['sellerPhone'] ?? data['seller_phone'] ?? data['farmerPhone'] ?? data['farmer_phone'] ?? '',
       items: (data['items'] as List<dynamic>?)
-              ?.map((item) => OrderItem.fromMap(item as Map<String, dynamic>))
+              ?.map((item) => OrderItem.fromFirestore(item as Map<String, dynamic>))
               .toList() ??
           [],
-      totalAmount: (data['total_amount'] ?? 0).toDouble(),
+      subtotal: (data['subtotal'] ?? data['sub_total'] ?? 0).toDouble(),
+      serviceFee: (data['serviceFee'] ?? data['service_fee'] ?? 0).toDouble(),
+      totalAmount: (data['totalAmount'] ?? data['total_amount'] ?? 0).toDouble(),
       status: OrderStatus.values.firstWhere(
         (e) => e.toString().split('.').last == data['status'],
         orElse: () => OrderStatus.pending,
       ),
       paymentMethod: PaymentMethod.values.firstWhere(
-        (e) => e.toString().split('.').last == data['payment_method'],
-        orElse: () => PaymentMethod.cash,
+        (e) => e.toString().split('.').last == (data['paymentMethod'] ?? data['payment_method']),
+        orElse: () => PaymentMethod.mtnMobileMoney,
       ),
-      deliveryAddress: data['delivery_address'],
-      deliveryNotes: data['delivery_notes'],
-      createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
-      updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
-      confirmedAt: parseDateTime(data['confirmed_at']),
-      rejectedAt: parseDateTime(data['rejected_at']),
-      deliveredAt: parseDateTime(data['delivered_at']),
-      receivedAt: parseDateTime(data['received_at']),
-      rejectionReason: data['rejection_reason'],
-      isReceivedByBuyer: data['is_received_by_buyer'] ?? false,
-      rating: data['rating'],
-      review: data['review'],
-      reviewPhoto: data['review_photo'],
-      reviewedAt: parseDateTime(data['reviewed_at']),
-      isFavoriteSeller: data['is_favorite_seller'] ?? false,
+      transactionId: data['transactionId'] ?? data['transaction_id'],
+      deliveryAddress: data['deliveryAddress'] ?? data['delivery_address'] ?? '',
+      deliveryNotes: data['deliveryNotes'] ?? data['delivery_notes'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
+                 (data['created_at'] as Timestamp?)?.toDate() ?? 
+                 DateTime.now(),
+      deliveredAt: (data['deliveredAt'] as Timestamp?)?.toDate() ?? 
+                   (data['delivered_at'] as Timestamp?)?.toDate(),
+      confirmedAt: (data['confirmedAt'] as Timestamp?)?.toDate() ?? 
+                   (data['confirmed_at'] as Timestamp?)?.toDate(),
+      cancelledAt: (data['cancelledAt'] as Timestamp?)?.toDate() ?? 
+                   (data['cancelled_at'] as Timestamp?)?.toDate(),
+      cancellationReason: data['cancellationReason'] ?? data['cancellation_reason'],
+      codRequiresBothConfirmation: data['codRequiresBothConfirmation'] ?? 
+                                    data['cod_requires_both_confirmation'] ?? 
+                                    false,
+      buyerConfirmedAt: (data['buyerConfirmedAt'] as Timestamp?)?.toDate() ?? 
+                        (data['buyer_confirmed_at'] as Timestamp?)?.toDate(),
+      sellerConfirmedAt: (data['sellerConfirmedAt'] as Timestamp?)?.toDate() ?? 
+                         (data['seller_confirmed_at'] as Timestamp?)?.toDate(),
+      codRemindersSent: data['codRemindersSent'] ?? data['cod_reminders_sent'] ?? 0,
+      metadata: data['metadata'] ?? {},
+      
+      // Review and rating fields (both formats)
+      rating: data['rating']?.toDouble(),
+      rejectionReason: data['rejectionReason'] ?? data['rejection_reason'],
+      isFavoriteSeller: data['isFavoriteSeller'] ?? data['is_favorite_seller'],
+      
+      // Backward compatibility fields (both formats)
+      farmerId: data['farmerId'] ?? data['farmer_id'],
+      farmerName: data['farmerName'] ?? data['farmer_name'],
+      farmerPhone: data['farmerPhone'] ?? data['farmer_phone'],
+      receivedAt: (data['receivedAt'] as Timestamp?)?.toDate() ?? 
+                  (data['received_at'] as Timestamp?)?.toDate(),
+      isReceivedByBuyer: data['isReceivedByBuyer'] ?? data['is_received_by_buyer'],
+      orderNumber: data['orderNumber'] ?? data['order_number'],
     );
   }
 
-  /// Convert Order to Firestore map
-  Map<String, dynamic> toFirestore() {
-    return {
-      'order_number': orderNumber,
-      'buyer_id': buyerId,
-      'buyer_name': buyerName,
-      'buyer_phone': buyerPhone,
-      'buyer_system_id': buyerSystemId,
-      'farmer_id': farmerId,
-      'farmer_name': farmerName,
-      'farmer_phone': farmerPhone,
-      'farmer_system_id': farmerSystemId,
-      'items': items.map((item) => item.toMap()).toList(),
-      'total_amount': totalAmount,
-      'status': status.toString().split('.').last,
-      'payment_method': paymentMethod.toString().split('.').last,
-      'delivery_address': deliveryAddress,
-      'delivery_notes': deliveryNotes,
-      'created_at': Timestamp.fromDate(createdAt),
-      'updated_at': Timestamp.fromDate(updatedAt),
-      'confirmed_at': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
-      'rejected_at': rejectedAt != null ? Timestamp.fromDate(rejectedAt!) : null,
-      'delivered_at': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
-      'received_at': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null,
-      'rejection_reason': rejectionReason,
-      'is_received_by_buyer': isReceivedByBuyer,
-      'rating': rating,
-      'review': review,
-      'review_photo': reviewPhoto,
-      'reviewed_at': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
-      'is_favorite_seller': isFavoriteSeller,
-    };
-  }
-
-  /// Create a copy with modified fields
+  // Copy with method
   Order copyWith({
     String? id,
-    String? orderNumber,
+    OrderType? type,
     String? buyerId,
     String? buyerName,
     String? buyerPhone,
-    String? buyerSystemId,
-    String? farmerId,
-    String? farmerName,
-    String? farmerPhone,
-    String? farmerSystemId,
+    String? sellerId,
+    String? sellerName,
+    String? sellerPhone,
     List<OrderItem>? items,
+    double? subtotal,
+    double? serviceFee,
     double? totalAmount,
     OrderStatus? status,
     PaymentMethod? paymentMethod,
+    String? transactionId,
     String? deliveryAddress,
     String? deliveryNotes,
     DateTime? createdAt,
-    DateTime? updatedAt,
-    DateTime? confirmedAt,
-    DateTime? rejectedAt,
     DateTime? deliveredAt,
-    DateTime? receivedAt,
+    DateTime? confirmedAt,
+    DateTime? cancelledAt,
+    String? cancellationReason,
+    bool? codRequiresBothConfirmation,
+    DateTime? buyerConfirmedAt,
+    DateTime? sellerConfirmedAt,
+    int? codRemindersSent,
+    Map<String, dynamic>? metadata,
+    double? rating,
     String? rejectionReason,
-    bool? isReceivedByBuyer,
-    int? rating,
-    String? review,
-    String? reviewPhoto,
-    DateTime? reviewedAt,
     bool? isFavoriteSeller,
+    String? farmerId,
+    String? farmerName,
+    String? farmerPhone,
+    DateTime? receivedAt,
+    bool? isReceivedByBuyer,
+    String? orderNumber,
   }) {
     return Order(
       id: id ?? this.id,
-      orderNumber: orderNumber ?? this.orderNumber,
+      type: type ?? this.type,
       buyerId: buyerId ?? this.buyerId,
       buyerName: buyerName ?? this.buyerName,
       buyerPhone: buyerPhone ?? this.buyerPhone,
-      buyerSystemId: buyerSystemId ?? this.buyerSystemId,
-      farmerId: farmerId ?? this.farmerId,
-      farmerName: farmerName ?? this.farmerName,
-      farmerPhone: farmerPhone ?? this.farmerPhone,
-      farmerSystemId: farmerSystemId ?? this.farmerSystemId,
+      sellerId: sellerId ?? this.sellerId,
+      sellerName: sellerName ?? this.sellerName,
+      sellerPhone: sellerPhone ?? this.sellerPhone,
       items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      serviceFee: serviceFee ?? this.serviceFee,
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      transactionId: transactionId ?? this.transactionId,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       deliveryNotes: deliveryNotes ?? this.deliveryNotes,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      confirmedAt: confirmedAt ?? this.confirmedAt,
-      rejectedAt: rejectedAt ?? this.rejectedAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,
-      receivedAt: receivedAt ?? this.receivedAt,
-      rejectionReason: rejectionReason ?? this.rejectionReason,
-      isReceivedByBuyer: isReceivedByBuyer ?? this.isReceivedByBuyer,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+      codRequiresBothConfirmation: codRequiresBothConfirmation ?? this.codRequiresBothConfirmation,
+      buyerConfirmedAt: buyerConfirmedAt ?? this.buyerConfirmedAt,
+      sellerConfirmedAt: sellerConfirmedAt ?? this.sellerConfirmedAt,
+      codRemindersSent: codRemindersSent ?? this.codRemindersSent,
+      metadata: metadata ?? this.metadata,
+      
+      // Review and rating fields
       rating: rating ?? this.rating,
-      review: review ?? this.review,
-      reviewPhoto: reviewPhoto ?? this.reviewPhoto,
-      reviewedAt: reviewedAt ?? this.reviewedAt,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
       isFavoriteSeller: isFavoriteSeller ?? this.isFavoriteSeller,
+      
+      // Backward compatibility fields
+      farmerId: farmerId ?? this.farmerId,
+      farmerName: farmerName ?? this.farmerName,
+      farmerPhone: farmerPhone ?? this.farmerPhone,
+      receivedAt: receivedAt ?? this.receivedAt,
+      isReceivedByBuyer: isReceivedByBuyer ?? this.isReceivedByBuyer,
+      orderNumber: orderNumber ?? this.orderNumber,
     );
   }
 }
@@ -243,119 +364,166 @@ class Order {
 class OrderItem {
   final String productId;
   final String productName;
-  final String productImage;
+  final String? productImage;
   final double price;
-  final String unit;
   final int quantity;
-  final double subtotal;
+  final String unit;
+  final double total;
+  
+  // Backward compatibility: subtotal is alias for total
+  double get subtotal => total;
 
   OrderItem({
     required this.productId,
     required this.productName,
-    required this.productImage,
+    this.productImage,
     required this.price,
-    required this.unit,
     required this.quantity,
-    required this.subtotal,
+    required this.unit,
+    required this.total,
   });
 
-  /// Create OrderItem from map
-  factory OrderItem.fromMap(Map<String, dynamic> data) {
-    return OrderItem(
-      productId: data['product_id'] ?? '',
-      productName: data['product_name'] ?? '',
-      productImage: data['product_image'] ?? '',
-      price: (data['price'] ?? 0).toDouble(),
-      unit: data['unit'] ?? 'kg',
-      quantity: data['quantity'] ?? 1,
-      subtotal: (data['subtotal'] ?? 0).toDouble(),
-    );
+  Map<String, dynamic> toFirestore() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'productImage': productImage,
+      'price': price,
+      'quantity': quantity,
+      'unit': unit,
+      'total': total,
+      'subtotal': total, // Backward compatibility
+    };
   }
 
-  /// Convert OrderItem to map
-  Map<String, dynamic> toMap() {
-    return {
-      'product_id': productId,
-      'product_name': productName,
-      'product_image': productImage,
-      'price': price,
-      'unit': unit,
-      'quantity': quantity,
-      'subtotal': subtotal,
-    };
+  factory OrderItem.fromFirestore(Map<String, dynamic> data) {
+    return OrderItem(
+      productId: data['productId'] ?? '',
+      productName: data['productName'] ?? '',
+      productImage: data['productImage'],
+      price: (data['price'] ?? 0).toDouble(),
+      quantity: data['quantity'] ?? 0,
+      unit: data['unit'] ?? '',
+      total: (data['total'] ?? data['subtotal'] ?? 0).toDouble(), // Support both fields
+    );
   }
 }
 
-/// Extension for OrderStatus display
+/// Type of order
+enum OrderType {
+  shgToPsaInputPurchase,  // SHG buying inputs from PSA
+  smeToShgProductPurchase, // SME buying products from SHG
+}
+
+/// Order status
+enum OrderStatus {
+  pending,                          // Order created, awaiting payment
+  paymentPending,                   // Payment initiated but not confirmed
+  paymentHeld,                      // Payment held in escrow
+  deliveryPending,                  // Payment secured, awaiting delivery
+  deliveredPendingConfirmation,     // Delivered, awaiting confirmation
+  confirmed,                        // Delivery confirmed
+  completed,                        // Order fully completed
+  cancelled,                        // Order cancelled
+  codPendingBothConfirmation,       // COD: Waiting for both parties
+  codOverdue,                       // COD: 48-hour deadline passed
+  
+  // Backward compatibility statuses (legacy order system)
+  preparing,                        // Preparing order (maps to deliveryPending)
+  ready,                            // Ready for pickup (maps to deliveryPending)
+  inTransit,                        // In transit (maps to deliveryPending)
+  delivered,                        // Delivered (maps to deliveredPendingConfirmation)
+  rejected,                         // Rejected (maps to cancelled)
+}
+
+/// Payment method
+enum PaymentMethod {
+  mtnMobileMoney,
+  airtelMoney,
+  cashOnDelivery,
+  
+  // Backward compatibility payment methods (legacy order system)
+  cash,                             // Cash payment (maps to cashOnDelivery)
+  mobileMoney,                      // Mobile money (maps to mtnMobileMoney)
+  bankTransfer,                     // Bank transfer (deprecated)
+}
+
+/// Extension methods for OrderType
+extension OrderTypeExtension on OrderType {
+  String get displayName {
+    switch (this) {
+      case OrderType.shgToPsaInputPurchase:
+        return 'Input Purchase';
+      case OrderType.smeToShgProductPurchase:
+        return 'Product Purchase';
+    }
+  }
+
+  double get serviceFee {
+    switch (this) {
+      case OrderType.shgToPsaInputPurchase:
+        return 7000.0; // UGX 7,000 total
+      case OrderType.smeToShgProductPurchase:
+        return 0.0; // FREE
+    }
+  }
+
+  double get buyerFee {
+    switch (this) {
+      case OrderType.shgToPsaInputPurchase:
+        return 2000.0; // SHG pays UGX 2,000
+      case OrderType.smeToShgProductPurchase:
+        return 0.0; // FREE
+    }
+  }
+
+  double get sellerFee {
+    switch (this) {
+      case OrderType.shgToPsaInputPurchase:
+        return 5000.0; // PSA pays UGX 5,000
+      case OrderType.smeToShgProductPurchase:
+        return 0.0; // FREE
+    }
+  }
+}
+
+/// Extension methods for OrderStatus
 extension OrderStatusExtension on OrderStatus {
   String get displayName {
     switch (this) {
       case OrderStatus.pending:
-        return 'Pending Confirmation';
+        return 'Pending';
+      case OrderStatus.paymentPending:
+        return 'Payment Pending';
+      case OrderStatus.paymentHeld:
+        return 'Payment Secured';
+      case OrderStatus.deliveryPending:
+        return 'Awaiting Delivery';
+      case OrderStatus.deliveredPendingConfirmation:
+        return 'Delivered - Confirm Receipt';
       case OrderStatus.confirmed:
         return 'Confirmed';
-      case OrderStatus.rejected:
-        return 'Rejected';
-      case OrderStatus.preparing:
-        return 'Preparing';
-      case OrderStatus.ready:
-        return 'Ready for Pickup';
-      case OrderStatus.inTransit:
-        return 'In Transit';
-      case OrderStatus.delivered:
-        return 'Delivered';
       case OrderStatus.completed:
         return 'Completed';
       case OrderStatus.cancelled:
         return 'Cancelled';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case OrderStatus.pending:
-        return 'Waiting for farmer to accept';
-      case OrderStatus.confirmed:
-        return 'Farmer accepted your order';
-      case OrderStatus.rejected:
-        return 'Farmer rejected this order';
+      case OrderStatus.codPendingBothConfirmation:
+        return 'COD - Awaiting Both Confirmations';
+      case OrderStatus.codOverdue:
+        return 'COD - Overdue';
+      // Legacy status names
       case OrderStatus.preparing:
-        return 'Farmer is preparing your order';
+        return 'Preparing';
       case OrderStatus.ready:
-        return 'Order is ready for collection';
+        return 'Ready';
       case OrderStatus.inTransit:
-        return 'Order is on the way';
+        return 'In Transit';
       case OrderStatus.delivered:
-        return 'Order has been delivered';
-      case OrderStatus.completed:
-        return 'Transaction completed';
-      case OrderStatus.cancelled:
-        return 'Order was cancelled';
+        return 'Delivered';
+      case OrderStatus.rejected:
+        return 'Rejected';
     }
   }
 }
 
-/// Extension for PaymentMethod display
-extension PaymentMethodExtension on PaymentMethod {
-  String get displayName {
-    switch (this) {
-      case PaymentMethod.cash:
-        return 'Cash on Delivery';
-      case PaymentMethod.mobileMoney:
-        return 'Mobile Money';
-      case PaymentMethod.bankTransfer:
-        return 'Bank Transfer';
-    }
-  }
 
-  String get description {
-    switch (this) {
-      case PaymentMethod.cash:
-        return 'Pay with cash when you receive the order';
-      case PaymentMethod.mobileMoney:
-        return 'Pay with MTN or Airtel Money';
-      case PaymentMethod.bankTransfer:
-        return 'Transfer to farmer\'s bank account';
-    }
-  }
-}

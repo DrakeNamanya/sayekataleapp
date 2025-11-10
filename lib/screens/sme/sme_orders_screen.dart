@@ -58,7 +58,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildOrdersList(buyerId, [app_order.OrderStatus.pending]),
+          _buildOrdersList(buyerId, [
+            app_order.OrderStatus.pending,
+          ]),
           _buildOrdersList(buyerId, [
             app_order.OrderStatus.confirmed,
             app_order.OrderStatus.preparing,
@@ -66,10 +68,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
             app_order.OrderStatus.inTransit,
           ]),
           _buildOrdersList(buyerId, [
-            app_order.OrderStatus.delivered,
             app_order.OrderStatus.completed,
-            app_order.OrderStatus.cancelled,
             app_order.OrderStatus.rejected,
+            app_order.OrderStatus.cancelled,
           ]),
         ],
       ),
@@ -221,14 +222,14 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          order.farmerName,
+                          order.farmerName ?? 'Unknown',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          order.farmerPhone,
+                          order.farmerPhone ?? '',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -346,7 +347,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
               
               // Rate Order Button (for delivered orders without review)
               if (order.status == app_order.OrderStatus.delivered && 
-                  order.isReceivedByBuyer && 
+                  (order.isReceivedByBuyer ?? false) && 
                   order.rating == null) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -518,8 +519,8 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow('Name', order.farmerName),
-                _buildDetailRow('Phone', order.farmerPhone),
+                _buildDetailRow('Name', order.farmerName ?? 'Unknown'),
+                _buildDetailRow('Phone', order.farmerPhone ?? ''),
                 
                 if (order.deliveryAddress != null) ...[
                   const SizedBox(height: 16),
@@ -552,7 +553,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          item.productImage,
+                          item.productImage ?? '',
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
@@ -697,8 +698,8 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       final conversation = await _messageService.getOrCreateConversation(
         user1Id: currentUser.id,
         user1Name: currentUser.name,
-        user2Id: order.farmerId,
-        user2Name: order.farmerName,
+        user2Id: order.farmerId ?? order.sellerId,
+        user2Name: order.farmerName ?? 'Seller',
       );
 
       if (mounted) {
@@ -710,8 +711,8 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
           MaterialPageRoute(
             builder: (context) => ChatScreen(
               conversationId: conversation.id,
-              otherUserId: order.farmerId,
-              otherUserName: order.farmerName,
+              otherUserId: order.farmerId ?? order.sellerId,
+              otherUserName: order.farmerName ?? 'Seller',
               currentUserId: currentUser.id,
               currentUserName: currentUser.name,
             ),
@@ -764,18 +765,25 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
   Color _getStatusColor(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Colors.orange;
       case app_order.OrderStatus.confirmed:
       case app_order.OrderStatus.preparing:
+      case app_order.OrderStatus.paymentHeld:
         return Colors.blue;
       case app_order.OrderStatus.ready:
       case app_order.OrderStatus.inTransit:
+      case app_order.OrderStatus.deliveryPending:
         return Colors.purple;
       case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return Colors.deepPurple;
       case app_order.OrderStatus.completed:
         return Colors.green;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
+      case app_order.OrderStatus.codOverdue:
         return Colors.red;
     }
   }
@@ -783,20 +791,28 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
   IconData _getStatusIcon(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Icons.pending;
       case app_order.OrderStatus.confirmed:
         return Icons.check_circle;
       case app_order.OrderStatus.preparing:
         return Icons.restaurant;
+      case app_order.OrderStatus.paymentHeld:
+        return Icons.lock;
       case app_order.OrderStatus.ready:
         return Icons.done_all;
       case app_order.OrderStatus.inTransit:
+      case app_order.OrderStatus.deliveryPending:
         return Icons.local_shipping;
       case app_order.OrderStatus.delivered:
-      case app_order.OrderStatus.completed:
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+      case app_order.OrderStatus.codPendingBothConfirmation:
         return Icons.check_circle_outline;
+      case app_order.OrderStatus.completed:
+        return Icons.verified;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
+      case app_order.OrderStatus.codOverdue:
         return Icons.cancel;
     }
   }
@@ -805,6 +821,10 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     switch (status) {
       case app_order.OrderStatus.pending:
         return 'Pending';
+      case app_order.OrderStatus.paymentPending:
+        return 'Payment Pending';
+      case app_order.OrderStatus.paymentHeld:
+        return 'Payment Secured';
       case app_order.OrderStatus.confirmed:
         return 'Confirmed';
       case app_order.OrderStatus.rejected:
@@ -815,8 +835,16 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
         return 'Ready';
       case app_order.OrderStatus.inTransit:
         return 'In Transit';
+      case app_order.OrderStatus.deliveryPending:
+        return 'Delivery Pending';
       case app_order.OrderStatus.delivered:
         return 'Delivered';
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+        return 'Awaiting Confirmation';
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return 'COD - Both Confirm';
+      case app_order.OrderStatus.codOverdue:
+        return 'COD Overdue';
       case app_order.OrderStatus.completed:
         return 'Completed';
       case app_order.OrderStatus.cancelled:
@@ -827,9 +855,13 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
   String _formatPaymentMethod(app_order.PaymentMethod method) {
     switch (method) {
       case app_order.PaymentMethod.cash:
+      case app_order.PaymentMethod.cashOnDelivery:
         return 'Cash on Delivery';
       case app_order.PaymentMethod.mobileMoney:
-        return 'Mobile Money';
+      case app_order.PaymentMethod.mtnMobileMoney:
+        return 'MTN Mobile Money';
+      case app_order.PaymentMethod.airtelMoney:
+        return 'Airtel Money';
       case app_order.PaymentMethod.bankTransfer:
         return 'Bank Transfer';
     }

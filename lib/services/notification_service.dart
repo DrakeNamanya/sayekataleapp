@@ -243,6 +243,28 @@ class NotificationService {
     }
   }
 
+  /// Send notification when order is confirmed by seller
+  Future<void> sendOrderConfirmationNotification({
+    required String buyerId,
+    required String orderId,
+    required String sellerName,
+  }) async {
+    try {
+      await createNotification(
+        userId: buyerId,
+        type: NotificationType.order,
+        title: '✅ Order Confirmed!',
+        message: '$sellerName has confirmed your order and will start preparing it',
+        actionUrl: '/orders/$orderId',
+        relatedId: orderId,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error sending order confirmation notification: $e');
+      }
+    }
+  }
+
   /// Send notification when order status is updated
   Future<void> sendOrderStatusNotification({
     required String buyerId,

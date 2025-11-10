@@ -111,7 +111,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
         orderId: widget.order.id,
         userId: userId,
         userName: userName,
-        farmId: widget.order.farmerId,
+        farmId: widget.order.farmerId ?? widget.order.sellerId,
         rating: _rating,
         comment: _commentController.text.trim(),
         photoUrls: photoUrls,

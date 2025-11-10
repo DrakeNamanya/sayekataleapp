@@ -25,7 +25,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isPasswordVisible = false;
   bool _isSignUpMode = true; // true = Sign Up, false = Sign In
   UserRole _selectedRole = UserRole.shg;
+  String? _selectedDistrict;
   final _authService = FirebaseEmailAuthService();
+  
+  // Official districts from districtinformation.xlsx
+  final List<String> _districts = [
+    'BUGIRI',
+    'BUGWERI',
+    'BUYENDE',
+    'IGANGA',
+    'JINJA',
+    'JINJA CITY',
+    'KALIRO',
+    'KAMULI',
+    'LUUKA',
+    'MAYUGE',
+    'NAMAYINGO',
+    'NAMUTUMBA',
+  ];
 
   @override
   void dispose() {
@@ -62,6 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
           role: _selectedRole,
+          district: _selectedDistrict,
         );
 
         if (mounted) {
@@ -302,6 +320,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     required: _isSignUpMode,
                     showOperatorIcon: true,
                     showFormatHelper: true,
+                  ),
+                  const SizedBox(height: 16),
+                  // District Selection (Sign Up Only) - Required for User ID generation
+                  DropdownButtonFormField<String>(
+                    value: _selectedDistrict,
+                    decoration: const InputDecoration(
+                      labelText: 'District',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                      hintText: 'Select your district',
+                    ),
+                    items: _districts.map((district) {
+                      return DropdownMenuItem(
+                        value: district,
+                        child: Text(district),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDistrict = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (_isSignUpMode && value == null) {
+                        return 'Please select your district';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                 ],

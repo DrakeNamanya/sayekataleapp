@@ -5,6 +5,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../models/order.dart';
+import '../../models/order_extensions.dart';
 import '../../utils/app_theme.dart';
 
 class SMECheckoutScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
+  PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMobileMoney;
   bool _isPlacingOrder = false;
 
   @override
@@ -274,19 +275,83 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                   // Payment Method
                   _buildSectionTitle('Payment Method'),
                   const SizedBox(height: 12),
-                  ...PaymentMethod.values.map((method) {
-                    return RadioListTile<PaymentMethod>(
-                      title: Text(method.displayName),
-                      subtitle: Text(method.description),
-                      value: method,
-                      groupValue: _selectedPaymentMethod,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPaymentMethod = value!;
-                        });
-                      },
-                    );
-                  }),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        children: [
+                          // MTN Mobile Money
+                          RadioListTile<PaymentMethod>(
+                            title: const Text('MTN Mobile Money'),
+                            subtitle: const Text('Pay securely with MTN MoMo'),
+                            secondary: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.yellow.shade700,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.phone_android, color: Colors.black, size: 24),
+                            ),
+                            value: PaymentMethod.mtnMobileMoney,
+                            groupValue: _selectedPaymentMethod,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPaymentMethod = value!;
+                              });
+                            },
+                          ),
+                          const Divider(height: 1),
+                          // Cash on Delivery
+                          RadioListTile<PaymentMethod>(
+                            title: const Text('Cash on Delivery (COD)'),
+                            subtitle: const Text('Pay with cash when order is delivered'),
+                            secondary: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.money, color: Colors.green, size: 24),
+                            ),
+                            value: PaymentMethod.cashOnDelivery,
+                            groupValue: _selectedPaymentMethod,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPaymentMethod = value!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Payment Information Notice
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'No service fees for SME → SHG purchases. Pay only for products!',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
 

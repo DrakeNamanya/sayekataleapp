@@ -27,7 +27,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.order.isFavoriteSeller;
+    _isFavorite = widget.order.isFavoriteSeller ?? false;
   }
 
   @override

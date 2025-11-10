@@ -1,9 +1,11 @@
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 import 'package:image_picker/image_picker.dart';
+import 'firebase_storage_diagnostic.dart';
 
 /// Service for managing image uploads to Firebase Storage
 /// Handles compression, thumbnails, and storage organization
@@ -21,6 +23,25 @@ class ImageStorageService {
     try {
       if (kDebugMode) {
         debugPrint('📂 Starting upload: folder=$folder, userId=$userId, path=${imageFile.path}');
+        
+        // Run diagnostics to help debug permission issues
+        await FirebaseStorageDiagnostic.runDiagnostics();
+        
+        // Check if user can upload to this path
+        final canUpload = await FirebaseStorageDiagnostic.canUploadToPath(folder, userId);
+        if (!canUpload) {
+          throw Exception('Permission check failed. See debug logs for details.');
+        }
+      }
+      
+      // Verify user is authenticated
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('User must be logged in to upload images. Please login and try again.');
+      }
+      
+      if (currentUser.uid != userId) {
+        throw Exception('User ID mismatch. Cannot upload to another user\'s folder.');
       }
 
       // Read bytes from XFile

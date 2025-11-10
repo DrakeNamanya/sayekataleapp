@@ -6,6 +6,11 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../services/message_service.dart';
 import '../../services/firebase_user_service.dart';
+import '../../services/rating_service.dart';
+import '../../widgets/star_rating_widget.dart';
+import '../../widgets/rating_breakdown_chart.dart';
+import '../../widgets/review_list.dart';
+import '../../widgets/review_card.dart';
 import '../common/chat_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -21,6 +26,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
   final MessageService _messageService = MessageService();
   final FirebaseUserService _userService = FirebaseUserService();
+  final RatingService _ratingService = RatingService();
 
   Future<void> _handleContactSeller() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -246,6 +252,103 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          // Farmer Rating Section
+                          FutureBuilder(
+                            future: _ratingService.getFarmerRating(widget.product.farmId),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData && snapshot.data != null) {
+                                final rating = snapshot.data!;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Seller Rating',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey.shade200),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // Rating score
+                                          Column(
+                                            children: [
+                                              Text(
+                                                rating.averageRating.toStringAsFixed(1),
+                                                style: const TextStyle(
+                                                  fontSize: 32,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primaryColor,
+                                                ),
+                                              ),
+                                              StarRatingWidget(
+                                                rating: rating.averageRating,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${rating.totalRatings} reviews',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppTheme.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 20),
+                                          // Rating quality
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: rating.averageRating.ratingColor.withValues(alpha: 0.1),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    rating.ratingQuality,
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 13,
+                                                      color: rating.averageRating.ratingColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'Based on ${rating.totalRatings} customer reviews',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppTheme.textSecondary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
                           // Quantity Selector
                           const Text(
                             'Quantity',

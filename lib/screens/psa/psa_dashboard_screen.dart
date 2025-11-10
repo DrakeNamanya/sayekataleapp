@@ -634,21 +634,26 @@ class _DashboardHomeState extends State<_DashboardHome> {
   Color _getStatusColor(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return AppTheme.warningColor;
       case app_order.OrderStatus.confirmed:
       case app_order.OrderStatus.preparing:
+      case app_order.OrderStatus.paymentHeld:
         return AppTheme.primaryColor;
       case app_order.OrderStatus.ready:
       case app_order.OrderStatus.inTransit:
+      case app_order.OrderStatus.deliveryPending:
         return Colors.blue;
       case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return Colors.purple;
       case app_order.OrderStatus.completed:
         return AppTheme.successColor;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
+      case app_order.OrderStatus.codOverdue:
         return AppTheme.errorColor;
-      default:
-        return AppTheme.textSecondary;
     }
   }
 }

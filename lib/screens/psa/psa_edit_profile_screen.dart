@@ -30,11 +30,14 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   // Business Start Date
   DateTime? _businessStartDate;
   
-  // Photo paths
+  // Photo paths and XFiles
   String? _profileImagePath;
   String? _signpostPhotoPath;
   String? _registrationCertPhotoPath;
   final List<String> _storePhotos = [];
+  
+  // XFile objects for upload
+  XFile? _profileImageFile;
   
   // Location
   String? _selectedDistrict;
@@ -100,6 +103,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
         switch (imageType) {
           case 'profile':
             _profileImagePath = pickedFile.path;
+            _profileImageFile = pickedFile; // Store XFile for upload
             break;
           case 'signpost':
             _signpostPhotoPath = pickedFile.path;
@@ -182,7 +186,8 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
 
       // TODO: Update this when business fields are added to user model
       await authProvider.updateProfile(
-        profileImage: _profileImagePath,
+        profileImageFile: _profileImageFile,
+        profileImageUrl: _profileImageFile == null ? _profileImagePath : null,  // Only pass URL if no file
         location: location,
       );
 

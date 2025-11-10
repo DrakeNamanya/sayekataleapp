@@ -63,8 +63,8 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
           ]),
           _buildOrdersList(shgId, [
             app_order.OrderStatus.completed,
-            app_order.OrderStatus.cancelled,
             app_order.OrderStatus.rejected,
+            app_order.OrderStatus.cancelled,
           ]),
         ],
       ),
@@ -225,15 +225,15 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                           ),
                         ),
                         Text(
-                          order.farmerName,
+                          order.farmerName ?? 'Unknown',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (order.farmerPhone.isNotEmpty)
+                        if (order.farmerPhone?.isNotEmpty ?? false)
                           Text(
-                            order.farmerPhone,
+                            order.farmerPhone ?? '',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -279,7 +279,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               ),
 
               // Confirm Receipt Button (for delivered orders)
-              if (order.status == app_order.OrderStatus.delivered && !order.isReceivedByBuyer) ...[
+              if (order.status == app_order.OrderStatus.delivered && !(order.isReceivedByBuyer ?? false)) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -438,7 +438,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     buffer.writeln('PSA SUPPLIER DETAILS');
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('Name: ${order.farmerName}');
-    if (order.farmerPhone.isNotEmpty) {
+    if (order.farmerPhone?.isNotEmpty ?? false) {
       buffer.writeln('Phone: ${order.farmerPhone}');
     }
     buffer.writeln('');
@@ -532,9 +532,9 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow('Name', order.farmerName),
-                if (order.farmerPhone.isNotEmpty)
-                  _buildDetailRow('Phone', order.farmerPhone),
+                _buildDetailRow('Name', order.farmerName ?? 'Unknown'),
+                if (order.farmerPhone?.isNotEmpty ?? false)
+                  _buildDetailRow('Phone', order.farmerPhone ?? ''),
 
                 if (order.deliveryAddress != null) ...[
                   const SizedBox(height: 16),
@@ -567,7 +567,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          item.productImage,
+                          item.productImage ?? '',
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
@@ -675,18 +675,25 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
   Color _getStatusColor(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Colors.orange;
       case app_order.OrderStatus.confirmed:
       case app_order.OrderStatus.preparing:
+      case app_order.OrderStatus.paymentHeld:
         return Colors.blue;
       case app_order.OrderStatus.ready:
       case app_order.OrderStatus.inTransit:
+      case app_order.OrderStatus.deliveryPending:
         return Colors.purple;
       case app_order.OrderStatus.delivered:
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return Colors.deepPurple;
       case app_order.OrderStatus.completed:
         return Colors.green;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
+      case app_order.OrderStatus.codOverdue:
         return Colors.red;
     }
   }
@@ -694,20 +701,28 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
   IconData _getStatusIcon(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Icons.pending;
       case app_order.OrderStatus.confirmed:
         return Icons.check_circle;
       case app_order.OrderStatus.preparing:
         return Icons.inventory;
+      case app_order.OrderStatus.paymentHeld:
+        return Icons.lock;
       case app_order.OrderStatus.ready:
         return Icons.done_all;
       case app_order.OrderStatus.inTransit:
+      case app_order.OrderStatus.deliveryPending:
         return Icons.local_shipping;
       case app_order.OrderStatus.delivered:
-      case app_order.OrderStatus.completed:
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+      case app_order.OrderStatus.codPendingBothConfirmation:
         return Icons.check_circle_outline;
+      case app_order.OrderStatus.completed:
+        return Icons.verified;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
+      case app_order.OrderStatus.codOverdue:
         return Icons.cancel;
     }
   }
@@ -716,6 +731,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     switch (status) {
       case app_order.OrderStatus.pending:
         return 'Pending';
+      case app_order.OrderStatus.paymentPending:
+        return 'Payment Pending';
+      case app_order.OrderStatus.paymentHeld:
+        return 'Payment Secured';
       case app_order.OrderStatus.confirmed:
         return 'Confirmed';
       case app_order.OrderStatus.rejected:
@@ -726,8 +745,16 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
         return 'Ready';
       case app_order.OrderStatus.inTransit:
         return 'In Transit';
+      case app_order.OrderStatus.deliveryPending:
+        return 'Delivery Pending';
       case app_order.OrderStatus.delivered:
         return 'Delivered';
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+        return 'Awaiting Confirmation';
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return 'COD - Both Confirm';
+      case app_order.OrderStatus.codOverdue:
+        return 'COD Overdue';
       case app_order.OrderStatus.completed:
         return 'Completed';
       case app_order.OrderStatus.cancelled:
@@ -738,9 +765,13 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
   String _formatPaymentMethod(app_order.PaymentMethod method) {
     switch (method) {
       case app_order.PaymentMethod.cash:
+      case app_order.PaymentMethod.cashOnDelivery:
         return 'Cash on Delivery';
       case app_order.PaymentMethod.mobileMoney:
-        return 'Mobile Money';
+      case app_order.PaymentMethod.mtnMobileMoney:
+        return 'MTN Mobile Money';
+      case app_order.PaymentMethod.airtelMoney:
+        return 'Airtel Money';
       case app_order.PaymentMethod.bankTransfer:
         return 'Bank Transfer';
     }

@@ -2,15 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../models/psa_verification.dart';
+import '../../services/psa_verification_service.dart';
 import 'psa_edit_profile_screen.dart';
+import 'psa_verification_form_screen.dart';
+import 'psa_business_info_screen.dart';
+import '../common/help_support_screen.dart';
 
-class PSAProfileScreen extends StatelessWidget {
+class PSAProfileScreen extends StatefulWidget {
   const PSAProfileScreen({super.key});
 
+  @override
+  State<PSAProfileScreen> createState() => _PSAProfileScreenState();
+}
+
+class _PSAProfileScreenState extends State<PSAProfileScreen> {
+  final PSAVerificationService _verificationService = PSAVerificationService();
+  
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
+    final userId = user?.id ?? '';
 
     return Scaffold(
       body: CustomScrollView(
@@ -60,6 +73,16 @@ class PSAProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
+                        user?.id ?? '',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
                         user?.phone ?? '',
                         style: const TextStyle(
                           color: Colors.white70,
@@ -103,6 +126,85 @@ class PSAProfileScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 8),
 
+                // Verification Status Banner
+                StreamBuilder<PsaVerification?>(
+                  stream: _verificationService.streamPsaVerification(userId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    }
+
+                    final verification = snapshot.data;
+                    
+                    if (verification == null) {
+                      // No verification submitted - prompt to complete
+                      return _VerificationBanner(
+                        status: 'incomplete',
+                        title: 'Complete Your Business Verification',
+                        subtitle: 'Submit your business documents to start selling',
+                        icon: Icons.warning_amber,
+                        color: Colors.orange,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PSAVerificationFormScreen(),
+                            ),
+                          ).then((_) => setState(() {}));
+                        },
+                      );
+                    }
+
+                    // Show verification status
+                    if (verification.status == PsaVerificationStatus.pending ||
+                        verification.status == PsaVerificationStatus.underReview) {
+                      return _VerificationBanner(
+                        status: 'pending',
+                        title: 'Verification Under Review',
+                        subtitle: 'Your documents are being reviewed by admin',
+                        icon: Icons.hourglass_empty,
+                        color: Colors.blue,
+                        onTap: null,
+                      );
+                    }
+
+                    if (verification.status == PsaVerificationStatus.approved) {
+                      return _VerificationBanner(
+                        status: 'approved',
+                        title: 'Verified Business',
+                        subtitle: 'Your business is verified and active',
+                        icon: Icons.verified,
+                        color: Colors.green,
+                        onTap: null,
+                      );
+                    }
+
+                    if (verification.status == PsaVerificationStatus.rejected) {
+                      return _VerificationBanner(
+                        status: 'rejected',
+                        title: 'Verification Rejected',
+                        subtitle: verification.rejectionReason ?? 'Please update your documents',
+                        icon: Icons.cancel,
+                        color: Colors.red,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PSAVerificationFormScreen(
+                                existingVerification: verification,
+                              ),
+                            ),
+                          ).then((_) => setState(() {}));
+                        },
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+                
+                const SizedBox(height: 16),
+
                 // Business Section
                 const Text(
                   'Business Information',
@@ -116,12 +218,12 @@ class PSAProfileScreen extends StatelessWidget {
                 _ProfileOption(
                   icon: Icons.business,
                   title: 'Business Profile',
-                  subtitle: 'Company details and verification',
+                  subtitle: 'View approved business information',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PSAEditProfileScreen(),
+                        builder: (context) => const PSABusinessInfoScreen(),
                       ),
                     );
                   },
@@ -145,9 +247,19 @@ class PSAProfileScreen extends StatelessWidget {
                 _ProfileOption(
                   icon: Icons.verified,
                   title: 'Verification Documents',
-                  subtitle: 'License and certifications',
-                  onTap: () {
-                    // TODO: Navigate to verification
+                  subtitle: 'Business license and certifications',
+                  onTap: () async {
+                    final verification = await _verificationService.getPsaVerification(userId);
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PSAVerificationFormScreen(
+                            existingVerification: verification,
+                          ),
+                        ),
+                      ).then((_) => setState(() {}));
+                    }
                   },
                 ),
 
@@ -242,7 +354,12 @@ class PSAProfileScreen extends StatelessWidget {
                   title: 'Help & Support',
                   subtitle: 'Get help and contact us',
                   onTap: () {
-                    // TODO: Navigate to help
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HelpSupportScreen(),
+                      ),
+                    );
                   },
                 ),
                 _ProfileOption(
@@ -370,6 +487,80 @@ class _ProfileOption extends StatelessWidget {
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.textSecondary),
+      ),
+    );
+  }
+}
+
+class _VerificationBanner extends StatelessWidget {
+  final String status;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _VerificationBanner({
+    required this.status,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: color, width: 2),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null)
+                Icon(Icons.arrow_forward, color: color),
+            ],
+          ),
+        ),
       ),
     );
   }

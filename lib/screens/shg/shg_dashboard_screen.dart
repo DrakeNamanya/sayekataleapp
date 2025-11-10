@@ -1043,21 +1043,26 @@ class _RecentOrdersList extends StatelessWidget {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
+      case OrderStatus.paymentPending:
         return AppTheme.warningColor;
       case OrderStatus.confirmed:
       case OrderStatus.preparing:
+      case OrderStatus.paymentHeld:
         return AppTheme.primaryColor;
       case OrderStatus.ready:
       case OrderStatus.inTransit:
+      case OrderStatus.deliveryPending:
         return Colors.blue;
       case OrderStatus.delivered:
+      case OrderStatus.deliveredPendingConfirmation:
+      case OrderStatus.codPendingBothConfirmation:
+        return Colors.purple;
       case OrderStatus.completed:
         return AppTheme.successColor;
       case OrderStatus.cancelled:
       case OrderStatus.rejected:
+      case OrderStatus.codOverdue:
         return AppTheme.errorColor;
-      default:
-        return AppTheme.textSecondary;
     }
   }
 }

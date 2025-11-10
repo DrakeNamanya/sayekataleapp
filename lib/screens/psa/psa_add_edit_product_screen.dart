@@ -1,11 +1,14 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/product.dart';
 import '../../models/product_category_hierarchy.dart';
 import '../../utils/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
+import '../../services/image_storage_service.dart';
 
 class PSAAddEditProductScreen extends StatefulWidget {
   final Product? product; // null for add, non-null for edit
@@ -24,12 +27,14 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   final _stockController = TextEditingController();
   final _unitSizeController = TextEditingController();
   final ProductService _productService = ProductService();
+  final ImageStorageService _imageStorageService = ImageStorageService();
   
   ProductCategory _selectedCategory = ProductCategory.crop;
   String? _selectedMainCategory;
   String? _selectedSubcategory;
   String _selectedUnit = 'KGs';
-  String? _productImagePath;
+  List<XFile> _selectedImages = []; // ✅ Store up to 3 images
+  List<String> _existingImageUrls = []; // ✅ Store existing Firebase URLs for edit mode
   bool _isLoading = false;
 
   @override
@@ -46,7 +51,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
       _selectedMainCategory = widget.product!.mainCategory;
       _selectedSubcategory = widget.product!.subcategory;
       _selectedUnit = widget.product!.unit;
-      // _productImagePath = widget.product!.imageUrl; // Product doesn't have imageUrl field yet
+      // ✅ Load all existing Firebase URLs from images list
+      _existingImageUrls = widget.product!.images.toList();
     }
   }
 
@@ -60,15 +66,65 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
     super.dispose();
   }
 
+  /// Pick image from gallery or camera
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
-      setState(() {
-        _productImagePath = pickedFile.path;
-      });
+    if (_selectedImages.length + _existingImageUrls.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 3 photos allowed'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
     }
+
+    final picker = ImagePicker();
+    
+    // Show options for camera or gallery
+    final ImageSource? source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Image Source'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final pickedFile = await picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImages.add(pickedFile);
+        });
+      }
+    }
+  }
+
+  /// Remove selected image
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  /// Remove existing image URL
+  void _removeExistingImage(int index) {
+    setState(() {
+      _existingImageUrls.removeAt(index);
+    });
   }
 
   Future<void> _saveProduct() async {
@@ -103,6 +159,24 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           ? int.parse(_unitSizeController.text.trim()) 
           : 1;
 
+      // ✅ Upload multiple images to Firebase Storage
+      List<String> allImageUrls = List.from(_existingImageUrls);
+      if (_selectedImages.isNotEmpty) {
+        if (kDebugMode) {
+          debugPrint('📸 Uploading ${_selectedImages.length} product images to Firebase Storage...');
+        }
+        final newImageUrls = await _imageStorageService.uploadMultipleImagesFromXFiles(
+          images: _selectedImages,
+          folder: 'products',
+          userId: psaUser.id,
+          compress: true,
+        );
+        allImageUrls.addAll(newImageUrls);
+        if (kDebugMode) {
+          debugPrint('✅ Uploaded ${newImageUrls.length} images successfully');
+        }
+      }
+
       if (widget.product == null) {
         // Create new product
         await _productService.createProduct(
@@ -117,7 +191,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           unit: _selectedUnit,
           unitSize: unitSize,
           stockQuantity: stockQuantity,
-          imageUrl: _productImagePath,
+          imageUrls: allImageUrls.isNotEmpty ? allImageUrls : null, // ✅ Use all images
         );
         
         if (mounted) {
@@ -141,7 +215,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           unit: _selectedUnit,
           unitSize: unitSize,
           stockQuantity: stockQuantity,
-          imageUrl: _productImagePath,
+          imageUrls: allImageUrls.isNotEmpty ? allImageUrls : null, // ✅ Multiple images
         );
         
         if (mounted) {
@@ -198,48 +272,170 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Product Image
-            Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: _productImagePath != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            _productImagePath!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_a_photo, size: 48, color: AppTheme.primaryColor),
-                                  SizedBox(height: 8),
-                                  Text('Tap to add photo', style: TextStyle(color: AppTheme.primaryColor)),
-                                ],
-                              );
-                            },
+            // ✅ Product Images (up to 3)
+            const Text(
+              'Product Photos (up to 3)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 120,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  // Existing Firebase images
+                  ..._existingImageUrls.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final url = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 110,
+                            height: 110,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300, width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(
+                                url,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                        )
-                      : const Column(
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeExistingImage(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  // Newly selected images
+                  ..._selectedImages.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final xFile = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 110,
+                            height: 110,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppTheme.primaryColor, width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: kIsWeb
+                                  ? FutureBuilder<Uint8List>(
+                                      future: xFile.readAsBytes(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return Image.memory(
+                                            snapshot.data!,
+                                            fit: BoxFit.cover,
+                                          );
+                                        }
+                                        return const Center(child: CircularProgressIndicator());
+                                      },
+                                    )
+                                  : Image.network(
+                                      xFile.path,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeImage(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'New',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  // Add photo button
+                  if (_selectedImages.length + _existingImageUrls.length < 3)
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 110,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, size: 48, color: AppTheme.primaryColor),
-                            SizedBox(height: 8),
-                            Text('Tap to add photo', style: TextStyle(color: AppTheme.primaryColor)),
+                            Icon(Icons.add_photo_alternate, size: 32, color: AppTheme.primaryColor),
+                            SizedBox(height: 4),
+                            Text('Add Photo', style: TextStyle(color: AppTheme.primaryColor, fontSize: 12)),
                           ],
                         ),
-                ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 24),

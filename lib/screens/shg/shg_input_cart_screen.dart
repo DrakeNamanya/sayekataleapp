@@ -17,7 +17,7 @@ class SHGInputCartScreen extends StatefulWidget {
 
 class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
   final OrderService _orderService = OrderService();
-  app_order.PaymentMethod _selectedPaymentMethod = app_order.PaymentMethod.mobileMoney;
+  app_order.PaymentMethod _selectedPaymentMethod = app_order.PaymentMethod.mtnMobileMoney;
   final _deliveryAddressController = TextEditingController();
   final _deliveryNotesController = TextEditingController();
   bool _isPlacingOrder = false;
@@ -34,7 +34,11 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
     final cartProvider = Provider.of<CartProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final cartItems = cartProvider.cartItems;
-    final totalAmount = cartProvider.total;
+    
+    // Calculate amounts for SHG → PSA purchases
+    final subtotal = cartProvider.subtotal;
+    final serviceFee = cartProvider.getServiceFee('UserRole.shg'); // UGX 2,000
+    final totalAmount = cartProvider.getTotal('UserRole.shg');
 
     return Scaffold(
       appBar: AppBar(
@@ -225,6 +229,57 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Subtotal
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Subtotal',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            Text(
+                              'UGX ${NumberFormat('#,###').format(subtotal)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Service Fee (SHG portion)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Service Fee',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Tooltip(
+                                  message: 'SHG pays UGX 2,000, PSA pays UGX 5,000\nTotal service fee: UGX 7,000',
+                                  child: Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              'UGX ${NumberFormat('#,###').format(serviceFee)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
                         // Total Amount
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -325,9 +380,8 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildPaymentMethodOption(app_order.PaymentMethod.mobileMoney, 'Mobile Money', Icons.phone_android),
-                _buildPaymentMethodOption(app_order.PaymentMethod.cash, 'Cash on Delivery', Icons.money),
-                _buildPaymentMethodOption(app_order.PaymentMethod.bankTransfer, 'Bank Transfer', Icons.account_balance),
+                _buildPaymentMethodOption(app_order.PaymentMethod.mtnMobileMoney, 'MTN Mobile Money', Icons.phone_android),
+                _buildPaymentMethodOption(app_order.PaymentMethod.cashOnDelivery, 'Cash on Delivery', Icons.money),
 
                 const SizedBox(height: 20),
 

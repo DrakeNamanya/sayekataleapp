@@ -138,9 +138,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // Wait for all animations to complete
     await Future.delayed(const Duration(milliseconds: 2000));
     
-    // Navigate to next screen
-    if (!mounted) return;
-    _navigateToNextScreen();
+    // DON'T auto-navigate - let user choose
+    // Animation complete, buttons are now visible
   }
 
   Future<void> _navigateToNextScreen() async {
@@ -195,6 +194,78 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     AppTheme.secondary.withValues(alpha: 0.1),
                   ],
                 ),
+              ),
+            ),
+            
+            // Hidden Animal Icons for Navigation (bottom center)
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Goat Icon (decorative - tap to continue)
+                  GestureDetector(
+                    onTap: () {
+                      _navigateToNextScreen();
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.pets,
+                        size: 30,
+                        color: Colors.brown,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // Hen Icon (ADMIN ACCESS - secret)
+                  GestureDetector(
+                    onTap: () {
+                      // Tap hen to access admin login
+                      Navigator.of(context).pushNamed('/admin-login');
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.egg_alt,
+                        size: 30,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // Crop Icon (decorative - tap to continue)
+                  GestureDetector(
+                    onTap: () {
+                      _navigateToNextScreen();
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.grass,
+                        size: 30,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             

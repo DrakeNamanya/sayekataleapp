@@ -18,6 +18,11 @@ class AppUser {
   final bool isVerified; // Identity verified (NIN + name match)
   final VerificationStatus verificationStatus;
   final DateTime? verifiedAt;
+  final bool isSuspended; // Account suspension status
+  final DateTime? suspendedAt; // When account was suspended
+  final String? suspensionReason; // Reason for suspension
+  final String? suspendedBy; // Admin ID who suspended the account
+  final PartnerInfo? partnerInfo; // Partner information for tracking user sources
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -39,6 +44,11 @@ class AppUser {
     this.isVerified = false,
     this.verificationStatus = VerificationStatus.pending,
     this.verifiedAt,
+    this.isSuspended = false,
+    this.suspendedAt,
+    this.suspensionReason,
+    this.suspendedBy,
+    this.partnerInfo,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -75,7 +85,7 @@ class AppUser {
     }
     
     return AppUser(
-      id: id,
+      id: data['id'] ?? id, // Use stored ID if available, fallback to document ID
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
       email: data['email'],
@@ -108,6 +118,13 @@ class AppUser {
         orElse: () => VerificationStatus.pending,
       ),
       verifiedAt: parseDateTime(data['verified_at']),
+      isSuspended: data['is_suspended'] ?? false,
+      suspendedAt: parseDateTime(data['suspended_at']),
+      suspensionReason: data['suspension_reason'],
+      suspendedBy: data['suspended_by'],
+      partnerInfo: data['partner_info'] != null
+          ? PartnerInfo.fromMap(data['partner_info'])
+          : null,
       createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
       updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
     );
@@ -115,6 +132,7 @@ class AppUser {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'id': id, // Store the user ID in the document
       'name': name,
       'phone': phone,
       'email': email,
@@ -131,6 +149,11 @@ class AppUser {
       'is_verified': isVerified,
       'verification_status': verificationStatus.toString().split('.').last,
       'verified_at': verifiedAt?.toIso8601String(),
+      'is_suspended': isSuspended,
+      'suspended_at': suspendedAt?.toIso8601String(),
+      'suspension_reason': suspensionReason,
+      'suspended_by': suspendedBy,
+      'partner_info': partnerInfo?.toMap(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -314,6 +337,81 @@ class Location {
       'village': village,
       'address': address,
     };
+  }
+}
+
+/// Partner information for tracking user acquisition sources
+class PartnerInfo {
+  final PartnerType partner;
+  final String? heiferAgrihubName;
+  final String? heiferSHGName;
+  final String? heiferSHGId;
+  final String? heiferParticipantId;
+  final String? fsmeGroupName;
+  final String? fsmeGroupId;
+  final String? fsmeParticipantId;
+
+  PartnerInfo({
+    required this.partner,
+    this.heiferAgrihubName,
+    this.heiferSHGName,
+    this.heiferSHGId,
+    this.heiferParticipantId,
+    this.fsmeGroupName,
+    this.fsmeGroupId,
+    this.fsmeParticipantId,
+  });
+
+  factory PartnerInfo.fromMap(Map<String, dynamic> data) {
+    return PartnerInfo(
+      partner: PartnerType.values.firstWhere(
+        (e) => e.toString() == 'PartnerType.${data['partner']}',
+        orElse: () => PartnerType.heifer,
+      ),
+      heiferAgrihubName: data['heifer_agrihub_name'],
+      heiferSHGName: data['heifer_shg_name'],
+      heiferSHGId: data['heifer_shg_id'],
+      heiferParticipantId: data['heifer_participant_id'],
+      fsmeGroupName: data['fsme_group_name'],
+      fsmeGroupId: data['fsme_group_id'],
+      fsmeParticipantId: data['fsme_participant_id'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'partner': partner.toString().split('.').last,
+      'heifer_agrihub_name': heiferAgrihubName,
+      'heifer_shg_name': heiferSHGName,
+      'heifer_shg_id': heiferSHGId,
+      'heifer_participant_id': heiferParticipantId,
+      'fsme_group_name': fsmeGroupName,
+      'fsme_group_id': fsmeGroupId,
+      'fsme_participant_id': fsmeParticipantId,
+    };
+  }
+}
+
+/// Partner organizations
+enum PartnerType {
+  heifer,
+  fsme,
+  curad,
+  asgima,
+}
+
+extension PartnerTypeExtension on PartnerType {
+  String get displayName {
+    switch (this) {
+      case PartnerType.heifer:
+        return 'Heifer';
+      case PartnerType.fsme:
+        return 'FSME';
+      case PartnerType.curad:
+        return 'CURAD';
+      case PartnerType.asgima:
+        return 'ASGIMA';
+    }
   }
 }
 

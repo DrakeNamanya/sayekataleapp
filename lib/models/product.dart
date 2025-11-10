@@ -1,7 +1,9 @@
 class Product {
   final String id;
+  final String? systemId; // Unique system-generated ID for product tracking (e.g., PROD-2024-001)
   final String farmId;
   final String name;
+  final String? businessName; // Legal business name for PSA products (for searchability)
   final String? description;
   final ProductCategory category;
   final String? mainCategory; // crop, oilSeeds, poultry, goats, cows
@@ -14,11 +16,16 @@ class Product {
   final List<String> images;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isFeatured;
+  final int totalSales; // Track sales count for "Top" badge
+  final double averageRating; // Track average rating for "Top" badge
 
   Product({
     required this.id,
+    this.systemId,
     required this.farmId,
     required this.name,
+    this.businessName,
     this.description,
     required this.category,
     this.mainCategory,
@@ -31,10 +38,17 @@ class Product {
     this.images = const [],
     required this.createdAt,
     required this.updatedAt,
+    this.isFeatured = false,
+    this.totalSales = 0,
+    this.averageRating = 0.0,
   });
 
   bool get isLowStock => stockQuantity <= lowStockThreshold;
   bool get isOutOfStock => stockQuantity == 0;
+  
+  /// Calculate if product qualifies for "Top" badge
+  /// Criteria: totalSales >= 10 AND averageRating >= 4.0
+  bool get isTop => totalSales >= 10 && averageRating >= 4.0;
 
   factory Product.fromFirestore(Map<String, dynamic> data, String id) {
     // Helper function to parse DateTime from Firestore Timestamp or String
@@ -51,8 +65,10 @@ class Product {
 
     return Product(
       id: id,
+      systemId: data['system_id'],
       farmId: data['farmer_id'] ?? data['farm_id'] ?? '', // Support both field names
       name: data['name'] ?? '',
+      businessName: data['business_name'],
       description: data['description'],
       category: ProductCategory.values.firstWhere(
         (e) => e.toString() == 'ProductCategory.${data['category']}',
@@ -70,13 +86,19 @@ class Product {
         : (data['images'] != null ? List<String>.from(data['images']) : []),
       createdAt: parseDateTime(data['created_at']),
       updatedAt: parseDateTime(data['updated_at']),
+      isFeatured: data['is_featured'] ?? false,
+      totalSales: data['total_sales'] ?? 0,
+      averageRating: (data['average_rating'] ?? 0.0).toDouble(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
+      'system_id': systemId ?? _generateSystemId(), // Auto-generate if not provided
       'farm_id': farmId,
+      'farmer_id': farmId, // Backward compatibility
       'name': name,
+      'business_name': businessName,
       'description': description,
       'category': category.toString().split('.').last,
       'main_category': mainCategory,
@@ -85,11 +107,24 @@ class Product {
       'unit_size': unitSize,
       'price': price,
       'stock_quantity': stockQuantity,
+      'is_available': stockQuantity > 0, // CRITICAL: Required for SME product queries
       'low_stock_threshold': lowStockThreshold,
       'images': images,
+      'image_url': images.isNotEmpty ? images.first : null, // Backward compatibility
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'is_featured': isFeatured,
+      'total_sales': totalSales,
+      'average_rating': averageRating,
     };
+  }
+  
+  /// Generate unique system ID for product (e.g., PROD-2024-123456)
+  static String _generateSystemId() {
+    final now = DateTime.now();
+    final year = now.year;
+    final timestamp = now.millisecondsSinceEpoch.toString().substring(7);
+    return 'PROD-$year-$timestamp';
   }
 }
 

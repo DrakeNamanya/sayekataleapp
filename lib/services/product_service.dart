@@ -7,6 +7,18 @@ class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ============================================================================
+  // HELPER METHODS
+  // ============================================================================
+  
+  /// Generate unique system ID for product (e.g., PROD-2025-123456)
+  String _generateSystemId() {
+    final now = DateTime.now();
+    final year = now.year;
+    final timestamp = now.millisecondsSinceEpoch.toString().substring(7);
+    return 'PROD-$year-$timestamp';
+  }
+
+  // ============================================================================
   // PRODUCT CREATION (Farmers)
   // ============================================================================
 
@@ -24,6 +36,7 @@ class ProductService {
     required int stockQuantity,
     int unitSize = 1,
     String? imageUrl,
+    List<String>? imageUrls,  // Support multiple images
     String? location,
   }) async {
     try {
@@ -31,8 +44,38 @@ class ProductService {
         debugPrint('📦 Creating product: $name for farmer $farmerName');
       }
 
+      // Determine which images to save
+      List<String> finalImages = [];
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        finalImages = imageUrls;
+      } else if (imageUrl != null) {
+        finalImages = [imageUrl];
+      }
+      
+      // Use first image as primary image_url (for backward compatibility)
+      // ✅ No placeholder URLs - only real Firebase images
+      final primaryImageUrl = finalImages.isNotEmpty 
+          ? finalImages.first 
+          : '';
+      
+      if (kDebugMode) {
+        debugPrint('📸 Saving ${finalImages.length} images for product');
+        for (int i = 0; i < finalImages.length; i++) {
+          debugPrint('   Image ${i + 1}: ${finalImages[i].substring(0, 60)}...');
+        }
+      }
+      
+      // Generate unique system ID for product tracking
+      final systemId = _generateSystemId();
+      
+      if (kDebugMode) {
+        debugPrint('🆔 Generated system_id: $systemId');
+      }
+      
       final product = {
+        'system_id': systemId,  // ✅ CRITICAL: Unique system-generated ID
         'farmer_id': farmerId,
+        'farm_id': farmerId,  // ✅ For backward compatibility
         'farmer_name': farmerName,
         'name': name,
         'description': description,
@@ -44,11 +87,12 @@ class ProductService {
         'unit_size': unitSize,
         'stock_quantity': stockQuantity,
         'low_stock_threshold': 10,
-        'image_url': imageUrl ?? 'https://via.placeholder.com/400x400?text=${Uri.encodeComponent(name)}',
+        'image_url': primaryImageUrl,  // Primary image for backward compatibility
+        'images': finalImages,  // All images as list
         'location': location ?? '',
         'rating': 0.0,
         'total_reviews': 0,
-        'is_available': true,
+        'is_available': stockQuantity > 0,  // ✅ CRITICAL: Auto-set based on stock
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       };
@@ -84,7 +128,7 @@ class ProductService {
     String? unit,
     int? unitSize,
     int? stockQuantity,
-    String? imageUrl,
+    List<String>? imageUrls,  // ✅ Changed from imageUrl to imageUrls
     bool? isAvailable,
   }) async {
     try {
@@ -105,7 +149,11 @@ class ProductService {
       if (unit != null) updates['unit'] = unit;
       if (unitSize != null) updates['unit_size'] = unitSize;
       if (stockQuantity != null) updates['stock_quantity'] = stockQuantity;
-      if (imageUrl != null) updates['image_url'] = imageUrl;
+      if (imageUrls != null) {
+        updates['images'] = imageUrls;  // ✅ Store as 'images' array
+        // Also update legacy image_url field with first image for backward compatibility
+        updates['image_url'] = imageUrls.isNotEmpty ? imageUrls.first : null;
+      }
       if (isAvailable != null) updates['is_available'] = isAvailable;
 
       await _firestore.collection('products').doc(productId).update(updates);
@@ -116,6 +164,29 @@ class ProductService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error updating product: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Update product stock quantity
+  Future<void> updateProductStock(String productId, int newStockQuantity) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('📦 Updating stock for product: $productId to $newStockQuantity');
+      }
+
+      await _firestore.collection('products').doc(productId).update({
+        'stock_quantity': newStockQuantity,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Stock updated successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error updating stock: $e');
       }
       rethrow;
     }

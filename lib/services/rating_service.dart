@@ -127,6 +127,122 @@ class RatingService {
     }
   }
 
+  /// Get reviews for a specific farmer
+  Future<List<Review>> getFarmerReviews(
+    String farmerId, {
+    int limit = 20,
+    int? minRating,
+  }) async {
+    try {
+      var query = _firestore
+          .collection('reviews')
+          .where('farm_id', isEqualTo: farmerId);
+
+      if (minRating != null) {
+        query = query.where('rating', isGreaterThanOrEqualTo: minRating.toDouble());
+      }
+
+      final snapshot = await query.get();
+
+      final reviews = snapshot.docs
+          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory (most recent first)
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return reviews.take(limit).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Get reviews for a specific product
+  Future<List<Review>> getProductReviews(
+    String productId, {
+    int limit = 20,
+    int? minRating,
+  }) async {
+    try {
+      var query = _firestore
+          .collection('reviews')
+          .where('product_id', isEqualTo: productId);
+
+      if (minRating != null) {
+        query = query.where('rating', isGreaterThanOrEqualTo: minRating.toDouble());
+      }
+
+      final snapshot = await query.get();
+
+      final reviews = snapshot.docs
+          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory (most recent first)
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return reviews.take(limit).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Stream reviews for a farmer (real-time updates)
+  Stream<List<Review>> streamFarmerReviews(String farmerId, {int limit = 20}) {
+    return _firestore
+        .collection('reviews')
+        .where('farm_id', isEqualTo: farmerId)
+        .snapshots()
+        .map((snapshot) {
+      final reviews = snapshot.docs
+          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      // Sort in memory (most recent first)
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return reviews.take(limit).toList();
+    });
+  }
+
+  /// Get review statistics for a farmer
+  Future<Map<String, dynamic>> getFarmerReviewStats(String farmerId) async {
+    try {
+      final reviews = await getFarmerReviews(farmerId, limit: 1000);
+      
+      if (reviews.isEmpty) {
+        return {
+          'total_reviews': 0,
+          'average_rating': 0.0,
+          'with_photos': 0,
+          'with_comments': 0,
+        };
+      }
+
+      final totalReviews = reviews.length;
+      final averageRating = reviews.fold<double>(
+        0.0,
+        (sum, review) => sum + review.rating,
+      ) / totalReviews;
+      final withPhotos = reviews.where((r) => r.hasPhotos).length;
+      final withComments = reviews.where((r) => r.comment != null && r.comment!.isNotEmpty).length;
+
+      return {
+        'total_reviews': totalReviews,
+        'average_rating': averageRating,
+        'with_photos': withPhotos,
+        'with_comments': withComments,
+      };
+    } catch (e) {
+      return {
+        'total_reviews': 0,
+        'average_rating': 0.0,
+        'with_photos': 0,
+        'with_comments': 0,
+      };
+    }
+  }
+
   /// Update farmer rating statistics
   Future<void> _updateFarmerRating(String farmerId, double newRating) async {
     try {

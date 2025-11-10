@@ -9,6 +9,7 @@ import '../../models/user.dart';
 import 'product_detail_screen.dart';
 import 'cart_screen.dart';
 import 'order_tracking_screen.dart';
+import 'browse_products_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -323,9 +324,14 @@ class _HomePage extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      // View all farms
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BrowseProductsScreen(),
+                        ),
+                      );
                     },
-                    child: const Text('View All'),
+                    child: const Text('Browse All'),
                   ),
                 ],
               ),
@@ -361,7 +367,12 @@ class _HomePage extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      // View all products
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BrowseProductsScreen(),
+                        ),
+                      );
                     },
                     child: const Text('View All'),
                   ),

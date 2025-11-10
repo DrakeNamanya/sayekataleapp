@@ -4,6 +4,7 @@ import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'sme_edit_profile_screen.dart';
+import '../common/help_support_screen.dart';
 
 class SMEProfileScreen extends StatelessWidget {
   const SMEProfileScreen({super.key});
@@ -219,7 +220,12 @@ class SMEProfileScreen extends StatelessWidget {
                     title: 'Help & Support',
                     subtitle: 'Get help or contact support',
                     onTap: () {
-                      // Navigate to help screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   

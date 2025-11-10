@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'shg_edit_profile_screen.dart';
+import '../common/help_support_screen.dart';
 
 class SHGProfileScreen extends StatelessWidget {
   const SHGProfileScreen({super.key});
@@ -11,6 +13,13 @@ class SHGProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
+    
+    if (kDebugMode) {
+      debugPrint('🖼️ SHG PROFILE SCREEN - Rendering with:');
+      debugPrint('   - user: ${user != null ? user.name : "NULL"}');
+      debugPrint('   - profileImage: ${user?.profileImage ?? "NULL"}');
+      debugPrint('   - nationalIdPhoto: ${user?.nationalIdPhoto ?? "NULL"}');
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -36,11 +45,16 @@ class SHGProfileScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 50,
-                        color: AppTheme.primaryColor,
-                      ),
+                      backgroundImage: user?.profileImage != null && user!.profileImage!.isNotEmpty
+                          ? NetworkImage(user.profileImage!)
+                          : null,
+                      child: user?.profileImage == null || user!.profileImage!.isEmpty
+                          ? Icon(
+                              Icons.person,
+                              size: 50,
+                              color: AppTheme.primaryColor,
+                            )
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -152,12 +166,11 @@ class SHGProfileScreen extends StatelessWidget {
                 icon: Icons.edit_outlined,
                 title: 'Edit Profile',
                 subtitle: 'Update your personal information',
-                onTap: () async {
-                  await Navigator.push(
+                onTap: () {
+                  Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SHGEditProfileScreen()),
                   );
-                  // Profile updated automatically through Provider
                 },
               ),
               _ProfileOption(
@@ -197,7 +210,12 @@ class SHGProfileScreen extends StatelessWidget {
                 title: 'Help & Support',
                 subtitle: 'Get help with the app',
                 onTap: () {
-                  // Help & support
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HelpSupportScreen(),
+                    ),
+                  );
                 },
               ),
               _ProfileOption(

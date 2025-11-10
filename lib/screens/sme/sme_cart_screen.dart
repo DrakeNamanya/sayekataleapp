@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cart_item.dart';
 import '../../models/order.dart';
+import '../../models/order_extensions.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../utils/app_theme.dart';
@@ -15,7 +16,7 @@ class SMECartScreen extends StatefulWidget {
 }
 
 class _SMECartScreenState extends State<SMECartScreen> {
-  PaymentMethod _selectedPaymentMethod = PaymentMethod.mobileMoney;
+  PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMobileMoney;
   
   @override
   Widget build(BuildContext context) {
@@ -141,22 +142,37 @@ class _SMECartScreenState extends State<SMECartScreen> {
                           label: 'Subtotal',
                           value: 'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
                         ),
-                        const SizedBox(height: 8),
-                        _SummaryRow(
-                          label: 'Delivery Fee',
-                          value: 'UGX ${cartProvider.deliveryFee.toStringAsFixed(0)}',
-                        ),
-                        const SizedBox(height: 8),
-                        _SummaryRow(
-                          label: 'Service Fee (5%)',
-                          value: 'UGX ${cartProvider.serviceFee.toStringAsFixed(0)}',
-                        ),
                         const Divider(height: 24),
                         _SummaryRow(
-                          label: 'Total',
-                          value: 'UGX ${cartProvider.total.toStringAsFixed(0)}',
+                          label: 'Total Amount',
+                          value: 'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
                           isBold: true,
                           valueColor: AppTheme.primaryColor,
+                        ),
+                        const SizedBox(height: 8),
+                        // Free delivery notice
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.green.shade700, size: 16),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'No service fees! Pay only for products.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade900,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
                         
@@ -327,8 +343,12 @@ class _SMECartScreenState extends State<SMECartScreen> {
   String _getPaymentMethodDescription(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.mobileMoney:
-        return 'Pay with Mobile Money (MTN/Airtel)';
+      case PaymentMethod.mtnMobileMoney:
+        return 'Pay with MTN Mobile Money';
+      case PaymentMethod.airtelMoney:
+        return 'Pay with Airtel Money';
       case PaymentMethod.cash:
+      case PaymentMethod.cashOnDelivery:
         return 'Pay cash on delivery';
       case PaymentMethod.bankTransfer:
         return 'Pay via bank transfer';

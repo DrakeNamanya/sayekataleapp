@@ -31,14 +31,35 @@ class CartProvider with ChangeNotifier {
   /// Calculate subtotal (sum of all item prices)
   double get subtotal => _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 
-  /// Delivery fee (flat rate)
-  double get deliveryFee => subtotal > 0 ? 5000.0 : 0.0; // UGX 5000
+  /// Get delivery fee based on user role (context-aware)
+  /// SME → SHG: FREE
+  /// SHG → PSA: Calculated as part of service fee split
+  double getDeliveryFee(String? userRole) {
+    return 0.0; // No separate delivery fee in new model
+  }
 
-  /// Service fee (5% of subtotal)
-  double get serviceFee => subtotal * 0.05;
+  /// Get service fee based on user role (context-aware)
+  /// SME → SHG: FREE
+  /// SHG → PSA: UGX 2,000 (SHG pays 2k, PSA pays 5k = total 7k)
+  double getServiceFee(String? userRole) {
+    if (userRole == 'UserRole.shg') {
+      // SHG buying from PSA - pays UGX 2,000
+      return _cartItems.isEmpty ? 0.0 : 2000.0;
+    }
+    // SME buying from SHG - FREE
+    return 0.0;
+  }
 
-  /// Calculate total price
-  double get total => subtotal + deliveryFee + serviceFee;
+  /// Calculate total price based on user role
+  /// Pass userRole as 'UserRole.shg' or 'UserRole.sme'
+  double getTotal(String? userRole) {
+    return subtotal + getServiceFee(userRole);
+  }
+
+  /// Legacy getters for backward compatibility (assume SME context)
+  double get deliveryFee => 0.0;
+  double get serviceFee => 0.0;
+  double get total => subtotal;
 
   /// Check if product is in cart
   bool isInCart(String productId) {

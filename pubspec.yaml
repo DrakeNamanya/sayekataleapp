@@ -60,15 +60,20 @@ dependencies:
   
   # UI Utilities
   intl: ^0.19.0
+  timeago: ^3.6.1  # Relative time formatting (e.g., "2 days ago")
   cached_network_image: ^3.3.1
   image_picker: ^1.0.7
   image: ^4.1.7  # Image compression and manipulation
+  path: ^1.9.0  # File path operations
   url_launcher: ^6.2.4
   shimmer: ^3.0.0
   carousel_slider: ^5.0.0
   dots_indicator: ^3.0.0
   photo_view: ^0.15.0
   fl_chart: ^1.1.1
+  csv: ^6.0.0  # CSV file generation and export
+  uuid: ^4.5.1  # UUID generation for unique transaction IDs
+  pdf: ^3.11.1  # PDF generation for receipts
 
 dev_dependencies:
   flutter_test:

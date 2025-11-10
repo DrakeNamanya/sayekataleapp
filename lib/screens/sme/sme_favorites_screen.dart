@@ -253,31 +253,48 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Stack(
                 children: [
-                  Image.network(
-                    product.images.isNotEmpty
-                        ? product.images.first
-                        : 'https://via.placeholder.com/400x400?text=${Uri.encodeComponent(product.name)}',
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.image, size: 48, color: Colors.grey[400]),
-                            const SizedBox(height: 8),
-                            Text(
-                              product.name,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                            ),
-                          ],
+                  // ✅ Only load images from Firebase (no placeholders)
+                  product.images.isNotEmpty
+                      ? Image.network(
+                          product.images.first,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.image_not_supported, size: 48, color: Colors.grey[400]),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Image unavailable',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.favorite, size: 48, color: Colors.grey[400]),
+                              const SizedBox(height: 8),
+                              Text(
+                                product.name,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
-                  ),
                   // Distance Badge
                   if (productWithFarmer.distanceKm != null)
                     Positioned(

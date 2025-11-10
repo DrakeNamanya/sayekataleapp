@@ -15,25 +15,54 @@ class ProductWithFarmerService {
     Location? buyerLocation,
   }) async {
     try {
-      if (products.isEmpty) return [];
+      if (products.isEmpty) {
+        if (kDebugMode) {
+          debugPrint('⚠️  No products provided to load farmer details');
+        }
+        return [];
+      }
+
+      if (kDebugMode) {
+        debugPrint('📦 Loading farmer details for ${products.length} products...');
+      }
 
       // Get unique farmer IDs
       final farmerIds = products.map((p) => p.farmId).toSet().toList();
+      
+      if (kDebugMode) {
+        debugPrint('👥 Unique farmer IDs to query: ${farmerIds.length}');
+      }
 
-      // Load all farmers in one query
-      final farmerDocs = await _firestore
-          .collection('users')
-          .where(FieldPath.documentId, whereIn: farmerIds)
-          .get();
-
-      // Create farmer map for quick lookup
+      // Load all farmers in batches (Firestore has 10-item limit for whereIn)
       final farmerMap = <String, AppUser>{};
-      for (final doc in farmerDocs.docs) {
-        farmerMap[doc.id] = AppUser.fromFirestore(doc.data(), doc.id);
+      
+      // Process farmer IDs in batches of 10
+      for (var i = 0; i < farmerIds.length; i += 10) {
+        final batch = farmerIds.skip(i).take(10).toList();
+        
+        try {
+          final farmerDocs = await _firestore
+              .collection('users')
+              .where(FieldPath.documentId, whereIn: batch)
+              .get();
+
+          for (final doc in farmerDocs.docs) {
+            farmerMap[doc.id] = AppUser.fromFirestore(doc.data(), doc.id);
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️  Error loading farmer batch: $e');
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Loaded ${farmerMap.length} farmer profiles');
       }
 
       // Create ProductWithFarmer list
       final productsWithFarmers = <ProductWithFarmer>[];
+      int missingFarmers = 0;
       
       for (final product in products) {
         final farmer = farmerMap[product.farmId];
@@ -51,10 +80,18 @@ class ProductWithFarmerService {
             distanceKm: distance,
           ));
         } else {
+          missingFarmers++;
           if (kDebugMode) {
-            debugPrint('⚠️ Farmer not found for product: ${product.name} (${product.farmId})');
+            debugPrint('⚠️  Farmer not found for product: ${product.name} | System ID: ${product.systemId ?? "N/A"} | Farmer ID: ${product.farmId}');
           }
         }
+      }
+
+      if (kDebugMode) {
+        if (missingFarmers > 0) {
+          debugPrint('⚠️  ${missingFarmers} products skipped due to missing farmer profiles');
+        }
+        debugPrint('📊 Final result: ${productsWithFarmers.length} products with farmer details');
       }
 
       // Sort by distance (nearest first)
@@ -78,6 +115,7 @@ class ProductWithFarmerService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error loading products with farmers: $e');
+        debugPrint('   Stack trace: ${StackTrace.current}');
       }
       return [];
     }

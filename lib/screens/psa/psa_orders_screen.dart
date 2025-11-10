@@ -59,7 +59,9 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildOrdersList(psaId, [app_order.OrderStatus.pending]),
+                _buildOrdersList(psaId, [
+                  app_order.OrderStatus.pending,
+                ]),
                 _buildOrdersList(psaId, [
                   app_order.OrderStatus.confirmed,
                   app_order.OrderStatus.preparing,
@@ -86,6 +88,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
       builder: (context, snapshot) {
         final revenue = snapshot.data ?? 0.0;
         return Container(
+          height: 100,
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -106,26 +109,30 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total Revenue',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Total Revenue',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'UGX ${NumberFormat('#,###').format(revenue)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 4),
+                    Text(
+                      'UGX ${NumberFormat('#,###').format(revenue)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -147,10 +154,10 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
   }
 
   Widget _buildFilterChips() {
-    return Container(
+    return SizedBox(
       height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: _statusFilters.length,
         itemBuilder: (context, index) {
@@ -573,7 +580,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          item.productImage,
+                          item.productImage ?? '',
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
@@ -793,40 +800,56 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
   Color _getStatusColor(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Colors.orange;
+      case app_order.OrderStatus.paymentHeld:
       case app_order.OrderStatus.confirmed:
       case app_order.OrderStatus.preparing:
         return Colors.blue;
+      case app_order.OrderStatus.deliveryPending:
       case app_order.OrderStatus.ready:
       case app_order.OrderStatus.inTransit:
         return Colors.purple;
+      case app_order.OrderStatus.deliveredPendingConfirmation:
       case app_order.OrderStatus.delivered:
       case app_order.OrderStatus.completed:
         return Colors.green;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
         return Colors.red;
+      case app_order.OrderStatus.codPendingBothConfirmation:
+      case app_order.OrderStatus.codOverdue:
+        return Colors.deepOrange;
     }
   }
 
   IconData _getStatusIcon(app_order.OrderStatus status) {
     switch (status) {
       case app_order.OrderStatus.pending:
+      case app_order.OrderStatus.paymentPending:
         return Icons.pending;
+      case app_order.OrderStatus.paymentHeld:
+        return Icons.lock;
       case app_order.OrderStatus.confirmed:
         return Icons.check_circle;
       case app_order.OrderStatus.preparing:
         return Icons.inventory;
+      case app_order.OrderStatus.deliveryPending:
       case app_order.OrderStatus.ready:
         return Icons.done_all;
       case app_order.OrderStatus.inTransit:
         return Icons.local_shipping;
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+        return Icons.assignment_turned_in;
       case app_order.OrderStatus.delivered:
       case app_order.OrderStatus.completed:
         return Icons.check_circle_outline;
       case app_order.OrderStatus.cancelled:
       case app_order.OrderStatus.rejected:
         return Icons.cancel;
+      case app_order.OrderStatus.codPendingBothConfirmation:
+      case app_order.OrderStatus.codOverdue:
+        return Icons.warning;
     }
   }
 
@@ -834,6 +857,14 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
     switch (status) {
       case app_order.OrderStatus.pending:
         return 'Pending';
+      case app_order.OrderStatus.paymentPending:
+        return 'Payment Pending';
+      case app_order.OrderStatus.paymentHeld:
+        return 'Payment Held';
+      case app_order.OrderStatus.deliveryPending:
+        return 'Delivery Pending';
+      case app_order.OrderStatus.deliveredPendingConfirmation:
+        return 'Delivered - Pending Confirmation';
       case app_order.OrderStatus.confirmed:
         return 'Confirmed';
       case app_order.OrderStatus.rejected:
@@ -850,15 +881,23 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen> with SingleTickerProv
         return 'Completed';
       case app_order.OrderStatus.cancelled:
         return 'Cancelled';
+      case app_order.OrderStatus.codPendingBothConfirmation:
+        return 'COD - Pending Confirmation';
+      case app_order.OrderStatus.codOverdue:
+        return 'COD - Overdue';
     }
   }
 
   String _formatPaymentMethod(app_order.PaymentMethod method) {
     switch (method) {
       case app_order.PaymentMethod.cash:
+      case app_order.PaymentMethod.cashOnDelivery:
         return 'Cash on Delivery';
       case app_order.PaymentMethod.mobileMoney:
-        return 'Mobile Money';
+      case app_order.PaymentMethod.mtnMobileMoney:
+        return 'MTN Mobile Money';
+      case app_order.PaymentMethod.airtelMoney:
+        return 'Airtel Money';
       case app_order.PaymentMethod.bankTransfer:
         return 'Bank Transfer';
     }

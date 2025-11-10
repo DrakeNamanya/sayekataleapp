@@ -120,7 +120,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 const Icon(Icons.phone, size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 4),
                 Text(
-                  order.farmerPhone,
+                  order.farmerPhone ?? 'N/A',
                   style: const TextStyle(fontSize: 14),
                 ),
               ],
@@ -174,7 +174,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             _buildOrderItems(order.items),
             
             // Confirm Receipt Button
-            if (order.status == OrderStatus.delivered && !order.isReceivedByBuyer)
+            if (order.status == OrderStatus.delivered && !(order.isReceivedByBuyer ?? false))
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: SizedBox(
@@ -193,7 +193,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
             
             // View Receipt Button
-            if (order.isReceivedByBuyer)
+            if (order.isReceivedByBuyer ?? false)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: SizedBox(
@@ -219,13 +219,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     String label;
     IconData? icon;
 
-    if (order.isReceivedByBuyer) {
+    if (order.isReceivedByBuyer ?? false) {
       color = Colors.green;
       label = '✅ Received';
       icon = Icons.check_circle;
     } else {
       switch (order.status) {
         case OrderStatus.pending:
+        case OrderStatus.paymentPending:
           color = Colors.orange;
           label = 'Pending';
           icon = Icons.access_time;
@@ -240,17 +241,25 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           label = 'Preparing';
           icon = Icons.kitchen;
           break;
+        case OrderStatus.paymentHeld:
+          color = Colors.blue;
+          label = 'Payment Secured';
+          icon = Icons.lock;
+          break;
         case OrderStatus.ready:
           color = Colors.teal;
           label = 'Ready';
           icon = Icons.done_all;
           break;
         case OrderStatus.inTransit:
+        case OrderStatus.deliveryPending:
           color = Colors.indigo;
           label = 'In Transit';
           icon = Icons.local_shipping;
           break;
         case OrderStatus.delivered:
+        case OrderStatus.deliveredPendingConfirmation:
+        case OrderStatus.codPendingBothConfirmation:
           color = Colors.green;
           label = 'Delivered';
           icon = Icons.inventory_2;
@@ -261,6 +270,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           icon = Icons.check_circle;
           break;
         case OrderStatus.rejected:
+        case OrderStatus.codOverdue:
           color = Colors.red;
           label = 'Rejected';
           icon = Icons.cancel;
@@ -524,7 +534,7 @@ ${order.confirmedAt != null ? 'Confirmed: ${dateFormat.format(order.confirmedAt!
 ${order.deliveredAt != null ? 'Delivered: ${dateFormat.format(order.deliveredAt!)}' : ''}
 ${order.receivedAt != null ? 'Received:  ${dateFormat.format(order.receivedAt!)}' : ''}
 
-${order.isReceivedByBuyer ? '''
+${(order.isReceivedByBuyer ?? false) ? '''
 ═══════════════════════════════════
 ✅ ORDER COMPLETED
 ═══════════════════════════════════
@@ -541,9 +551,13 @@ Received on: ${dateFormat.format(order.receivedAt!)}
   String _getPaymentMethodName(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.cash:
+      case PaymentMethod.cashOnDelivery:
         return 'Cash on Delivery';
       case PaymentMethod.mobileMoney:
-        return 'Mobile Money';
+      case PaymentMethod.mtnMobileMoney:
+        return 'MTN Mobile Money';
+      case PaymentMethod.airtelMoney:
+        return 'Airtel Money';
       case PaymentMethod.bankTransfer:
         return 'Bank Transfer';
     }

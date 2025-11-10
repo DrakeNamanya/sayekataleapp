@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
+import '../utils/district_codes.dart';
 
 /// Firebase Email Authentication Service
 /// Handles email/password authentication and user management with Firestore
@@ -30,6 +31,7 @@ class FirebaseEmailAuthService {
     required String name,
     required String phone,
     required UserRole role,
+    String? district,
   }) async {
     try {
       if (kDebugMode) {
@@ -68,6 +70,7 @@ class FirebaseEmailAuthService {
           name: name,
           phone: phone,
           role: role,
+          district: district,
         );
         
         if (kDebugMode) {
@@ -217,6 +220,7 @@ class FirebaseEmailAuthService {
     required String name,
     required String phone,
     required UserRole role,
+    String? district,
     AppUser? existingUser,
   }) async {
     try {
@@ -238,8 +242,8 @@ class FirebaseEmailAuthService {
           debugPrint('✨ Creating new user profile...');
         }
 
-        // Generate user ID based on role
-        final userId = await _generateUserId(role);
+        // Generate user ID based on role and district
+        final userId = await _generateUserId(role, district: district);
         
         // Set profile completion deadline (24 hours from now)
         final profileDeadline = DateTime.now().add(const Duration(hours: 24));
@@ -278,16 +282,42 @@ class FirebaseEmailAuthService {
   /// Get user profile from Firestore
   Future<AppUser?> getUserProfile(String uid) async {
     try {
+      if (kDebugMode) {
+        debugPrint('🔄 AUTH SERVICE - Fetching user profile for UID: $uid');
+      }
+      
       final userDoc = await _firestore.collection('users').doc(uid).get();
       
       if (userDoc.exists) {
-        return AppUser.fromFirestore(userDoc.data()!, uid);
+        final data = userDoc.data()!;
+        
+        if (kDebugMode) {
+          debugPrint('📄 AUTH SERVICE - Firestore document data:');
+          debugPrint('   - profile_image: ${data['profile_image'] ?? "NULL"}');
+          debugPrint('   - national_id_photo: ${data['national_id_photo'] ?? "NULL"}');
+          debugPrint('   - name: ${data['name'] ?? "NULL"}');
+          debugPrint('   - is_profile_complete: ${data['is_profile_complete'] ?? "NULL"}');
+        }
+        
+        final user = AppUser.fromFirestore(data, uid);
+        
+        if (kDebugMode) {
+          debugPrint('✅ AUTH SERVICE - AppUser object created:');
+          debugPrint('   - user.profileImage: ${user.profileImage ?? "NULL"}');
+          debugPrint('   - user.nationalIdPhoto: ${user.nationalIdPhoto ?? "NULL"}');
+        }
+        
+        return user;
+      }
+      
+      if (kDebugMode) {
+        debugPrint('⚠️ AUTH SERVICE - User document does not exist for UID: $uid');
       }
       
       return null;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Error fetching user profile: $e');
+        debugPrint('❌ AUTH SERVICE - Error fetching user profile: $e');
       }
       return null;
     }
@@ -311,19 +341,25 @@ class FirebaseEmailAuthService {
     }
   }
 
-  /// Generate unique user ID based on role
-  /// Uses timestamp-based ID for reliability (no Firestore query needed)
-  Future<String> _generateUserId(UserRole role) async {
+  /// Generate unique user ID based on role and district
+  /// Format: ROLE + DISTRICT_CODE (3 letters) + SEQUENTIAL_NUMBER
+  /// Examples: PSAIGA01, SHGJIN025, SMEBUG045
+  /// Uses official district codes from districtinformation.xlsx
+  Future<String> _generateUserId(UserRole role, {String? district}) async {
     try {
       final roleStr = role.toString().split('.').last.toUpperCase();
       
-      // Generate timestamp-based ID for reliability
-      // Format: SHG-1730423456789, SME-1730423456789, PSA-1730423456789
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final userId = '$roleStr-$timestamp';
+      // Get next sequential number for this role (no district)
+      final sequentialNumber = await _getNextUserNumber(roleStr);
+      
+      // Format: ROLE-NUMBER (zero-padded to 5 digits)
+      final formattedNumber = sequentialNumber.toString().padLeft(5, '0');
+      final userId = '$roleStr-$formattedNumber';
       
       if (kDebugMode) {
         debugPrint('✅ Generated user ID: $userId');
+        debugPrint('   - Role: $roleStr');
+        debugPrint('   - Sequential Number: $formattedNumber');
       }
       
       return userId;
@@ -331,8 +367,55 @@ class FirebaseEmailAuthService {
       if (kDebugMode) {
         debugPrint('❌ Error generating user ID: $e');
       }
-      // Final fallback
+      // Fallback to timestamp-based ID if generation fails
       return '${role.toString().split('.').last.toUpperCase()}-${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+  
+  /// Get next sequential number for a role
+  /// This ensures unique, incremental user IDs
+  Future<int> _getNextUserNumber(String roleStr) async {
+    try {
+      // Query Firestore to find the highest number for this role
+      final prefix = '$roleStr-';
+      
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('id', isGreaterThanOrEqualTo: prefix)
+          .where('id', isLessThan: '${roleStr}.') // Get all IDs with this prefix
+          .get();
+      
+      if (querySnapshot.docs.isEmpty) {
+        // First user with this role
+        return 1;
+      }
+      
+      // Find the highest number from existing IDs
+      int maxNumber = 0;
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final userId = data['id'] as String?;
+        
+        if (userId != null && userId.startsWith(prefix)) {
+          // Extract the number part (everything after prefix)
+          final numberPart = userId.substring(prefix.length);
+          final number = int.tryParse(numberPart);
+          
+          if (number != null && number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      }
+      
+      // Return next number
+      return maxNumber + 1;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Error getting sequential number: $e');
+        debugPrint('   Falling back to timestamp-based number');
+      }
+      // Fallback: use last 3 digits of timestamp
+      return DateTime.now().millisecondsSinceEpoch % 1000;
     }
   }
 

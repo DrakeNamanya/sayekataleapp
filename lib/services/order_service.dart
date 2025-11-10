@@ -24,6 +24,45 @@ class OrderService {
   // ORDER CREATION (Buyers)
   // ============================================================================
 
+  /// Validate stock availability for cart items
+  Future<Map<String, dynamic>> validateCartStock(List<CartItem> cartItems) async {
+    final List<String> outOfStockItems = [];
+    final List<String> insufficientStockItems = [];
+    
+    for (final item in cartItems) {
+      try {
+        // Fetch current product stock from Firebase
+        final productDoc = await _firestore.collection('products').doc(item.productId).get();
+        
+        if (!productDoc.exists) {
+          outOfStockItems.add(item.productName);
+          continue;
+        }
+        
+        final productData = productDoc.data()!;
+        final currentStock = productData['stock_quantity'] ?? 0;
+        final isAvailable = productData['is_available'] ?? false;
+        
+        if (!isAvailable || currentStock == 0) {
+          outOfStockItems.add(item.productName);
+        } else if (currentStock < item.quantity) {
+          insufficientStockItems.add('${item.productName} (Available: $currentStock ${item.unit}, Requested: ${item.quantity} ${item.unit})');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Error checking stock for ${item.productName}: $e');
+        }
+        outOfStockItems.add(item.productName);
+      }
+    }
+    
+    return {
+      'isValid': outOfStockItems.isEmpty && insufficientStockItems.isEmpty,
+      'outOfStockItems': outOfStockItems,
+      'insufficientStockItems': insufficientStockItems,
+    };
+  }
+
   /// Place order from cart items
   /// Groups cart items by farmer and creates separate orders
   Future<List<app_order.Order>> placeOrdersFromCart({
@@ -38,6 +77,32 @@ class OrderService {
     try {
       if (kDebugMode) {
         debugPrint('📦 Placing orders from ${cartItems.length} cart items');
+      }
+
+      // ✅ STEP 1: Validate stock availability before creating orders
+      if (kDebugMode) {
+        debugPrint('🔍 Validating stock availability...');
+      }
+      
+      final stockValidation = await validateCartStock(cartItems);
+      
+      if (!stockValidation['isValid']) {
+        final outOfStock = stockValidation['outOfStockItems'] as List<String>;
+        final insufficient = stockValidation['insufficientStockItems'] as List<String>;
+        
+        String errorMessage = '❌ Cannot place order:\n';
+        if (outOfStock.isNotEmpty) {
+          errorMessage += '\nOut of stock:\n${outOfStock.map((item) => '  • $item').join('\n')}';
+        }
+        if (insufficient.isNotEmpty) {
+          errorMessage += '\n\nInsufficient stock:\n${insufficient.map((item) => '  • $item').join('\n')}';
+        }
+        
+        throw Exception(errorMessage);
+      }
+      
+      if (kDebugMode) {
+        debugPrint('✅ Stock validation passed');
       }
 
       // Group cart items by farmer
@@ -98,30 +163,75 @@ class OrderService {
             price: cartItem.price,
             unit: cartItem.unit,
             quantity: cartItem.quantity,
-            subtotal: cartItem.price * cartItem.quantity,
+            total: cartItem.price * cartItem.quantity,
           );
         }).toList();
 
-        // Create order with generated order number and system IDs
+        // Determine order type and service fee based on buyer and seller roles
+        // We need to fetch buyer and seller documents to determine roles
+        app_order.OrderType orderType;
+        double serviceFee;
+        
+        try {
+          // Fetch buyer and seller roles to determine order type
+          final buyerDoc = await _firestore.collection('users').doc(buyerId).get();
+          final sellerDoc = await _firestore.collection('users').doc(farmerId).get();
+          
+          final buyerRole = buyerDoc.exists ? (buyerDoc.data()?['role'] as String?) : null;
+          final sellerRole = sellerDoc.exists ? (sellerDoc.data()?['role'] as String?) : null;
+          
+          if (kDebugMode) {
+            debugPrint('📊 Order roles: Buyer=$buyerRole, Seller=$sellerRole');
+          }
+          
+          // Determine order type based on roles
+          if (buyerRole == 'shg' && sellerRole == 'psa') {
+            // SHG buying inputs from PSA
+            orderType = app_order.OrderType.shgToPsaInputPurchase;
+            serviceFee = 7000.0; // SHG pays UGX 2,000 + PSA pays UGX 5,000
+            if (kDebugMode) {
+              debugPrint('💰 SHG → PSA: Service fee UGX 7,000 (SHG: 2,000 + PSA: 5,000)');
+            }
+          } else {
+            // SME buying products from SHG or other combinations
+            orderType = app_order.OrderType.smeToShgProductPurchase;
+            serviceFee = 0.0; // FREE for SME → SHG purchases
+            if (kDebugMode) {
+              debugPrint('💰 SME → SHG: FREE (no service fee)');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Error determining order type: $e, defaulting to SME → SHG');
+          }
+          orderType = app_order.OrderType.smeToShgProductPurchase;
+          serviceFee = 0.0;
+        }
+        
+        // Create order with correct type and service fee
         final order = app_order.Order(
           id: '', // Will be set by Firestore
-          orderNumber: _generateOrderNumber(),
+          type: orderType,
           buyerId: buyerId,
           buyerName: buyerName,
           buyerPhone: buyerPhone,
-          buyerSystemId: buyerSystemId,
+          sellerId: farmerId,
+          sellerName: farmerName,
+          sellerPhone: farmerPhone,
+          items: orderItems,
+          subtotal: total,
+          serviceFee: serviceFee,
+          totalAmount: total + serviceFee, // Add service fee to total
+          status: app_order.OrderStatus.pending,
+          paymentMethod: paymentMethod,
+          deliveryAddress: deliveryAddress ?? '',
+          deliveryNotes: deliveryNotes,
+          // Backward compatibility fields
           farmerId: farmerId,
           farmerName: farmerName,
           farmerPhone: farmerPhone,
-          farmerSystemId: farmerSystemId,
-          items: orderItems,
-          totalAmount: total,
-          status: app_order.OrderStatus.pending,
-          paymentMethod: paymentMethod,
-          deliveryAddress: deliveryAddress,
-          deliveryNotes: deliveryNotes,
+          orderNumber: _generateOrderNumber(),
           createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
         );
 
         // Save to Firestore
@@ -271,6 +381,51 @@ class OrderService {
   /// Farmer accepts/confirms order
   Future<void> confirmOrder(String orderId) async {
     try {
+      // ✅ STEP 1: Get order details to reduce stock
+      final orderDoc = await _firestore.collection('orders').doc(orderId).get();
+      if (!orderDoc.exists) {
+        throw Exception('Order not found');
+      }
+      
+      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
+      
+      if (kDebugMode) {
+        debugPrint('📦 Confirming order $orderId with ${order.items.length} items');
+      }
+      
+      // ✅ STEP 2: Reduce stock for each product in the order
+      for (final item in order.items) {
+        try {
+          final productDoc = await _firestore.collection('products').doc(item.productId).get();
+          
+          if (productDoc.exists) {
+            final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
+            final newStock = currentStock - item.quantity;
+            
+            if (kDebugMode) {
+              debugPrint('   📉 ${item.productName}: $currentStock → $newStock ${item.unit}');
+            }
+            
+            // Update product stock
+            await _firestore.collection('products').doc(item.productId).update({
+              'stock_quantity': newStock < 0 ? 0 : newStock,
+              'is_available': newStock > 0,
+              'updated_at': FieldValue.serverTimestamp(),
+            });
+          } else {
+            if (kDebugMode) {
+              debugPrint('   ⚠️ Product ${item.productId} not found, skipping stock reduction');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('   ⚠️ Error reducing stock for ${item.productName}: $e');
+          }
+          // Continue with other items even if one fails
+        }
+      }
+      
+      // ✅ STEP 3: Update order status to confirmed
       await _firestore.collection('orders').doc(orderId).update({
         'status': app_order.OrderStatus.confirmed.toString().split('.').last,
         'confirmed_at': FieldValue.serverTimestamp(),
@@ -278,7 +433,20 @@ class OrderService {
       });
 
       if (kDebugMode) {
-        debugPrint('✅ app_order.Order $orderId confirmed');
+        debugPrint('✅ Order $orderId confirmed and stock reduced');
+      }
+      
+      // ✅ STEP 4: Send notification to buyer about confirmation
+      try {
+        await _notificationService.sendOrderConfirmationNotification(
+          buyerId: order.buyerId,
+          orderId: orderId,
+          sellerName: order.sellerName,
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Failed to send confirmation notification: $e');
+        }
       }
 
       // Auto-create delivery tracking
@@ -390,7 +558,7 @@ class OrderService {
         id: '', // Firestore will generate
         orderId: orderId,
         deliveryType: deliveryType,
-        deliveryPersonId: order.farmerId,
+        deliveryPersonId: order.farmerId ?? order.sellerId,
         deliveryPersonName: sellerName,
         deliveryPersonPhone: sellerPhone,
         recipientId: order.buyerId,
@@ -798,7 +966,7 @@ class OrderService {
         return order.createdAt.isAfter(firstDayOfMonth) &&
                (order.status == app_order.OrderStatus.completed ||
                 order.status == app_order.OrderStatus.delivered ||
-                order.isReceivedByBuyer);
+                (order.isReceivedByBuyer ?? false));
       });
 
       return monthlyOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
@@ -815,7 +983,7 @@ class OrderService {
     try {
       final orders = await getBuyerOrders(buyerId);
       return orders.where((order) => 
-        order.isReceivedByBuyer || 
+        (order.isReceivedByBuyer ?? false) || 
         order.status == app_order.OrderStatus.completed
       ).length;
     } catch (e) {
@@ -831,7 +999,7 @@ class OrderService {
     try {
       final orders = await getBuyerOrders(buyerId);
       return orders.where((order) => 
-        !order.isReceivedByBuyer && 
+        !(order.isReceivedByBuyer ?? false) && 
         order.status != app_order.OrderStatus.completed &&
         order.status != app_order.OrderStatus.cancelled &&
         order.status != app_order.OrderStatus.rejected
@@ -851,7 +1019,7 @@ class OrderService {
       final yesterday = DateTime.now().subtract(const Duration(hours: 24));
       
       return orders.where((order) => 
-        order.isReceivedByBuyer &&
+        (order.isReceivedByBuyer ?? false) &&
         order.receivedAt != null &&
         order.receivedAt!.isAfter(yesterday)
       ).toList();

@@ -3,9 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../models/product.dart';
 import '../../models/product_category_hierarchy.dart';
-import '../../providers/auth_provider.dart';
+import '../../providers/auth_provider.dart' as app_auth;
 import '../../services/product_service.dart';
 import '../../services/image_picker_service.dart';
 import '../../services/image_storage_service.dart';
@@ -26,7 +27,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = Provider.of<app_auth.AuthProvider>(context);
     final farmerId = authProvider.currentUser!.id;
 
     return Scaffold(
@@ -173,22 +174,27 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
             // Product Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                product.images.isNotEmpty
-                    ? product.images.first
-                    : 'https://via.placeholder.com/80x80?text=${Uri.encodeComponent(product.name)}',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 80,
-                    height: 80,
-                    color: Colors.grey[200],
-                    child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
-                  );
-                },
-              ),
+              child: product.images.isNotEmpty
+                  ? Image.network(
+                      product.images.first,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image_not_supported, size: 32, color: Colors.grey[400]),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 80,
+                      height: 80,
+                      color: Colors.grey[200],
+                      child: Icon(Icons.inventory_2, size: 32, color: Colors.grey[400]),
+                    ),
             ),
             const SizedBox(width: 12),
             
@@ -542,7 +548,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 }
 
                 try {
-                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  final authProvider = Provider.of<app_auth.AuthProvider>(context, listen: false);
                   final user = authProvider.currentUser!;
 
                   // Upload product images to Firebase Storage
@@ -553,10 +559,11 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     }
                     
                     final imageStorageService = ImageStorageService();
+                    final firebaseUid = firebase_auth.FirebaseAuth.instance.currentUser!.uid;
                     imageUrls = await imageStorageService.uploadMultipleImagesFromXFiles(
                       images: selectedImages,
                       folder: 'products',
-                      userId: user.id,
+                      userId: firebaseUid, // Use Firebase Auth UID, not user.id
                       compress: true,
                     ).timeout(
                       const Duration(seconds: 60),
@@ -570,7 +577,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     }
                   }
 
-                  // Create product with first image URL (backward compatibility)
+                  // Create product with all uploaded images
                   await _productService.createProduct(
                     farmerId: user.id,
                     farmerName: user.name,
@@ -582,7 +589,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     price: double.parse(priceController.text.trim()),
                     unit: selectedUnit,
                     stockQuantity: int.parse(stockController.text.trim()),
-                    imageUrl: imageUrls?.isNotEmpty == true ? imageUrls!.first : null,
+                    imageUrls: imageUrls,  // Pass all images
                   );
 
                   if (mounted) {

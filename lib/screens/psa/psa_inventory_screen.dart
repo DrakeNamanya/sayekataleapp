@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/product_service.dart';
+import '../../models/product.dart';
 import '../../utils/app_theme.dart';
 
 class PSAInventoryScreen extends StatefulWidget {
@@ -8,327 +12,313 @@ class PSAInventoryScreen extends StatefulWidget {
   State<PSAInventoryScreen> createState() => _PSAInventoryScreenState();
 }
 
-class MutableProduct {
-  final String id;
-  final String name;
-  final String? description;
-  final String unit;
-  int stockQuantity;
-  final int lowStockThreshold;
-
-  MutableProduct({
-    required this.id,
-    required this.name,
-    this.description,
-    required this.unit,
-    required this.stockQuantity,
-    required this.lowStockThreshold,
-  });
-}
-
 class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
-  // Mock inventory data (in production, fetch from API/database)
-  final List<MutableProduct> _inventory = [
-    MutableProduct(
-      id: 'psa_crop1',
-      name: 'Hybrid Maize Seeds',
-      description: 'High-yield hybrid maize seeds, 10kg bag',
-      unit: 'bag',
-      stockQuantity: 200,
-      lowStockThreshold: 50,
-    ),
-    MutableProduct(
-      id: 'psa_crop2',
-      name: 'NPK Fertilizer',
-      description: 'NPK 17-17-17 compound fertilizer, 50kg bag',
-      unit: 'bag',
-      stockQuantity: 35, // Low stock
-      lowStockThreshold: 50,
-    ),
-    MutableProduct(
-      id: 'psa_crop3',
-      name: 'Pesticide Spray',
-      description: 'Multi-purpose pesticide, 1 liter',
-      unit: 'liter',
-      stockQuantity: 0, // Out of stock
-      lowStockThreshold: 20,
-    ),
-  ];
-
+  final ProductService _productService = ProductService();
+  List<Product> _products = [];
+  bool _isLoading = true;
   String _filterType = 'all'; // all, low_stock, out_of_stock
 
-  List<MutableProduct> get _filteredInventory {
-    switch (_filterType) {
-      case 'low_stock':
-        return _inventory.where((p) => 
-          p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold
-        ).toList();
-      case 'out_of_stock':
-        return _inventory.where((p) => p.stockQuantity == 0).toList();
-      default:
-        return _inventory;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProducts();
+    });
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+      
+      if (userId != null) {
+        final products = await _productService.getFarmerProducts(userId);
+        setState(() {
+          _products = products;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load products: $e')),
+        );
+      }
     }
   }
 
-  int get _lowStockCount => _inventory.where((p) => 
-    p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold
-  ).length;
+  List<Product> get _filteredProducts {
+    switch (_filterType) {
+      case 'low_stock':
+        return _products.where((p) => p.isLowStock && !p.isOutOfStock).toList();
+      case 'out_of_stock':
+        return _products.where((p) => p.isOutOfStock).toList();
+      default:
+        return _products;
+    }
+  }
 
-  int get _outOfStockCount => _inventory.where((p) => 
-    p.stockQuantity == 0
-  ).length;
+  int get _lowStockCount => _products.where((p) => p.isLowStock && !p.isOutOfStock).length;
+  int get _outOfStockCount => _products.where((p) => p.isOutOfStock).length;
+
+  Future<void> _adjustStock(Product product) async {
+    final controller = TextEditingController(text: product.stockQuantity.toString());
+    
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Adjust Stock: ${product.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Current Stock: ${product.stockQuantity} ${product.unit}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'New Stock Quantity',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.inventory),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newStock = int.tryParse(controller.text);
+              if (newStock != null && newStock >= 0) {
+                Navigator.pop(context, newStock);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a valid number')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      try {
+        await _productService.updateProductStock(product.id, result);
+        await _loadProducts();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Stock updated successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update stock: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteProduct(Product product) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Product'),
+        content: Text('Are you sure you want to delete "${product.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _productService.deleteProduct(product.id);
+        await _loadProducts();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Product deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete product: $e')),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory Management'),
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadProducts,
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
-      body: Column(
-        children: [
-          // Summary Cards
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SummaryCard(
-                    title: 'Total Items',
-                    value: _inventory.length.toString(),
-                    icon: Icons.inventory_2,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _SummaryCard(
-                    title: 'Low Stock',
-                    value: _lowStockCount.toString(),
-                    icon: Icons.warning_amber,
-                    color: AppTheme.warningColor,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _SummaryCard(
-                    title: 'Out of Stock',
-                    value: _outOfStockCount.toString(),
-                    icon: Icons.error_outline,
-                    color: AppTheme.errorColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Filter Chips
-          SizedBox(
-            height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _FilterChip(
-                  label: 'All Products',
-                  count: _inventory.length,
-                  isSelected: _filterType == 'all',
-                  onTap: () => setState(() => _filterType = 'all'),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: 'Low Stock',
-                  count: _lowStockCount,
-                  isSelected: _filterType == 'low_stock',
-                  color: AppTheme.warningColor,
-                  onTap: () => setState(() => _filterType = 'low_stock'),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: 'Out of Stock',
-                  count: _outOfStockCount,
-                  isSelected: _filterType == 'out_of_stock',
-                  color: AppTheme.errorColor,
-                  onTap: () => setState(() => _filterType = 'out_of_stock'),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Inventory List
-          Expanded(
-            child: _filteredInventory.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadProducts,
+              child: Column(
+                children: [
+                  // Summary Cards
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 64,
-                          color: AppTheme.textSecondary,
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Total Items',
+                            value: _products.length.toString(),
+                            icon: Icons.inventory_2,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No products found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Low Stock',
+                            value: _lowStockCount.toString(),
+                            icon: Icons.warning_amber,
+                            color: AppTheme.warningColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SummaryCard(
+                            title: 'Out of Stock',
+                            value: _outOfStockCount.toString(),
+                            icon: Icons.error_outline,
+                            color: AppTheme.errorColor,
                           ),
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredInventory.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredInventory[index];
-                      return _InventoryCard(
-                        product: product,
-                        onAdjustStock: () => _showAdjustStockDialog(product),
-                      );
-                    },
                   ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _showAdjustStockDialog(MutableProduct product) {
-    final controller = TextEditingController();
-    String adjustmentType = 'add'; // add or remove
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('Adjust Stock: ${product.name}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Current Stock: ${product.stockQuantity} ${product.unit}s',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Adjustment Type Toggle
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        setDialogState(() {
-                          adjustmentType = 'add';
-                        });
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: adjustmentType == 'add' 
-                            ? AppTheme.successColor 
-                            : Colors.transparent,
-                        foregroundColor: adjustmentType == 'add'
-                            ? Colors.white
-                            : AppTheme.successColor,
-                      ),
-                      child: const Text('Add Stock'),
+                  // Filter Chips
+                  SizedBox(
+                    height: 50,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        _FilterChip(
+                          label: 'All Products',
+                          count: _products.length,
+                          isSelected: _filterType == 'all',
+                          onTap: () => setState(() => _filterType = 'all'),
+                        ),
+                        const SizedBox(width: 8),
+                        _FilterChip(
+                          label: 'Low Stock',
+                          count: _lowStockCount,
+                          isSelected: _filterType == 'low_stock',
+                          color: AppTheme.warningColor,
+                          onTap: () => setState(() => _filterType = 'low_stock'),
+                        ),
+                        const SizedBox(width: 8),
+                        _FilterChip(
+                          label: 'Out of Stock',
+                          count: _outOfStockCount,
+                          isSelected: _filterType == 'out_of_stock',
+                          color: AppTheme.errorColor,
+                          onTap: () => setState(() => _filterType = 'out_of_stock'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+
+                  // Inventory List
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        setDialogState(() {
-                          adjustmentType = 'remove';
-                        });
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: adjustmentType == 'remove'
-                            ? AppTheme.errorColor
-                            : Colors.transparent,
-                        foregroundColor: adjustmentType == 'remove'
-                            ? Colors.white
-                            : AppTheme.errorColor,
-                      ),
-                      child: const Text('Remove Stock'),
-                    ),
+                    child: _filteredProducts.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 64,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _filterType == 'all'
+                                      ? 'No products in inventory'
+                                      : _filterType == 'low_stock'
+                                          ? 'No low stock items'
+                                          : 'No out of stock items',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Add products to manage your inventory',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredProducts.length,
+                            itemBuilder: (context, index) {
+                              return _InventoryCard(
+                                product: _filteredProducts[index],
+                                onAdjust: () => _adjustStock(_filteredProducts[index]),
+                                onDelete: () => _deleteProduct(_filteredProducts[index]),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              
-              // Quantity Input
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Quantity',
-                  hintText: 'Enter quantity',
-                  suffixText: product.unit,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                adjustmentType == 'add'
-                    ? 'Stock after adjustment: ${product.stockQuantity + (int.tryParse(controller.text) ?? 0)} ${product.unit}s'
-                    : 'Stock after adjustment: ${(product.stockQuantity - (int.tryParse(controller.text) ?? 0)).clamp(0, product.stockQuantity)} ${product.unit}s',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                final quantity = int.tryParse(controller.text);
-                if (quantity == null || quantity <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid quantity'),
-                      backgroundColor: AppTheme.errorColor,
-                    ),
-                  );
-                  return;
-                }
-
-                setState(() {
-                  if (adjustmentType == 'add') {
-                    product.stockQuantity += quantity;
-                  } else {
-                    product.stockQuantity = (product.stockQuantity - quantity).clamp(0, product.stockQuantity);
-                  }
-                });
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      adjustmentType == 'add'
-                          ? 'Added $quantity ${product.unit}s to stock'
-                          : 'Removed $quantity ${product.unit}s from stock',
-                    ),
-                    backgroundColor: AppTheme.successColor,
-                  ),
-                );
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -348,32 +338,41 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppTheme.textSecondary,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -397,15 +396,19 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppTheme.primaryColor;
-
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor : Colors.grey.shade200,
+          color: isSelected ? chipColor : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -414,25 +417,23 @@ class _FilterChip extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected ? Colors.white : AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : chipColor.withValues(alpha: 0.2),
+                color: isSelected ? Colors.white.withValues(alpha: 0.3) : chipColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 count.toString(),
                 style: TextStyle(
                   color: isSelected ? Colors.white : chipColor,
-                  fontSize: 11,
                   fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -444,52 +445,41 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _InventoryCard extends StatelessWidget {
-  final MutableProduct product;
-  final VoidCallback onAdjustStock;
+  final Product product;
+  final VoidCallback onAdjust;
+  final VoidCallback onDelete;
 
   const _InventoryCard({
     required this.product,
-    required this.onAdjustStock,
+    required this.onAdjust,
+    required this.onDelete,
   });
-
-  Color get _stockColor {
-    if (product.stockQuantity == 0) return AppTheme.errorColor;
-    if (product.stockQuantity <= product.lowStockThreshold) return AppTheme.warningColor;
-    return AppTheme.successColor;
-  }
-
-  String get _stockStatus {
-    if (product.stockQuantity == 0) return 'Out of Stock';
-    if (product.stockQuantity <= product.lowStockThreshold) return 'Low Stock';
-    return 'In Stock';
-  }
 
   @override
   Widget build(BuildContext context) {
+    final isLowStock = product.isLowStock && !product.isOutOfStock;
+    final isOutOfStock = product.isOutOfStock;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isOutOfStock
+              ? AppTheme.errorColor
+              : isLowStock
+                  ? AppTheme.warningColor
+                  : Colors.grey.shade200,
+          width: isOutOfStock || isLowStock ? 2 : 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: _stockColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: _stockColor,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,38 +487,58 @@ class _InventoryCard extends StatelessWidget {
                       Text(
                         product.name,
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        product.description ?? '',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
+                      if (product.description != null && product.description!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          product.description!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _stockColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _stockStatus,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _stockColor,
-                      fontWeight: FontWeight.bold,
+                if (isOutOfStock)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'OUT OF STOCK',
+                      style: TextStyle(
+                        color: AppTheme.errorColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else if (isLowStock)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'LOW STOCK',
+                      style: TextStyle(
+                        color: AppTheme.warningColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -541,17 +551,21 @@ class _InventoryCard extends StatelessWidget {
                       Text(
                         'Current Stock',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
-                        '${product.stockQuantity} ${product.unit}s',
+                        '${product.stockQuantity} ${product.unit}',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: _stockColor,
+                          color: isOutOfStock
+                              ? AppTheme.errorColor
+                              : isLowStock
+                                  ? AppTheme.warningColor
+                                  : AppTheme.primaryColor,
                         ),
                       ),
                     ],
@@ -564,27 +578,48 @@ class _InventoryCard extends StatelessWidget {
                       Text(
                         'Low Stock Alert',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
-                        '${product.lowStockThreshold} ${product.unit}s',
+                        '${product.lowStockThreshold} ${product.unit}',
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: onAdjustStock,
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Adjust'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onAdjust,
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Adjust Stock'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryColor,
+                      side: const BorderSide(color: AppTheme.primaryColor),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('Delete'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                    ),
                   ),
                 ),
               ],
