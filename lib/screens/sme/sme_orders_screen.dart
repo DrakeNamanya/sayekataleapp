@@ -81,22 +81,53 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     return StreamBuilder<List<app_order.Order>>(
       stream: _orderService.streamBuyerOrders(buyerId),
       builder: (context, snapshot) {
+        // Debug logging
+        if (kDebugMode) {
+          debugPrint('📊 SME Orders - Connection: ${snapshot.connectionState}');
+          debugPrint('📊 SME Orders - Has Error: ${snapshot.hasError}');
+          debugPrint('📊 SME Orders - Data: ${snapshot.data?.length ?? 0} orders');
+          debugPrint('📊 SME Orders - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading orders...', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          );
         }
 
         if (snapshot.hasError) {
+          if (kDebugMode) {
+            debugPrint('❌ SME Orders Error: ${snapshot.error}');
+          }
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
-                Text('Error: ${snapshot.error}'),
+                Text(
+                  'Error loading orders',
+                  style: TextStyle(fontSize: 18, color: Colors.red[700], fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${snapshot.error}',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 16),
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: () => setState(() {}),
-                  child: const Text('Retry'),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 ),
               ],
             ),
@@ -104,25 +135,41 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
         }
 
         var orders = snapshot.data ?? [];
+        if (kDebugMode) {
+          debugPrint('📦 Total orders fetched: ${orders.length}');
+        }
+
         orders = orders.where((order) => statusFilter.contains(order.status)).toList();
+        if (kDebugMode) {
+          debugPrint('📦 After status filter: ${orders.length}');
+        }
 
         if (orders.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'No orders found',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Start shopping to place orders',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
-              ],
+          return Container(
+            color: Colors.white,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No orders found',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start shopping to place orders',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Filtered by: ${statusFilter.map((s) => _formatStatus(s)).join(", ")}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                  ),
+                ],
+              ),
             ),
           );
         }
