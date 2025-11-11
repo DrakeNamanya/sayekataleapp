@@ -1,42 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/subscription.dart';
-import '../models/transaction.dart' as app_transaction;
-import '../models/user.dart' as app_user;
-import 'mtn_momo_service.dart';
 
-/// Subscription service for managing premium subscriptions
-/// Handles SHG Premium (UGX 50,000/year) and PSA Annual (UGX 120,000/year)
+/// Service for managing premium subscriptions
 class SubscriptionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final MtnMomoService _momoService = MtnMomoService(useSandbox: true);
 
-  // ============================================================================
-  // SUBSCRIPTION MANAGEMENT
-  // ============================================================================
+  // Subscription pricing
+  static const double YEARLY_SME_DIRECTORY_PRICE = 50000.0; // UGX 50,000
 
-  /// Check if user has active subscription
-  /// 
-  /// [userId] - User ID
-  /// [type] - Subscription type to check
-  Future<bool> hasActiveSubscription(String userId, SubscriptionType type) async {
+  /// Check if user has active SME directory subscription
+  Future<bool> hasActiveSMEDirectorySubscription(String userId) async {
     try {
-      final snapshot = await _firestore
+      final querySnapshot = await _firestore
           .collection('subscriptions')
-          .where('userId', isEqualTo: userId)
-          .where('type', isEqualTo: type.toString().split('.').last)
+          .where('user_id', isEqualTo: userId)
+          .where('type', isEqualTo: 'smeDirectory')
           .where('status', isEqualTo: 'active')
-          .limit(1)
           .get();
 
-      if (snapshot.docs.isEmpty) return false;
+      if (querySnapshot.docs.isEmpty) return false;
 
-      final subscription = Subscription.fromFirestore(
-        snapshot.docs.first.data(),
-        snapshot.docs.first.id,
-      );
+      // Check if subscription is not expired
+      for (final doc in querySnapshot.docs) {
+        final subscription = Subscription.fromFirestore(doc.data(), doc.id);
+        if (subscription.isActive) {
+          return true;
+        }
+      }
 
-      return subscription.isActive;
+      return false;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error checking subscription: $e');
@@ -45,407 +38,272 @@ class SubscriptionService {
     }
   }
 
-  /// Get user's current subscription
-  /// 
-  /// [userId] - User ID
-  /// [type] - Subscription type
-  Future<Subscription?> getUserSubscription(String userId, SubscriptionType type) async {
+  /// Get user's current active subscription
+  Future<Subscription?> getActiveSubscription(String userId, SubscriptionType type) async {
     try {
-      final snapshot = await _firestore
+      final querySnapshot = await _firestore
           .collection('subscriptions')
-          .where('userId', isEqualTo: userId)
+          .where('user_id', isEqualTo: userId)
           .where('type', isEqualTo: type.toString().split('.').last)
-          .orderBy('createdAt', descending: true)
+          .where('status', isEqualTo: 'active')
+          .orderBy('created_at', descending: true)
           .limit(1)
           .get();
 
-      if (snapshot.docs.isEmpty) return null;
+      if (querySnapshot.docs.isEmpty) return null;
 
-      return Subscription.fromFirestore(
-        snapshot.docs.first.data(),
-        snapshot.docs.first.id,
+      final subscription = Subscription.fromFirestore(
+        querySnapshot.docs.first.data(),
+        querySnapshot.docs.first.id,
       );
+
+      return subscription.isActive ? subscription : null;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Error fetching subscription: $e');
+        debugPrint('❌ Error getting subscription: $e');
       }
       return null;
     }
   }
 
-  /// Stream user's subscription status
-  Stream<Subscription?> streamUserSubscription(String userId, SubscriptionType type) {
+  /// Create new subscription (after payment confirmation)
+  Future<String> createSubscription({
+    required String userId,
+    required SubscriptionType type,
+    required String paymentMethod,
+    required String paymentReference,
+  }) async {
+    try {
+      final startDate = DateTime.now();
+      final endDate = startDate.add(const Duration(days: 365)); // 1 year
+
+      final subscription = Subscription(
+        id: '', // Will be set by Firestore
+        userId: userId,
+        type: type,
+        status: SubscriptionStatus.active,
+        startDate: startDate,
+        endDate: endDate,
+        amount: YEARLY_SME_DIRECTORY_PRICE,
+        paymentMethod: paymentMethod,
+        paymentReference: paymentReference,
+        createdAt: DateTime.now(),
+      );
+
+      final docRef = await _firestore
+          .collection('subscriptions')
+          .add(subscription.toFirestore());
+
+      if (kDebugMode) {
+        debugPrint('✅ Subscription created: ${docRef.id}');
+      }
+
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error creating subscription: $e');
+      }
+      throw Exception('Failed to create subscription: $e');
+    }
+  }
+
+  /// Create pending subscription (before payment)
+  Future<String> createPendingSubscription({
+    required String userId,
+    required SubscriptionType type,
+    required String paymentMethod,
+  }) async {
+    try {
+      final startDate = DateTime.now();
+      final endDate = startDate.add(const Duration(days: 365));
+
+      final subscription = Subscription(
+        id: '',
+        userId: userId,
+        type: type,
+        status: SubscriptionStatus.pending,
+        startDate: startDate,
+        endDate: endDate,
+        amount: YEARLY_SME_DIRECTORY_PRICE,
+        paymentMethod: paymentMethod,
+        createdAt: DateTime.now(),
+      );
+
+      final docRef = await _firestore
+          .collection('subscriptions')
+          .add(subscription.toFirestore());
+
+      if (kDebugMode) {
+        debugPrint('✅ Pending subscription created: ${docRef.id}');
+      }
+
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error creating pending subscription: $e');
+      }
+      throw Exception('Failed to create pending subscription: $e');
+    }
+  }
+
+  /// Activate pending subscription (after payment confirmation)
+  Future<void> activateSubscription(String subscriptionId, String paymentReference) async {
+    try {
+      await _firestore.collection('subscriptions').doc(subscriptionId).update({
+        'status': 'active',
+        'payment_reference': paymentReference,
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Subscription activated: $subscriptionId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error activating subscription: $e');
+      }
+      throw Exception('Failed to activate subscription: $e');
+    }
+  }
+
+  /// Cancel subscription
+  Future<void> cancelSubscription(String subscriptionId) async {
+    try {
+      await _firestore.collection('subscriptions').doc(subscriptionId).update({
+        'status': 'cancelled',
+        'cancelled_at': Timestamp.now(),
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Subscription cancelled: $subscriptionId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error cancelling subscription: $e');
+      }
+      throw Exception('Failed to cancel subscription: $e');
+    }
+  }
+
+  /// Get all SME contacts (for premium users)
+  Future<List<SMEContact>> getAllSMEContacts() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('user_type', isEqualTo: 'sme')
+          .orderBy('name')
+          .get();
+
+      final contacts = querySnapshot.docs
+          .map((doc) => SMEContact.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      if (kDebugMode) {
+        debugPrint('✅ Fetched ${contacts.length} SME contacts');
+      }
+
+      return contacts;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error fetching SME contacts: $e');
+      }
+      throw Exception('Failed to fetch SME contacts: $e');
+    }
+  }
+
+  /// Search SME contacts with filters
+  Future<List<SMEContact>> searchSMEContacts({
+    String? searchQuery,
+    String? district,
+    String? product,
+    bool? verifiedOnly,
+  }) async {
+    try {
+      Query query = _firestore
+          .collection('users')
+          .where('user_type', isEqualTo: 'sme');
+
+      // Apply district filter
+      if (district != null && district.isNotEmpty && district != 'All') {
+        query = query.where('district', isEqualTo: district);
+      }
+
+      // Apply verified filter
+      if (verifiedOnly == true) {
+        query = query.where('is_verified', isEqualTo: true);
+      }
+
+      final querySnapshot = await query.get();
+
+      var contacts = querySnapshot.docs
+          .map((doc) => SMEContact.fromFirestore(doc.data(), doc.id))
+          .toList();
+
+      // Apply search query filter (in-memory)
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        contacts = contacts.where((contact) {
+          final query = searchQuery.toLowerCase();
+          return contact.name.toLowerCase().contains(query) ||
+                 contact.phone.contains(query) ||
+                 contact.email.toLowerCase().contains(query) ||
+                 contact.district.toLowerCase().contains(query);
+        }).toList();
+      }
+
+      // Apply product filter (in-memory)
+      if (product != null && product.isNotEmpty && product != 'All') {
+        contacts = contacts.where((contact) {
+          return contact.products.any((p) => p.toLowerCase().contains(product.toLowerCase()));
+        }).toList();
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Filtered ${contacts.length} SME contacts');
+      }
+
+      return contacts;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error searching SME contacts: $e');
+      }
+      throw Exception('Failed to search SME contacts: $e');
+    }
+  }
+
+  /// Get subscription history for user
+  Stream<List<Subscription>> streamUserSubscriptions(String userId) {
     return _firestore
         .collection('subscriptions')
-        .where('userId', isEqualTo: userId)
-        .where('type', isEqualTo: type.toString().split('.').last)
-        .orderBy('createdAt', descending: true)
-        .limit(1)
+        .where('user_id', isEqualTo: userId)
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
-      if (snapshot.docs.isEmpty) return null;
-      return Subscription.fromFirestore(
-        snapshot.docs.first.data(),
-        snapshot.docs.first.id,
-      );
+      return snapshot.docs
+          .map((doc) => Subscription.fromFirestore(doc.data(), doc.id))
+          .toList();
     });
   }
 
-  // ============================================================================
-  // SUBSCRIPTION PURCHASE
-  // ============================================================================
-
-  /// Purchase subscription
-  /// 
-  /// [user] - User purchasing subscription
-  /// [type] - Subscription type
-  /// [phoneNumber] - Payment phone number
-  /// 
-  /// Returns subscription ID
-  Future<String> purchaseSubscription({
-    required app_user.AppUser user,
-    required SubscriptionType type,
-    required String phoneNumber,
-  }) async {
-    try {
-      if (kDebugMode) {
-        debugPrint('💳 Purchasing subscription: ${type.displayName} for ${user.name}');
-      }
-
-      // Check if user already has active subscription
-      final hasActive = await hasActiveSubscription(user.id, type);
-      if (hasActive) {
-        throw Exception('User already has an active ${type.displayName} subscription');
-      }
-
-      // Create transaction
-      final transaction = app_transaction.Transaction(
-        id: 'TXN-SUB-${DateTime.now().millisecondsSinceEpoch}',
-        type: type == SubscriptionType.shgPremium
-            ? app_transaction.TransactionType.shgPremiumSubscription
-            : app_transaction.TransactionType.psaAnnualSubscription,
-        buyerId: user.id,
-        buyerName: user.name,
-        sellerId: 'APP',
-        sellerName: 'Poultry Link',
-        amount: type.amount,
-        serviceFee: 0,
-        sellerReceives: type.amount,
-        status: app_transaction.TransactionStatus.initiated,
-        paymentMethod: app_transaction.PaymentMethod.mtnMobileMoney,
-        createdAt: DateTime.now(),
-        metadata: {
-          'subscriptionType': type.toString(),
-          'userRole': user.role.toString(),
-        },
-      );
-
-      // Save transaction
-      await _firestore
-          .collection('transactions')
-          .doc(transaction.id)
-          .set(transaction.toFirestore());
-
-      // Request payment
-      try {
-        final paymentRef = await _momoService.requestPayment(
-          amount: type.amount,
-          phoneNumber: phoneNumber,
-          payerMessage: 'Subscription: ${type.displayName}',
-          payeeNote: 'Poultry Link ${type.displayName}',
-        );
-
-        // Update transaction with payment reference
-        await _firestore.collection('transactions').doc(transaction.id).update({
-          'paymentReference': paymentRef,
-          'status': app_transaction.TransactionStatus.paymentPending.toString().split('.').last,
-        });
-
-        if (kDebugMode) {
-          debugPrint('✅ Payment requested: $paymentRef');
-        }
-
-        return transaction.id;
-      } catch (e) {
-        // Payment request failed
-        await _firestore.collection('transactions').doc(transaction.id).update({
-          'status': app_transaction.TransactionStatus.failed.toString().split('.').last,
-          'failureReason': e.toString(),
-        });
-        rethrow;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error purchasing subscription: $e');
-      }
-      rethrow;
-    }
-  }
-
-  /// Confirm subscription payment and activate
-  /// 
-  /// [transactionId] - app_transaction.Transaction ID
-  Future<String?> confirmSubscriptionPayment(String transactionId) async {
-    try {
-      final doc = await _firestore.collection('transactions').doc(transactionId).get();
-      
-      if (!doc.exists) {
-        throw Exception('app_transaction.Transaction not found');
-      }
-
-      final transaction = app_transaction.Transaction.fromFirestore(doc.data()!, doc.id);
-
-      if (transaction.paymentReference == null) {
-        throw Exception('Payment reference not found');
-      }
-
-      // Check payment status
-      final status = await _momoService.checkPaymentStatus(transaction.paymentReference!);
-
-      if (status.isSuccessful) {
-        // Create subscription
-        final subscription = Subscription(
-          id: 'SUB-${DateTime.now().millisecondsSinceEpoch}',
-          userId: transaction.buyerId,
-          userName: transaction.buyerName,
-          type: transaction.type == app_transaction.TransactionType.shgPremiumSubscription
-              ? SubscriptionType.shgPremium
-              : SubscriptionType.psaAnnual,
-          status: SubscriptionStatus.active,
-          amount: transaction.amount,
-          startDate: DateTime.now(),
-          expiryDate: DateTime.now().add(const Duration(days: 365)),
-          transactionId: transactionId,
-          autoRenew: false,
-          createdAt: DateTime.now(),
-        );
-
-        // Save subscription
-        await _firestore
-            .collection('subscriptions')
-            .doc(subscription.id)
-            .set(subscription.toFirestore());
-
-        // Update transaction
-        await _firestore.collection('transactions').doc(transactionId).update({
-          'status': app_transaction.TransactionStatus.completed.toString().split('.').last,
-          'completedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Update revenue tracking
-        await _updateRevenueTracking(transaction);
-
-        if (kDebugMode) {
-          debugPrint('✅ Subscription activated: ${subscription.id}');
-        }
-
-        return subscription.id;
-      } else if (status.isFailed) {
-        await _firestore.collection('transactions').doc(transactionId).update({
-          'status': app_transaction.TransactionStatus.failed.toString().split('.').last,
-          'failureReason': status.reason ?? 'Payment failed',
-        });
-
-        return null;
-      }
-
-      // Still pending
-      return null;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error confirming subscription payment: $e');
-      }
-      rethrow;
-    }
-  }
-
-  // ============================================================================
-  // SUBSCRIPTION RENEWAL
-  // ============================================================================
-
-  /// Check for expiring subscriptions and send reminders
-  Future<void> checkExpiringSubscriptions() async {
-    try {
-      final now = DateTime.now();
-      final thirtyDaysFromNow = now.add(const Duration(days: 30));
-      final sevenDaysFromNow = now.add(const Duration(days: 7));
-
-      // Find subscriptions expiring within 30 days
-      final snapshot = await _firestore
-          .collection('subscriptions')
-          .where('status', isEqualTo: 'active')
-          .where('expiryDate', isLessThanOrEqualTo: Timestamp.fromDate(thirtyDaysFromNow))
-          .get();
-
-      for (final doc in snapshot.docs) {
-        final subscription = Subscription.fromFirestore(doc.data(), doc.id);
-
-        if (!subscription.isExpiringSoon) continue;
-
-        final daysUntilExpiry = subscription.expiryDate.difference(now).inDays;
-
-        // Send 30-day reminder
-        if (daysUntilExpiry <= 30 && daysUntilExpiry > 7) {
-          await _sendRenewalReminder(subscription, daysUntilExpiry);
-        }
-        // Send 7-day reminder
-        else if (daysUntilExpiry <= 7 && daysUntilExpiry > 0) {
-          await _sendRenewalReminder(subscription, daysUntilExpiry);
-        }
-      }
-
-      if (kDebugMode) {
-        debugPrint('✅ Checked expiring subscriptions');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error checking expiring subscriptions: $e');
-      }
-    }
-  }
-
-  /// Send renewal reminder
-  Future<void> _sendRenewalReminder(Subscription subscription, int daysUntilExpiry) async {
-    try {
-      // Update last reminder sent
-      await _firestore.collection('subscriptions').doc(subscription.id).update({
-        'lastReminderSent': FieldValue.serverTimestamp(),
-      });
-
-      // TODO: Send in-app message/notification
-      if (kDebugMode) {
-        debugPrint('📧 Renewal reminder sent to ${subscription.userName}: $daysUntilExpiry days remaining');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error sending reminder: $e');
-      }
-    }
-  }
-
-  /// Renew subscription
-  /// 
-  /// [subscriptionId] - Current subscription ID
-  /// [phoneNumber] - Payment phone number
-  Future<String> renewSubscription({
-    required String subscriptionId,
-    required String phoneNumber,
-  }) async {
-    try {
-      final doc = await _firestore.collection('subscriptions').doc(subscriptionId).get();
-      
-      if (!doc.exists) {
-        throw Exception('Subscription not found');
-      }
-
-      final subscription = Subscription.fromFirestore(doc.data()!, doc.id);
-
-      // Fetch user details
-      final userDoc = await _firestore.collection('users').doc(subscription.userId).get();
-      if (!userDoc.exists) {
-        throw Exception('User not found');
-      }
-
-      final user = app_user.AppUser.fromFirestore(userDoc.data()!, userDoc.id);
-
-      // Create new subscription transaction
-      final transactionId = await purchaseSubscription(
-        user: user,
-        type: subscription.type,
-        phoneNumber: phoneNumber,
-      );
-
-      if (kDebugMode) {
-        debugPrint('✅ Subscription renewal initiated: $transactionId');
-      }
-
-      return transactionId;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error renewing subscription: $e');
-      }
-      rethrow;
-    }
-  }
-
-  // ============================================================================
-  // SUBSCRIPTION ENFORCEMENT
-  // ============================================================================
-
-  /// Enforce PSA subscription - hide products if subscription expired
-  Future<void> enforcePsaSubscription(String psaId) async {
-    try {
-      final hasActive = await hasActiveSubscription(psaId, SubscriptionType.psaAnnual);
-
-      if (!hasActive) {
-        // Hide all PSA products
-        final products = await _firestore
-            .collection('products')
-            .where('supplierId', isEqualTo: psaId)
-            .get();
-
-        final batch = _firestore.batch();
-        for (final doc in products.docs) {
-          batch.update(doc.reference, {
-            'isVisible': false,
-            'hiddenReason': 'Subscription expired',
-          });
-        }
-        await batch.commit();
-
-        if (kDebugMode) {
-          debugPrint('🚫 PSA products hidden due to expired subscription: $psaId');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error enforcing PSA subscription: $e');
-      }
-    }
-  }
-
-  /// Check expired subscriptions and update status
+  /// Check and update expired subscriptions
   Future<void> updateExpiredSubscriptions() async {
     try {
-      final now = DateTime.now();
-
-      final snapshot = await _firestore
+      final now = Timestamp.now();
+      final querySnapshot = await _firestore
           .collection('subscriptions')
           .where('status', isEqualTo: 'active')
-          .where('expiryDate', isLessThan: Timestamp.fromDate(now))
+          .where('end_date', isLessThan: now)
           .get();
 
-      final batch = _firestore.batch();
-      for (final doc in snapshot.docs) {
-        batch.update(doc.reference, {
-          'status': SubscriptionStatus.expired.toString().split('.').last,
-        });
+      for (final doc in querySnapshot.docs) {
+        await doc.reference.update({'status': 'expired'});
       }
-      await batch.commit();
 
       if (kDebugMode) {
-        debugPrint('✅ Updated ${snapshot.docs.length} expired subscriptions');
+        debugPrint('✅ Updated ${querySnapshot.docs.length} expired subscriptions');
       }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error updating expired subscriptions: $e');
       }
     }
-  }
-
-  // ============================================================================
-  // HELPER METHODS
-  // ============================================================================
-
-  /// Update revenue tracking
-  Future<void> _updateRevenueTracking(app_transaction.Transaction transaction) async {
-    final month = DateTime.now().toIso8601String().substring(0, 7); // YYYY-MM
-    
-    await _firestore.collection('revenue_tracking').doc(month).set({
-      'month': month,
-      'subscriptionRevenue': FieldValue.increment(transaction.amount),
-      'totalSubscriptions': FieldValue.increment(1),
-      'completedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
   }
 }

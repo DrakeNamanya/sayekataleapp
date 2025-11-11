@@ -5,9 +5,11 @@ import '../../services/notification_service.dart';
 import '../../services/message_service.dart';
 import '../../services/order_service.dart';
 import '../../services/product_service.dart';
+import '../../services/subscription_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart';
 import '../../models/product.dart';
+import '../../models/subscription.dart';
 import '../../widgets/notification_badge.dart';
 import '../../widgets/features_guide_dialog.dart';
 import 'shg_products_screen.dart';
@@ -18,6 +20,8 @@ import 'shg_messages_screen.dart';
 import 'shg_profile_screen.dart';
 import 'shg_notifications_screen.dart';
 import 'shg_my_purchases_screen.dart';
+import 'premium_sme_directory_screen.dart';
+import 'subscription_purchase_screen.dart';
 import '../delivery/delivery_control_screen.dart';
 
 class SHGDashboardScreen extends StatefulWidget {
@@ -663,6 +667,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     ],
                   ),
                 ),
+                
+                const SizedBox(height: 24),
+                // Premium Subscription Section
+                _buildPremiumSubscriptionCard(context, farmerId),
+                
                 const SizedBox(height: 24),
                 // Alerts Section
                 if (pendingOrders > 0 || lowStockProducts > 0)
@@ -757,6 +766,138 @@ class _DashboardHomeState extends State<_DashboardHome> {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     return '${hours}h ${minutes}m';
+  }
+
+  Widget _buildPremiumSubscriptionCard(BuildContext context, String? farmerId) {
+    if (farmerId == null) return const SizedBox.shrink();
+
+    final subscriptionService = SubscriptionService();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: FutureBuilder<Subscription?>(
+        future: subscriptionService.getActiveSubscription(
+          farmerId,
+          SubscriptionType.smeDirectory,
+        ),
+        builder: (context, snapshot) {
+          final hasActiveSubscription = snapshot.data != null;
+          final subscription = snapshot.data;
+
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: hasActiveSubscription
+                    ? [Colors.purple[700]!, Colors.purple[500]!]
+                    : [Colors.grey[700]!, Colors.grey[500]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: (hasActiveSubscription ? Colors.purple : Colors.grey)
+                      .withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  if (hasActiveSubscription) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumSMEDirectoryScreen(),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SubscriptionPurchaseScreen(),
+                      ),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          hasActiveSubscription
+                              ? Icons.verified_user
+                              : Icons.workspace_premium,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  hasActiveSubscription
+                                      ? 'Premium Active'
+                                      : 'Unlock Premium',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (hasActiveSubscription) ...[
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.greenAccent,
+                                    size: 20,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              hasActiveSubscription
+                                  ? '${subscription!.daysRemaining} days remaining • Tap to access'
+                                  : 'Full SME Directory • UGX 50,000/year',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        hasActiveSubscription
+                            ? Icons.chevron_right
+                            : Icons.lock_open,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
