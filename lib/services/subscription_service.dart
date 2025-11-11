@@ -187,15 +187,19 @@ class SubscriptionService {
   /// Get all SME contacts (for premium users)
   Future<List<SMEContact>> getAllSMEContacts() async {
     try {
+      // Remove orderBy to avoid requiring composite index
+      // We'll sort in memory instead
       final querySnapshot = await _firestore
           .collection('users')
           .where('user_type', isEqualTo: 'sme')
-          .orderBy('name')
           .get();
 
       final contacts = querySnapshot.docs
           .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
+
+      // Sort by name in memory
+      contacts.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (kDebugMode) {
         debugPrint('✅ Fetched ${contacts.length} SME contacts');
