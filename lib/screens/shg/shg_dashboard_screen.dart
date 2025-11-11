@@ -670,7 +670,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                 
                 const SizedBox(height: 24),
                 // Premium Subscription Section
-                _buildPremiumSubscriptionCard(context, farmerId),
+                _buildPremiumSubscriptionCard(context),
                 
                 const SizedBox(height: 24),
                 // Alerts Section
@@ -768,7 +768,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
     return '${hours}h ${minutes}m';
   }
 
-  Widget _buildPremiumSubscriptionCard(BuildContext context, String? farmerId) {
+  Widget _buildPremiumSubscriptionCard(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final farmerId = authProvider.currentUser?.id;
+    
     if (farmerId == null) return const SizedBox.shrink();
 
     final subscriptionService = SubscriptionService();

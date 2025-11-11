@@ -194,7 +194,7 @@ class SubscriptionService {
           .get();
 
       final contacts = querySnapshot.docs
-          .map((doc) => SMEContact.fromFirestore(doc.data(), doc.id))
+          .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
 
       if (kDebugMode) {
@@ -235,7 +235,7 @@ class SubscriptionService {
       final querySnapshot = await query.get();
 
       var contacts = querySnapshot.docs
-          .map((doc) => SMEContact.fromFirestore(doc.data(), doc.id))
+          .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
 
       // Apply search query filter (in-memory)
