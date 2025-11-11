@@ -10,26 +10,25 @@ class SubscriptionService {
   static const double YEARLY_SME_DIRECTORY_PRICE = 50000.0; // UGX 50,000
 
   /// Check if user has active SME directory subscription
+  /// Uses direct document lookup for better performance
   Future<bool> hasActiveSMEDirectorySubscription(String userId) async {
     try {
-      final querySnapshot = await _firestore
+      // Direct document lookup
+      final docSnapshot = await _firestore
           .collection('subscriptions')
-          .where('user_id', isEqualTo: userId)
-          .where('type', isEqualTo: 'smeDirectory')
-          .where('status', isEqualTo: 'active')
+          .doc(userId)
           .get();
 
-      if (querySnapshot.docs.isEmpty) return false;
+      if (!docSnapshot.exists) return false;
 
-      // Check if subscription is not expired
-      for (final doc in querySnapshot.docs) {
-        final subscription = Subscription.fromFirestore(doc.data(), doc.id);
-        if (subscription.isActive) {
-          return true;
-        }
-      }
+      final subscription = Subscription.fromFirestore(
+        docSnapshot.data() as Map<String, dynamic>,
+        docSnapshot.id,
+      );
 
-      return false;
+      // Check if it's SME directory subscription and is active
+      return subscription.type == SubscriptionType.smeDirectory && 
+             subscription.isActive;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error checking subscription: $e');
@@ -39,24 +38,25 @@ class SubscriptionService {
   }
 
   /// Get user's current active subscription
+  /// Uses userId as document ID for direct lookup
   Future<Subscription?> getActiveSubscription(String userId, SubscriptionType type) async {
     try {
-      final querySnapshot = await _firestore
+      // Direct document lookup using userId
+      final docSnapshot = await _firestore
           .collection('subscriptions')
-          .where('user_id', isEqualTo: userId)
-          .where('type', isEqualTo: type.toString().split('.').last)
-          .where('status', isEqualTo: 'active')
-          .orderBy('created_at', descending: true)
-          .limit(1)
+          .doc(userId)
           .get();
 
-      if (querySnapshot.docs.isEmpty) return null;
+      if (!docSnapshot.exists) return null;
 
       final subscription = Subscription.fromFirestore(
-        querySnapshot.docs.first.data(),
-        querySnapshot.docs.first.id,
+        docSnapshot.data() as Map<String, dynamic>,
+        docSnapshot.id,
       );
 
+      // Verify it's the correct type and is active
+      if (subscription.type != type) return null;
+      
       return subscription.isActive ? subscription : null;
     } catch (e) {
       if (kDebugMode) {
@@ -67,6 +67,7 @@ class SubscriptionService {
   }
 
   /// Create new subscription (after payment confirmation)
+  /// Uses userId as document ID for efficient security rules checking
   Future<String> createSubscription({
     required String userId,
     required SubscriptionType type,
@@ -78,7 +79,7 @@ class SubscriptionService {
       final endDate = startDate.add(const Duration(days: 365)); // 1 year
 
       final subscription = Subscription(
-        id: '', // Will be set by Firestore
+        id: userId, // Use userId as document ID
         userId: userId,
         type: type,
         status: SubscriptionStatus.active,
@@ -90,15 +91,17 @@ class SubscriptionService {
         createdAt: DateTime.now(),
       );
 
-      final docRef = await _firestore
+      // Use userId as document ID for efficient exists() checks in security rules
+      await _firestore
           .collection('subscriptions')
-          .add(subscription.toFirestore());
+          .doc(userId)
+          .set(subscription.toFirestore(), SetOptions(merge: true));
 
       if (kDebugMode) {
-        debugPrint('✅ Subscription created: ${docRef.id}');
+        debugPrint('✅ Subscription created for user: $userId');
       }
 
-      return docRef.id;
+      return userId;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error creating subscription: $e');
