@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/wallet.dart';
+import '../models/wallet.dart' as wallet_model;
 import 'pawapay_service.dart';
 
 /// Wallet Service for managing user wallets and transactions
@@ -16,16 +16,16 @@ class WalletService {
   // ============================================================================
   
   /// Get or create wallet for user
-  Future<Wallet> getOrCreateWallet(String userId) async {
+  Future<wallet_model.Wallet> getOrCreateWallet(String userId) async {
     try {
       final walletDoc = await _firestore.collection('wallets').doc(userId).get();
       
       if (walletDoc.exists) {
-        return Wallet.fromFirestore(walletDoc.data()!, walletDoc.id);
+        return wallet_model.Wallet.fromFirestore(walletDoc.data()!, walletDoc.id);
       }
       
       // Create new wallet
-      final newWallet = Wallet(
+      final newWallet = wallet_model.Wallet(
         id: userId,
         userId: userId,
         balance: 0.0,
@@ -50,12 +50,12 @@ class WalletService {
   }
   
   /// Stream wallet updates
-  Stream<Wallet> streamWallet(String userId) {
+  Stream<wallet_model.Wallet> streamWallet(String userId) {
     return _firestore
         .collection('wallets')
         .doc(userId)
         .snapshots()
-        .map((doc) => Wallet.fromFirestore(doc.data()!, doc.id));
+        .map((doc) => wallet_model.Wallet.fromFirestore(doc.data()!, doc.id));
   }
   
   // ============================================================================
@@ -89,9 +89,9 @@ class WalletService {
         // Create pending transaction
         await _createTransaction(
           userId: userId,
-          type: TransactionType.deposit,
+          type: wallet_model.TransactionType.deposit,
           amount: amount,
-          status: TransactionStatus.pending,
+          status: wallet_model.TransactionStatus.pending,
           referenceId: result['depositId'],
           description: 'Mobile money deposit',
         );
@@ -145,12 +145,12 @@ class WalletService {
       }
       
       final transactionDoc = transactionQuery.docs.first;
-      final transaction = Transaction.fromMap(transactionDoc.data());
+      final transaction = wallet_model.Transaction.fromMap(transactionDoc.data());
       
       if (status == 'COMPLETED') {
         // Update transaction status
         await _firestore.collection('transactions').doc(transactionDoc.id).update({
-          'status': TransactionStatus.completed.toString().split('.').last,
+          'status': wallet_model.TransactionStatus.completed.toString().split('.').last,
         });
         
         // Add to wallet balance
@@ -165,7 +165,7 @@ class WalletService {
       } else if (status == 'FAILED') {
         // Update transaction status
         await _firestore.collection('transactions').doc(transactionDoc.id).update({
-          'status': TransactionStatus.failed.toString().split('.').last,
+          'status': wallet_model.TransactionStatus.failed.toString().split('.').last,
           'description': failureReason ?? 'Payment failed',
         });
         
@@ -224,9 +224,9 @@ class WalletService {
         // Create pending transaction
         await _createTransaction(
           userId: userId,
-          type: TransactionType.withdrawal,
+          type: wallet_model.TransactionType.withdrawal,
           amount: amount,
-          status: TransactionStatus.pending,
+          status: wallet_model.TransactionStatus.pending,
           referenceId: result['payoutId'],
           description: 'Mobile money withdrawal',
         );
@@ -280,12 +280,12 @@ class WalletService {
       }
       
       final transactionDoc = transactionQuery.docs.first;
-      final transaction = Transaction.fromMap(transactionDoc.data());
+      final transaction = wallet_model.Transaction.fromMap(transactionDoc.data());
       
       if (status == 'COMPLETED') {
         // Update transaction status
         await _firestore.collection('transactions').doc(transactionDoc.id).update({
-          'status': TransactionStatus.completed.toString().split('.').last,
+          'status': wallet_model.TransactionStatus.completed.toString().split('.').last,
         });
         
         if (kDebugMode) {
@@ -294,7 +294,7 @@ class WalletService {
       } else if (status == 'FAILED') {
         // Update transaction status
         await _firestore.collection('transactions').doc(transactionDoc.id).update({
-          'status': TransactionStatus.failed.toString().split('.').last,
+          'status': wallet_model.TransactionStatus.failed.toString().split('.').last,
           'description': failureReason ?? 'Payout failed',
         });
         
@@ -317,7 +317,7 @@ class WalletService {
   // ============================================================================
   
   /// Get user transactions
-  Future<List<Transaction>> getTransactions(String userId, {int limit = 50}) async {
+  Future<List<wallet_model.Transaction>> getTransactions(String userId, {int limit = 50}) async {
     try {
       final querySnapshot = await _firestore
           .collection('transactions')
@@ -327,7 +327,7 @@ class WalletService {
           .get();
       
       return querySnapshot.docs
-          .map((doc) => Transaction.fromMap(doc.data()))
+          .map((doc) => wallet_model.Transaction.fromMap(doc.data()))
           .toList();
     } catch (e) {
       if (kDebugMode) {
@@ -338,7 +338,7 @@ class WalletService {
   }
   
   /// Stream user transactions
-  Stream<List<Transaction>> streamTransactions(String userId) {
+  Stream<List<wallet_model.Transaction>> streamTransactions(String userId) {
     return _firestore
         .collection('transactions')
         .where('wallet_id', isEqualTo: userId)
@@ -346,21 +346,21 @@ class WalletService {
         .limit(50)
         .snapshots()
         .map((snapshot) =>
-            snapshot.docs.map((doc) => Transaction.fromMap(doc.data())).toList());
+            snapshot.docs.map((doc) => wallet_model.Transaction.fromMap(doc.data())).toList());
   }
   
   /// Create transaction record
   Future<String> _createTransaction({
     required String userId,
-    required TransactionType type,
+    required wallet_model.TransactionType type,
     required double amount,
-    required TransactionStatus status,
+    required wallet_model.TransactionStatus status,
     String? referenceId,
     String? orderId,
     String? description,
   }) async {
     try {
-      final transaction = Transaction(
+      final transaction = wallet_model.Transaction(
         id: '', // Will be set by Firestore
         walletId: userId,
         type: type,

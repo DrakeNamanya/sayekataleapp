@@ -21,8 +21,9 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
   void initState() {
     super.initState();
     // Initialize PawaPay with API token
-    // TODO: Store API token securely
-    final pawaPayService = PawaPayService(apiToken: 'YOUR_PAWAPAY_API_TOKEN');
+    final pawaPayService = PawaPayService(
+      apiToken: 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4NTA5MjM2LCJpYXQiOjE3NjI5NzY0MzYsInBtIjoiREFGLFBBRiIsImp0aSI6ImE0NjQyZjUyLWYwODYtNGJjNy1hMGY3LTQ2MmJiNDgyYzM1MSJ9.zyFdgBTQ-dj_NiR15ChPjLM6kYjH3ZB4J9G8ye4TKiOjPgdXsJ53U08-WspwZ8JtjXua8FGuIf4VhQVcmVRjHQ'
+    );
     _walletService = WalletService(pawaPayService: pawaPayService);
   }
 

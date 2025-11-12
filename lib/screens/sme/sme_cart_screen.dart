@@ -673,7 +673,7 @@ class _CartItemCardState extends State<_CartItemCard> {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          onRemove();
+                          widget.onRemove();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.errorColor,

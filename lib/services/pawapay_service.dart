@@ -54,7 +54,7 @@ class PawaPayService {
       };
       
       if (customerName != null) {
-        requestBody['payer']['displayName'] = customerName;
+        (requestBody['payer'] as Map<String, dynamic>)['displayName'] = customerName;
       }
       
       if (kDebugMode) {
@@ -144,7 +144,7 @@ class PawaPayService {
       };
       
       if (recipientName != null) {
-        requestBody['recipient']['displayName'] = recipientName;
+        (requestBody['recipient'] as Map<String, dynamic>)['displayName'] = recipientName;
       }
       
       if (kDebugMode) {
