@@ -200,15 +200,16 @@ class FirebaseAuthService {
           debugPrint('✨ Creating new user profile...');
         }
 
-        // Generate user ID based on role
-        final userId = await _generateUserId(role);
+        // ✅ FIXED: Use Firebase UID as id field (not generated system ID)
+        // Generate system ID for display purposes only
+        final systemId = await _generateUserId(role);
         
         // Set profile completion deadline (24 hours from now)
         final profileDeadline = DateTime.now().add(const Duration(hours: 24));
 
         // Create new user
         final newUser = AppUser(
-          id: userId,
+          id: uid, // ✅ Use Firebase UID, not generated system ID
           name: name,
           phone: phone,
           role: role,
@@ -219,7 +220,10 @@ class FirebaseAuthService {
         );
 
         // Save to Firestore
-        await userRef.set(newUser.toFirestore());
+        final userData = newUser.toFirestore();
+        // ✅ Store system_id as separate field for display/customer support
+        userData['system_id'] = systemId;
+        await userRef.set(userData);
 
         if (kDebugMode) {
           debugPrint('✅ User profile created: $userId');
