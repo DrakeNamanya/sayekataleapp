@@ -1,0 +1,238 @@
+// ===================================================================
+// FIRESTORE SECURITY RULES - STANDARDIZED WITH PARTICIPANTS ARRAY
+// ===================================================================
+// Apply these in Firebase Console → Firestore Database → Rules tab
+// Last updated: After fixing permission-denied errors on Orders page
+// ===================================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===================================================================
+    // HELPER FUNCTIONS
+    // ===================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is in the participants array (STANDARDIZED APPROACH)
+    function isParticipant() {
+      return resource.data.participants != null &&
+             request.auth.uid in resource.data.participants;
+    }
+    
+    // Legacy field name support (camelCase + snake_case)
+    function isBuyer() {
+      return (resource.data.buyer_id == request.auth.uid) ||
+             (resource.data.buyerId == request.auth.uid);
+    }
+    
+    function isSeller() {
+      return (resource.data.seller_id == request.auth.uid) ||
+             (resource.data.sellerId == request.auth.uid);
+    }
+    
+    function isFarmer() {
+      return (resource.data.farmer_id == request.auth.uid) ||
+             (resource.data.farmerId == request.auth.uid);
+    }
+    
+    // Comprehensive order actor check
+    function isOrderActor() {
+      return isParticipant() || isBuyer() || isSeller() || isFarmer();
+    }
+    
+    // Premium subscription check
+    function hasPremiumSubscription() {
+      let userId = request.auth.uid;
+      let subscription = get(/databases/$(database)/documents/subscriptions/$(userId));
+      return subscription.data.status == 'active' &&
+             subscription.data.type == 'premium' &&
+             subscription.data.expiresAt > request.time;
+    }
+    
+    // ===================================================================
+    // USERS COLLECTION
+    // ===================================================================
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if false; // No account deletion through client
+    }
+    
+    // ===================================================================
+    // PRODUCTS COLLECTION
+    // ===================================================================
+    
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.seller_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.seller_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.seller_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // ORDERS COLLECTION (ROOT AND SUBCOLLECTIONS)
+    // ===================================================================
+    // Supports both:
+    // - Root collection: /orders/{orderId}
+    // - Subcollections: /users/{userId}/orders/{orderId}
+    // ===================================================================
+    
+    match /{path=**}/orders/{orderId} {
+      // READ: Any participant can read
+      allow read: if isAuthenticated() && isOrderActor();
+      
+      // CREATE: Only buyer can create
+      allow create: if isAuthenticated() &&
+        (request.resource.data.buyer_id == request.auth.uid ||
+         request.resource.data.buyerId == request.auth.uid);
+      
+      // UPDATE: Only status and timestamp fields can be changed
+      allow update: if isAuthenticated() && isOrderActor() &&
+        request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['status', 'updatedAt', 'updated_at',
+                    'buyerConfirmedAt', 'buyer_confirmed_at',
+                    'sellerConfirmedAt', 'seller_confirmed_at',
+                    'farmerConfirmedAt', 'farmer_confirmed_at',
+                    'deliveryConfirmedAt', 'delivery_confirmed_at']);
+      
+      // DELETE: No one can delete orders
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // REVIEWS COLLECTION
+    // ===================================================================
+    
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.reviewer_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.reviewer_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.reviewer_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // SUBSCRIPTIONS COLLECTION
+    // ===================================================================
+    
+    match /subscriptions/{userId} {
+      allow read: if isUser(userId);
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // SME DIRECTORY COLLECTION (Premium Access Required)
+    // ===================================================================
+    
+    match /sme_directory/{smeId} {
+      // Read requires premium subscription
+      allow read: if isAuthenticated() && hasPremiumSubscription();
+      
+      // SME can create/update their own profile
+      allow create: if isAuthenticated() &&
+        request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // GROUPS/SHG COLLECTION
+    // ===================================================================
+    
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        (resource.data.admin_id == request.auth.uid ||
+         request.auth.uid in resource.data.members);
+      allow delete: if isAuthenticated() &&
+        resource.data.admin_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // NOTIFICATIONS COLLECTION
+    // ===================================================================
+    
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // DENY ALL OTHER COLLECTIONS
+    // ===================================================================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ===================================================================
+// MIGRATION GUIDE: Adding participants Array to Existing Orders
+// ===================================================================
+// Run this Python script to add participants field to all orders:
+//
+// import firebase_admin
+// from firebase_admin import credentials, firestore
+// 
+// cred = credentials.Certificate('/opt/flutter/firebase-admin-sdk.json')
+// firebase_admin.initialize_app(cred)
+// db = firestore.client()
+// 
+// orders_ref = db.collection_group('orders')
+// orders = orders_ref.stream()
+// 
+// for order in orders:
+//     data = order.to_dict()
+//     participants = []
+//     
+//     # Add buyer
+//     if 'buyer_id' in data:
+//         participants.append(data['buyer_id'])
+//     elif 'buyerId' in data:
+//         participants.append(data['buyerId'])
+//     
+//     # Add seller
+//     if 'seller_id' in data:
+//         participants.append(data['seller_id'])
+//     elif 'sellerId' in data:
+//         participants.append(data['sellerId'])
+//     
+//     # Add farmer
+//     if 'farmer_id' in data:
+//         participants.append(data['farmer_id'])
+//     elif 'farmerId' in data:
+//         participants.append(data['farmerId'])
+//     
+//     # Update document
+//     if participants:
+//         order.reference.update({'participants': participants})
+//         print(f"✅ Updated order {order.id}")
+// 
+// print("Migration complete!")
+// ===================================================================

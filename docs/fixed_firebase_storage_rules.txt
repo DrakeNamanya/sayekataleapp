@@ -1,0 +1,111 @@
+// ===================================================================
+// FIREBASE STORAGE SECURITY RULES - STANDARDIZED & PRODUCTION-READY
+// ===================================================================
+// Apply these in Firebase Console → Storage → Rules tab
+// Last updated: After fixing unauthorized upload errors
+// ===================================================================
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ===================================================================
+    // HELPER FUNCTIONS
+    // ===================================================================
+    
+    function isAuth() { 
+      return request.auth != null; 
+    }
+    
+    function isValidImageSize() {
+      return request.resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+    
+    function isImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+    
+    // ===================================================================
+    // PROFILE IMAGES: users/{userId}/profile/{fileName}
+    // ===================================================================
+    // Path convention: users/{uid}/profile/profile.jpg
+    // Public read, owner-only write with safety checks
+    
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true; // Public read (anyone can view profiles)
+      
+      allow write: if isOwner(userId)
+        && isValidImageSize()
+        && isImageType();
+    }
+    
+    // ===================================================================
+    // PRODUCT IMAGES: products/{ownerId}/{fileName}
+    // ===================================================================
+    // Path convention: products/{uid}/product_123.jpg
+    // Public read, owner-only write
+    
+    match /products/{ownerId}/{allPaths=**} {
+      allow read: if true; // Public read (anyone can browse products)
+      
+      allow write: if isOwner(ownerId)
+        && isValidImageSize()
+        && isImageType();
+    }
+    
+    // ===================================================================
+    // VERIFICATION DOCUMENTS: users/{userId}/verification/{fileName}
+    // ===================================================================
+    // Path convention: users/{uid}/verification/national_id.jpg
+    // Private read (owner only), owner-only write
+    
+    match /users/{userId}/verification/{fileName} {
+      allow read: if isOwner(userId); // Private (only owner can view)
+      
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024 // 10MB for documents
+        && request.resource.contentType.matches('image/.*');
+    }
+    
+    // ===================================================================
+    // ORDER IMAGES: orders/{orderId}/{fileName}
+    // ===================================================================
+    // Path convention: orders/order_123/product_image.jpg
+    // Authenticated read, authenticated write (order participants)
+    
+    match /orders/{orderId}/{fileName} {
+      allow read: if isAuth(); // Any authenticated user can view
+      
+      allow write: if isAuth()
+        && isValidImageSize()
+        && isImageType();
+    }
+    
+    // ===================================================================
+    // GROUP/BUSINESS DOCUMENTS: groups/{groupId}/{fileName}
+    // ===================================================================
+    // Path convention: groups/shg_123/registration.jpg
+    // Authenticated read, authenticated write
+    
+    match /groups/{groupId}/{fileName} {
+      allow read: if isAuth();
+      
+      allow write: if isAuth()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    
+    // ===================================================================
+    // DENY ALL OTHER PATHS (Security by default)
+    // ===================================================================
+    
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
