@@ -50,12 +50,32 @@ class WalletService {
   }
   
   /// Stream wallet updates
+  /// Note: Call getOrCreateWallet() first to ensure wallet exists before streaming
   Stream<wallet_model.Wallet> streamWallet(String userId) {
     return _firestore
         .collection('wallets')
         .doc(userId)
         .snapshots()
-        .map((doc) => wallet_model.Wallet.fromFirestore(doc.data()!, doc.id));
+        .map((doc) {
+          // Handle case where document might not exist
+          if (!doc.exists || doc.data() == null) {
+            // Return default wallet if document doesn't exist
+            // This should rarely happen if getOrCreateWallet is called first
+            if (kDebugMode) {
+              debugPrint('⚠️ Wallet document does not exist for user $userId, returning default');
+            }
+            return wallet_model.Wallet(
+              id: userId,
+              userId: userId,
+              balance: 0.0,
+              pendingBalance: 0.0,
+              currency: 'UGX',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+          }
+          return wallet_model.Wallet.fromFirestore(doc.data()!, doc.id);
+        });
   }
   
   // ============================================================================

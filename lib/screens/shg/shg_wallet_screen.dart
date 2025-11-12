@@ -44,49 +44,119 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
         backgroundColor: AppTheme.primaryColor,
         elevation: 0,
       ),
-      body: StreamBuilder<Wallet>(
-        stream: _walletService.streamWallet(user.id),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData) {
-            return const Center(child: Text('No wallet data'));
-          }
-
-          final wallet = snapshot.data!;
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              // Trigger rebuild
-              setState(() {});
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+      body: FutureBuilder<Wallet>(
+        // First, ensure wallet exists by calling getOrCreateWallet
+        future: _walletService.getOrCreateWallet(user.id),
+        builder: (context, futureSnapshot) {
+          // Show loading while creating/fetching wallet
+          if (futureSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Wallet Balance Card
-                  _buildBalanceCard(wallet),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Action Buttons
-                  _buildActionButtons(user.id, user.name, user.phone),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Recent Transactions
-                  _buildTransactionsList(user.id),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading wallet...'),
                 ],
               ),
-            ),
+            );
+          }
+
+          // Show error if wallet creation/fetch failed
+          if (futureSnapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+                  const SizedBox(height: 16),
+                  Text('Error loading wallet: ${futureSnapshot.error}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Wallet now exists, use StreamBuilder for real-time updates
+          return StreamBuilder<Wallet>(
+            stream: _walletService.streamWallet(user.id),
+            builder: (context, streamSnapshot) {
+              // Use futureSnapshot data while stream is loading
+              if (streamSnapshot.connectionState == ConnectionState.waiting) {
+                // Show initial wallet data from future while waiting for stream
+                if (futureSnapshot.hasData) {
+                  final wallet = futureSnapshot.data!;
+                  return _buildWalletContent(wallet, user.id, user.name, user.phone);
+                }
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (streamSnapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+                      const SizedBox(height: 16),
+                      Text('Error: ${streamSnapshot.error}'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => setState(() {}),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Stream has data, use it for real-time updates
+              if (streamSnapshot.hasData) {
+                final wallet = streamSnapshot.data!;
+                return _buildWalletContent(wallet, user.id, user.name, user.phone);
+              }
+
+              // Fallback: show future data if stream has no data yet
+              if (futureSnapshot.hasData) {
+                final wallet = futureSnapshot.data!;
+                return _buildWalletContent(wallet, user.id, user.name, user.phone);
+              }
+
+              return const Center(child: Text('No wallet data'));
+            },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildWalletContent(Wallet wallet, String userId, String userName, String userPhone) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Trigger rebuild to refresh data
+        setState(() {});
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Wallet Balance Card
+            _buildBalanceCard(wallet),
+            
+            const SizedBox(height: 16),
+            
+            // Action Buttons
+            _buildActionButtons(userId, userName, userPhone),
+            
+            const SizedBox(height: 24),
+            
+            // Recent Transactions
+            _buildTransactionsList(userId),
+          ],
+        ),
       ),
     );
   }
