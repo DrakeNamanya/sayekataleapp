@@ -244,15 +244,17 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
       return;
     }
 
-    if (_nationalIdPhotoPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('National ID photo is required'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
+    // ✅ National ID photo is now optional during development
+    // Users can add GPS location without uploading National ID photo
+    // if (_nationalIdPhotoPath == null) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('National ID photo is required'),
+    //       backgroundColor: AppTheme.errorColor,
+    //     ),
+    //   );
+    //   return;
+    // }
 
     // Location validation: Either GPS coordinates OR complete administrative divisions required
     final hasGPS = _latitude != null && _longitude != null && _latitude != 0.0 && _longitude != 0.0;

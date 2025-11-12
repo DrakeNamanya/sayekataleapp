@@ -69,6 +69,8 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
             app_order.OrderStatus.inTransit,
           ]),
           _buildOrdersList(buyerId, [
+            app_order.OrderStatus.delivered, // ✅ Include delivered orders
+            app_order.OrderStatus.deliveredPendingConfirmation, // ✅ Include pending confirmation
             app_order.OrderStatus.completed,
             app_order.OrderStatus.rejected,
             app_order.OrderStatus.cancelled,
