@@ -1,0 +1,63 @@
+// ===================================================================
+// FIRESTORE SECURITY RULES - DEVELOPMENT MODE (OPEN)
+// ===================================================================
+// ⚠️ WARNING: These rules allow FULL ACCESS to all data
+// ⚠️ USE ONLY FOR DEVELOPMENT - NOT FOR PRODUCTION!
+// ===================================================================
+// Apply these in Firebase Console → Firestore Database → Rules tab
+// Purpose: Allow unrestricted access during app development
+// ===================================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===================================================================
+    // ALLOW ALL ACCESS TO ALL COLLECTIONS
+    // ===================================================================
+    // Anyone can read and write any document in any collection
+    
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// ===================================================================
+// WHAT THIS MEANS
+// ===================================================================
+//
+// ✅ ALL users can read ANY document
+// ✅ ALL users can write/update/delete ANY document
+// ✅ NO authentication required
+// ✅ NO permission checks
+// ✅ NO field validation
+// ✅ NO restrictions whatsoever
+//
+// BENEFITS FOR DEVELOPMENT:
+// ✅ No "permission-denied" errors
+// ✅ Test any feature without auth issues
+// ✅ Rapid prototyping and testing
+// ✅ Focus on app logic, not security rules
+//
+// ⚠️ IMPORTANT REMINDERS:
+// ❌ DO NOT use these rules in production
+// ❌ Your data is completely unprotected
+// ❌ Anyone with your Firebase config can access/modify data
+// ❌ Change to secure rules before launching
+//
+// ===================================================================
+// WHEN TO SWITCH TO SECURE RULES
+// ===================================================================
+//
+// Switch to production rules when:
+// 1. App development is complete
+// 2. Ready for beta testing with real users
+// 3. Ready to launch publicly
+// 4. Need to protect user data
+//
+// Production rules available in:
+// - fixed_firestore_rules_v2.txt (secure version)
+//
+// ===================================================================

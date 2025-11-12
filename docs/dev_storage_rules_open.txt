@@ -1,0 +1,108 @@
+// ===================================================================
+// FIREBASE STORAGE SECURITY RULES - DEVELOPMENT MODE (OPEN)
+// ===================================================================
+// ⚠️ WARNING: These rules allow FULL ACCESS to all files
+// ⚠️ USE ONLY FOR DEVELOPMENT - NOT FOR PRODUCTION!
+// ===================================================================
+// Apply these in Firebase Console → Storage → Rules tab
+// Purpose: Allow unrestricted file uploads/downloads during development
+// ===================================================================
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ===================================================================
+    // ALLOW ALL ACCESS TO ALL PATHS
+    // ===================================================================
+    // Anyone can read and write any file at any path
+    
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// ===================================================================
+// WHAT THIS MEANS
+// ===================================================================
+//
+// ✅ ALL users can upload files to ANY path
+// ✅ ALL users can download ANY file
+// ✅ ALL users can delete ANY file
+// ✅ NO authentication required
+// ✅ NO file size limits
+// ✅ NO content type restrictions
+// ✅ NO path restrictions
+// ✅ NO rate limiting
+//
+// BENEFITS FOR DEVELOPMENT:
+// ✅ No "firebase image timeout" errors
+// ✅ No "permission denied" errors
+// ✅ Upload/download files instantly
+// ✅ Test any storage feature freely
+// ✅ No IAM permission prompts
+// ✅ Focus on app functionality
+//
+// ⚠️ IMPORTANT REMINDERS:
+// ❌ DO NOT use these rules in production
+// ❌ Anyone can upload/delete files
+// ❌ No protection against abuse (large files, spam)
+// ❌ Storage costs could increase rapidly
+// ❌ Change to secure rules before launching
+//
+// ===================================================================
+// DEVELOPMENT CONSIDERATIONS
+// ===================================================================
+//
+// While using open rules:
+// 1. Monitor Firebase Storage usage in console
+// 2. Watch for unexpected file uploads
+// 3. Regularly clean up test files
+// 4. Keep Firebase project private (don't share config publicly)
+// 5. Use test/dummy data, not real sensitive data
+//
+// ===================================================================
+// WHEN TO SWITCH TO SECURE RULES
+// ===================================================================
+//
+// Switch to production rules when:
+// 1. App development is complete
+// 2. Ready for beta testing with real users
+// 3. Ready to launch publicly
+// 4. Need to protect against abuse
+// 5. Need to enforce file size limits
+// 6. Need to validate file types
+//
+// Production rules available in:
+// - fixed_firebase_storage_rules_v2.txt (secure with Firestore)
+// - fixed_firebase_storage_rules_v2_no_firestore.txt (secure, faster)
+//
+// ===================================================================
+// TRANSITION PLAN TO PRODUCTION
+// ===================================================================
+//
+// When ready to go live:
+//
+// STEP 1: Test with secure rules
+// - Apply production rules to test environment first
+// - Verify all features still work
+// - Fix any permission issues
+//
+// STEP 2: Update to production rules
+// - Apply secure Firestore rules (v2)
+// - Apply secure Storage rules (v2 no Firestore)
+// - Test thoroughly
+//
+// STEP 3: Monitor access
+// - Check Firebase Console for unauthorized access attempts
+// - Monitor Storage usage patterns
+// - Review Firestore read/write counts
+//
+// STEP 4: Fine-tune rules
+// - Adjust based on actual usage patterns
+// - Add specific restrictions as needed
+// - Keep security tight but functional
+//
+// ===================================================================
