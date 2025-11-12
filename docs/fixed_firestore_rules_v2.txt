@@ -1,0 +1,250 @@
+// ===================================================================
+// FIRESTORE SECURITY RULES - ENHANCED VERSION 2
+// ===================================================================
+// Apply these in Firebase Console → Firestore Database → Rules tab
+// Version 2: Enhanced products rules + robust isParticipant check
+// ===================================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===================================================================
+    // HELPER FUNCTIONS
+    // ===================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // ENHANCED: More robust participants check with type validation
+    function isParticipant() {
+      return resource.data.participants != null &&
+             resource.data.participants is list &&
+             request.auth.uid in resource.data.participants;
+    }
+    
+    // Legacy field name support (camelCase + snake_case)
+    function isBuyer() {
+      return (resource.data.buyer_id == request.auth.uid) ||
+             (resource.data.buyerId == request.auth.uid);
+    }
+    
+    function isSeller() {
+      return (resource.data.seller_id == request.auth.uid) ||
+             (resource.data.sellerId == request.auth.uid);
+    }
+    
+    function isFarmer() {
+      return (resource.data.farmer_id == request.auth.uid) ||
+             (resource.data.farmerId == request.auth.uid);
+    }
+    
+    // Comprehensive order actor check
+    function isOrderActor() {
+      return isParticipant() || isBuyer() || isSeller() || isFarmer();
+    }
+    
+    // ENHANCED: Product owner check supporting multiple field names
+    function isProductOwner() {
+      return (resource.data.seller_id == request.auth.uid) ||
+             (resource.data.sellerId == request.auth.uid) ||
+             (resource.data.farmer_id == request.auth.uid) ||
+             (resource.data.farmerId == request.auth.uid) ||
+             (resource.data.farm_id == request.auth.uid) ||
+             (resource.data.farmId == request.auth.uid);
+    }
+    
+    // Premium subscription check
+    function hasPremiumSubscription() {
+      let userId = request.auth.uid;
+      let subscription = get(/databases/$(database)/documents/subscriptions/$(userId));
+      return subscription.data.status == 'active' &&
+             subscription.data.type == 'premium' &&
+             subscription.data.expiresAt > request.time;
+    }
+    
+    // ===================================================================
+    // USERS COLLECTION
+    // ===================================================================
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if false; // No account deletion through client
+    }
+    
+    // ===================================================================
+    // PRODUCTS COLLECTION - ENHANCED
+    // ===================================================================
+    // Supports seller_id, farmer_id, and farm_id field names
+    
+    match /products/{productId} {
+      // Read access for all authenticated users
+      allow read: if isAuthenticated();
+      
+      // CREATE: Allow if user sets themselves as seller/farmer/farm owner
+      allow create: if isAuthenticated() && (
+        request.resource.data.seller_id == request.auth.uid ||
+        request.resource.data.sellerId == request.auth.uid ||
+        request.resource.data.farmer_id == request.auth.uid ||
+        request.resource.data.farmerId == request.auth.uid ||
+        request.resource.data.farm_id == request.auth.uid ||
+        request.resource.data.farmId == request.auth.uid
+      );
+      
+      // UPDATE/DELETE: Only owner can modify/delete
+      allow update, delete: if isAuthenticated() && isProductOwner();
+    }
+    
+    // ===================================================================
+    // ORDERS COLLECTION (ROOT AND SUBCOLLECTIONS)
+    // ===================================================================
+    // Supports both:
+    // - Root collection: /orders/{orderId}
+    // - Subcollections: /users/{userId}/orders/{orderId}
+    // ===================================================================
+    
+    match /{path=**}/orders/{orderId} {
+      // READ: Any participant can read
+      allow read: if isAuthenticated() && isOrderActor();
+      
+      // CREATE: Only buyer can create
+      allow create: if isAuthenticated() &&
+        (request.resource.data.buyer_id == request.auth.uid ||
+         request.resource.data.buyerId == request.auth.uid);
+      
+      // UPDATE: Only status and timestamp fields can be changed
+      allow update: if isAuthenticated() && isOrderActor() &&
+        request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['status', 'updatedAt', 'updated_at',
+                    'buyerConfirmedAt', 'buyer_confirmed_at',
+                    'sellerConfirmedAt', 'seller_confirmed_at',
+                    'farmerConfirmedAt', 'farmer_confirmed_at',
+                    'deliveryConfirmedAt', 'delivery_confirmed_at',
+                    'participants']); // Allow participants array updates
+      
+      // DELETE: No one can delete orders
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // REVIEWS COLLECTION
+    // ===================================================================
+    
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.reviewer_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.reviewer_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.reviewer_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // SUBSCRIPTIONS COLLECTION
+    // ===================================================================
+    
+    match /subscriptions/{userId} {
+      allow read: if isUser(userId);
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // SME DIRECTORY COLLECTION (Premium Access Required)
+    // ===================================================================
+    
+    match /sme_directory/{smeId} {
+      // Read requires premium subscription
+      allow read: if isAuthenticated() && hasPremiumSubscription();
+      
+      // SME can create/update their own profile
+      allow create: if isAuthenticated() &&
+        request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow delete: if false;
+    }
+    
+    // ===================================================================
+    // GROUPS/SHG COLLECTION
+    // ===================================================================
+    
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        (resource.data.admin_id == request.auth.uid ||
+         request.auth.uid in resource.data.members);
+      allow delete: if isAuthenticated() &&
+        resource.data.admin_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // NOTIFICATIONS COLLECTION
+    // ===================================================================
+    
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+        resource.data.user_id == request.auth.uid;
+    }
+    
+    // ===================================================================
+    // DENY ALL OTHER COLLECTIONS
+    // ===================================================================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ===================================================================
+// WHAT'S NEW IN VERSION 2
+// ===================================================================
+// 
+// 1. ENHANCED isParticipant() function:
+//    - Added type check: resource.data.participants is list
+//    - More robust error handling for missing/invalid participants field
+//
+// 2. ENHANCED Products Collection Rules:
+//    - New isProductOwner() helper function
+//    - Supports seller_id, sellerId, farmer_id, farmerId, farm_id, farmId
+//    - Both CREATE and UPDATE/DELETE check multiple field names
+//
+// 3. ENHANCED Orders UPDATE rule:
+//    - Now allows 'participants' field updates (for migration script)
+//
+// ===================================================================
+// MIGRATION GUIDE: Adding participants Array to Existing Orders
+// ===================================================================
+// 
+// Python script is ready at:
+// /home/user/flutter_app/scripts/migrate_orders_add_participants.py
+//
+// Usage:
+// cd /home/user/flutter_app
+// python3 scripts/migrate_orders_add_participants.py
+//
+// Features:
+// - Uses collection_group for all orders (root + subcollections)
+// - Supports both snake_case and camelCase field names
+// - Safety confirmation before execution
+// - Detailed progress reporting
+// - Error handling and recovery
+//
+// ===================================================================
