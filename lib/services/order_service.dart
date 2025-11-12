@@ -167,10 +167,8 @@ class OrderService {
           );
         }).toList();
 
-        // Determine order type and service fee based on buyer and seller roles
-        // We need to fetch buyer and seller documents to determine roles
+        // Determine order type based on buyer and seller roles
         app_order.OrderType orderType;
-        double serviceFee;
         
         try {
           // Fetch buyer and seller roles to determine order type
@@ -188,16 +186,14 @@ class OrderService {
           if (buyerRole == 'shg' && sellerRole == 'psa') {
             // SHG buying inputs from PSA
             orderType = app_order.OrderType.shgToPsaInputPurchase;
-            serviceFee = 7000.0; // SHG pays UGX 2,000 + PSA pays UGX 5,000
             if (kDebugMode) {
-              debugPrint('💰 SHG → PSA: Service fee UGX 7,000 (SHG: 2,000 + PSA: 5,000)');
+              debugPrint('📦 SHG → PSA: Input purchase order');
             }
           } else {
             // SME buying products from SHG or other combinations
             orderType = app_order.OrderType.smeToShgProductPurchase;
-            serviceFee = 0.0; // FREE for SME → SHG purchases
             if (kDebugMode) {
-              debugPrint('💰 SME → SHG: FREE (no service fee)');
+              debugPrint('📦 SME → SHG: Product purchase order');
             }
           }
         } catch (e) {
@@ -205,10 +201,9 @@ class OrderService {
             debugPrint('⚠️ Error determining order type: $e, defaulting to SME → SHG');
           }
           orderType = app_order.OrderType.smeToShgProductPurchase;
-          serviceFee = 0.0;
         }
         
-        // Create order with correct type and service fee
+        // Create order (no service fees)
         final order = app_order.Order(
           id: '', // Will be set by Firestore
           type: orderType,
@@ -220,8 +215,8 @@ class OrderService {
           sellerPhone: farmerPhone,
           items: orderItems,
           subtotal: total,
-          serviceFee: serviceFee,
-          totalAmount: total + serviceFee, // Add service fee to total
+          serviceFee: 0.0, // No service fees
+          totalAmount: total, // Total equals subtotal (no additional fees)
           status: app_order.OrderStatus.pending,
           paymentMethod: paymentMethod,
           deliveryAddress: deliveryAddress ?? '',

@@ -35,10 +35,8 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
     final cartItems = cartProvider.cartItems;
     
-    // Calculate amounts for SHG → PSA purchases
+    // Calculate amounts (no service fees)
     final subtotal = cartProvider.subtotal;
-    final serviceFee = cartProvider.getServiceFee('UserRole.shg'); // UGX 2,000
-    final totalAmount = cartProvider.getTotal('UserRole.shg');
 
     return Scaffold(
       appBar: AppBar(
@@ -135,41 +133,9 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        // Decrease quantity
-                                        IconButton(
-                                          onPressed: () {
-                                            if (item.quantity > 1) {
-                                              cartProvider.updateQuantity(item.productId, item.quantity - 1);
-                                            }
-                                          },
-                                          icon: const Icon(Icons.remove_circle_outline),
-                                          iconSize: 24,
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                                          child: Text(
-                                            '${item.quantity}',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        // Increase quantity
-                                        IconButton(
-                                          onPressed: () {
-                                            cartProvider.updateQuantity(item.productId, item.quantity + 1);
-                                          },
-                                          icon: const Icon(Icons.add_circle_outline),
-                                          iconSize: 24,
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                      ],
+                                    _QuantityControl(
+                                      item: item,
+                                      cartProvider: cartProvider,
                                     ),
                                   ],
                                 ),
@@ -229,57 +195,6 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Subtotal
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Subtotal',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            Text(
-                              'UGX ${NumberFormat('#,###').format(subtotal)}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Service Fee (SHG portion)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Service Fee',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Tooltip(
-                                  message: 'SHG pays UGX 2,000, PSA pays UGX 5,000\nTotal service fee: UGX 7,000',
-                                  child: Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              'UGX ${NumberFormat('#,###').format(serviceFee)}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 24),
                         // Total Amount
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -292,7 +207,7 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                               ),
                             ),
                             Text(
-                              'UGX ${NumberFormat('#,###').format(totalAmount)}',
+                              'UGX ${NumberFormat('#,###').format(subtotal)}',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -617,5 +532,131 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
         ),
       );
     }
+  }
+}
+
+class _QuantityControl extends StatefulWidget {
+  final dynamic item;
+  final CartProvider cartProvider;
+
+  const _QuantityControl({
+    required this.item,
+    required this.cartProvider,
+  });
+
+  @override
+  State<_QuantityControl> createState() => _QuantityControlState();
+}
+
+class _QuantityControlState extends State<_QuantityControl> {
+  late TextEditingController _quantityController;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityController = TextEditingController(text: widget.item.quantity.toString());
+  }
+
+  @override
+  void didUpdateWidget(_QuantityControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isEditing && widget.item.quantity != oldWidget.item.quantity) {
+      _quantityController.text = widget.item.quantity.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  void _updateQuantityFromTextField() {
+    final newQuantity = int.tryParse(_quantityController.text);
+    if (newQuantity != null && newQuantity > 0 && newQuantity <= 9999) {
+      widget.cartProvider.updateQuantity(widget.item.productId, newQuantity);
+      setState(() {
+        _isEditing = false;
+      });
+    } else {
+      // Reset to current quantity if invalid
+      _quantityController.text = widget.item.quantity.toString();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid quantity (1-9999)'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Decrease quantity
+        IconButton(
+          onPressed: widget.item.quantity > 1
+              ? () {
+                  widget.cartProvider.updateQuantity(widget.item.productId, widget.item.quantity - 1);
+                }
+              : null,
+          icon: const Icon(Icons.remove_circle_outline),
+          iconSize: 24,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+        // Editable quantity input
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isEditing = true;
+            });
+          },
+          child: Container(
+            width: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _isEditing
+                ? TextField(
+                    controller: _quantityController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    autofocus: true,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _updateQuantityFromTextField(),
+                    onTapOutside: (_) => _updateQuantityFromTextField(),
+                  )
+                : Text(
+                    '${widget.item.quantity}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+        // Increase quantity
+        IconButton(
+          onPressed: () {
+            widget.cartProvider.updateQuantity(widget.item.productId, widget.item.quantity + 1);
+          },
+          icon: const Icon(Icons.add_circle_outline),
+          iconSize: 24,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
+    );
   }
 }

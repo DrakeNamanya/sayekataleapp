@@ -456,7 +456,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
   }
 }
 
-class _CartItemCard extends StatelessWidget {
+class _CartItemCard extends StatefulWidget {
   final CartItem cartItem;
   final Function(int) onQuantityChanged;
   final VoidCallback onRemove;
@@ -466,6 +466,54 @@ class _CartItemCard extends StatelessWidget {
     required this.onQuantityChanged,
     required this.onRemove,
   });
+
+  @override
+  State<_CartItemCard> createState() => _CartItemCardState();
+}
+
+class _CartItemCardState extends State<_CartItemCard> {
+  late TextEditingController _quantityController;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityController = TextEditingController(text: widget.cartItem.quantity.toString());
+  }
+
+  @override
+  void didUpdateWidget(_CartItemCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isEditing && widget.cartItem.quantity != oldWidget.cartItem.quantity) {
+      _quantityController.text = widget.cartItem.quantity.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  void _updateQuantityFromTextField() {
+    final newQuantity = int.tryParse(_quantityController.text);
+    if (newQuantity != null && newQuantity > 0 && newQuantity <= 9999) {
+      widget.onQuantityChanged(newQuantity);
+      setState(() {
+        _isEditing = false;
+      });
+    } else {
+      // Reset to current quantity if invalid
+      _quantityController.text = widget.cartItem.quantity.toString();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid quantity (1-9999)'),
+          backgroundColor: AppTheme.errorColor,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -498,7 +546,7 @@ class _CartItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    cartItem.productName,
+                    widget.cartItem.productName,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -506,7 +554,7 @@ class _CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'UGX ${cartItem.price.toStringAsFixed(0)}/${cartItem.unit}',
+                    'UGX ${widget.cartItem.price.toStringAsFixed(0)}/${widget.cartItem.unit}',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.primaryColor,
@@ -528,8 +576,10 @@ class _CartItemCard extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove, size: 18),
-                              onPressed: cartItem.quantity > 1
-                                  ? () => onQuantityChanged(cartItem.quantity - 1)
+                              onPressed: widget.cartItem.quantity > 1
+                                  ? () {
+                                      widget.onQuantityChanged(widget.cartItem.quantity - 1);
+                                    }
                                   : null,
                               padding: const EdgeInsets.all(4),
                               constraints: const BoxConstraints(
@@ -537,19 +587,49 @@ class _CartItemCard extends StatelessWidget {
                                 minHeight: 32,
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                '${cartItem.quantity}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            // Editable quantity input
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _isEditing = true;
+                                });
+                              },
+                              child: Container(
+                                width: 60,
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: _isEditing
+                                    ? TextField(
+                                        controller: _quantityController,
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        autofocus: true,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                          isDense: true,
+                                        ),
+                                        onSubmitted: (_) => _updateQuantityFromTextField(),
+                                        onTapOutside: (_) => _updateQuantityFromTextField(),
+                                      )
+                                    : Text(
+                                        '${widget.cartItem.quantity}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.add, size: 18),
-                              onPressed: () => onQuantityChanged(cartItem.quantity + 1),
+                              onPressed: () {
+                                widget.onQuantityChanged(widget.cartItem.quantity + 1);
+                              },
                               padding: const EdgeInsets.all(4),
                               constraints: const BoxConstraints(
                                 minWidth: 32,
@@ -563,7 +643,7 @@ class _CartItemCard extends StatelessWidget {
                       
                       // Item Total
                       Text(
-                        'UGX ${cartItem.totalPrice.toStringAsFixed(0)}',
+                        'UGX ${widget.cartItem.totalPrice.toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -584,7 +664,7 @@ class _CartItemCard extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Remove Item'),
-                    content: Text('Remove ${cartItem.productName} from cart?'),
+                    content: Text('Remove ${widget.cartItem.productName} from cart?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),

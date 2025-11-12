@@ -185,10 +185,6 @@ class CartScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      _PriceRow('Subtotal', cartProvider.subtotal),
-                      _PriceRow('Delivery Fee', cartProvider.deliveryFee),
-                      _PriceRow('Service Fee', cartProvider.serviceFee),
-                      const Divider(height: 24),
                       _PriceRow('Total', cartProvider.total, isBold: true),
                       const SizedBox(height: 16),
                       SizedBox(
