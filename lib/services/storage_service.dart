@@ -1,142 +1,132 @@
-import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
+import 'dart:typed_data';
 
+/// Standardized Firebase Storage upload service
+/// Uses fixed path conventions matching security rules
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Upload verification document to Firebase Storage
-  /// Returns the download URL of the uploaded file
-  /// Uses XFile for web compatibility
-  Future<String> uploadVerificationDocument(
-    String psaId,
-    String documentType,
-    XFile file,
-  ) async {
-    try {
-      if (kDebugMode) {
-        debugPrint('📤 Uploading document: $documentType for PSA: $psaId');
-      }
-      
-      final fileName = '${documentType}_${DateTime.now().millisecondsSinceEpoch}${path.extension(file.path)}';
-      final ref = _storage.ref().child('psa_verifications/$psaId/$fileName');
-
-      // Determine content type based on file extension
-      String contentType = 'application/octet-stream';
-      final ext = path.extension(file.path).toLowerCase();
-      if (ext == '.pdf') {
-        contentType = 'application/pdf';
-      } else if (ext == '.jpg' || ext == '.jpeg') {
-        contentType = 'image/jpeg';
-      } else if (ext == '.png') {
-        contentType = 'image/png';
-      }
-
-      // Always use putData with bytes from XFile (works on both web and mobile)
-      if (kDebugMode) {
-        debugPrint('📱 Uploading file with putData method');
-      }
-      
-      final bytes = await file.readAsBytes();
-      final metadata = SettableMetadata(
-        contentType: contentType,
-      );
-      final uploadTask = ref.putData(bytes, metadata);
-      
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      if (kDebugMode) {
-        debugPrint('✅ Document uploaded successfully: $downloadUrl');
-      }
-
-      return downloadUrl;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Upload error: $e');
-      }
-      throw Exception('Failed to upload document: $e');
+  /// Get current user ID (throws if not authenticated)
+  String get _currentUserId {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
     }
+    return user.uid;
   }
 
-  /// Upload product image to Firebase Storage
-  /// Returns the download URL of the uploaded file
-  /// Uses XFile for web compatibility
+  /// Upload profile picture
+  /// Path: users/{uid}/profile/profile.jpg
+  /// Security: Owner-only write, public read
+  Future<String> uploadProfilePicture(Uint8List imageBytes) async {
+    final uid = _currentUserId;
+    
+    // Standardized path matching Storage rules
+    final ref = _storage.ref().child('users/$uid/profile/profile.jpg');
+    
+    final task = await ref.putData(
+      imageBytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    
+    return await ref.getDownloadURL();
+  }
+
+  /// Upload product image
+  /// Path: products/{uid}/{productId}.jpg
+  /// Security: Owner-only write, public read
   Future<String> uploadProductImage(
-    String farmId,
+    Uint8List imageBytes,
     String productId,
-    XFile file,
   ) async {
-    try {
-      if (kDebugMode) {
-        debugPrint('📤 Uploading product image for product: $productId');
-      }
-      
-      final fileName = '${productId}_${DateTime.now().millisecondsSinceEpoch}${path.extension(file.path)}';
-      final ref = _storage.ref().child('products/$farmId/$fileName');
-
-      // Determine content type
-      String contentType = 'image/jpeg';
-      final ext = path.extension(file.path).toLowerCase();
-      if (ext == '.png') {
-        contentType = 'image/png';
-      } else if (ext == '.gif') {
-        contentType = 'image/gif';
-      } else if (ext == '.webp') {
-        contentType = 'image/webp';
-      }
-
-      // Always use putData with bytes from XFile (works on both web and mobile)
-      final bytes = await file.readAsBytes();
-      final metadata = SettableMetadata(
-        contentType: contentType,
-      );
-      final uploadTask = ref.putData(bytes, metadata);
-      
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      if (kDebugMode) {
-        debugPrint('✅ Product image uploaded successfully');
-      }
-
-      return downloadUrl;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Upload error: $e');
-      }
-      throw Exception('Failed to upload product image: $e');
-    }
+    final uid = _currentUserId;
+    
+    // Standardized path matching Storage rules
+    final ref = _storage.ref().child('products/$uid/$productId.jpg');
+    
+    final task = await ref.putData(
+      imageBytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    
+    return await ref.getDownloadURL();
   }
 
-  /// Upload multiple product images
-  /// Uses XFile for web compatibility
-  Future<List<String>> uploadProductImages(
-    String farmId,
-    String productId,
-    List<XFile> files,
+  /// Upload verification document (National ID, etc.)
+  /// Path: users/{uid}/verification/{fileName}
+  /// Security: Owner-only read/write (private)
+  Future<String> uploadVerificationDocument(
+    Uint8List imageBytes,
+    String fileName,
   ) async {
-    try {
-      final urls = <String>[];
-      for (final file in files) {
-        final url = await uploadProductImage(farmId, productId, file);
-        urls.add(url);
-      }
-      return urls;
-    } catch (e) {
-      throw Exception('Failed to upload product images: $e');
-    }
+    final uid = _currentUserId;
+    
+    // Standardized path matching Storage rules
+    final ref = _storage.ref().child('users/$uid/verification/$fileName');
+    
+    final task = await ref.putData(
+      imageBytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    
+    return await ref.getDownloadURL();
   }
 
-  /// Delete file from Firebase Storage
-  Future<void> deleteFile(String fileUrl) async {
+  /// Upload order-related image
+  /// Path: orders/{orderId}/{fileName}
+  /// Security: Authenticated write, authenticated read
+  Future<String> uploadOrderImage(
+    Uint8List imageBytes,
+    String orderId,
+    String fileName,
+  ) async {
+    final uid = _currentUserId; // Ensure authenticated
+    
+    // Standardized path matching Storage rules
+    final ref = _storage.ref().child('orders/$orderId/$fileName');
+    
+    final task = await ref.putData(
+      imageBytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    
+    return await ref.getDownloadURL();
+  }
+
+  /// Upload group/business document
+  /// Path: groups/{groupId}/{fileName}
+  /// Security: Authenticated write, authenticated read
+  Future<String> uploadGroupDocument(
+    Uint8List imageBytes,
+    String groupId,
+    String fileName,
+  ) async {
+    final uid = _currentUserId; // Ensure authenticated
+    
+    // Standardized path matching Storage rules
+    final ref = _storage.ref().child('groups/$groupId/$fileName');
+    
+    final task = await ref.putData(
+      imageBytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    
+    return await ref.getDownloadURL();
+  }
+
+  /// Delete a file from Storage
+  Future<void> deleteFile(String downloadUrl) async {
     try {
-      final ref = _storage.refFromURL(fileUrl);
+      final ref = _storage.refFromURL(downloadUrl);
       await ref.delete();
     } catch (e) {
-      throw Exception('Failed to delete file: $e');
+      // File may not exist or user may not have permission
+      if (kDebugMode) {
+        print('Error deleting file: $e');
+      }
     }
   }
 }

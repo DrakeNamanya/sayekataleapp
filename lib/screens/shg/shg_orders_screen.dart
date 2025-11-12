@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../services/message_service.dart';
 import '../../models/order.dart' as app_order;
+import '../../utils/string_helpers.dart';
 import '../common/chat_screen.dart';
 
 class SHGOrdersScreen extends StatefulWidget {
@@ -337,7 +338,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Order #${order.id.substring(0, 8).toUpperCase()}',
+                          'Order #${getOrderIdDisplay(order.id)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -582,7 +583,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 const SizedBox(height: 12),
                 
                 // Order ID
-                _buildDetailRow('Order ID', '#${order.id.substring(0, 12).toUpperCase()}'),
+                _buildDetailRow('Order ID', '#${getOrderIdFullDisplay(order.id)}'),
                 _buildDetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
                 _buildDetailRow('Status', _formatStatus(order.status)),
                 

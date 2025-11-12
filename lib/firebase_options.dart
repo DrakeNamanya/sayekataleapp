@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '713040690605',
     projectId: 'sayekataleapp',
     authDomain: 'sayekataleapp.firebaseapp.com',
-    storageBucket: 'sayekataleapp.firebasestorage.app',
+    storageBucket: 'sayekataleapp.appspot.com',
   );
 
   // Android Configuration (from google-services.json)
@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     appId: '1:713040690605:android:060c649529abd85ccb7524',
     messagingSenderId: '713040690605',
     projectId: 'sayekataleapp',
-    storageBucket: 'sayekataleapp.firebasestorage.app',
+    storageBucket: 'sayekataleapp.appspot.com',
   );
 
   // iOS Configuration
@@ -74,7 +74,7 @@ class DefaultFirebaseOptions {
     appId: '1:713040690605:ios:REPLACE_WITH_IOS_APP_ID',
     messagingSenderId: '713040690605',
     projectId: 'sayekataleapp',
-    storageBucket: 'sayekataleapp.firebasestorage.app',
+    storageBucket: 'sayekataleapp.appspot.com',
     iosBundleId: 'com.datacollectors.sayekatale',
   );
 }
