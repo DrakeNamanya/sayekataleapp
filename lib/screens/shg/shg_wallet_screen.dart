@@ -426,17 +426,101 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
                       if (mounted) {
                         Navigator.pop(context);
                         
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              result['success']
-                                  ? result['message']
-                                  : result['error'],
+                        if (result['success']) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result['message']),
+                              backgroundColor: Colors.green,
                             ),
-                            backgroundColor:
-                                result['success'] ? Colors.green : Colors.red,
-                          ),
-                        );
+                          );
+                        } else {
+                          // Check if it's a CORS/network error
+                          final errorMsg = result['error'] ?? '';
+                          final isCorsError = errorMsg.contains('ClientException') || 
+                                             errorMsg.contains('failed to fetch') ||
+                                             errorMsg.contains('Network error');
+                          
+                          if (isCorsError) {
+                            // Show detailed CORS explanation
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Row(
+                                  children: [
+                                    Icon(Icons.info_outline, color: Colors.blue),
+                                    SizedBox(width: 8),
+                                    Text('Web Preview Limitation'),
+                                  ],
+                                ),
+                                content: const SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '🌐 PawaPay Integration Status',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'The web preview cannot directly connect to PawaPay API due to browser security restrictions (CORS policy).',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        '✅ Solutions:',
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        '1. Android APK (Recommended)',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '   Mobile apps work perfectly - no CORS restrictions.',
+                                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        '2. Backend Server',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '   Use Cloud Functions or backend API to proxy PawaPay calls.',
+                                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        '📱 To test PawaPay:',
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        '• Build Android APK and install on device\n• PawaPay will work fully in the mobile app',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Got it'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            // Show regular error
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(errorMsg),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          }
+                        }
                       }
                     },
               child: isLoading
