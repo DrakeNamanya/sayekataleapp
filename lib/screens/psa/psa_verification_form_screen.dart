@@ -1090,6 +1090,17 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
 
   Future<void> _captureGPSLocation() async {
     setState(() => _isCapturingGPS = true);
+    
+    // Show progress message to user
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🛰️ Searching for GPS signal... This may take up to 45 seconds.'),
+          backgroundColor: Colors.blue,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
 
     try {
       if (kDebugMode) {
@@ -1132,22 +1143,39 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         debugPrint('📡 Requesting current position...');
       }
 
-      // Try high accuracy first with longer timeout
+      // Try multiple accuracy levels with progressive fallback
       Position position;
       try {
+        // Try 1: High accuracy with 45 second timeout
+        if (kDebugMode) {
+          debugPrint('📡 Attempt 1: High accuracy GPS...');
+        }
         position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 30), // Longer timeout for better GPS lock
+          timeLimit: const Duration(seconds: 45),
         );
-      } catch (timeoutError) {
+      } catch (highAccuracyError) {
         if (kDebugMode) {
-          debugPrint('⚠️ High accuracy timeout, trying medium accuracy...');
+          debugPrint('⚠️ High accuracy failed: $highAccuracyError');
+          debugPrint('📡 Attempt 2: Medium accuracy GPS...');
         }
-        // Fallback to medium accuracy if high accuracy times out
-        position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 20),
-        );
+        try {
+          // Try 2: Medium accuracy with 30 second timeout
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+            timeLimit: const Duration(seconds: 30),
+          );
+        } catch (mediumAccuracyError) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Medium accuracy failed: $mediumAccuracyError');
+            debugPrint('📡 Attempt 3: Low accuracy GPS (last resort)...');
+          }
+          // Try 3: Low accuracy with 20 second timeout (last resort)
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low,
+            timeLimit: const Duration(seconds: 20),
+          );
+        }
       }
 
       if (kDebugMode) {
