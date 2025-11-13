@@ -615,13 +615,25 @@ class _CartItemCardState extends State<_CartItemCard> {
                                         onSubmitted: (_) => _updateQuantityFromTextField(),
                                         onTapOutside: (_) => _updateQuantityFromTextField(),
                                       )
-                                    : Text(
-                                        '${widget.cartItem.quantity}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '${widget.cartItem.quantity}',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Icon(
+                                            Icons.edit_outlined,
+                                            size: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ],
                                       ),
                               ),
                             ),

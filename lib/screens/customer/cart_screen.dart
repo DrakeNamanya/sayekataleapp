@@ -134,11 +134,18 @@ class CartScreen extends StatelessWidget {
                                         iconSize: 24,
                                         color: AppTheme.primaryColor,
                                       ),
-                                      Text(
-                                        '${item.quantity}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          '${item.quantity}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       IconButton(

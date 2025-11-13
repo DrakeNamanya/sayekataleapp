@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'firebase_options.dart';
 import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
@@ -44,6 +45,14 @@ void main() async {
     
     // Initialize Hive for local storage
     await Hive.initFlutter();
+    
+    // Initialize Google Mobile Ads SDK (only on mobile platforms)
+    if (!kIsWeb) {
+      await MobileAds.instance.initialize();
+      if (kDebugMode) {
+        debugPrint('✅ Google Mobile Ads SDK initialized');
+      }
+    }
     
   } catch (e) {
     // Log error but continue to show app

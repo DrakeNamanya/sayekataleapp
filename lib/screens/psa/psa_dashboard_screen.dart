@@ -8,6 +8,7 @@ import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../models/product.dart';
+import '../../widgets/admob_banner_widget.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
@@ -1004,6 +1005,18 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            
+            // AdMob Banner
+            const SliverToBoxAdapter(
+              child: AdMobBannerWidget(
+                backgroundColor: Colors.white,
+              ),
+            ),
+            
+            // Bottom padding
+            const SliverPadding(
+              padding: EdgeInsets.only(bottom: 24),
             ),
           ],
         ),

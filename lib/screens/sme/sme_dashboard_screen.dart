@@ -8,6 +8,7 @@ import '../../services/message_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/features_guide_dialog.dart';
+import '../../widgets/admob_banner_widget.dart';
 import 'sme_browse_products_screen.dart';
 import 'sme_cart_screen.dart';
 import 'sme_orders_screen.dart';
@@ -725,6 +726,12 @@ class _DashboardHomeState extends State<_DashboardHome> {
                 ),
                 const SizedBox(height: 8),
                 _RecentOrdersList(),
+                const SizedBox(height: 24),
+                
+                // AdMob Banner
+                const AdMobBannerWidget(
+                  backgroundColor: Colors.white,
+                ),
                 const SizedBox(height: 24),
               ],
             ),
