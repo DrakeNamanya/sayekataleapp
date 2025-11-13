@@ -23,14 +23,17 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
 
-  // Test Ad Unit IDs for development
+  // Production Ad Unit IDs
+  // Ad Unit 1 (Banner Ad): Description - "Ad"
   String get _adUnitId {
     if (kIsWeb) {
-      return ''; // Web not supported
+      return ''; // Web not supported - AdMob only works on native mobile
     } else if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/6300978111'; // Android test ID
+      // Production Banner Ad Unit ID
+      return 'ca-app-pub-3940256099942544/6300978111';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716'; // iOS test ID
+      // iOS not configured per requirements (Android and web only)
+      return '';
     } else {
       return '';
     }
@@ -50,14 +53,30 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
       request: const AdRequest(),
       size: AdSize.banner,
       listener: BannerAdListener(
+        // Ad loaded successfully
         onAdLoaded: (ad) {
+          if (kDebugMode) {
+            debugPrint('✅ AdMob Banner loaded successfully');
+            debugPrint('   Ad Unit ID: $_adUnitId');
+            if (ad is BannerAd) {
+              debugPrint('   Ad size: ${ad.size.width}x${ad.size.height}');
+            }
+          }
           if (mounted) {
             setState(() {
               _isLoaded = true;
             });
           }
         },
+        
+        // Ad failed to load
         onAdFailedToLoad: (ad, error) {
+          if (kDebugMode) {
+            debugPrint('❌ AdMob Banner failed to load');
+            debugPrint('   Error code: ${error.code}');
+            debugPrint('   Error message: ${error.message}');
+            debugPrint('   Error domain: ${error.domain}');
+          }
           ad.dispose();
           if (mounted) {
             setState(() {
@@ -65,10 +84,44 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
             });
           }
         },
+        
+        // Ad opened (user clicked)
+        onAdOpened: (ad) {
+          if (kDebugMode) {
+            debugPrint('📱 AdMob Banner opened - User clicked ad');
+          }
+        },
+        
+        // Ad closed
+        onAdClosed: (ad) {
+          if (kDebugMode) {
+            debugPrint('📱 AdMob Banner closed - User returned to app');
+          }
+        },
+        
+        // Ad impression logged
+        onAdImpression: (ad) {
+          if (kDebugMode) {
+            debugPrint('👁️ AdMob Banner impression recorded');
+          }
+        },
+        
+        // Ad clicked
+        onAdClicked: (ad) {
+          if (kDebugMode) {
+            debugPrint('🖱️ AdMob Banner clicked');
+          }
+        },
       ),
     );
 
+    // Load the ad
     _bannerAd?.load();
+    
+    if (kDebugMode) {
+      debugPrint('🔄 Loading AdMob Banner...');
+      debugPrint('   Ad Unit ID: $_adUnitId');
+    }
   }
 
   @override

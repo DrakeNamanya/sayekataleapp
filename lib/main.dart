@@ -46,11 +46,21 @@ void main() async {
     // Initialize Hive for local storage
     await Hive.initFlutter();
     
-    // Initialize Google Mobile Ads SDK (only on mobile platforms)
+    // Initialize Google Mobile Ads SDK (Android platform only)
+    // Web platform: AdMob not supported, gracefully skipped
     if (!kIsWeb) {
-      await MobileAds.instance.initialize();
       if (kDebugMode) {
-        debugPrint('✅ Google Mobile Ads SDK initialized');
+        debugPrint('🔄 Initializing Google Mobile Ads SDK...');
+      }
+      
+      await MobileAds.instance.initialize();
+      
+      if (kDebugMode) {
+        debugPrint('✅ Google Mobile Ads SDK initialized for Android');
+      }
+    } else {
+      if (kDebugMode) {
+        debugPrint('ℹ️ Skipping AdMob initialization on Web platform (not supported)');
       }
     }
     
