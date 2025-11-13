@@ -20,20 +20,38 @@ import 'providers/cart_provider.dart';
 import 'services/firebase_test.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // Test Firebase connection (only in debug mode)
-  if (kDebugMode) {
-    await FirebaseTest.runAllTests();
+  // Wrap initialization in try-catch to prevent white screen
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Initialize Firebase with timeout protection
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        if (kDebugMode) {
+          debugPrint('⚠️ Firebase initialization timeout - continuing anyway');
+        }
+        throw Exception('Firebase initialization timeout');
+      },
+    );
+    
+    // Test Firebase connection (only in debug mode)
+    if (kDebugMode) {
+      await FirebaseTest.runAllTests();
+    }
+    
+    // Initialize Hive for local storage
+    await Hive.initFlutter();
+    
+  } catch (e) {
+    // Log error but continue to show app
+    if (kDebugMode) {
+      debugPrint('❌ Initialization error: $e');
+    }
+    // Don't block app startup - Firebase might still work
   }
-  
-  // Initialize Hive for local storage
-  await Hive.initFlutter();
   
   runApp(const MyApp());
 }
