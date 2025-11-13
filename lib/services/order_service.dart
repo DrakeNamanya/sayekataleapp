@@ -376,6 +376,15 @@ class OrderService {
   /// Farmer accepts/confirms order
   Future<void> confirmOrder(String orderId) async {
     try {
+      // Validate orderId is not empty or invalid
+      if (orderId.isEmpty || orderId == 'orders' || orderId.contains('/')) {
+        throw Exception('Invalid order ID: "$orderId". Order ID must be a valid document ID.');
+      }
+      
+      if (kDebugMode) {
+        debugPrint('🔍 Confirming order with ID: "$orderId"');
+      }
+      
       // ✅ STEP 1: Get order details to reduce stock
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
       if (!orderDoc.exists) {

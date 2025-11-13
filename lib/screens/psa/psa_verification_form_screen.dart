@@ -1132,10 +1132,23 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         debugPrint('📡 Requesting current position...');
       }
 
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 15), // Increased timeout for web
-      );
+      // Try high accuracy first with longer timeout
+      Position position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 30), // Longer timeout for better GPS lock
+        );
+      } catch (timeoutError) {
+        if (kDebugMode) {
+          debugPrint('⚠️ High accuracy timeout, trying medium accuracy...');
+        }
+        // Fallback to medium accuracy if high accuracy times out
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 20),
+        );
+      }
 
       if (kDebugMode) {
         debugPrint('✅ Position captured: ${position.latitude}, ${position.longitude}');

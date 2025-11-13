@@ -608,42 +608,65 @@ class _QuantityControlState extends State<_QuantityControl> {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
-        // Editable quantity input
-        InkWell(
-          onTap: () {
-            setState(() {
-              _isEditing = true;
-            });
-          },
-          child: Container(
-            width: 60,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _isEditing
-                ? TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    autofocus: true,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+        // Editable quantity input (tap to type large quantities)
+        Tooltip(
+          message: 'Tap to type quantity',
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _isEditing = true;
+              });
+            },
+            child: Container(
+              width: 70,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _isEditing ? Colors.blue : Colors.grey.shade300,
+                  width: _isEditing ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                color: _isEditing ? Colors.blue.shade50 : Colors.grey.shade50,
+              ),
+              child: _isEditing
+                  ? TextField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      autofocus: true,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                        hintText: '0',
+                      ),
+                      onSubmitted: (_) => _updateQuantityFromTextField(),
+                      onTapOutside: (_) => _updateQuantityFromTextField(),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${widget.item.quantity}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ],
                     ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isDense: true,
-                    ),
-                    onSubmitted: (_) => _updateQuantityFromTextField(),
-                    onTapOutside: (_) => _updateQuantityFromTextField(),
-                  )
-                : Text(
-                    '${widget.item.quantity}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            ),
           ),
         ),
         // Increase quantity

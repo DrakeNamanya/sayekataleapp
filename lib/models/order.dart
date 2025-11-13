@@ -115,7 +115,8 @@ class Order {
   // Convert to Firestore format
   Map<String, dynamic> toFirestore() {
     return {
-      'id': id,
+      // Don't store 'id' in document - use Firestore document ID instead
+      // This prevents bugs where stored 'id' conflicts with actual docId
       'type': type.toString().split('.').last,
       // CRITICAL: Save in BOTH camelCase and snake_case for compatibility
       'buyerId': buyerId,
@@ -213,7 +214,9 @@ class Order {
     }
     
     return Order(
-      id: data['id'] ?? docId,
+      // Always use Firestore document ID, ignore any stored 'id' field
+      // This prevents bugs where corrupt 'id' data causes issues
+      id: docId, 
       type: orderType,
       // Read from both camelCase and snake_case
       buyerId: data['buyerId'] ?? data['buyer_id'] ?? '',
