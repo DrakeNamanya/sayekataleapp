@@ -404,6 +404,38 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             letterSpacing: 1,
                           ),
                         ),
+                        const SizedBox(height: 40),
+                        // Continue Button
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacementNamed('/onboarding');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 8,
+                            shadowColor: AppTheme.primary.withValues(alpha: 0.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward, size: 20),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),

@@ -156,7 +156,7 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                                   const SizedBox(height: 8),
                                   IconButton(
                                     onPressed: () {
-                                      cartProvider.removeItem(item.productId);
+                                      cartProvider.removeItem(item.id);  // ✅ Use cart item ID, not product ID
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text('Item removed from cart'),
@@ -575,13 +575,16 @@ class _QuantityControlState extends State<_QuantityControl> {
   void _updateQuantityFromTextField() {
     final newQuantity = int.tryParse(_quantityController.text);
     if (newQuantity != null && newQuantity > 0 && newQuantity <= 9999) {
-      widget.cartProvider.updateQuantity(widget.item.productId, newQuantity);
+      widget.cartProvider.updateQuantity(widget.item.id, newQuantity);  // ✅ Use cart item ID
       setState(() {
         _isEditing = false;
       });
     } else {
       // Reset to current quantity if invalid
-      _quantityController.text = widget.item.quantity.toString();
+      setState(() {
+        _quantityController.text = widget.item.quantity.toString();
+        _isEditing = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid quantity (1-9999)'),
@@ -600,7 +603,7 @@ class _QuantityControlState extends State<_QuantityControl> {
         IconButton(
           onPressed: widget.item.quantity > 1
               ? () {
-                  widget.cartProvider.updateQuantity(widget.item.productId, widget.item.quantity - 1);
+                  widget.cartProvider.updateQuantity(widget.item.id, widget.item.quantity - 1);  // ✅ Use cart item ID
                 }
               : null,
           icon: const Icon(Icons.remove_circle_outline),
@@ -644,8 +647,15 @@ class _QuantityControlState extends State<_QuantityControl> {
                         isDense: true,
                         hintText: '0',
                       ),
-                      onSubmitted: (_) => _updateQuantityFromTextField(),
-                      onTapOutside: (_) => _updateQuantityFromTextField(),
+                      onSubmitted: (_) {
+                        _updateQuantityFromTextField();
+                      },
+                      onEditingComplete: () {
+                        _updateQuantityFromTextField();
+                      },
+                      onTapOutside: (_) {
+                        _updateQuantityFromTextField();
+                      },
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -672,7 +682,7 @@ class _QuantityControlState extends State<_QuantityControl> {
         // Increase quantity
         IconButton(
           onPressed: () {
-            widget.cartProvider.updateQuantity(widget.item.productId, widget.item.quantity + 1);
+            widget.cartProvider.updateQuantity(widget.item.id, widget.item.quantity + 1);  // ✅ Use cart item ID
           },
           icon: const Icon(Icons.add_circle_outline),
           iconSize: 24,

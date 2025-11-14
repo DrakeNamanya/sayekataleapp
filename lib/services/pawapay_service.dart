@@ -6,9 +6,10 @@ import 'package:uuid/uuid.dart';
 /// PawaPay Mobile Money Payment Service
 /// Handles deposits, payouts, and refunds via PawaPay API
 class PawaPayService {
-  // PawaPay API Configuration
-  static const String _sandboxBaseUrl = 'https://api.sandbox.pawapay.cloud';
-  static const String _productionBaseUrl = 'https://api.pawapay.cloud';
+  // PawaPay API Configuration (Updated from official docs)
+  // Reference: https://docs.pawapay.io/v2/docs/how_to_start
+  static const String _sandboxBaseUrl = 'https://api.sandbox.pawapay.io';
+  static const String _productionBaseUrl = 'https://api.pawapay.io';
   
   // Get API base URL based on environment
   String get _baseUrl => kDebugMode ? _sandboxBaseUrl : _productionBaseUrl;
@@ -34,6 +35,8 @@ class PawaPayService {
     required String correspondentId, // e.g., 'MTN_MOMO_UGA' for MTN Uganda
     required String description,
     String? customerName,
+    String? userId, // Added for webhook identification
+    Map<String, dynamic>? metadata, // Additional metadata
   }) async {
     try {
       final depositId = _uuid.v4();
@@ -57,6 +60,18 @@ class PawaPayService {
         (requestBody['payer'] as Map<String, dynamic>)['displayName'] = customerName;
       }
       
+      // Add metadata for webhook identification
+      if (userId != null || metadata != null) {
+        final meta = metadata ?? {};
+        if (userId != null) {
+          meta['userId'] = userId;
+        }
+        if (customerName != null) {
+          meta['userName'] = customerName;
+        }
+        requestBody['metadata'] = meta;
+      }
+      
       if (kDebugMode) {
         debugPrint('🔵 PawaPay Deposit Request: $depositId');
         debugPrint('   Amount: $currency $amount');
@@ -65,7 +80,7 @@ class PawaPayService {
       }
       
       final response = await http.post(
-        Uri.parse('$_baseUrl/deposits'),
+        Uri.parse('$_baseUrl/v2/deposits'),  // Updated to v2 API
         headers: {
           'Authorization': 'Bearer $_apiToken',
           'Content-Type': 'application/json',
@@ -155,7 +170,7 @@ class PawaPayService {
       }
       
       final response = await http.post(
-        Uri.parse('$_baseUrl/payouts'),
+        Uri.parse('$_baseUrl/v2/payouts'),  // Updated to v2 API
         headers: {
           'Authorization': 'Bearer $_apiToken',
           'Content-Type': 'application/json',
@@ -209,7 +224,7 @@ class PawaPayService {
   Future<Map<String, dynamic>> checkDepositStatus(String depositId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/deposits/$depositId'),
+        Uri.parse('$_baseUrl/v2/deposits/$depositId'),  // Updated to v2 API
         headers: {
           'Authorization': 'Bearer $_apiToken',
         },
@@ -243,7 +258,7 @@ class PawaPayService {
   Future<Map<String, dynamic>> checkPayoutStatus(String payoutId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/payouts/$payoutId'),
+        Uri.parse('$_baseUrl/v2/payouts/$payoutId'),  // Updated to v2 API
         headers: {
           'Authorization': 'Bearer $_apiToken',
         },
@@ -298,7 +313,7 @@ class PawaPayService {
       }
       
       final response = await http.post(
-        Uri.parse('$_baseUrl/refunds'),
+        Uri.parse('$_baseUrl/v2/refunds'),  // Updated to v2 API
         headers: {
           'Authorization': 'Bearer $_apiToken',
           'Content-Type': 'application/json',

@@ -60,8 +60,25 @@ class DeliveryTracking {
   /// Check if delivery is completed
   bool get isCompleted => status == DeliveryStatus.completed;
 
-  /// Get progress percentage (0-100)
+  /// Get progress percentage (0-100) - Shows remaining distance
+  /// 100% = at origin, 0% = at destination
   double get progressPercentage {
+    if (currentLocation == null || status != DeliveryStatus.inProgress) {
+      return 100.0; // Start at 100% (full distance remaining)
+    }
+
+    final totalDistance = originLocation.distanceTo(destinationLocation);
+    if (totalDistance == 0) return 0.0; // Already at destination
+
+    final remainingDistance = currentLocation!.distanceTo(destinationLocation);
+    
+    // Return remaining distance as percentage (100% → 0%)
+    return (remainingDistance / totalDistance * 100).clamp(0.0, 100.0);
+  }
+
+  /// Get traveled distance percentage (0-100) - Shows completed journey
+  /// 0% = at origin, 100% = at destination
+  double get traveledPercentage {
     if (currentLocation == null || status != DeliveryStatus.inProgress) {
       return 0.0;
     }
@@ -73,6 +90,14 @@ class DeliveryTracking {
     final traveledDistance = totalDistance - remainingDistance;
     
     return (traveledDistance / totalDistance * 100).clamp(0.0, 100.0);
+  }
+
+  /// Get remaining distance in kilometers
+  double? get remainingDistanceKm {
+    if (currentLocation == null || status != DeliveryStatus.inProgress) {
+      return estimatedDistance;
+    }
+    return currentLocation!.distanceTo(destinationLocation);
   }
 
   /// Get estimated time of arrival

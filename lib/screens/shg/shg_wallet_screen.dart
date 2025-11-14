@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/wallet_service.dart';
 import '../../services/pawapay_service.dart';
+import '../../config/pawapay_config.dart';
 import '../../models/wallet.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/uganda_phone_validator.dart';
 
 class SHGWalletScreen extends StatefulWidget {
   const SHGWalletScreen({super.key});
@@ -20,9 +22,9 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay with API token
+    // Initialize PawaPay with API token from config
     final pawaPayService = PawaPayService(
-      apiToken: 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4NTA5MjM2LCJpYXQiOjE3NjI5NzY0MzYsInBtIjoiREFGLFBBRiIsImp0aSI6ImE0NjQyZjUyLWYwODYtNGJjNy1hMGY3LTQ2MmJiNDgyYzM1MSJ9.zyFdgBTQ-dj_NiR15ChPjLM6kYjH3ZB4J9G8ye4TKiOjPgdXsJ53U08-WspwZ8JtjXua8FGuIf4VhQVcmVRjHQ'
+      apiToken: PawaPayConfig.apiToken,
     );
     _walletService = WalletService(pawaPayService: pawaPayService);
   }
@@ -319,8 +321,11 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
   // ============================================================================
 
   void _showDepositDialog(String userId, String userName, String userPhone) {
+    final phoneController = TextEditingController();
     final amountController = TextEditingController();
-    String selectedProvider = 'MTN_MOMO_UGA';
+    String? selectedProvider;
+    String? detectedOperator;
+    String? phoneError;
     bool isLoading = false;
 
     showDialog(
@@ -333,58 +338,125 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Step 1: Phone Number Input
                 const Text(
-                  'Enter amount to deposit',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  'Step 1: Enter your mobile money number',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',
+                    hintText: '0712 345 678',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.phone),
+                    errorText: phoneError,
+                  ),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      // Validate phone number
+                      phoneError = UgandaPhoneValidator.validate(value);
+                      
+                      if (phoneError == null) {
+                        // Detect operator
+                        detectedOperator = UgandaPhoneValidator.getOperatorName(value);
+                        
+                        // Auto-select provider based on operator
+                        if (detectedOperator?.contains('MTN') ?? false) {
+                          selectedProvider = 'MTN_MOMO_UGA';
+                        } else if (detectedOperator?.contains('Airtel') ?? false) {
+                          selectedProvider = 'AIRTEL_OAPI_UGA';
+                        } else {
+                          selectedProvider = null;
+                          phoneError = 'Only MTN and Airtel are supported for mobile money';
+                        }
+                      } else {
+                        detectedOperator = null;
+                        selectedProvider = null;
+                      }
+                    });
+                  },
+                ),
+                if (detectedOperator != null && phoneError == null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '✓ Detected: $detectedOperator',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.green.shade900,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                
+                // Step 2: Amount Input
+                const Text(
+                  'Step 2: Enter amount to deposit',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
                 TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Amount (UGX)',
+                    hintText: '10,000',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.money),
                   ),
+                  enabled: phoneError == null && detectedOperator != null,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Select payment method',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: selectedProvider,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'MTN_MOMO_UGA',
-                      child: Text('MTN Mobile Money'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'AIRTEL_OAPI_UGA',
-                      child: Text('Airtel Money'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedProvider = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
+                
+                // Info box
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    'You will receive a prompt on your phone to authorize the payment.',
-                    style: TextStyle(fontSize: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'How it works:',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '1. Enter your MTN or Airtel number\n'
+                        '2. Enter the amount to deposit\n'
+                        '3. Click "Initiate Deposit"\n'
+                        '4. You will receive a prompt on your phone\n'
+                        '5. Enter your PIN to complete the payment',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -396,13 +468,20 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: isLoading
+              onPressed: (isLoading || phoneError != null || detectedOperator == null || selectedProvider == null)
                   ? null
                   : () async {
-                      final amount = double.tryParse(amountController.text);
+                      final amount = double.tryParse(amountController.text.replaceAll(',', ''));
                       if (amount == null || amount <= 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please enter a valid amount')),
+                        );
+                        return;
+                      }
+
+                      if (amount < 1000) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Minimum deposit amount is UGX 1,000')),
                         );
                         return;
                       }
@@ -414,8 +493,8 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
                       final result = await _walletService.initiateDeposit(
                         userId: userId,
                         amount: amount,
-                        phoneNumber: userPhone,
-                        provider: selectedProvider,
+                        phoneNumber: phoneController.text,
+                        provider: selectedProvider!,
                         userName: userName,
                       );
 
@@ -429,8 +508,13 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
                         if (result['success']) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(result['message']),
+                              content: Text(
+                                '✅ Deposit initiated!\n'
+                                'Check your phone (${phoneController.text}) for payment prompt.\n'
+                                'Enter your PIN to complete the deposit.',
+                              ),
                               backgroundColor: Colors.green,
+                              duration: const Duration(seconds: 6),
                             ),
                           );
                         } else {
@@ -527,9 +611,9 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Deposit'),
+                  : const Text('Initiate Deposit'),
             ),
           ],
         ),

@@ -127,15 +127,35 @@ class SMEContact {
 
   /// Create from Firestore user document
   factory SMEContact.fromFirestore(Map<String, dynamic> data, String id) {
+    // Extract district from nested location object or fallback to direct field
+    String districtValue = '';
+    if (data['location'] != null && data['location'] is Map) {
+      districtValue = (data['location'] as Map)['district'] ?? '';
+    } else {
+      districtValue = data['district'] ?? '';
+    }
+
+    // Extract subcounty and village from location object
+    String? subCountyValue;
+    String? villageValue;
+    if (data['location'] != null && data['location'] is Map) {
+      subCountyValue = (data['location'] as Map)['subcounty'];
+      villageValue = (data['location'] as Map)['village'];
+    } else {
+      subCountyValue = data['sub_county'];
+      villageValue = data['village'];
+    }
+
     return SMEContact(
       id: id,
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
       email: data['email'] ?? '',
-      district: data['district'] ?? '',
-      subCounty: data['sub_county'],
-      village: data['village'],
-      products: List<String>.from(data['interested_products'] ?? []),
+      district: districtValue,
+      subCounty: subCountyValue,
+      village: villageValue,
+      // Products will be populated separately from order history
+      products: [], 
       registeredAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isVerified: data['is_verified'] ?? false,
       profileImage: data['profile_image'],

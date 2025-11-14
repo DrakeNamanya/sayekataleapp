@@ -1,139 +1,138 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Receipt model for documenting completed transactions
+/// Receipt Model for Order Deliveries
+/// Generated when SME/SHG confirms receipt of delivered products
 class Receipt {
-  final String id;
-  final String transactionId;
-  final String orderId;
-  final ReceiptType type;
-  final String buyerId;
+  final String id; // Receipt ID (e.g., "RCP-00001")
+  final String orderId; // Associated order ID
+  final String buyerId; // SME/SHG buyer ID
   final String buyerName;
-  final String buyerPhone;
-  final String sellerId;
+  final String sellerId; // SHG/PSA seller ID
   final String sellerName;
-  final String sellerPhone;
-  final double amount;
-  final double serviceFee;
-  final double buyerPaid;
-  final double sellerReceived;
-  final String paymentMethod;
-  final String? paymentReference;
-  final String? disbursementReference;
-  final DateTime transactionDate;
-  final DateTime receiptGeneratedAt;
-  final String pdfUrl;
-  final String? messageSentTo;
-  final DateTime? messageSentAt;
-  final Map<String, dynamic> metadata;
+  final List<ReceiptItem> items; // Products received
+  final double totalAmount; // Total amount paid
+  final String paymentMethod; // How payment was made
+  final DateTime confirmedAt; // When buyer confirmed receipt
+  final DateTime createdAt; // Receipt generation time
+  final String? notes; // Additional notes from buyer
+  final String? deliveryPhoto; // Photo of delivered products
+  final int? rating; // Buyer's rating (1-5 stars)
+  final String? feedback; // Buyer's feedback/comment
 
   Receipt({
     required this.id,
-    required this.transactionId,
     required this.orderId,
-    required this.type,
     required this.buyerId,
     required this.buyerName,
-    required this.buyerPhone,
     required this.sellerId,
     required this.sellerName,
-    required this.sellerPhone,
-    required this.amount,
-    required this.serviceFee,
-    required this.buyerPaid,
-    required this.sellerReceived,
+    required this.items,
+    required this.totalAmount,
     required this.paymentMethod,
-    this.paymentReference,
-    this.disbursementReference,
-    required this.transactionDate,
-    required this.receiptGeneratedAt,
-    required this.pdfUrl,
-    this.messageSentTo,
-    this.messageSentAt,
-    this.metadata = const {},
+    required this.confirmedAt,
+    required this.createdAt,
+    this.notes,
+    this.deliveryPhoto,
+    this.rating,
+    this.feedback,
   });
 
-  // Convert to Firestore format
+  factory Receipt.fromFirestore(Map<String, dynamic> data, String id) {
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return null;
+    }
+
+    return Receipt(
+      id: data['id'] ?? id,
+      orderId: data['order_id'] ?? '',
+      buyerId: data['buyer_id'] ?? '',
+      buyerName: data['buyer_name'] ?? '',
+      sellerId: data['seller_id'] ?? '',
+      sellerName: data['seller_name'] ?? '',
+      items: (data['items'] as List<dynamic>?)
+              ?.map((item) => ReceiptItem.fromMap(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      totalAmount: (data['total_amount'] ?? 0).toDouble(),
+      paymentMethod: data['payment_method'] ?? '',
+      confirmedAt: parseDateTime(data['confirmed_at']) ?? DateTime.now(),
+      createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
+      notes: data['notes'],
+      deliveryPhoto: data['delivery_photo'],
+      rating: data['rating'],
+      feedback: data['feedback'],
+    );
+  }
+
   Map<String, dynamic> toFirestore() {
     return {
       'id': id,
-      'transactionId': transactionId,
-      'orderId': orderId,
-      'type': type.toString().split('.').last,
-      'buyerId': buyerId,
-      'buyerName': buyerName,
-      'buyerPhone': buyerPhone,
-      'sellerId': sellerId,
-      'sellerName': sellerName,
-      'sellerPhone': sellerPhone,
-      'amount': amount,
-      'serviceFee': serviceFee,
-      'buyerPaid': buyerPaid,
-      'sellerReceived': sellerReceived,
-      'paymentMethod': paymentMethod,
-      'paymentReference': paymentReference,
-      'disbursementReference': disbursementReference,
-      'transactionDate': Timestamp.fromDate(transactionDate),
-      'receiptGeneratedAt': Timestamp.fromDate(receiptGeneratedAt),
-      'pdfUrl': pdfUrl,
-      'messageSentTo': messageSentTo,
-      'messageSentAt': messageSentAt != null ? Timestamp.fromDate(messageSentAt!) : null,
-      'metadata': metadata,
+      'order_id': orderId,
+      'buyer_id': buyerId,
+      'buyer_name': buyerName,
+      'seller_id': sellerId,
+      'seller_name': sellerName,
+      'items': items.map((item) => item.toMap()).toList(),
+      'total_amount': totalAmount,
+      'payment_method': paymentMethod,
+      'confirmed_at': Timestamp.fromDate(confirmedAt),
+      'created_at': Timestamp.fromDate(createdAt),
+      'notes': notes,
+      'delivery_photo': deliveryPhoto,
+      'rating': rating,
+      'feedback': feedback,
     };
   }
 
-  // Create from Firestore document
-  factory Receipt.fromFirestore(Map<String, dynamic> data, String docId) {
-    return Receipt(
-      id: data['id'] ?? docId,
-      transactionId: data['transactionId'] ?? '',
-      orderId: data['orderId'] ?? '',
-      type: ReceiptType.values.firstWhere(
-        (e) => e.toString().split('.').last == data['type'],
-        orElse: () => ReceiptType.productPurchase,
-      ),
-      buyerId: data['buyerId'] ?? '',
-      buyerName: data['buyerName'] ?? '',
-      buyerPhone: data['buyerPhone'] ?? '',
-      sellerId: data['sellerId'] ?? '',
-      sellerName: data['sellerName'] ?? '',
-      sellerPhone: data['sellerPhone'] ?? '',
-      amount: (data['amount'] ?? 0).toDouble(),
-      serviceFee: (data['serviceFee'] ?? 0).toDouble(),
-      buyerPaid: (data['buyerPaid'] ?? 0).toDouble(),
-      sellerReceived: (data['sellerReceived'] ?? 0).toDouble(),
-      paymentMethod: data['paymentMethod'] ?? '',
-      paymentReference: data['paymentReference'],
-      disbursementReference: data['disbursementReference'],
-      transactionDate: (data['transactionDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      receiptGeneratedAt: (data['receiptGeneratedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      pdfUrl: data['pdfUrl'] ?? '',
-      messageSentTo: data['messageSentTo'],
-      messageSentAt: (data['messageSentAt'] as Timestamp?)?.toDate(),
-      metadata: data['metadata'] ?? {},
-    );
+  /// Generate receipt number from count
+  static String generateReceiptId(int count) {
+    return 'RCP-${(count + 1).toString().padLeft(5, '0')}';
   }
 }
 
-/// Type of receipt
-enum ReceiptType {
-  productPurchase,        // Regular product purchase
-  inputPurchase,          // Input purchase with service fee
-  subscription,           // Subscription payment
-  refund,                 // Refund receipt
-}
+/// Receipt Item - Product received in delivery
+class ReceiptItem {
+  final String productId;
+  final String productName;
+  final int quantity;
+  final String unit;
+  final double pricePerUnit;
+  final double totalPrice;
 
-/// Extension methods for ReceiptType
-extension ReceiptTypeExtension on ReceiptType {
-  String get displayName {
-    switch (this) {
-      case ReceiptType.productPurchase:
-        return 'Product Purchase';
-      case ReceiptType.inputPurchase:
-        return 'Input Purchase';
-      case ReceiptType.subscription:
-        return 'Subscription Payment';
-      case ReceiptType.refund:
-        return 'Refund';
-    }
+  ReceiptItem({
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+    required this.unit,
+    required this.pricePerUnit,
+    required this.totalPrice,
+  });
+
+  factory ReceiptItem.fromMap(Map<String, dynamic> data) {
+    return ReceiptItem(
+      productId: data['product_id'] ?? '',
+      productName: data['product_name'] ?? '',
+      quantity: data['quantity'] ?? 0,
+      unit: data['unit'] ?? 'kg',
+      pricePerUnit: (data['price_per_unit'] ?? 0).toDouble(),
+      totalPrice: (data['total_price'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'product_id': productId,
+      'product_name': productName,
+      'quantity': quantity,
+      'unit': unit,
+      'price_per_unit': pricePerUnit,
+      'total_price': totalPrice,
+    };
   }
 }

@@ -504,7 +504,10 @@ class _CartItemCardState extends State<_CartItemCard> {
       });
     } else {
       // Reset to current quantity if invalid
-      _quantityController.text = widget.cartItem.quantity.toString();
+      setState(() {
+        _quantityController.text = widget.cartItem.quantity.toString();
+        _isEditing = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid quantity (1-9999)'),
@@ -612,8 +615,15 @@ class _CartItemCardState extends State<_CartItemCard> {
                                           contentPadding: EdgeInsets.zero,
                                           isDense: true,
                                         ),
-                                        onSubmitted: (_) => _updateQuantityFromTextField(),
-                                        onTapOutside: (_) => _updateQuantityFromTextField(),
+                                        onSubmitted: (_) {
+                                          _updateQuantityFromTextField();
+                                        },
+                                        onEditingComplete: () {
+                                          _updateQuantityFromTextField();
+                                        },
+                                        onTapOutside: (_) {
+                                          _updateQuantityFromTextField();
+                                        },
                                       )
                                     : Row(
                                         mainAxisSize: MainAxisSize.min,

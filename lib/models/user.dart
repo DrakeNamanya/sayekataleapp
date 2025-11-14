@@ -25,6 +25,13 @@ class AppUser {
   final PartnerInfo? partnerInfo; // Partner information for tracking user sources
   final DateTime createdAt;
   final DateTime updatedAt;
+  
+  // System Rating Fields (Auto-calculated based on performance)
+  final double systemRating; // 0-5 stars, automatically calculated
+  final int totalCompletedOrders; // Total successfully completed orders
+  final double averageCustomerRating; // 0-5, average from customer reviews
+  final double orderFulfillmentRate; // 0-100%, percentage of successful deliveries
+  final DateTime? lastRatingUpdate; // When rating was last calculated
 
   AppUser({
     required this.id,
@@ -51,6 +58,11 @@ class AppUser {
     this.partnerInfo,
     required this.createdAt,
     required this.updatedAt,
+    this.systemRating = 0.0,
+    this.totalCompletedOrders = 0,
+    this.averageCustomerRating = 0.0,
+    this.orderFulfillmentRate = 0.0,
+    this.lastRatingUpdate,
   });
   
   // Check if user can sell (profile must be complete)
@@ -127,6 +139,11 @@ class AppUser {
           : null,
       createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
       updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
+      systemRating: (data['system_rating'] as num?)?.toDouble() ?? 0.0,
+      totalCompletedOrders: (data['total_completed_orders'] as num?)?.toInt() ?? 0,
+      averageCustomerRating: (data['average_customer_rating'] as num?)?.toDouble() ?? 0.0,
+      orderFulfillmentRate: (data['order_fulfillment_rate'] as num?)?.toDouble() ?? 0.0,
+      lastRatingUpdate: parseDateTime(data['last_rating_update']),
     );
   }
 
@@ -156,6 +173,11 @@ class AppUser {
       'partner_info': partnerInfo?.toMap(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'system_rating': systemRating,
+      'total_completed_orders': totalCompletedOrders,
+      'average_customer_rating': averageCustomerRating,
+      'order_fulfillment_rate': orderFulfillmentRate,
+      'last_rating_update': lastRatingUpdate?.toIso8601String(),
     };
   }
   

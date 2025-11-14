@@ -397,23 +397,13 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                     }
 
                     // Load ratings for all farmers
-                    final farmerIds = productsWithFarmers
-                        .map((pwf) => pwf.product.farmId)
-                        .toSet()
+                    // Ratings display temporarily disabled
+                    var productsWithRatings = productsWithFarmers
+                        .map((pwf) => ProductWithRating(
+                              productWithFarmer: pwf,
+                              farmerRating: null, // Rating display disabled
+                            ))
                         .toList();
-
-                    return FutureBuilder<Map<String, FarmerRating>>(
-                      future: _ratingService.getFarmerRatings(farmerIds),
-                      builder: (context, ratingSnapshot) {
-                        final ratingsMap = ratingSnapshot.data ?? {};
-
-                        // Combine products with ratings
-                        var productsWithRatings = productsWithFarmers
-                            .map((pwf) => ProductWithRating(
-                                  productWithFarmer: pwf,
-                                  farmerRating: ratingsMap[pwf.product.farmId],
-                                ))
-                            .toList();
 
                         // Apply active filters
                         productsWithRatings = _applyFilters(productsWithRatings);
@@ -465,8 +455,6 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                                   ),
                           ],
                         );
-                      },
-                    );
                   },
                 );
               },

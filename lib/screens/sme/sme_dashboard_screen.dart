@@ -16,6 +16,7 @@ import 'sme_favorites_screen.dart';
 import 'sme_messages_screen.dart';
 import 'sme_profile_screen.dart';
 import 'sme_notifications_screen.dart';
+import '../common/receipts_list_screen.dart';
 
 class SMEDashboardScreen extends StatefulWidget {
   const SMEDashboardScreen({super.key});
@@ -610,6 +611,28 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _QuickActionCard(
+                              icon: Icons.receipt_long,
+                              label: 'My Receipts',
+                              color: Colors.indigo,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ReceiptsListScreen(isSellerView: false),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(child: SizedBox()), // Empty space for alignment
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -916,9 +939,10 @@ class _RecentOrdersList extends StatelessWidget {
         final recentOrders = snapshot.data ?? [];
 
         if (recentOrders.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Center(
+          return Container(
+            padding: const EdgeInsets.all(32.0),
+            color: Colors.white,
+            child: const Center(
               child: Column(
                 children: [
                   Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),

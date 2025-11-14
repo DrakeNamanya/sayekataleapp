@@ -190,22 +190,24 @@ class SubscriptionService {
   /// Get all SME contacts (for premium users)
   Future<List<SMEContact>> getAllSMEContacts() async {
     try {
-      // Remove orderBy to avoid requiring composite index
-      // We'll sort in memory instead
+      // Query uses 'role' field, not 'user_type'
       final querySnapshot = await _firestore
           .collection('users')
-          .where('user_type', isEqualTo: 'sme')
+          .where('role', isEqualTo: 'sme')
           .get();
 
       final contacts = querySnapshot.docs
           .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
 
+      // Fetch products for each SME from their order history
+      await _populateSMEProducts(contacts);
+
       // Sort by name in memory
       contacts.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
       if (kDebugMode) {
-        debugPrint('✅ Fetched ${contacts.length} SME contacts');
+        debugPrint('✅ Fetched ${contacts.length} SME contacts with products');
       }
 
       return contacts;
@@ -214,6 +216,60 @@ class SubscriptionService {
         debugPrint('❌ Error fetching SME contacts: $e');
       }
       throw Exception('Failed to fetch SME contacts: $e');
+    }
+  }
+
+  /// Populate products for SMEs from their order history
+  Future<void> _populateSMEProducts(List<SMEContact> contacts) async {
+    for (var contact in contacts) {
+      try {
+        // Get all orders placed by this SME
+        final ordersSnapshot = await _firestore
+            .collection('orders')
+            .where('buyer_id', isEqualTo: contact.id)
+            .get();
+
+        // Extract unique product names from order items
+        final Set<String> productSet = {};
+        for (var orderDoc in ordersSnapshot.docs) {
+          final orderData = orderDoc.data();
+          final items = orderData['items'] as List<dynamic>?;
+          if (items != null) {
+            for (var item in items) {
+              final productName = item['product_name'] ?? item['productName'];
+              if (productName != null && productName.toString().isNotEmpty) {
+                productSet.add(productName.toString());
+              }
+            }
+          }
+        }
+
+        // Update the contact's products list
+        // Using reflection-like approach via creating new instance
+        final index = contacts.indexOf(contact);
+        contacts[index] = SMEContact(
+          id: contact.id,
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
+          district: contact.district,
+          subCounty: contact.subCounty,
+          village: contact.village,
+          products: productSet.toList()..sort(),
+          registeredAt: contact.registeredAt,
+          isVerified: contact.isVerified,
+          profileImage: contact.profileImage,
+        );
+
+        if (kDebugMode) {
+          debugPrint('  • ${contact.name}: ${productSet.length} unique products');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Error fetching products for ${contact.name}: $e');
+        }
+        // Continue with empty products list if error occurs
+      }
     }
   }
 
@@ -227,7 +283,7 @@ class SubscriptionService {
     try {
       Query query = _firestore
           .collection('users')
-          .where('user_type', isEqualTo: 'sme');
+          .where('role', isEqualTo: 'sme');
 
       // Apply district filter
       if (district != null && district.isNotEmpty && district != 'All') {

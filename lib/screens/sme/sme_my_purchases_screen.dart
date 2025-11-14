@@ -7,16 +7,16 @@ import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../models/order.dart' as app_order;
 import '../../utils/app_theme.dart';
-import '../sme/order_review_screen.dart';
+import 'order_review_screen.dart';
 
-class SHGMyPurchasesScreen extends StatefulWidget {
-  const SHGMyPurchasesScreen({super.key});
+class SMEMyPurchasesScreen extends StatefulWidget {
+  const SMEMyPurchasesScreen({super.key});
 
   @override
-  State<SHGMyPurchasesScreen> createState() => _SHGMyPurchasesScreenState();
+  State<SMEMyPurchasesScreen> createState() => _SMEMyPurchasesScreenState();
 }
 
-class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with SingleTickerProviderStateMixin {
+class _SMEMyPurchasesScreenState extends State<SMEMyPurchasesScreen> with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   late TabController _tabController;
   bool _isProcessing = false;
@@ -36,7 +36,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final shgId = authProvider.currentUser!.id;
+    final smeId = authProvider.currentUser!.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,15 +55,15 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildOrdersList(shgId, [app_order.OrderStatus.pending]),
-          _buildOrdersList(shgId, [
+          _buildOrdersList(smeId, [app_order.OrderStatus.pending]),
+          _buildOrdersList(smeId, [
             app_order.OrderStatus.confirmed,
             app_order.OrderStatus.preparing,
             app_order.OrderStatus.ready,
             app_order.OrderStatus.inTransit,
             app_order.OrderStatus.delivered,
           ]),
-          _buildOrdersList(shgId, [
+          _buildOrdersList(smeId, [
             app_order.OrderStatus.completed,
             app_order.OrderStatus.rejected,
             app_order.OrderStatus.cancelled,
@@ -73,16 +73,16 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     );
   }
 
-  Widget _buildOrdersList(String shgId, List<app_order.OrderStatus> statusFilter) {
+  Widget _buildOrdersList(String smeId, List<app_order.OrderStatus> statusFilter) {
     return StreamBuilder<List<app_order.Order>>(
-      stream: _orderService.streamBuyerOrders(shgId),
+      stream: _orderService.streamBuyerOrders(smeId),
       builder: (context, snapshot) {
         // Debug logging
         if (kDebugMode) {
-          debugPrint('📊 SHG My Purchases - Connection: ${snapshot.connectionState}');
-          debugPrint('📊 SHG My Purchases - Has Error: ${snapshot.hasError}');
-          debugPrint('📊 SHG My Purchases - Data: ${snapshot.data?.length ?? 0} orders');
-          debugPrint('📊 SHG My Purchases - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
+          debugPrint('📊 SME My Purchases - Connection: ${snapshot.connectionState}');
+          debugPrint('📊 SME My Purchases - Has Error: ${snapshot.hasError}');
+          debugPrint('📊 SME My Purchases - Data: ${snapshot.data?.length ?? 0} orders');
+          debugPrint('📊 SME My Purchases - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -100,7 +100,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
 
         if (snapshot.hasError) {
           if (kDebugMode) {
-            debugPrint('❌ SHG My Purchases Error: ${snapshot.error}');
+            debugPrint('❌ SME My Purchases Error: ${snapshot.error}');
           }
           return Center(
             child: Column(
@@ -156,7 +156,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Your input purchases will appear here',
+                    'Your product purchases will appear here',
                     style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                     textAlign: TextAlign.center,
                   ),
@@ -253,7 +253,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               const Divider(),
               const SizedBox(height: 12),
 
-              // PSA Seller Info
+              // Seller Info (SHG or PSA)
               Row(
                 children: [
                   CircleAvatar(
@@ -266,7 +266,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'PSA Supplier',
+                          'Seller',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
@@ -436,17 +436,17 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
             Text('Confirm Receipt'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Have you received this order in good condition?'),
-            const SizedBox(height: 16),
-            const Text('By confirming:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('✅ Order will be marked as completed'),
-            const Text('✅ Product stock will be updated'),
-            const Text('✅ Receipt will be generated'),
+            Text('Have you received this order in good condition?'),
+            SizedBox(height: 16),
+            Text('By confirming:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('✅ Order will be marked as completed'),
+            Text('✅ Product stock will be updated'),
+            Text('✅ Receipt will be generated'),
           ],
         ),
         actions: [
@@ -574,7 +574,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     buffer.writeln('Status: ${_formatStatus(order.status)}');
     buffer.writeln('');
     buffer.writeln('───────────────────────────────────');
-    buffer.writeln('PSA SUPPLIER DETAILS');
+    buffer.writeln('SELLER DETAILS');
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('Name: ${order.farmerName}');
     if (order.farmerPhone?.isNotEmpty ?? false) {
@@ -582,7 +582,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     }
     buffer.writeln('');
     buffer.writeln('───────────────────────────────────');
-    buffer.writeln('BUYER DETAILS (SHG)');
+    buffer.writeln('BUYER DETAILS (SME)');
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('Name: ${order.buyerName}');
     buffer.writeln('Phone: ${order.buyerPhone}');
@@ -667,7 +667,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
 
                 const SizedBox(height: 16),
                 const Text(
-                  'PSA Supplier Information',
+                  'Seller Information',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),

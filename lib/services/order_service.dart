@@ -5,12 +5,16 @@ import '../models/cart_item.dart';
 import '../models/delivery_tracking.dart';
 import 'notification_service.dart';
 import 'delivery_tracking_service.dart';
+import 'receipt_service.dart';
+import 'rating_service.dart';
 
 /// Service for managing orders in Firestore
 class OrderService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final NotificationService _notificationService = NotificationService();
   final DeliveryTrackingService _trackingService = DeliveryTrackingService();
+  final ReceiptService _receiptService = ReceiptService();
+  final RatingService _ratingService = RatingService();
 
   /// Generate human-readable order number
   String _generateOrderNumber() {
@@ -295,14 +299,33 @@ class OrderService {
   /// Get orders for a farmer
   Future<List<app_order.Order>> getFarmerOrders(String farmerId) async {
     try {
-      final querySnapshot = await _firestore
+      // Query by farmer_id (for SHG farmers)
+      final farmerQuery = await _firestore
           .collection('orders')
           .where('farmer_id', isEqualTo: farmerId)
           .get();
 
-      final orders = querySnapshot.docs
-          .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
-          .toList();
+      // Query by seller_id (for PSA suppliers)
+      final sellerQuery = await _firestore
+          .collection('orders')
+          .where('seller_id', isEqualTo: farmerId)
+          .get();
+
+      // Merge results and remove duplicates
+      final Map<String, app_order.Order> ordersMap = {};
+      
+      for (var doc in farmerQuery.docs) {
+        ordersMap[doc.id] = app_order.Order.fromFirestore(doc.data(), doc.id);
+      }
+      
+      for (var doc in sellerQuery.docs) {
+        // Only add if not already in map (avoid duplicates)
+        if (!ordersMap.containsKey(doc.id)) {
+          ordersMap[doc.id] = app_order.Order.fromFirestore(doc.data(), doc.id);
+        }
+      }
+
+      final orders = ordersMap.values.toList();
 
       // Sort by created date (newest first)
       orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -892,7 +915,14 @@ class OrderService {
 
   /// Buyer confirms receipt of order
   /// This marks the order as truly completed and triggers stock reduction
-  Future<void> confirmReceipt(String orderId) async {
+  /// Also generates a receipt for the transaction
+  Future<void> confirmReceipt(
+    String orderId, {
+    String? notes,
+    String? deliveryPhoto,
+    int? rating,
+    String? feedback,
+  }) async {
     try {
       if (kDebugMode) {
         debugPrint('✅ Buyer confirming receipt of order: $orderId');
@@ -942,6 +972,41 @@ class OrderService {
         }
       }
 
+      // 🧾 Generate receipt for this confirmed delivery
+      try {
+        final receipt = await _receiptService.generateReceipt(
+          order: order,
+          notes: notes,
+          deliveryPhoto: deliveryPhoto,
+          rating: rating,
+          feedback: feedback,
+        );
+        
+        if (kDebugMode) {
+          debugPrint('🧾 Receipt generated: ${receipt.id}');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Error generating receipt: $e');
+        }
+        // Don't fail the confirmation if receipt generation fails
+      }
+
+      // ⭐ Update seller's system rating after order completion
+      if (order.farmerId != null) {
+        try {
+          await _ratingService.calculateAndUpdateUserRating(order.farmerId!);
+          if (kDebugMode) {
+            debugPrint('⭐ Seller rating updated for ${order.farmerId}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Error updating seller rating: $e');
+          }
+          // Don't fail the confirmation if rating update fails
+        }
+      }
+
       if (kDebugMode) {
         debugPrint('✅ Order $orderId marked as completed and stock reduced');
       }
@@ -986,9 +1051,10 @@ class OrderService {
   Future<int> getBuyerCompletedOrdersCount(String buyerId) async {
     try {
       final orders = await getBuyerOrders(buyerId);
+      // Only count orders that are BOTH delivered AND received by buyer
       return orders.where((order) => 
-        (order.isReceivedByBuyer ?? false) || 
-        order.status == app_order.OrderStatus.completed
+        order.status == app_order.OrderStatus.delivered &&
+        (order.isReceivedByBuyer ?? false)
       ).length;
     } catch (e) {
       if (kDebugMode) {
@@ -1002,11 +1068,13 @@ class OrderService {
   Future<int> getBuyerActiveOrdersCount(String buyerId) async {
     try {
       final orders = await getBuyerOrders(buyerId);
+      // Only count truly active orders - not delivered, completed, cancelled, or rejected
       return orders.where((order) => 
-        !(order.isReceivedByBuyer ?? false) && 
-        order.status != app_order.OrderStatus.completed &&
-        order.status != app_order.OrderStatus.cancelled &&
-        order.status != app_order.OrderStatus.rejected
+        order.status == app_order.OrderStatus.pending ||
+        order.status == app_order.OrderStatus.confirmed ||
+        order.status == app_order.OrderStatus.preparing ||
+        order.status == app_order.OrderStatus.ready ||
+        order.status == app_order.OrderStatus.inTransit
       ).length;
     } catch (e) {
       if (kDebugMode) {
@@ -1016,16 +1084,15 @@ class OrderService {
     }
   }
 
-  /// Get recent orders (completed within 24 hours)
+  /// Get recent orders (created within 24 hours)
   Future<List<app_order.Order>> getBuyerRecentOrders(String buyerId) async {
     try {
       final orders = await getBuyerOrders(buyerId);
       final yesterday = DateTime.now().subtract(const Duration(hours: 24));
       
+      // Show all orders created in last 24 hours, regardless of status
       return orders.where((order) => 
-        (order.isReceivedByBuyer ?? false) &&
-        order.receivedAt != null &&
-        order.receivedAt!.isAfter(yesterday)
+        order.createdAt.isAfter(yesterday)
       ).toList();
     } catch (e) {
       if (kDebugMode) {
@@ -1085,6 +1152,19 @@ class OrderService {
 
         // Update farmer's rating statistics
         await _updateFarmerRating(farmerId, farmerName, rating);
+
+        // ⭐ Update seller's system rating after review submission
+        try {
+          await _ratingService.calculateAndUpdateUserRating(farmerId);
+          if (kDebugMode) {
+            debugPrint('⭐ Seller system rating updated for $farmerId');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Error updating seller system rating: $e');
+          }
+          // Don't fail the review submission if rating update fails
+        }
       }
 
       if (kDebugMode) {

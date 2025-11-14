@@ -407,7 +407,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
 
   /// Progress card with distance and ETA
   Widget _buildProgressCard(DeliveryTracking tracking) {
-    final progress = tracking.progressPercentage;
+    final remainingProgress = tracking.progressPercentage; // 100% → 0%
+    final traveledProgress = tracking.traveledPercentage;   // 0% → 100%
+    final remainingKm = tracking.remainingDistanceKm;
     final eta = tracking.estimatedArrival;
 
     return Card(
@@ -420,14 +422,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Delivery Progress',
+                  'Distance Remaining',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  '${progress.toStringAsFixed(0)}%',
+                  '${remainingProgress.toStringAsFixed(0)}%',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -436,9 +438,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 4),
+            Text(
+              'Completed: ${traveledProgress.toStringAsFixed(0)}%',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: progress / 100,
+              value: traveledProgress / 100, // Show completed progress visually
               minHeight: 8,
               backgroundColor: Colors.grey.shade300,
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -447,10 +457,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (tracking.estimatedDistance != null)
+                if (remainingKm != null)
                   _buildInfoChip(
                     icon: Icons.route,
-                    label: '${tracking.estimatedDistance!.toStringAsFixed(1)} km',
+                    label: '${remainingKm.toStringAsFixed(1)} km left',
                   ),
                 if (tracking.estimatedDuration != null)
                   _buildInfoChip(

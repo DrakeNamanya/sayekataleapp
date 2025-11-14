@@ -1,302 +1,295 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/farmer_rating.dart';
-import '../models/review.dart';
+import 'package:flutter/foundation.dart';
+import '../models/order.dart' as app_order;
+import '../models/user.dart';
 
-/// Service for managing and querying farmer ratings
+/// Service for calculating and updating user system ratings
+/// 
+/// Rating calculation is based on:
+/// 1. Total Completed Orders (quantity metric)
+/// 2. Average Customer Rating (quality metric from reviews)
+/// 3. Order Fulfillment Rate (reliability metric)
+/// 4. Consistency (performance over time)
 class RatingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Get rating for a single farmer
-  Future<FarmerRating?> getFarmerRating(String farmerId) async {
+  /// Calculate and update system rating for a user
+  /// 
+  /// This method:
+  /// - Fetches all orders where user is seller
+  /// - Calculates performance metrics
+  /// - Computes weighted system rating
+  /// - Updates user profile with new rating
+  Future<UserRatingMetrics> calculateAndUpdateUserRating(String userId) async {
     try {
-      final doc = await _firestore
-          .collection('farmer_ratings')
-          .doc(farmerId)
-          .get();
-
-      if (doc.exists && doc.data() != null) {
-        return FarmerRating.fromFirestore(doc.data()!, doc.id);
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Get ratings for multiple farmers (batch query)
-  /// Returns a map of farmerId -> FarmerRating
-  Future<Map<String, FarmerRating>> getFarmerRatings(
-    List<String> farmerIds,
-  ) async {
-    try {
-      final Map<String, FarmerRating> ratingsMap = {};
-
-      if (farmerIds.isEmpty) {
-        return ratingsMap;
+      if (kDebugMode) {
+        debugPrint('📊 Calculating rating for user: $userId');
       }
 
-      // Remove duplicates
-      final uniqueFarmerIds = farmerIds.toSet().toList();
-
-      // Firestore 'in' query has a limit of 10 items
-      // Split into batches if more than 10 farmers
-      for (int i = 0; i < uniqueFarmerIds.length; i += 10) {
-        final batch = uniqueFarmerIds.skip(i).take(10).toList();
-
-        final snapshot = await _firestore
-            .collection('farmer_ratings')
-            .where(FieldPath.documentId, whereIn: batch)
-            .get();
-
-        for (final doc in snapshot.docs) {
-          if (doc.exists && doc.data().isNotEmpty) {
-            ratingsMap[doc.id] = FarmerRating.fromFirestore(doc.data(), doc.id);
-          }
-        }
+      // Fetch user data
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        throw Exception('User not found: $userId');
       }
 
-      return ratingsMap;
-    } catch (e) {
-      return {};
-    }
-  }
+      final user = AppUser.fromFirestore(userDoc.data()!, userDoc.id);
 
-  /// Get all highly rated farmers (>= 4.0 stars)
-  Future<List<FarmerRating>> getHighlyRatedFarmers({int limit = 20}) async {
-    try {
-      final snapshot = await _firestore
-          .collection('farmer_ratings')
-          .where('average_rating', isGreaterThanOrEqualTo: 4.0)
-          .orderBy('average_rating', descending: true)
-          .limit(limit)
-          .get();
+      // Calculate metrics
+      final metrics = await _calculateUserMetrics(userId, user.role);
 
-      return snapshot.docs
-          .map((doc) => FarmerRating.fromFirestore(doc.data(), doc.id))
-          .toList();
-    } catch (e) {
-      return [];
-    }
-  }
+      // Calculate weighted system rating
+      final systemRating = _calculateWeightedRating(metrics);
 
-  /// Get top rated farmers
-  Future<List<FarmerRating>> getTopRatedFarmers({int limit = 10}) async {
-    try {
-      final snapshot = await _firestore
-          .collection('farmer_ratings')
-          .orderBy('average_rating', descending: true)
-          .orderBy('total_ratings', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => FarmerRating.fromFirestore(doc.data(), doc.id))
-          .toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// Stream rating for a single farmer (real-time updates)
-  Stream<FarmerRating?> streamFarmerRating(String farmerId) {
-    return _firestore
-        .collection('farmer_ratings')
-        .doc(farmerId)
-        .snapshots()
-        .map((doc) {
-      if (doc.exists && doc.data() != null) {
-        return FarmerRating.fromFirestore(doc.data()!, doc.id);
-      }
-      return null;
-    });
-  }
-
-  /// Submit a new review
-  Future<void> submitReview(Review review) async {
-    try {
-      // Add review to reviews collection
-      await _firestore
-          .collection('reviews')
-          .doc(review.id)
-          .set(review.toFirestore());
-
-      // Update farmer rating statistics
-      await _updateFarmerRating(review.farmId, review.rating);
-    } catch (e) {
-      throw Exception('Failed to submit review: $e');
-    }
-  }
-
-  /// Get reviews for a specific farmer
-  Future<List<Review>> getFarmerReviews(
-    String farmerId, {
-    int limit = 20,
-    int? minRating,
-  }) async {
-    try {
-      var query = _firestore
-          .collection('reviews')
-          .where('farm_id', isEqualTo: farmerId);
-
-      if (minRating != null) {
-        query = query.where('rating', isGreaterThanOrEqualTo: minRating.toDouble());
-      }
-
-      final snapshot = await query.get();
-
-      final reviews = snapshot.docs
-          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
-          .toList();
-
-      // Sort in memory (most recent first)
-      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      return reviews.take(limit).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// Get reviews for a specific product
-  Future<List<Review>> getProductReviews(
-    String productId, {
-    int limit = 20,
-    int? minRating,
-  }) async {
-    try {
-      var query = _firestore
-          .collection('reviews')
-          .where('product_id', isEqualTo: productId);
-
-      if (minRating != null) {
-        query = query.where('rating', isGreaterThanOrEqualTo: minRating.toDouble());
-      }
-
-      final snapshot = await query.get();
-
-      final reviews = snapshot.docs
-          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
-          .toList();
-
-      // Sort in memory (most recent first)
-      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      return reviews.take(limit).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// Stream reviews for a farmer (real-time updates)
-  Stream<List<Review>> streamFarmerReviews(String farmerId, {int limit = 20}) {
-    return _firestore
-        .collection('reviews')
-        .where('farm_id', isEqualTo: farmerId)
-        .snapshots()
-        .map((snapshot) {
-      final reviews = snapshot.docs
-          .map((doc) => Review.fromFirestore(doc.data(), doc.id))
-          .toList();
-
-      // Sort in memory (most recent first)
-      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      return reviews.take(limit).toList();
-    });
-  }
-
-  /// Get review statistics for a farmer
-  Future<Map<String, dynamic>> getFarmerReviewStats(String farmerId) async {
-    try {
-      final reviews = await getFarmerReviews(farmerId, limit: 1000);
-      
-      if (reviews.isEmpty) {
-        return {
-          'total_reviews': 0,
-          'average_rating': 0.0,
-          'with_photos': 0,
-          'with_comments': 0,
-        };
-      }
-
-      final totalReviews = reviews.length;
-      final averageRating = reviews.fold<double>(
-        0.0,
-        (sum, review) => sum + review.rating,
-      ) / totalReviews;
-      final withPhotos = reviews.where((r) => r.hasPhotos).length;
-      final withComments = reviews.where((r) => r.comment != null && r.comment!.isNotEmpty).length;
-
-      return {
-        'total_reviews': totalReviews,
-        'average_rating': averageRating,
-        'with_photos': withPhotos,
-        'with_comments': withComments,
-      };
-    } catch (e) {
-      return {
-        'total_reviews': 0,
-        'average_rating': 0.0,
-        'with_photos': 0,
-        'with_comments': 0,
-      };
-    }
-  }
-
-  /// Update farmer rating statistics
-  Future<void> _updateFarmerRating(String farmerId, double newRating) async {
-    try {
-      final ratingDoc = _firestore.collection('farmer_ratings').doc(farmerId);
-      
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(ratingDoc);
-        
-        if (snapshot.exists) {
-          // Update existing rating
-          final data = snapshot.data()!;
-          final currentAverage = (data['average_rating'] ?? 0.0).toDouble();
-          final totalRatings = (data['total_ratings'] ?? 0) as int;
-          
-          // Calculate new average
-          final newTotalRatings = totalRatings + 1;
-          final newAverage = ((currentAverage * totalRatings) + newRating) / newTotalRatings;
-          
-          // Update rating distribution
-          final ratingDistribution = List<int>.from(data['rating_distribution'] ?? [0, 0, 0, 0, 0]);
-          final ratingIndex = newRating.round() - 1;
-          if (ratingIndex >= 0 && ratingIndex < 5) {
-            ratingDistribution[ratingIndex]++;
-          }
-          
-          transaction.update(ratingDoc, {
-            'average_rating': newAverage,
-            'total_ratings': newTotalRatings,
-            'rating_distribution': ratingDistribution,
-            'last_rated_at': FieldValue.serverTimestamp(),
-            'updated_at': FieldValue.serverTimestamp(),
-          });
-        } else {
-          // Create new rating document
-          final ratingDistribution = [0, 0, 0, 0, 0];
-          final ratingIndex = newRating.round() - 1;
-          if (ratingIndex >= 0 && ratingIndex < 5) {
-            ratingDistribution[ratingIndex] = 1;
-          }
-          
-          transaction.set(ratingDoc, {
-            'farmer_name': 'Farmer',
-            'average_rating': newRating,
-            'total_ratings': 1,
-            'total_orders': 0,
-            'total_deliveries': 0,
-            'rating_distribution': ratingDistribution,
-            'last_rated_at': FieldValue.serverTimestamp(),
-            'updated_at': FieldValue.serverTimestamp(),
-          });
-        }
+      // Update user profile
+      await _firestore.collection('users').doc(userId).update({
+        'system_rating': systemRating,
+        'total_completed_orders': metrics.totalCompletedOrders,
+        'average_customer_rating': metrics.averageCustomerRating,
+        'order_fulfillment_rate': metrics.orderFulfillmentRate,
+        'last_rating_update': DateTime.now().toIso8601String(),
       });
+
+      if (kDebugMode) {
+        debugPrint('✅ Rating updated for $userId: $systemRating/5.0');
+        debugPrint('   Completed Orders: ${metrics.totalCompletedOrders}');
+        debugPrint('   Avg Customer Rating: ${metrics.averageCustomerRating.toStringAsFixed(2)}/5.0');
+        debugPrint('   Fulfillment Rate: ${metrics.orderFulfillmentRate.toStringAsFixed(1)}%');
+      }
+
+      return UserRatingMetrics(
+        userId: userId,
+        systemRating: systemRating,
+        totalCompletedOrders: metrics.totalCompletedOrders,
+        averageCustomerRating: metrics.averageCustomerRating,
+        orderFulfillmentRate: metrics.orderFulfillmentRate,
+        totalOrders: metrics.totalOrders,
+        totalDeliveredOrders: metrics.totalDeliveredOrders,
+        totalReviewedOrders: metrics.totalReviewedOrders,
+      );
     } catch (e) {
-      throw Exception('Failed to update farmer rating: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error calculating rating for $userId: $e');
+      }
+      rethrow;
     }
+  }
+
+  /// Calculate user performance metrics from order history
+  Future<_MetricsData> _calculateUserMetrics(String userId, UserRole role) async {
+    // Query orders based on user role
+    Query<Map<String, dynamic>> ordersQuery;
+
+    if (role == UserRole.sme) {
+      // SME is a buyer - query by buyer_id
+      ordersQuery = _firestore
+          .collection('orders')
+          .where('buyer_id', isEqualTo: userId);
+    } else {
+      // SHG/PSA are sellers - query by farmer_id (seller_id)
+      ordersQuery = _firestore
+          .collection('orders')
+          .where('farmer_id', isEqualTo: userId);
+    }
+
+    final ordersSnapshot = await ordersQuery.get();
+    final orders = ordersSnapshot.docs
+        .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
+        .toList();
+
+    if (orders.isEmpty) {
+      return _MetricsData(
+        totalOrders: 0,
+        totalCompletedOrders: 0,
+        totalDeliveredOrders: 0,
+        totalReviewedOrders: 0,
+        totalRatingPoints: 0.0,
+        orderFulfillmentRate: 0.0,
+        averageCustomerRating: 0.0,
+      );
+    }
+
+    // Calculate metrics
+    int totalOrders = orders.length;
+    int totalCompletedOrders = 0;
+    int totalDeliveredOrders = 0;
+    int totalReviewedOrders = 0;
+    double totalRatingPoints = 0.0;
+
+    for (var order in orders) {
+      // Count completed orders
+      if (order.status == app_order.OrderStatus.completed) {
+        totalCompletedOrders++;
+      }
+
+      // Count delivered orders (includes completed)
+      if (order.status == app_order.OrderStatus.delivered ||
+          order.status == app_order.OrderStatus.completed) {
+        totalDeliveredOrders++;
+      }
+
+      // Count reviewed orders and sum ratings
+      if (order.rating != null && order.rating! > 0) {
+        totalReviewedOrders++;
+        totalRatingPoints += order.rating!.toDouble();
+      }
+    }
+
+    // Calculate rates
+    double orderFulfillmentRate = totalOrders > 0
+        ? (totalDeliveredOrders / totalOrders * 100)
+        : 0.0;
+
+    double averageCustomerRating = totalReviewedOrders > 0
+        ? (totalRatingPoints / totalReviewedOrders)
+        : 0.0;
+
+    return _MetricsData(
+      totalOrders: totalOrders,
+      totalCompletedOrders: totalCompletedOrders,
+      totalDeliveredOrders: totalDeliveredOrders,
+      totalReviewedOrders: totalReviewedOrders,
+      totalRatingPoints: totalRatingPoints,
+      orderFulfillmentRate: orderFulfillmentRate,
+      averageCustomerRating: averageCustomerRating,
+    );
+  }
+
+  /// Calculate weighted system rating from metrics
+  /// 
+  /// Rating Formula:
+  /// - Base Rating (40%): Scaled from completed orders count (0-50 orders = 0-5 stars)
+  /// - Customer Rating (40%): Average customer ratings (0-5 stars)
+  /// - Fulfillment Rate (20%): Order fulfillment percentage (0-100% = 0-5 stars)
+  double _calculateWeightedRating(_MetricsData metrics) {
+    // Base rating from completed orders (0-50 orders = 0-5 stars)
+    // Scale: 10 orders = 1 star, 50+ orders = 5 stars
+    double baseRating = (metrics.totalCompletedOrders / 10).clamp(0.0, 5.0);
+    double baseWeight = 0.40;
+
+    // Customer rating weight (direct 0-5 stars)
+    double customerRating = metrics.averageCustomerRating;
+    double customerWeight = 0.40;
+
+    // Fulfillment rate (0-100% converted to 0-5 stars)
+    double fulfillmentRating = (metrics.orderFulfillmentRate / 100) * 5;
+    double fulfillmentWeight = 0.20;
+
+    // Calculate weighted average
+    double systemRating = (baseRating * baseWeight) +
+        (customerRating * customerWeight) +
+        (fulfillmentRating * fulfillmentWeight);
+
+    // Ensure rating is between 0-5
+    return systemRating.clamp(0.0, 5.0);
+  }
+
+  /// Calculate ratings for all users in the system
+  /// 
+  /// This can be run periodically (e.g., daily) to update all user ratings
+  Future<List<UserRatingMetrics>> calculateAllUserRatings() async {
+    try {
+      if (kDebugMode) {
+        debugPrint('📊 Starting batch rating calculation for all users...');
+      }
+
+      final usersSnapshot = await _firestore.collection('users').get();
+      final results = <UserRatingMetrics>[];
+
+      for (var userDoc in usersSnapshot.docs) {
+        try {
+          final metrics = await calculateAndUpdateUserRating(userDoc.id);
+          results.add(metrics);
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Failed to calculate rating for ${userDoc.id}: $e');
+          }
+          // Continue with other users even if one fails
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Batch rating calculation complete: ${results.length} users updated');
+      }
+
+      return results;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error in batch rating calculation: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Get user rating metrics without updating
+  Future<UserRatingMetrics> getUserRatingMetrics(String userId) async {
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found: $userId');
+    }
+
+    final data = userDoc.data()!;
+    final user = AppUser.fromFirestore(data, userDoc.id);
+
+    return UserRatingMetrics(
+      userId: userId,
+      systemRating: user.systemRating,
+      totalCompletedOrders: user.totalCompletedOrders,
+      averageCustomerRating: user.averageCustomerRating,
+      orderFulfillmentRate: user.orderFulfillmentRate,
+      totalOrders: 0, // Not stored in user model
+      totalDeliveredOrders: 0, // Not stored in user model
+      totalReviewedOrders: 0, // Not stored in user model
+    );
+  }
+}
+
+/// Internal metrics data structure for calculations
+class _MetricsData {
+  final int totalOrders;
+  final int totalCompletedOrders;
+  final int totalDeliveredOrders;
+  final int totalReviewedOrders;
+  final double totalRatingPoints;
+  final double orderFulfillmentRate;
+  final double averageCustomerRating;
+
+  _MetricsData({
+    required this.totalOrders,
+    required this.totalCompletedOrders,
+    required this.totalDeliveredOrders,
+    required this.totalReviewedOrders,
+    required this.totalRatingPoints,
+    required this.orderFulfillmentRate,
+    required this.averageCustomerRating,
+  });
+}
+
+/// User rating metrics result
+class UserRatingMetrics {
+  final String userId;
+  final double systemRating;
+  final int totalCompletedOrders;
+  final double averageCustomerRating;
+  final double orderFulfillmentRate;
+  final int totalOrders;
+  final int totalDeliveredOrders;
+  final int totalReviewedOrders;
+
+  UserRatingMetrics({
+    required this.userId,
+    required this.systemRating,
+    required this.totalCompletedOrders,
+    required this.averageCustomerRating,
+    required this.orderFulfillmentRate,
+    required this.totalOrders,
+    required this.totalDeliveredOrders,
+    required this.totalReviewedOrders,
+  });
+
+  @override
+  String toString() {
+    return 'UserRatingMetrics(userId: $userId, rating: $systemRating/5.0, '
+        'completed: $totalCompletedOrders, avgRating: $averageCustomerRating, '
+        'fulfillment: ${orderFulfillmentRate.toStringAsFixed(1)}%)';
   }
 }

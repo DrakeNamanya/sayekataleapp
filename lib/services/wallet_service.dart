@@ -101,8 +101,14 @@ class WalletService {
         currency: 'UGX',
         phoneNumber: phoneNumber,
         correspondentId: provider,
-        description: 'Wallet deposit',
+        description: 'Wallet deposit - SayeKatale',
         customerName: userName,
+        userId: userId, // Pass user ID for webhook identification
+        metadata: {
+          'userId': userId,
+          'userName': userName ?? 'Unknown',
+          'source': 'wallet_deposit',
+        },
       );
       
       if (result['success'] == true) {

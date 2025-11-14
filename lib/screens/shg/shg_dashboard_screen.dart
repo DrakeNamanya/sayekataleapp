@@ -1097,9 +1097,10 @@ class _RecentOrdersList extends StatelessWidget {
         final recentOrders = snapshot.data ?? [];
 
         if (recentOrders.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Center(
+          return Container(
+            padding: const EdgeInsets.all(32.0),
+            color: Colors.white,
+            child: const Center(
               child: Column(
                 children: [
                   Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),

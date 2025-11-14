@@ -6,9 +6,11 @@ import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../services/message_service.dart';
 import '../../services/delivery_tracking_service.dart';
+import '../../services/receipt_service.dart';
 import '../../models/order.dart' as app_order;
 import '../common/chat_screen.dart';
 import '../delivery/live_tracking_screen.dart';
+import '../common/receipt_detail_screen.dart';
 import 'order_review_screen.dart';
 
 class SMEOrdersScreen extends StatefulWidget {
@@ -22,6 +24,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
   final OrderService _orderService = OrderService();
   final MessageService _messageService = MessageService();
   final DeliveryTrackingService _trackingService = DeliveryTrackingService();
+  final ReceiptService _receiptService = ReceiptService();
   late TabController _tabController;
 
   @override
@@ -395,6 +398,50 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 ),
               ],
               
+              // Confirm Receipt Button (for delivered orders not yet confirmed)
+              if (order.status == app_order.OrderStatus.delivered && 
+                  !(order.isReceivedByBuyer ?? false)) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showConfirmReceiptDialog(order),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Confirm Receipt'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              
+              // View Receipt Button (for confirmed orders with receipts)
+              if (order.status == app_order.OrderStatus.delivered && 
+                  (order.isReceivedByBuyer ?? false)) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _viewReceipt(order),
+                    icon: const Icon(Icons.receipt_long, size: 18),
+                    label: const Text('View Receipt'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              
               // Rate Order Button (for delivered orders without review)
               if (order.status == app_order.OrderStatus.delivered && 
                   (order.isReceivedByBuyer ?? false) && 
@@ -525,6 +572,217 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     // Refresh orders list if review was submitted
     if (result == true && mounted) {
       setState(() {}); // Trigger rebuild to fetch updated orders
+    }
+  }
+
+  /// Show confirm receipt dialog with rating, feedback, and photo options
+  Future<void> _showConfirmReceiptDialog(app_order.Order order) async {
+    int rating = 5;
+    String feedback = '';
+    String notes = '';
+    final feedbackController = TextEditingController();
+    final notesController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Confirm Receipt'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Please confirm that you have received your order.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 20),
+                
+                // Rating
+                const Text(
+                  'Rate your experience',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      onPressed: () {
+                        setState(() {
+                          rating = index + 1;
+                        });
+                      },
+                      icon: Icon(
+                        index < rating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 32,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+                
+                // Feedback
+                const Text(
+                  'Feedback (optional)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: feedbackController,
+                  decoration: const InputDecoration(
+                    hintText: 'Share your experience...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  onChanged: (value) => feedback = value,
+                ),
+                const SizedBox(height: 16),
+                
+                // Notes
+                const Text(
+                  'Additional notes (optional)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    hintText: 'Any special notes...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                  onChanged: (value) => notes = value,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: const Text('Confirm Receipt'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Confirm receipt and generate receipt
+      await _orderService.confirmReceipt(
+        order.id,
+        notes: notes.isEmpty ? null : notes,
+        rating: rating,
+        feedback: feedback.isEmpty ? null : feedback,
+      );
+
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      // Show success
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Receipt confirmed! Your receipt has been generated.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+
+      // Refresh orders list
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error confirming receipt: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// View receipt for confirmed order
+  Future<void> _viewReceipt(app_order.Order order) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Get receipt by order ID
+      final receipt = await _receiptService.getReceiptByOrderId(order.id);
+
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      if (receipt == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Receipt not found. It may still be generating.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Navigate to receipt detail screen
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReceiptDetailScreen(receipt: receipt),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading
+      if (mounted) Navigator.pop(context);
+
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading receipt: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
