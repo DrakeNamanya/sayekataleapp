@@ -26,10 +26,23 @@ import os
 app = Flask(__name__)
 
 # Initialize Firebase Admin SDK
-cred_path = '/opt/flutter/firebase-admin-sdk.json'
+# Support both local development and Cloud Run deployment
+cred_path = os.getenv('FIREBASE_CREDENTIALS_PATH', '/opt/flutter/firebase-admin-sdk.json')
+
 if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    # Try using credentials file first
+    if os.path.exists(cred_path):
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+        print(f'✅ Firebase initialized with credentials file: {cred_path}')
+    else:
+        # Fall back to default credentials (Cloud Run uses this)
+        try:
+            firebase_admin.initialize_app()
+            print('✅ Firebase initialized with default credentials (Cloud Run)')
+        except Exception as e:
+            print(f'❌ Firebase initialization failed: {e}')
+            raise
 
 db = firestore.client()
 
@@ -325,13 +338,16 @@ def handle_refund_callback(data):
 
 
 if __name__ == '__main__':
+    # Support both local and Cloud Run deployment
+    port = int(os.getenv('PORT', 5555))
+    
     print('🚀 Starting PawaPay Webhook Server...')
-    print('📍 Webhook URL: http://localhost:5555/api/pawapay/webhook')
-    print('🏥 Health check: http://localhost:5555/health')
+    print(f'📍 Webhook URL: http://localhost:{port}/api/pawapay/webhook')
+    print(f'🏥 Health check: http://localhost:{port}/health')
     print('')
     print('⚠️ For production, configure this URL in PawaPay Dashboard:')
     print('   Settings → Webhooks → Add URL')
     print('')
     
-    # Run on port 5555 (different from Flutter web preview)
-    app.run(host='0.0.0.0', port=5555, debug=True)
+    # Run on specified port (5555 for local, 8080 for Cloud Run)
+    app.run(host='0.0.0.0', port=port, debug=False)
