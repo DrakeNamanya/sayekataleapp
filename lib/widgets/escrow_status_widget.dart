@@ -24,8 +24,8 @@ class EscrowStatusWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _getStatusColor().withOpacity(0.1),
-            _getStatusColor().withOpacity(0.05),
+            _getStatusColor().withValues(alpha: 0.1),
+            _getStatusColor().withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -34,7 +34,7 @@ class EscrowStatusWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _getStatusColor().withOpacity(0.1),
+            color: _getStatusColor().withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
