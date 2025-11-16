@@ -565,9 +565,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
+  //   String _formatDate(DateTime date) {
+  //     return DateFormat('MMM dd, yyyy').format(date);
+  //   }
 
   @override
   Widget build(BuildContext context) {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cart_item.dart';
-import '../../models/order.dart';
-import '../../models/order_extensions.dart';
-import '../../providers/auth_provider.dart';
+// import '../../models/order.dart';
+// import '../../models/order_extensions.dart';
+// import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../utils/app_theme.dart';
 import 'sme_checkout_screen.dart';
@@ -16,7 +16,7 @@ class SMECartScreen extends StatefulWidget {
 }
 
 class _SMECartScreenState extends State<SMECartScreen> {
-  PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMobileMoney;
+  //   PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMobileMoney;
 
   @override
   Widget build(BuildContext context) {
@@ -221,235 +221,237 @@ class _SMECartScreenState extends State<SMECartScreen> {
     );
   }
 
-  void _showCheckoutDialog(
-    BuildContext context,
-    CartProvider cartProvider,
-    AuthProvider authProvider,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Checkout',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
+  //   void _showCheckoutDialog(
+  //     BuildContext context,
+  //     CartProvider cartProvider,
+  //     AuthProvider authProvider,
+  //   ) {
+  //     showModalBottomSheet(
+  //       context: context,
+  //       isScrollControlled: true,
+  //       builder: (context) => StatefulBuilder(
+  //         builder: (context, setModalState) => Container(
+  //           padding: EdgeInsets.only(
+  //             bottom: MediaQuery.of(context).viewInsets.bottom,
+  //           ),
+  //           child: Padding(
+  //             padding: const EdgeInsets.all(24),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 const Text(
+  //                   'Checkout',
+  //                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+  //                 ),
+  //                 const SizedBox(height: 24),
+  // 
+  //                 // Payment Method Selection
+  //                 const Text(
+  //                   'Select Payment Method',
+  //                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  //                 ),
+  //                 const SizedBox(height: 12),
+  // 
+  //                 ...PaymentMethod.values.map((method) {
+  //                   return RadioListTile<PaymentMethod>(
+  //                     title: Text(method.displayName),
+  //                     subtitle: Text(_getPaymentMethodDescription(method)),
+  //                     value: method,
+  //                     groupValue: _selectedPaymentMethod,
+  //                     onChanged: (value) {
+  //                       setModalState(() {
+  //                         _selectedPaymentMethod = value!;
+  //                       });
+  //                     },
+  //                   );
+  //                 }),
+  // 
+  //                 const SizedBox(height: 24),
+  // 
+  //                 // Order Summary
+  //                 Container(
+  //                   padding: const EdgeInsets.all(16),
+  //                   decoration: BoxDecoration(
+  //                     color: AppTheme.primaryColor.withValues(alpha: 0.05),
+  //                     borderRadius: BorderRadius.circular(12),
+  //                   ),
+  //                   child: Column(
+  //                     children: [
+  //                       Row(
+  //                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                         children: [
+  //                           const Text('Total Amount'),
+  //                           Text(
+  //                             'UGX ${cartProvider.total.toStringAsFixed(0)}',
+  //                             style: TextStyle(
+  //                               fontSize: 18,
+  //                               fontWeight: FontWeight.bold,
+  //                               color: AppTheme.primaryColor,
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                       const SizedBox(height: 8),
+  //                       Row(
+  //                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                         children: [
+  //                           Text(
+  //                             'Payment Method',
+  //                             style: TextStyle(
+  //                               fontSize: 13,
+  //                               color: AppTheme.textSecondary,
+  //                             ),
+  //                           ),
+  //                           Text(
+  //                             _selectedPaymentMethod.displayName,
+  //                             style: const TextStyle(
+  //                               fontSize: 13,
+  //                               fontWeight: FontWeight.w600,
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  // 
+  //                 const SizedBox(height: 24),
+  // 
+  //                 // Place Order Button
+  //                 SizedBox(
+  //                   width: double.infinity,
+  //                   child: ElevatedButton(
+  //                     onPressed: () {
+  //                       _placeOrder(context, cartProvider, authProvider);
+  //                     },
+  //                     style: ElevatedButton.styleFrom(
+  //                       padding: const EdgeInsets.symmetric(vertical: 16),
+  //                     ),
+  //                     child: const Text(
+  //                       'Place Order',
+  //                       style: TextStyle(fontSize: 16),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
 
-                // Payment Method Selection
-                const Text(
-                  'Select Payment Method',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
+  // Unused method - retained for potential future use
+  // String _getPaymentMethodDescription(PaymentMethod method) {
+  //   switch (method) {
+  //     case PaymentMethod.mobileMoney:
+  //     case PaymentMethod.mtnMobileMoney:
+  //       return 'Pay with MTN Mobile Money';
+  //     case PaymentMethod.airtelMoney:
+  //       return 'Pay with Airtel Money';
+  //     case PaymentMethod.cash:
+  //     case PaymentMethod.cashOnDelivery:
+  //       return 'Pay cash on delivery';
+  //     case PaymentMethod.bankTransfer:
+  //       return 'Pay via bank transfer';
+  //   }
+  // }
 
-                ...PaymentMethod.values.map((method) {
-                  return RadioListTile<PaymentMethod>(
-                    title: Text(method.displayName),
-                    subtitle: Text(_getPaymentMethodDescription(method)),
-                    value: method,
-                    groupValue: _selectedPaymentMethod,
-                    onChanged: (value) {
-                      setModalState(() {
-                        _selectedPaymentMethod = value!;
-                      });
-                    },
-                  );
-                }),
-
-                const SizedBox(height: 24),
-
-                // Order Summary
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Total Amount'),
-                          Text(
-                            'UGX ${cartProvider.total.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Payment Method',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                          Text(
-                            _selectedPaymentMethod.displayName,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Place Order Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _placeOrder(context, cartProvider, authProvider);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text(
-                      'Place Order',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getPaymentMethodDescription(PaymentMethod method) {
-    switch (method) {
-      case PaymentMethod.mobileMoney:
-      case PaymentMethod.mtnMobileMoney:
-        return 'Pay with MTN Mobile Money';
-      case PaymentMethod.airtelMoney:
-        return 'Pay with Airtel Money';
-      case PaymentMethod.cash:
-      case PaymentMethod.cashOnDelivery:
-        return 'Pay cash on delivery';
-      case PaymentMethod.bankTransfer:
-        return 'Pay via bank transfer';
-    }
-  }
-
-  void _placeOrder(
-    BuildContext context,
-    CartProvider cartProvider,
-    AuthProvider authProvider,
-  ) {
-    // Simulate order placement
-    final user = authProvider.currentUser;
-
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please login to place order'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
-
-    // Group items by farm
-    final itemsByFarm = cartProvider.groupByFarmer();
-
-    // Create orders (one per farm)
-    Navigator.pop(context); // Close checkout dialog
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text('Placing ${itemsByFarm.length} order(s)...'),
-          ],
-        ),
-      ),
-    );
-
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context); // Close loading dialog
-
-      cartProvider.clear();
-
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.check_circle, color: AppTheme.successColor, size: 32),
-              const SizedBox(width: 12),
-              const Text('Order Placed!'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Successfully placed ${itemsByFarm.length} order(s)'),
-              const SizedBox(height: 8),
-              Text(
-                'Payment Method: ${_selectedPaymentMethod.displayName}',
-                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Total: UGX ${cartProvider.total.toStringAsFixed(0)}',
-                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to previous screen
-              },
-              child: const Text('Continue Shopping'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-                // Navigate to orders screen (tab index 2)
-              },
-              child: const Text('View Orders'),
-            ),
-          ],
-        ),
-      );
-    });
-  }
+  // Unused method - retained for potential future use
+  // void _placeOrder(
+  //   BuildContext context,
+  //   CartProvider cartProvider,
+  //   AuthProvider authProvider,
+  // ) {
+  //   // Simulate order placement
+  //   final user = authProvider.currentUser;
+  //
+  //   if (user == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please login to place order'),
+  //         backgroundColor: AppTheme.errorColor,
+  //       ),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Group items by farm
+  //   final itemsByFarm = cartProvider.groupByFarmer();
+  //
+  //   // Create orders (one per farm)
+  //   Navigator.pop(context); // Close checkout dialog
+  //
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => AlertDialog(
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           const CircularProgressIndicator(),
+  //           const SizedBox(height: 16),
+  //           Text('Placing ${itemsByFarm.length} order(s)...'),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  //
+  //   // Simulate API call
+  //   Future.delayed(const Duration(seconds: 2), () {
+  //     Navigator.pop(context); // Close loading dialog
+  //
+  //     cartProvider.clear();
+  //
+  //     showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //         title: Row(
+  //           children: [
+  //             Icon(Icons.check_circle, color: AppTheme.successColor, size: 32),
+  //             const SizedBox(width: 12),
+  //             const Text('Order Placed!'),
+  //           ],
+  //         ),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text('Successfully placed ${itemsByFarm.length} order(s)'),
+  //             const SizedBox(height: 8),
+  //             Text(
+  //               'Payment Method: ${_selectedPaymentMethod.displayName}',
+  //               style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+  //             ),
+  //             const SizedBox(height: 8),
+  //             Text(
+  //               'Total: UGX ${cartProvider.total.toStringAsFixed(0)}',
+  //               style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+  //             ),
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.pop(context); // Close dialog
+  //               Navigator.pop(context); // Go back to previous screen
+  //             },
+  //             child: const Text('Continue Shopping'),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Navigator.pop(context);
+  //               Navigator.pop(context);
+  //               // Navigate to orders screen (tab index 2)
+  //             },
+  //             child: const Text('View Orders'),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   });
+  // }
 }
 
 class _CartItemCard extends StatefulWidget {

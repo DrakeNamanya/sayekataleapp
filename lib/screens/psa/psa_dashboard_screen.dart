@@ -27,8 +27,8 @@ class PSADashboardScreen extends StatefulWidget {
 
 class _PSADashboardScreenState extends State<PSADashboardScreen> {
   int _selectedIndex = 0;
-  final int _unreadNotifications = 7;
-  final int _unreadMessages = 4;
+  //   final int _unreadNotifications = 7;
+  //   final int _unreadMessages = 4;
 
   late final List<Widget> _screens;
 
@@ -127,7 +127,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
   int _totalProducts = 0;
   int _lowStockItems = 0;
   int _deliveryPending = 0;
-  bool _isLoading = true;
+  //   bool _isLoading = true;
 
   @override
   void initState() {

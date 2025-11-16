@@ -133,7 +133,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
   int _activeOrders = 0;
   int _pendingOrders = 0;
   int _lowStockProducts = 0;
-  bool _isLoading = true;
+  // bool _isLoading = true; // Unused for now
 
   @override
   void initState() {

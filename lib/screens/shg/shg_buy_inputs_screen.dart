@@ -13,7 +13,7 @@ import '../../providers/auth_provider.dart' as app_auth;
 import '../../providers/cart_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/product_with_farmer_service.dart';
-import '../../services/rating_service.dart';
+// import '../../services/rating_service.dart';
 import '../../widgets/filter_bottom_sheet.dart';
 import '../../widgets/product_skeleton_loader.dart';
 import '../../widgets/hero_carousel.dart';
@@ -33,7 +33,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
   final ProductService _productService = ProductService();
   final ProductWithFarmerService _productWithFarmerService =
       ProductWithFarmerService();
-  final RatingService _ratingService = RatingService();
+  // final RatingService _ratingService = RatingService(); // Unused for now
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 import '../../models/farmer.dart';
 import '../../models/user.dart';
-import '../../providers/auth_provider.dart';
+// import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'sme_farmer_detail_screen.dart';
 
@@ -135,19 +135,20 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
     return ['All Districts', ...districts];
   }
 
-  Map<String, List<Farmer>> get _farmersByDistrict {
-    final Map<String, List<Farmer>> grouped = {};
-    for (var farmer in _filteredFarmers) {
-      final district = farmer.location?.district ?? 'Unknown';
-      grouped[district] = [...(grouped[district] ?? []), farmer];
-    }
-    return grouped;
-  }
-
+  //   Map<String, List<Farmer>> get _farmersByDistrict {
+  //     final Map<String, List<Farmer>> grouped = {};
+  //     for (var farmer in _filteredFarmers) {
+  //       final district = farmer.location?.district ?? 'Unknown';
+  //       grouped[district] = [...(grouped[district] ?? []), farmer];
+  //     }
+  //     return grouped;
+  //   }
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final currentUser = authProvider.currentUser;
+    // Auth provider and current user available if needed for future use
+    // final authProvider = Provider.of<AuthProvider>(context);
+    // final currentUser = authProvider.currentUser;
+    final currentUser = null; // Placeholder for user location features
 
     // Sort farmers by distance if user has location
     final sortedFarmers = _filteredFarmers.toList();

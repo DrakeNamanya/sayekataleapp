@@ -128,7 +128,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
   double _monthlySpending = 0.0;
   int _activeOrders = 0;
   int _completedOrders = 0;
-  int _recentOrdersCount = 0;
+  //   int _recentOrdersCount = 0;
   bool _isLoadingStats = true;
 
   @override

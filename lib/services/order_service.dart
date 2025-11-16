@@ -142,29 +142,30 @@ class OrderService {
         final farmerItems = entry.value;
         final farmerName = farmerItems.first.farmerName;
 
-        // Fetch buyer and farmer profiles
+        // Fetch farmer profile for phone number
         String farmerPhone = '';
 
         try {
-          final buyerDoc = await _firestore
-              .collection('users')
-              .doc(buyerId)
-              .get();
-          if (buyerDoc.exists) {
-            buyerSystemId = buyerDoc.data()?['national_id'];
-          }
+          // Fetch buyer profile (system ID not currently used)
+          // final buyerDoc = await _firestore
+          //     .collection('users')
+          //     .doc(buyerId)
+          //     .get();
+          // if (buyerDoc.exists) {
+          //   buyerSystemId = buyerDoc.data()?['national_id'];
+          // }
 
           final farmerDoc = await _firestore
               .collection('users')
               .doc(farmerId)
               .get();
           if (farmerDoc.exists) {
-            farmerSystemId = farmerDoc.data()?['national_id'];
+            // farmerSystemId = farmerDoc.data()?['national_id'];  // Not currently used
             farmerPhone = farmerDoc.data()?['phone'] ?? '';
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('⚠️ Could not fetch user profiles for system IDs: $e');
+            debugPrint('⚠️ Could not fetch user profiles: $e');
           }
         }
 
