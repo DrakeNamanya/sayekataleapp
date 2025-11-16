@@ -328,7 +328,7 @@ extension DeliveryStatusExtension on DeliveryStatus {
 
 extension on double {
   double cos() => math.cos(this);
-  double sin() => math.sin(this);
+  //   double sin() => math.sin(this);
   double sqrt() => math.sqrt(this);
   double asin() => math.asin(this);
 }

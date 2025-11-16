@@ -133,7 +133,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
   int _activeOrders = 0;
   int _pendingOrders = 0;
   int _lowStockProducts = 0;
-  bool _isLoading = true;
+  // Loading state available for future UI improvements
+  // bool _isLoading = true;
 
   @override
   void initState() {
@@ -148,7 +149,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     final farmerId = authProvider.currentUser?.id;
 
     if (farmerId == null) {
-      setState(() => _isLoading = false);
+      setState(() {});  // _isLoading = false;  // Loading state disabled
       return;
     }
 
@@ -172,12 +173,12 @@ class _DashboardHomeState extends State<_DashboardHome> {
           _activeOrders = results[2] as int;
           _pendingOrders = results[3] as int;
           _lowStockProducts = results[4] as int;
-          _isLoading = false;
+          // _isLoading = false;  // Loading state disabled
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {});  // _isLoading = false;  // Loading state disabled
       }
     }
   }

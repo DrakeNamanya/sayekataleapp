@@ -128,7 +128,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
   double _monthlySpending = 0.0;
   int _activeOrders = 0;
   int _completedOrders = 0;
-  int _recentOrdersCount = 0;
+  // Recent orders count available for future use
+  // int _recentOrdersCount = 0;
   bool _isLoadingStats = true;
 
   @override
@@ -164,7 +165,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
           _monthlySpending = results[0] as double;
           _completedOrders = results[1] as int;
           _activeOrders = results[2] as int;
-          _recentOrdersCount = (results[3] as List).length;
+          // _recentOrdersCount = (results[3] as List).length;  // Field disabled
           _isLoadingStats = false;
         });
       }

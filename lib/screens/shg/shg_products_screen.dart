@@ -614,7 +614,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
 
                     if (kDebugMode) {
                       debugPrint(
-                        '✅ Uploaded ${imageUrls.length ?? 0} product images',
+                        '✅ Uploaded ${imageUrls.length} product images',
                       );
                     }
                   }

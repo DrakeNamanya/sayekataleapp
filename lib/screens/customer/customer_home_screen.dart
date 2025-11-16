@@ -544,8 +544,7 @@ class _FarmCard extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  farm.location.fullAddress ??
-                                      'Location not set',
+                                  farm.location.fullAddress,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.textSecondary,

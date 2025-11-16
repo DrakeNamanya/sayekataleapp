@@ -6,7 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../services/message_service.dart';
 import '../../services/firebase_user_service.dart';
-import '../../services/rating_service.dart';
+// import '../../services/rating_service.dart';
 // import '../../widgets/review_list.dart'; // Unused widget with compilation errors
 import '../common/chat_screen.dart';
 
@@ -23,7 +23,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
   final MessageService _messageService = MessageService();
   final FirebaseUserService _userService = FirebaseUserService();
-  final RatingService _ratingService = RatingService();
+  // final RatingService _ratingService = RatingService(); // Unused for now
 
   Future<void> _handleContactSeller() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);

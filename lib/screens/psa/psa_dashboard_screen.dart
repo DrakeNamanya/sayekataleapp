@@ -27,8 +27,8 @@ class PSADashboardScreen extends StatefulWidget {
 
 class _PSADashboardScreenState extends State<PSADashboardScreen> {
   int _selectedIndex = 0;
-  final int _unreadNotifications = 7;
-  final int _unreadMessages = 4;
+  //   final int _unreadNotifications = 7;
+  //   final int _unreadMessages = 4;
 
   late final List<Widget> _screens;
 
@@ -127,7 +127,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
   int _totalProducts = 0;
   int _lowStockItems = 0;
   int _deliveryPending = 0;
-  bool _isLoading = true;
+  // Loading state available for future UI improvements
+  // bool _isLoading = true;
 
   @override
   void initState() {
@@ -142,7 +143,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
     final supplierId = authProvider.currentUser?.id;
 
     if (supplierId == null) {
-      setState(() => _isLoading = false);
+      setState(() {});  // _isLoading = false;  // Loading state disabled
       return;
     }
 
@@ -170,12 +171,12 @@ class _DashboardHomeState extends State<_DashboardHome> {
           _totalProducts = results[3] as int;
           _lowStockItems = results[4] as int;
           _deliveryPending = results[5] as int;
-          _isLoading = false;
+          // _isLoading = false;  // Loading state disabled
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {});  // _isLoading = false;  // Loading state disabled
       }
     }
   }

@@ -435,7 +435,6 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
               validator: (value) {
                 // Made optional since not all PSA businesses need UNBS certification
                 return null;
-                return null;
               },
             ),
             const SizedBox(height: 16),

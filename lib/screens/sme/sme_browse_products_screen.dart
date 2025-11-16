@@ -11,7 +11,7 @@ import '../../providers/cart_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/product_with_farmer_service.dart';
 import '../../services/favorite_service.dart';
-import '../../services/rating_service.dart';
+// import '../../services/rating_service.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/filter_bottom_sheet.dart';
 import '../../widgets/product_skeleton_loader.dart';
@@ -35,7 +35,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   final ProductWithFarmerService _productWithFarmerService =
       ProductWithFarmerService();
   final FavoriteService _favoriteService = FavoriteService();
-  final RatingService _ratingService = RatingService();
+  // final RatingService _ratingService = RatingService(); // Unused for now
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   ProductCategory? _selectedCategory;
@@ -615,175 +615,175 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     );
   }
 
-  Widget _buildProductCard(Product product) {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Stack(
-                children: [
-                  // ✅ Only load images from Firebase (no placeholders)
-                  product.images.isNotEmpty
-                      ? Image.network(
-                          product.images.first,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.image_not_supported,
-                                    size: 48,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Image unavailable',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.inventory_2,
-                                size: 48,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                product.name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                  if (product.isOutOfStock)
-                    Container(
-                      color: Colors.black54,
-                      child: const Center(
-                        child: Text(
-                          'OUT OF STOCK',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          // Product Info
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      // Farmer name - get from farmId (this is the user ID)
-                      Text(
-                        'Farmer', // We don't have farmer name in Product model
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Add to Cart Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 32,
-                    child: ElevatedButton(
-                      onPressed: product.isOutOfStock
-                          ? null
-                          : () => _addToCart(product, cartProvider),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_shopping_cart, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            product.isOutOfStock ? 'Out of Stock' : 'Add',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //   Widget _buildProductCard(Product product) {
+  //     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+  // 
+  //     return Card(
+  //       elevation: 2,
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           // Product Image
+  //           Expanded(
+  //             flex: 3,
+  //             child: ClipRRect(
+  //               borderRadius: const BorderRadius.vertical(
+  //                 top: Radius.circular(12),
+  //               ),
+  //               child: Stack(
+  //                 children: [
+  //                   // ✅ Only load images from Firebase (no placeholders)
+  //                   product.images.isNotEmpty
+  //                       ? Image.network(
+  //                           product.images.first,
+  //                           width: double.infinity,
+  //                           height: double.infinity,
+  //                           fit: BoxFit.cover,
+  //                           errorBuilder: (context, error, stackTrace) {
+  //                             return Container(
+  //                               color: Colors.grey[200],
+  //                               child: Column(
+  //                                 mainAxisAlignment: MainAxisAlignment.center,
+  //                                 children: [
+  //                                   Icon(
+  //                                     Icons.image_not_supported,
+  //                                     size: 48,
+  //                                     color: Colors.grey[400],
+  //                                   ),
+  //                                   const SizedBox(height: 8),
+  //                                   Text(
+  //                                     'Image unavailable',
+  //                                     textAlign: TextAlign.center,
+  //                                     style: TextStyle(
+  //                                       fontSize: 10,
+  //                                       color: Colors.grey[600],
+  //                                     ),
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             );
+  //                           },
+  //                         )
+  //                       : Container(
+  //                           color: Colors.grey[200],
+  //                           child: Column(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               Icon(
+  //                                 Icons.inventory_2,
+  //                                 size: 48,
+  //                                 color: Colors.grey[400],
+  //                               ),
+  //                               const SizedBox(height: 8),
+  //                               Text(
+  //                                 product.name,
+  //                                 textAlign: TextAlign.center,
+  //                                 style: TextStyle(
+  //                                   fontSize: 11,
+  //                                   color: Colors.grey[700],
+  //                                   fontWeight: FontWeight.w500,
+  //                                 ),
+  //                                 maxLines: 2,
+  //                                 overflow: TextOverflow.ellipsis,
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                   if (product.isOutOfStock)
+  //                     Container(
+  //                       color: Colors.black54,
+  //                       child: const Center(
+  //                         child: Text(
+  //                           'OUT OF STOCK',
+  //                           style: TextStyle(
+  //                             color: Colors.white,
+  //                             fontWeight: FontWeight.bold,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  // 
+  //           // Product Info
+  //           Expanded(
+  //             flex: 2,
+  //             child: Padding(
+  //               padding: const EdgeInsets.all(8),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(
+  //                         product.name,
+  //                         style: const TextStyle(
+  //                           fontSize: 14,
+  //                           fontWeight: FontWeight.bold,
+  //                         ),
+  //                         maxLines: 1,
+  //                         overflow: TextOverflow.ellipsis,
+  //                       ),
+  //                       const SizedBox(height: 2),
+  //                       // Farmer name - get from farmId (this is the user ID)
+  //                       Text(
+  //                         'Farmer', // We don't have farmer name in Product model
+  //                         style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+  //                         maxLines: 1,
+  //                         overflow: TextOverflow.ellipsis,
+  //                       ),
+  //                       const SizedBox(height: 4),
+  //                       Text(
+  //                         'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
+  //                         style: TextStyle(
+  //                           fontSize: 13,
+  //                           fontWeight: FontWeight.w600,
+  //                           color: AppTheme.primaryColor,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  // 
+  //                   // Add to Cart Button
+  //                   SizedBox(
+  //                     width: double.infinity,
+  //                     height: 32,
+  //                     child: ElevatedButton(
+  //                       onPressed: product.isOutOfStock
+  //                           ? null
+  //                           : () => _addToCart(product, cartProvider),
+  //                       style: ElevatedButton.styleFrom(
+  //                         padding: const EdgeInsets.symmetric(horizontal: 8),
+  //                         shape: RoundedRectangleBorder(
+  //                           borderRadius: BorderRadius.circular(8),
+  //                         ),
+  //                       ),
+  //                       child: Row(
+  //                         mainAxisAlignment: MainAxisAlignment.center,
+  //                         children: [
+  //                           const Icon(Icons.add_shopping_cart, size: 16),
+  //                           const SizedBox(width: 4),
+  //                           Text(
+  //                             product.isOutOfStock ? 'Out of Stock' : 'Add',
+  //                             style: const TextStyle(fontSize: 12),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
 
   /// Enhanced product card with farmer details, distance, and ratings
   Widget _buildEnhancedProductCard(ProductWithRating productWithRating) {
@@ -1724,45 +1724,45 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     });
   }
 
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String query = _searchQuery;
-        return AlertDialog(
-          title: const Text('Search Products'),
-          content: TextField(
-            autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Enter product name...',
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (value) => query = value,
-            onSubmitted: (value) {
-              setState(() => _searchQuery = value);
-              Navigator.pop(context);
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() => _searchQuery = '');
-                Navigator.pop(context);
-              },
-              child: const Text('Clear'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() => _searchQuery = query);
-                Navigator.pop(context);
-              },
-              child: const Text('Search'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //   void _showSearchDialog() {
+  //     showDialog(
+  //       context: context,
+  //       builder: (context) {
+  //         String query = _searchQuery;
+  //         return AlertDialog(
+  //           title: const Text('Search Products'),
+  //           content: TextField(
+  //             autofocus: true,
+  //             decoration: const InputDecoration(
+  //               hintText: 'Enter product name...',
+  //               prefixIcon: Icon(Icons.search),
+  //             ),
+  //             onChanged: (value) => query = value,
+  //             onSubmitted: (value) {
+  //               setState(() => _searchQuery = value);
+  //               Navigator.pop(context);
+  //             },
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 setState(() => _searchQuery = '');
+  //                 Navigator.pop(context);
+  //               },
+  //               child: const Text('Clear'),
+  //             ),
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 setState(() => _searchQuery = query);
+  //                 Navigator.pop(context);
+  //               },
+  //               child: const Text('Search'),
+  //             ),
+  //           ],
+  //         );
+  //       },
+  //     );
+  //   }
 
   /// Show filter bottom sheet
   Future<void> _showFilterSheet() async {
