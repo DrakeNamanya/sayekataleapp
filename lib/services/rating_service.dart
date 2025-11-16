@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/order.dart' as app_order;
 import '../models/user.dart';
+import '../models/farmer_rating.dart';
 
 /// Service for calculating and updating user system ratings
 /// 
@@ -240,6 +241,178 @@ class RatingService {
       totalDeliveredOrders: 0, // Not stored in user model
       totalReviewedOrders: 0, // Not stored in user model
     );
+  }
+
+  /// Get multiple farmer ratings by their IDs
+  /// Used for displaying ratings in product listings
+  Future<Map<String, FarmerRating>> getFarmerRatings(List<String> farmerIds) async {
+    try {
+      if (farmerIds.isEmpty) {
+        return {};
+      }
+
+      if (kDebugMode) {
+        debugPrint('📊 Fetching ratings for ${farmerIds.length} farmers');
+      }
+
+      final ratingsMap = <String, FarmerRating>{};
+
+      // Fetch ratings for each farmer
+      for (final farmerId in farmerIds) {
+        try {
+          final ratingDoc = await _firestore
+              .collection('farmer_ratings')
+              .doc(farmerId)
+              .get();
+
+          if (ratingDoc.exists && ratingDoc.data() != null) {
+            // Parse FarmerRating from Firestore data
+            final farmerRating = FarmerRating.fromFirestore(ratingDoc.data()!, farmerId);
+            ratingsMap[farmerId] = farmerRating;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Failed to fetch rating for $farmerId: $e');
+          }
+          // Continue with other farmers even if one fails
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Fetched ${ratingsMap.length} farmer ratings');
+      }
+
+      return ratingsMap;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error fetching farmer ratings: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Submit a review for an order
+  /// Creates review document and updates farmer rating statistics
+  Future<void> submitReview(dynamic review) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('📝 Submitting review for order: ${review.orderId}');
+      }
+
+      // Create review document
+      final reviewRef = _firestore.collection('reviews').doc();
+      await reviewRef.set({
+        'order_id': review.orderId,
+        'user_id': review.userId,
+        'user_name': review.userName,
+        'farm_id': review.farmId,
+        'product_id': review.productId,
+        'rating': review.rating,
+        'comment': review.comment,
+        'photo_urls': review.photoUrls ?? [],
+        'created_at': review.createdAt.toIso8601String(),
+      });
+
+      // Update order with review info
+      await _firestore.collection('orders').doc(review.orderId).update({
+        'rating': review.rating.toInt(),
+        'review': review.comment,
+        'review_photos': review.photoUrls ?? [],
+        'reviewed_at': DateTime.now().toIso8601String(),
+        'status': 'completed',
+      });
+
+      // Get farmer name from order
+      final orderDoc = await _firestore.collection('orders').doc(review.orderId).get();
+      if (orderDoc.exists) {
+        final orderData = orderDoc.data()!;
+        final farmerId = orderData['farmer_id'];
+        final farmerName = orderData['farmer_name'];
+
+        // Update farmer's rating statistics
+        await _updateFarmerRating(farmerId, farmerName, review.rating.toInt());
+
+        // Update seller's system rating after review submission
+        try {
+          await calculateAndUpdateUserRating(farmerId);
+          if (kDebugMode) {
+            debugPrint('⭐ Seller system rating updated for $farmerId');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Error updating seller system rating: $e');
+          }
+          // Don't fail the review submission if rating update fails
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Review submitted successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error submitting review: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Update farmer's rating statistics
+  Future<void> _updateFarmerRating(String farmerId, String farmerName, int rating) async {
+    try {
+      final ratingDoc = _firestore.collection('farmer_ratings').doc(farmerId);
+      final ratingSnapshot = await ratingDoc.get();
+
+      if (ratingSnapshot.exists) {
+        // Update existing rating
+        final data = ratingSnapshot.data()!;
+        final currentAverage = (data['average_rating'] ?? 0.0).toDouble();
+        final currentTotal = data['total_ratings'] ?? 0;
+        final currentDistribution = (data['rating_distribution'] as List<dynamic>?)
+                ?.map((e) => e as int)
+                .toList() ??
+            [0, 0, 0, 0, 0];
+
+        // Calculate new average
+        final newTotal = currentTotal + 1;
+        final newAverage = ((currentAverage * currentTotal) + rating) / newTotal;
+
+        // Update distribution
+        currentDistribution[rating - 1]++;
+
+        await ratingDoc.update({
+          'average_rating': newAverage,
+          'total_ratings': newTotal,
+          'rating_distribution': currentDistribution,
+          'last_rated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        // Create new rating record
+        final distribution = [0, 0, 0, 0, 0];
+        distribution[rating - 1] = 1;
+
+        await ratingDoc.set({
+          'farmer_name': farmerName,
+          'average_rating': rating.toDouble(),
+          'total_ratings': 1,
+          'total_orders': 0,
+          'total_deliveries': 0,
+          'rating_distribution': distribution,
+          'last_rated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      if (kDebugMode) {
+        debugPrint('✅ Farmer rating updated for $farmerId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error updating farmer rating: $e');
+      }
+      // Don't rethrow - rating update failure shouldn't block review submission
+    }
   }
 }
 

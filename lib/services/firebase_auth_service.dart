@@ -226,7 +226,7 @@ class FirebaseAuthService {
         await userRef.set(userData);
 
         if (kDebugMode) {
-          debugPrint('✅ User profile created: $userId');
+          debugPrint('✅ User profile created: $uid');
         }
 
         return newUser;
