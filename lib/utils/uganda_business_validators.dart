@@ -1,6 +1,6 @@
-/// Uganda Business Validation Utilities
-/// Validates TIN (Tax Identification Number) and Business Registration Numbers
-/// Based on Uganda Revenue Authority (URA) and URSB specifications
+// Uganda Business Validation Utilities
+// Validates TIN (Tax Identification Number) and Business Registration Numbers
+// Based on Uganda Revenue Authority (URA) and URSB specifications
 
 class UgandaBusinessValidators {
   // ============================================================================
