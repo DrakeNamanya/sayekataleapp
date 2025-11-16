@@ -23,7 +23,9 @@ class Conversation {
     return Conversation(
       id: id,
       participantIds: List<String>.from(data['participant_ids'] ?? []),
-      participantNames: Map<String, String>.from(data['participant_names'] ?? {}),
+      participantNames: Map<String, String>.from(
+        data['participant_names'] ?? {},
+      ),
       lastMessage: data['last_message'],
       lastMessageTime: data['last_message_time'] != null
           ? DateTime.parse(data['last_message_time'])
@@ -101,9 +103,4 @@ class Message {
   }
 }
 
-enum MessageType {
-  text,
-  image,
-  file,
-  location,
-}
+enum MessageType { text, image, file, location }

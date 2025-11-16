@@ -16,7 +16,8 @@ class FeaturedProductCarousel extends StatefulWidget {
   });
 
   @override
-  State<FeaturedProductCarousel> createState() => _FeaturedProductCarouselState();
+  State<FeaturedProductCarousel> createState() =>
+      _FeaturedProductCarouselState();
 }
 
 class _FeaturedProductCarouselState extends State<FeaturedProductCarousel> {
@@ -100,10 +101,7 @@ class _FeaturedProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
 
-  const _FeaturedProductCard({
-    required this.product,
-    required this.onTap,
-  });
+  const _FeaturedProductCard({required this.product, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -132,9 +130,7 @@ class _FeaturedProductCard extends StatelessWidget {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
                         color: Colors.grey.shade200,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                        child: const Center(child: CircularProgressIndicator()),
                       ),
                       errorWidget: (context, url, error) => Container(
                         color: Colors.grey.shade300,
@@ -153,7 +149,7 @@ class _FeaturedProductCard extends StatelessWidget {
                         color: Colors.grey,
                       ),
                     ),
-              
+
               // Gradient Overlay for Text Readability
               Container(
                 decoration: BoxDecoration(
@@ -168,7 +164,7 @@ class _FeaturedProductCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Product Info
               Positioned(
                 left: 16,
@@ -247,7 +243,7 @@ class _FeaturedProductCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Price Button
               Positioned(
                 right: 16,
@@ -278,13 +274,9 @@ class _FeaturedProductCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Featured Badge
-              const Positioned(
-                top: 12,
-                right: 12,
-                child: FeaturedBadge(),
-              ),
+              const Positioned(top: 12, right: 12, child: FeaturedBadge()),
             ],
           ),
         ),

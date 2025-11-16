@@ -55,7 +55,8 @@ class Receipt {
       buyerName: data['buyer_name'] ?? '',
       sellerId: data['seller_id'] ?? '',
       sellerName: data['seller_name'] ?? '',
-      items: (data['items'] as List<dynamic>?)
+      items:
+          (data['items'] as List<dynamic>?)
               ?.map((item) => ReceiptItem.fromMap(item as Map<String, dynamic>))
               .toList() ??
           [],

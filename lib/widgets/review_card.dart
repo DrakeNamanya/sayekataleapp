@@ -40,7 +40,9 @@ class ReviewCard extends StatelessWidget {
                   // User avatar
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    backgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.1,
+                    ),
                     child: Text(
                       review.userName.isNotEmpty
                           ? review.userName[0].toUpperCase()
@@ -79,10 +81,7 @@ class ReviewCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      StarRatingWidget(
-                        rating: review.rating,
-                        size: 16,
-                      ),
+                      StarRatingWidget(rating: review.rating, size: 16),
                       const SizedBox(height: 2),
                       Text(
                         review.rating.toStringAsFixed(1),
@@ -205,11 +204,7 @@ class ReviewCardCompact extends StatelessWidget {
   final Review review;
   final VoidCallback? onTap;
 
-  const ReviewCardCompact({
-    super.key,
-    required this.review,
-    this.onTap,
-  });
+  const ReviewCardCompact({super.key, required this.review, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -238,11 +233,7 @@ class ReviewCardCompact extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 14,
-                      color: Colors.amber,
-                    ),
+                    const Icon(Icons.star, size: 14, color: Colors.amber),
                     const SizedBox(width: 4),
                     Text(
                       review.rating.toStringAsFixed(1),
@@ -283,10 +274,7 @@ class ReviewCardCompact extends StatelessWidget {
               // Time
               Text(
                 timeago.format(review.createdAt),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
               ),
             ],
           ),

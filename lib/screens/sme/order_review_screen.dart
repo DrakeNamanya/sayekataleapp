@@ -18,7 +18,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   final _formKey = GlobalKey<FormState>();
   final _reviewController = TextEditingController();
   final OrderService _orderService = OrderService();
-  
+
   int _rating = 0;
   String? _reviewPhotoPath;
   bool _isFavorite = false;
@@ -44,7 +44,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
       maxHeight: 1024,
       imageQuality: 85,
     );
-    
+
     if (pickedFile != null) {
       setState(() {
         _reviewPhotoPath = pickedFile.path;
@@ -107,10 +107,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rate Your Order'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Rate Your Order'), elevation: 0),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -134,18 +131,12 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Seller: ${widget.order.farmerName}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Total: UGX ${widget.order.totalAmount.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                   ],
                 ),
@@ -156,10 +147,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             // Rating Section
             const Text(
               'How was your experience?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Center(
@@ -197,10 +185,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             // Review Text
             const Text(
               'Write a review',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -227,10 +212,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             // Photo Upload
             const Text(
               'Add a photo (optional)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             GestureDetector(
@@ -253,7 +235,11 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
+                                  Icon(
+                                    Icons.add_a_photo,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
                                   SizedBox(height: 8),
                                   Text('Tap to add photo'),
                                 ],
@@ -266,7 +252,11 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
+                            Icon(
+                              Icons.add_a_photo,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 8),
                             Text('Tap to add photo of delivered product'),
                           ],
@@ -312,7 +302,10 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                     )
                   : const Text(
                       'Submit Review',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ],

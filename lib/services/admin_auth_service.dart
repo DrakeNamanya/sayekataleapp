@@ -8,7 +8,7 @@ import '../models/admin_user.dart';
 class AdminAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   static const String _adminSessionKey = 'admin_session';
   static const String _adminIdKey = 'admin_id';
   static const String _adminEmailKey = 'admin_email';
@@ -29,7 +29,7 @@ class AdminAuthService {
 
       // Step 2: Check if user is admin
       final adminUser = await getAdminByEmail(email);
-      
+
       if (adminUser == null) {
         // Not an admin - sign out immediately
         await _auth.signOut();
@@ -39,7 +39,9 @@ class AdminAuthService {
       if (!adminUser.isActive) {
         // Admin account is deactivated
         await _auth.signOut();
-        throw Exception('Admin account is deactivated. Contact system administrator.');
+        throw Exception(
+          'Admin account is deactivated. Contact system administrator.',
+        );
       }
 
       // Step 3: Save admin session
@@ -80,7 +82,7 @@ class AdminAuthService {
   Future<AdminUser?> getAdminById(String adminId) async {
     try {
       final doc = await _firestore.collection('admin_users').doc(adminId).get();
-      
+
       if (!doc.exists) {
         return null;
       }
@@ -96,7 +98,7 @@ class AdminAuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final hasSession = prefs.getBool(_adminSessionKey) ?? false;
-      
+
       if (!hasSession) {
         return false;
       }
@@ -130,7 +132,7 @@ class AdminAuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final adminId = prefs.getString(_adminIdKey);
-      
+
       if (adminId == null) {
         return null;
       }

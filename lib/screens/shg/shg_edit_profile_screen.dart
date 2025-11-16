@@ -23,7 +23,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   final _phoneController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _nameOnIdPhotoController = TextEditingController();
-  
+
   // Partner information controllers
   final _heiferAgrihubNameController = TextEditingController();
   final _heiferSHGNameController = TextEditingController();
@@ -32,7 +32,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   final _fsmeGroupNameController = TextEditingController();
   final _fsmeGroupIdController = TextEditingController();
   final _fsmeParticipantIdController = TextEditingController();
-  
+
   Sex? _selectedSex;
   DisabilityStatus _disabilityStatus = DisabilityStatus.no;
   String? _profileImagePath;
@@ -41,20 +41,20 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   XFile? _nationalIdPhotoFile; // Local file for display before upload
   double? _latitude;
   double? _longitude;
-  
+
   // Location data from picker
   String? _selectedDistrict;
   String? _selectedSubcounty;
   String? _selectedParish;
   String? _selectedVillage;
-  
+
   // NIN validation state
   String? _ninValidationError;
   String? _ninType;
-  
+
   // Partner information
   PartnerType? _selectedPartner;
-  
+
   bool _isLoading = false;
 
   @override
@@ -66,7 +66,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   void _loadCurrentUserData() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
-    
+
     if (user != null) {
       _nameController.text = user.name;
       _phoneController.text = user.phone;
@@ -76,39 +76,50 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
       _disabilityStatus = user.disabilityStatus;
       _profileImagePath = user.profileImage;
       _nationalIdPhotoPath = user.nationalIdPhoto;
-      
+
       if (kDebugMode) {
         debugPrint('🔄 SHG EDIT PROFILE - Loaded user data:');
         debugPrint('   - User name: ${user.name}');
         debugPrint('   - Profile image: ${_profileImagePath ?? "NULL"}');
         debugPrint('   - National ID photo: ${_nationalIdPhotoPath ?? "NULL"}');
       }
-      
+
       // Validate NIN if present
       if (user.nationalId != null && user.nationalId!.isNotEmpty) {
         _validateNIN(user.nationalId!);
       }
-      
+
       if (user.location != null) {
         // Treat empty strings as null for proper validation
-        _selectedDistrict = user.location!.district?.isNotEmpty == true ? user.location!.district : null;
-        _selectedSubcounty = user.location!.subcounty?.isNotEmpty == true ? user.location!.subcounty : null;
-        _selectedParish = user.location!.parish?.isNotEmpty == true ? user.location!.parish : null;
-        _selectedVillage = user.location!.village?.isNotEmpty == true ? user.location!.village : null;
+        _selectedDistrict = user.location!.district?.isNotEmpty == true
+            ? user.location!.district
+            : null;
+        _selectedSubcounty = user.location!.subcounty?.isNotEmpty == true
+            ? user.location!.subcounty
+            : null;
+        _selectedParish = user.location!.parish?.isNotEmpty == true
+            ? user.location!.parish
+            : null;
+        _selectedVillage = user.location!.village?.isNotEmpty == true
+            ? user.location!.village
+            : null;
         _latitude = user.location!.latitude;
         _longitude = user.location!.longitude;
       }
-      
+
       // Load partner information
       if (user.partnerInfo != null) {
         _selectedPartner = user.partnerInfo!.partner;
-        _heiferAgrihubNameController.text = user.partnerInfo!.heiferAgrihubName ?? '';
+        _heiferAgrihubNameController.text =
+            user.partnerInfo!.heiferAgrihubName ?? '';
         _heiferSHGNameController.text = user.partnerInfo!.heiferSHGName ?? '';
         _heiferSHGIdController.text = user.partnerInfo!.heiferSHGId ?? '';
-        _heiferParticipantIdController.text = user.partnerInfo!.heiferParticipantId ?? '';
+        _heiferParticipantIdController.text =
+            user.partnerInfo!.heiferParticipantId ?? '';
         _fsmeGroupNameController.text = user.partnerInfo!.fsmeGroupName ?? '';
         _fsmeGroupIdController.text = user.partnerInfo!.fsmeGroupId ?? '';
-        _fsmeParticipantIdController.text = user.partnerInfo!.fsmeParticipantId ?? '';
+        _fsmeParticipantIdController.text =
+            user.partnerInfo!.fsmeParticipantId ?? '';
       }
     }
   }
@@ -138,7 +149,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
       _latitude = 0.3476; // Kampala default
       _longitude = 32.5825;
     });
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -153,7 +164,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
     setState(() {
       final error = NINValidator.validateNIN(value);
       _ninValidationError = error;
-      
+
       if (error == null) {
         _ninType = NINValidator.getNINType(value);
       } else {
@@ -172,7 +183,8 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         backgroundColor: Colors.grey.shade200,
         backgroundImage: MemoryImage(bytes),
       );
-    } else if (_profileImagePath != null && _profileImagePath!.startsWith('http')) {
+    } else if (_profileImagePath != null &&
+        _profileImagePath!.startsWith('http')) {
       // Show network image (existing URL)
       return CircleAvatar(
         radius: 60,
@@ -180,7 +192,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         backgroundImage: NetworkImage(_profileImagePath!),
       );
     }
-    
+
     // No image
     return CircleAvatar(
       radius: 60,
@@ -200,7 +212,8 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         width: double.infinity,
         height: 150,
       );
-    } else if (_nationalIdPhotoPath != null && _nationalIdPhotoPath!.startsWith('http')) {
+    } else if (_nationalIdPhotoPath != null &&
+        _nationalIdPhotoPath!.startsWith('http')) {
       // Show network image (existing URL)
       return Image.network(
         _nationalIdPhotoPath!,
@@ -209,7 +222,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
         height: 150,
       );
     }
-    
+
     // No image - show placeholder
     return Center(
       child: Column(
@@ -265,16 +278,27 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
     // }
 
     // Location validation: Either GPS coordinates OR complete administrative divisions required
-    final hasGPS = _latitude != null && _longitude != null && _latitude != 0.0 && _longitude != 0.0;
-    final hasAdminDivisions = _selectedDistrict != null && _selectedDistrict!.isNotEmpty &&
-                              _selectedSubcounty != null && _selectedSubcounty!.isNotEmpty &&
-                              _selectedParish != null && _selectedParish!.isNotEmpty &&
-                              _selectedVillage != null && _selectedVillage!.isNotEmpty;
-    
+    final hasGPS =
+        _latitude != null &&
+        _longitude != null &&
+        _latitude != 0.0 &&
+        _longitude != 0.0;
+    final hasAdminDivisions =
+        _selectedDistrict != null &&
+        _selectedDistrict!.isNotEmpty &&
+        _selectedSubcounty != null &&
+        _selectedSubcounty!.isNotEmpty &&
+        _selectedParish != null &&
+        _selectedParish!.isNotEmpty &&
+        _selectedVillage != null &&
+        _selectedVillage!.isNotEmpty;
+
     if (!hasGPS && !hasAdminDivisions) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please provide either GPS coordinates OR select District/Subcounty/Parish/Village'),
+          content: Text(
+            'Please provide either GPS coordinates OR select District/Subcounty/Parish/Village',
+          ),
           backgroundColor: AppTheme.errorColor,
           duration: Duration(seconds: 4),
         ),
@@ -288,7 +312,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       // Create location with either GPS-only or complete administrative divisions
       final location = Location(
         latitude: _latitude ?? 0.0,
@@ -305,63 +329,79 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
       if (_selectedPartner != null) {
         partnerInfo = PartnerInfo(
           partner: _selectedPartner!,
-          heiferAgrihubName: _selectedPartner == PartnerType.heifer 
-              ? _heiferAgrihubNameController.text.trim().isNotEmpty 
-                  ? _heiferAgrihubNameController.text.trim() 
-                  : null
+          heiferAgrihubName: _selectedPartner == PartnerType.heifer
+              ? _heiferAgrihubNameController.text.trim().isNotEmpty
+                    ? _heiferAgrihubNameController.text.trim()
+                    : null
               : null,
-          heiferSHGName: _selectedPartner == PartnerType.heifer 
-              ? _heiferSHGNameController.text.trim().isNotEmpty 
-                  ? _heiferSHGNameController.text.trim() 
-                  : null
+          heiferSHGName: _selectedPartner == PartnerType.heifer
+              ? _heiferSHGNameController.text.trim().isNotEmpty
+                    ? _heiferSHGNameController.text.trim()
+                    : null
               : null,
-          heiferSHGId: _selectedPartner == PartnerType.heifer 
-              ? _heiferSHGIdController.text.trim().isNotEmpty 
-                  ? _heiferSHGIdController.text.trim() 
-                  : null
+          heiferSHGId: _selectedPartner == PartnerType.heifer
+              ? _heiferSHGIdController.text.trim().isNotEmpty
+                    ? _heiferSHGIdController.text.trim()
+                    : null
               : null,
-          heiferParticipantId: _selectedPartner == PartnerType.heifer 
-              ? _heiferParticipantIdController.text.trim().isNotEmpty 
-                  ? _heiferParticipantIdController.text.trim() 
-                  : null
+          heiferParticipantId: _selectedPartner == PartnerType.heifer
+              ? _heiferParticipantIdController.text.trim().isNotEmpty
+                    ? _heiferParticipantIdController.text.trim()
+                    : null
               : null,
-          fsmeGroupName: _selectedPartner == PartnerType.fsme 
-              ? _fsmeGroupNameController.text.trim().isNotEmpty 
-                  ? _fsmeGroupNameController.text.trim() 
-                  : null
+          fsmeGroupName: _selectedPartner == PartnerType.fsme
+              ? _fsmeGroupNameController.text.trim().isNotEmpty
+                    ? _fsmeGroupNameController.text.trim()
+                    : null
               : null,
-          fsmeGroupId: _selectedPartner == PartnerType.fsme 
-              ? _fsmeGroupIdController.text.trim().isNotEmpty 
-                  ? _fsmeGroupIdController.text.trim() 
-                  : null
+          fsmeGroupId: _selectedPartner == PartnerType.fsme
+              ? _fsmeGroupIdController.text.trim().isNotEmpty
+                    ? _fsmeGroupIdController.text.trim()
+                    : null
               : null,
-          fsmeParticipantId: _selectedPartner == PartnerType.fsme 
-              ? _fsmeParticipantIdController.text.trim().isNotEmpty 
-                  ? _fsmeParticipantIdController.text.trim() 
-                  : null
+          fsmeParticipantId: _selectedPartner == PartnerType.fsme
+              ? _fsmeParticipantIdController.text.trim().isNotEmpty
+                    ? _fsmeParticipantIdController.text.trim()
+                    : null
               : null,
         );
       }
 
       if (kDebugMode) {
         debugPrint('📤 SHG EDIT PROFILE - Calling updateProfile with:');
-        debugPrint('   - profileImageFile: ${_profileImageFile?.path ?? "null"}');
+        debugPrint(
+          '   - profileImageFile: ${_profileImageFile?.path ?? "null"}',
+        );
         debugPrint('   - profileImagePath: ${_profileImagePath ?? "null"}');
-        debugPrint('   - nationalIdPhotoFile: ${_nationalIdPhotoFile?.path ?? "null"}');
-        debugPrint('   - nationalIdPhotoPath: ${_nationalIdPhotoPath ?? "null"}');
-        debugPrint('   - nationalId: ${_nationalIdController.text.trim().isEmpty ? "EMPTY" : "filled"}');
-        debugPrint('   - nameOnIdPhoto: ${_nameOnIdPhotoController.text.trim().isEmpty ? "EMPTY" : "filled"}');
+        debugPrint(
+          '   - nationalIdPhotoFile: ${_nationalIdPhotoFile?.path ?? "null"}',
+        );
+        debugPrint(
+          '   - nationalIdPhotoPath: ${_nationalIdPhotoPath ?? "null"}',
+        );
+        debugPrint(
+          '   - nationalId: ${_nationalIdController.text.trim().isEmpty ? "EMPTY" : "filled"}',
+        );
+        debugPrint(
+          '   - nameOnIdPhoto: ${_nameOnIdPhotoController.text.trim().isEmpty ? "EMPTY" : "filled"}',
+        );
         debugPrint('   - sex: ${_selectedSex ?? "null"}');
         debugPrint('   - location: ${location.district}');
-        debugPrint('   - partnerInfo: ${partnerInfo != null ? partnerInfo.partner.displayName : "null"}');
+        debugPrint(
+          '   - partnerInfo: ${partnerInfo != null ? partnerInfo.partner.displayName : "null"}',
+        );
       }
-      
+
       await authProvider.updateProfile(
         profileImageFile: _profileImageFile,
-        profileImageUrl: _profileImageFile == null ? _profileImagePath : null,  // Only pass URL if no file
+        profileImageUrl: _profileImageFile == null
+            ? _profileImagePath
+            : null, // Only pass URL if no file
         nationalId: _nationalIdController.text.trim(),
         nationalIdPhotoFile: _nationalIdPhotoFile,
-        nationalIdPhotoUrl: _nationalIdPhotoFile == null ? _nationalIdPhotoPath : null,  // Only pass URL if no file
+        nationalIdPhotoUrl: _nationalIdPhotoFile == null
+            ? _nationalIdPhotoPath
+            : null, // Only pass URL if no file
         nameOnIdPhoto: _nameOnIdPhotoController.text.trim(),
         sex: _selectedSex,
         disabilityStatus: _disabilityStatus,
@@ -398,7 +438,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
@@ -493,10 +533,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
             // Profile Image
             const Text(
               'Profile Photo',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Center(
@@ -522,7 +559,11 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
                       backgroundColor: AppTheme.primaryColor,
                       radius: 20,
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                        icon: const Icon(
+                          Icons.camera_alt,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                         onPressed: () => _pickImage(true),
                       ),
                     ),
@@ -615,10 +656,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
             // National ID Photo
             const Text(
               'National ID Photo *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             InkWell(
@@ -654,15 +692,21 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
                 prefixIcon: const Icon(Icons.badge),
                 hintText: 'Enter name exactly as shown on ID',
                 helperText: 'Must match your profile name for verification',
-                suffixIcon: _nameController.text.isNotEmpty &&
+                suffixIcon:
+                    _nameController.text.isNotEmpty &&
                         _nameOnIdPhotoController.text.isNotEmpty
                     ? Icon(
                         NINValidator.namesMatch(
-                                _nameController.text, _nameOnIdPhotoController.text)
+                              _nameController.text,
+                              _nameOnIdPhotoController.text,
+                            )
                             ? Icons.check_circle
                             : Icons.warning,
-                        color: NINValidator.namesMatch(
-                                _nameController.text, _nameOnIdPhotoController.text)
+                        color:
+                            NINValidator.namesMatch(
+                              _nameController.text,
+                              _nameOnIdPhotoController.text,
+                            )
                             ? AppTheme.successColor
                             : AppTheme.warningColor,
                       )
@@ -687,25 +731,35 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
                   children: [
                     Icon(
                       NINValidator.namesMatch(
-                              _nameController.text, _nameOnIdPhotoController.text)
+                            _nameController.text,
+                            _nameOnIdPhotoController.text,
+                          )
                           ? Icons.check_circle
                           : Icons.warning,
                       size: 16,
-                      color: NINValidator.namesMatch(
-                              _nameController.text, _nameOnIdPhotoController.text)
+                      color:
+                          NINValidator.namesMatch(
+                            _nameController.text,
+                            _nameOnIdPhotoController.text,
+                          )
                           ? AppTheme.successColor
                           : AppTheme.warningColor,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       NINValidator.namesMatch(
-                              _nameController.text, _nameOnIdPhotoController.text)
+                            _nameController.text,
+                            _nameOnIdPhotoController.text,
+                          )
                           ? 'Names match - verification ready'
                           : 'Names do not match - verification may fail',
                       style: TextStyle(
                         fontSize: 12,
-                        color: NINValidator.namesMatch(
-                                _nameController.text, _nameOnIdPhotoController.text)
+                        color:
+                            NINValidator.namesMatch(
+                              _nameController.text,
+                              _nameOnIdPhotoController.text,
+                            )
                             ? AppTheme.successColor
                             : AppTheme.warningColor,
                         fontWeight: FontWeight.w600,
@@ -718,7 +772,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
 
             // Sex
             DropdownButtonFormField<Sex>(
-              value: _selectedSex,
+              initialValue: _selectedSex,
               decoration: const InputDecoration(
                 labelText: 'Sex *',
                 prefixIcon: Icon(Icons.person_outline),
@@ -746,10 +800,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
             // Disability Status
             const Text(
               'Disability Status *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Row(
@@ -786,10 +837,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
             const Divider(height: 32),
             const Text(
               'Partner Information (Optional)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -797,10 +845,10 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
               style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            
+
             // Partner Dropdown
             DropdownButtonFormField<PartnerType>(
-              value: _selectedPartner,
+              initialValue: _selectedPartner,
               decoration: const InputDecoration(
                 labelText: 'Partner Organization',
                 prefixIcon: Icon(Icons.business),
@@ -831,7 +879,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // Heifer-specific fields
             if (_selectedPartner == PartnerType.heifer) ...[
               TextFormField(
@@ -867,7 +915,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // FSME-specific fields
             if (_selectedPartner == PartnerType.fsme) ...[
               TextFormField(
@@ -903,10 +951,7 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
               children: [
                 const Text(
                   'Location Information *',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton.icon(
                   onPressed: _getCurrentLocation,

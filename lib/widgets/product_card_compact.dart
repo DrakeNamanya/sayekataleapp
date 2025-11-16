@@ -71,7 +71,7 @@ class ProductCardCompact extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Product Info
             Expanded(
               child: Column(
@@ -89,7 +89,7 @@ class ProductCardCompact extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Farmer Name
                   if (farmerName != null)
                     Row(
@@ -114,7 +114,7 @@ class ProductCardCompact extends StatelessWidget {
                       ],
                     ),
                   const SizedBox(height: 4),
-                  
+
                   // Rating & Top Badge
                   Row(
                     children: [
@@ -136,7 +136,7 @@ class ProductCardCompact extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Distance
                   if (distanceKm != null)
                     Row(
@@ -157,7 +157,7 @@ class ProductCardCompact extends StatelessWidget {
                       ],
                     ),
                   const SizedBox(height: 8),
-                  
+
                   // Price & Add Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -182,7 +182,7 @@ class ProductCardCompact extends StatelessWidget {
                           ),
                         ],
                       ),
-                      
+
                       // Add Button
                       Material(
                         color: const Color(0xFF2E7D32),

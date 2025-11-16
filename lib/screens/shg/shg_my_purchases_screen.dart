@@ -16,7 +16,8 @@ class SHGMyPurchasesScreen extends StatefulWidget {
   State<SHGMyPurchasesScreen> createState() => _SHGMyPurchasesScreenState();
 }
 
-class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with SingleTickerProviderStateMixin {
+class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen>
+    with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   late TabController _tabController;
   bool _isProcessing = false;
@@ -73,16 +74,25 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     );
   }
 
-  Widget _buildOrdersList(String shgId, List<app_order.OrderStatus> statusFilter) {
+  Widget _buildOrdersList(
+    String shgId,
+    List<app_order.OrderStatus> statusFilter,
+  ) {
     return StreamBuilder<List<app_order.Order>>(
       stream: _orderService.streamBuyerOrders(shgId),
       builder: (context, snapshot) {
         // Debug logging
         if (kDebugMode) {
-          debugPrint('📊 SHG My Purchases - Connection: ${snapshot.connectionState}');
+          debugPrint(
+            '📊 SHG My Purchases - Connection: ${snapshot.connectionState}',
+          );
           debugPrint('📊 SHG My Purchases - Has Error: ${snapshot.hasError}');
-          debugPrint('📊 SHG My Purchases - Data: ${snapshot.data?.length ?? 0} orders');
-          debugPrint('📊 SHG My Purchases - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
+          debugPrint(
+            '📊 SHG My Purchases - Data: ${snapshot.data?.length ?? 0} orders',
+          );
+          debugPrint(
+            '📊 SHG My Purchases - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}',
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -92,7 +102,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Loading purchases...', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'Loading purchases...',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -110,7 +123,11 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                 const SizedBox(height: 16),
                 Text(
                   'Error loading purchases',
-                  style: TextStyle(fontSize: 18, color: Colors.red[700], fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -136,7 +153,9 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
         }
 
         // Apply status filter
-        orders = orders.where((order) => statusFilter.contains(order.status)).toList();
+        orders = orders
+            .where((order) => statusFilter.contains(order.status))
+            .toList();
         if (kDebugMode) {
           debugPrint('📦 After status filter: ${orders.length}');
         }
@@ -148,11 +167,19 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[400]),
+                  Icon(
+                    Icons.shopping_bag_outlined,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No orders found',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -216,7 +243,9 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                          DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(order.createdAt),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -226,7 +255,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -267,10 +299,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                       children: [
                         const Text(
                           'PSA Supplier',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 10, color: Colors.grey),
                         ),
                         Text(
                           order.farmerName ?? 'Unknown',
@@ -306,7 +335,11 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.shopping_basket, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.shopping_basket,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '${order.items.length} item(s)',
@@ -327,12 +360,15 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               ),
 
               // Confirm Receipt Button (for delivered orders)
-              if (order.status == app_order.OrderStatus.delivered && !(order.isReceivedByBuyer ?? false)) ...[
+              if (order.status == app_order.OrderStatus.delivered &&
+                  !(order.isReceivedByBuyer ?? false)) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isProcessing ? null : () => _confirmReceipt(order),
+                    onPressed: _isProcessing
+                        ? null
+                        : () => _confirmReceipt(order),
                     icon: const Icon(Icons.check_circle, size: 18),
                     label: const Text('Confirm Receipt'),
                     style: ElevatedButton.styleFrom(
@@ -344,8 +380,8 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               ],
 
               // Rate Order Button (for delivered orders that have been confirmed but not reviewed)
-              if (order.status == app_order.OrderStatus.delivered && 
-                  (order.isReceivedByBuyer ?? false) && 
+              if (order.status == app_order.OrderStatus.delivered &&
+                  (order.isReceivedByBuyer ?? false) &&
                   order.rating == null) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -368,7 +404,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
               if (order.rating != null) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber.shade50,
                     borderRadius: BorderRadius.circular(8),
@@ -396,7 +435,9 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                                 ...List.generate(
                                   5,
                                   (index) => Icon(
-                                    index < order.rating! ? Icons.star : Icons.star_border,
+                                    index < order.rating!
+                                        ? Icons.star
+                                        : Icons.star_border,
                                     color: Colors.amber[700],
                                     size: 16,
                                   ),
@@ -442,7 +483,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
           children: [
             const Text('Have you received this order in good condition?'),
             const SizedBox(height: 16),
-            const Text('By confirming:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'By confirming:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             const Text('✅ Order will be marked as completed'),
             const Text('✅ Product stock will be updated'),
@@ -496,11 +540,9 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
   Future<void> _navigateToReviewScreen(app_order.Order order) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => OrderReviewScreen(order: order),
-      ),
+      MaterialPageRoute(builder: (context) => OrderReviewScreen(order: order)),
     );
-    
+
     // Refresh orders list if review was submitted
     if (result == true && mounted) {
       setState(() {}); // Trigger rebuild to fetch updated orders
@@ -530,10 +572,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
             ),
             child: Text(
               receipt,
-              style: const TextStyle(
-                fontFamily: 'Courier',
-                fontSize: 12,
-              ),
+              style: const TextStyle(fontFamily: 'Courier', fontSize: 12),
             ),
           ),
         ),
@@ -586,9 +625,7 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('Name: ${order.buyerName}');
     buffer.writeln('Phone: ${order.buyerPhone}');
-    if (order.deliveryAddress != null) {
-      buffer.writeln('Address: ${order.deliveryAddress}');
-    }
+    buffer.writeln('Address: ${order.deliveryAddress}');
     buffer.writeln('');
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('ORDER ITEMS');
@@ -597,13 +634,19 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
     for (var i = 0; i < order.items.length; i++) {
       final item = order.items[i];
       buffer.writeln('${i + 1}. ${item.productName}');
-      buffer.writeln('   ${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}');
-      buffer.writeln('   Subtotal: UGX ${NumberFormat('#,###').format(item.subtotal)}');
+      buffer.writeln(
+        '   ${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
+      );
+      buffer.writeln(
+        '   Subtotal: UGX ${NumberFormat('#,###').format(item.subtotal)}',
+      );
       buffer.writeln('');
     }
 
     buffer.writeln('───────────────────────────────────');
-    buffer.writeln('TOTAL: UGX ${NumberFormat('#,###').format(order.totalAmount)}');
+    buffer.writeln(
+      'TOTAL: UGX ${NumberFormat('#,###').format(order.totalAmount)}',
+    );
     buffer.writeln('───────────────────────────────────');
     buffer.writeln('');
     buffer.writeln('Payment: ${_formatPaymentMethod(order.paymentMethod)}');
@@ -661,8 +704,14 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                 const SizedBox(height: 12),
 
                 // Order ID
-                _buildDetailRow('Order ID', '#${order.id.substring(0, 12).toUpperCase()}'),
-                _buildDetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
+                _buildDetailRow(
+                  'Order ID',
+                  '#${order.id.substring(0, 12).toUpperCase()}',
+                ),
+                _buildDetailRow(
+                  'Date',
+                  DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                ),
                 _buildDetailRow('Status', _formatStatus(order.status)),
 
                 const SizedBox(height: 16),
@@ -675,14 +724,14 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                 if (order.farmerPhone?.isNotEmpty ?? false)
                   _buildDetailRow('Phone', order.farmerPhone ?? ''),
 
-                if (order.deliveryAddress != null) ...[
+                ...[
                   const SizedBox(height: 16),
                   const Text(
                     'Delivery Details',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  _buildDetailRow('Address', order.deliveryAddress!),
+                  _buildDetailRow('Address', order.deliveryAddress),
                   if (order.deliveryNotes != null)
                     _buildDetailRow('Notes', order.deliveryNotes!),
                 ],
@@ -694,59 +743,67 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                 ),
                 const SizedBox(height: 8),
 
-                ...order.items.map((item) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item.productImage ?? '',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+                ...order.items.map(
+                  (item) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            item.productImage ?? '',
                             width: 50,
                             height: 50,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image, color: Colors.grey),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.productName,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.productName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        'UGX ${NumberFormat('#,###').format(item.subtotal)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                        Text(
+                          'UGX ${NumberFormat('#,###').format(item.subtotal)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
+                ),
 
                 const Divider(),
                 const SizedBox(height: 8),
@@ -772,7 +829,10 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
                   ],
                 ),
 
-                _buildDetailRow('Payment Method', _formatPaymentMethod(order.paymentMethod)),
+                _buildDetailRow(
+                  'Payment Method',
+                  _formatPaymentMethod(order.paymentMethod),
+                ),
               ],
             ),
           ),
@@ -791,19 +851,13 @@ class _SHGMyPurchasesScreenState extends State<SHGMyPurchasesScreen> with Single
             width: 100,
             child: Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
         ],

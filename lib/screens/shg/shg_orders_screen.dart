@@ -16,12 +16,21 @@ class SHGOrdersScreen extends StatefulWidget {
   State<SHGOrdersScreen> createState() => _SHGOrdersScreenState();
 }
 
-class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProviderStateMixin {
+class _SHGOrdersScreenState extends State<SHGOrdersScreen>
+    with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   final MessageService _messageService = MessageService();
   late TabController _tabController;
-  
-  final List<String> _statusFilters = ['All', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Completed'];
+
+  final List<String> _statusFilters = [
+    'All',
+    'Pending',
+    'Confirmed',
+    'Preparing',
+    'Ready',
+    'Delivered',
+    'Completed',
+  ];
   String _selectedFilter = 'All';
 
   @override
@@ -119,10 +128,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   children: [
                     const Text(
                       'Total Revenue',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -189,7 +195,10 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildOrdersList(String farmerId, List<app_order.OrderStatus> statusFilter) {
+  Widget _buildOrdersList(
+    String farmerId,
+    List<app_order.OrderStatus> statusFilter,
+  ) {
     return StreamBuilder<List<app_order.Order>>(
       stream: _orderService.streamFarmerOrders(farmerId),
       builder: (context, snapshot) {
@@ -197,8 +206,12 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
         if (kDebugMode) {
           debugPrint('📊 SHG Orders - Connection: ${snapshot.connectionState}');
           debugPrint('📊 SHG Orders - Has Error: ${snapshot.hasError}');
-          debugPrint('📊 SHG Orders - Data: ${snapshot.data?.length ?? 0} orders');
-          debugPrint('📊 SHG Orders - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
+          debugPrint(
+            '📊 SHG Orders - Data: ${snapshot.data?.length ?? 0} orders',
+          );
+          debugPrint(
+            '📊 SHG Orders - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}',
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -226,7 +239,11 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 const SizedBox(height: 16),
                 Text(
                   'Error loading orders',
-                  style: TextStyle(fontSize: 18, color: Colors.red[700], fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -252,7 +269,9 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
         }
 
         // Apply status filter
-        orders = orders.where((order) => statusFilter.contains(order.status)).toList();
+        orders = orders
+            .where((order) => statusFilter.contains(order.status))
+            .toList();
         if (kDebugMode) {
           debugPrint('📦 After status filter: ${orders.length}');
         }
@@ -260,12 +279,18 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
         // Apply chip filter
         if (_selectedFilter != 'All') {
           final filterStatus = app_order.OrderStatus.values.firstWhere(
-            (s) => s.toString().split('.').last.toLowerCase() == _selectedFilter.toLowerCase(),
+            (s) =>
+                s.toString().split('.').last.toLowerCase() ==
+                _selectedFilter.toLowerCase(),
             orElse: () => app_order.OrderStatus.pending,
           );
-          orders = orders.where((order) => order.status == filterStatus).toList();
+          orders = orders
+              .where((order) => order.status == filterStatus)
+              .toList();
           if (kDebugMode) {
-            debugPrint('📦 After chip filter ($_selectedFilter): ${orders.length}');
+            debugPrint(
+              '📦 After chip filter ($_selectedFilter): ${orders.length}',
+            );
           }
         }
 
@@ -280,7 +305,11 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   const SizedBox(height: 16),
                   Text(
                     'No orders found',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -290,7 +319,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _selectedFilter == 'All' 
+                    _selectedFilter == 'All'
                         ? 'Filtered by: ${statusFilter.map((s) => _formatStatus(s)).join(", ")}'
                         : 'Filter: $_selectedFilter',
                     style: TextStyle(fontSize: 12, color: Colors.grey[400]),
@@ -346,7 +375,9 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                          DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(order.createdAt),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -356,7 +387,10 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -382,7 +416,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
               const SizedBox(height: 12),
               const Divider(),
               const SizedBox(height: 12),
-              
+
               // Buyer Info
               Row(
                 children: [
@@ -415,7 +449,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Order Items Summary
               Container(
                 padding: const EdgeInsets.all(12),
@@ -428,7 +462,11 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.shopping_basket, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.shopping_basket,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '${order.items.length} item(s)',
@@ -447,7 +485,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ],
                 ),
               ),
-              
+
               // Action Buttons
               if (order.status == app_order.OrderStatus.pending) ...[
                 const SizedBox(height: 12),
@@ -480,13 +518,14 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ],
                 ),
               ],
-              
+
               if (order.status == app_order.OrderStatus.confirmed) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.preparing),
+                    onPressed: () =>
+                        _updateStatus(order, app_order.OrderStatus.preparing),
                     icon: const Icon(Icons.restaurant, size: 18),
                     label: const Text('Mark as Preparing'),
                     style: ElevatedButton.styleFrom(
@@ -496,13 +535,14 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               if (order.status == app_order.OrderStatus.preparing) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.ready),
+                    onPressed: () =>
+                        _updateStatus(order, app_order.OrderStatus.ready),
                     icon: const Icon(Icons.check_circle, size: 18),
                     label: const Text('Mark as Ready'),
                     style: ElevatedButton.styleFrom(
@@ -512,13 +552,14 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               if (order.status == app_order.OrderStatus.ready) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.inTransit),
+                    onPressed: () =>
+                        _updateStatus(order, app_order.OrderStatus.inTransit),
                     icon: const Icon(Icons.local_shipping, size: 18),
                     label: const Text('Mark as In Transit'),
                     style: ElevatedButton.styleFrom(
@@ -528,13 +569,14 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               if (order.status == app_order.OrderStatus.inTransit) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _updateStatus(order, app_order.OrderStatus.delivered),
+                    onPressed: () =>
+                        _updateStatus(order, app_order.OrderStatus.delivered),
                     icon: const Icon(Icons.done_all, size: 18),
                     label: const Text('Mark as Delivered'),
                     style: ElevatedButton.styleFrom(
@@ -581,12 +623,18 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 ),
                 const Divider(),
                 const SizedBox(height: 12),
-                
+
                 // Order ID
-                _buildDetailRow('Order ID', '#${getOrderIdFullDisplay(order.id)}'),
-                _buildDetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
+                _buildDetailRow(
+                  'Order ID',
+                  '#${getOrderIdFullDisplay(order.id)}',
+                ),
+                _buildDetailRow(
+                  'Date',
+                  DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                ),
                 _buildDetailRow('Status', _formatStatus(order.status)),
-                
+
                 const SizedBox(height: 16),
                 const Text(
                   'Buyer Information',
@@ -595,83 +643,91 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                 const SizedBox(height: 8),
                 _buildDetailRow('Name', order.buyerName),
                 _buildDetailRow('Phone', order.buyerPhone),
-                
-                if (order.deliveryAddress != null) ...[
+
+                ...[
                   const SizedBox(height: 16),
                   const Text(
                     'Delivery Details',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  _buildDetailRow('Address', order.deliveryAddress!),
+                  _buildDetailRow('Address', order.deliveryAddress),
                   if (order.deliveryNotes != null)
                     _buildDetailRow('Notes', order.deliveryNotes!),
                 ],
-                
+
                 const SizedBox(height: 16),
                 const Text(
                   'Order Items',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                
-                ...order.items.map((item) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item.productImage ?? '',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+
+                ...order.items.map(
+                  (item) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            item.productImage ?? '',
                             width: 50,
                             height: 50,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image, color: Colors.grey),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.productName,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.productName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        'UGX ${NumberFormat('#,###').format(item.subtotal)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                        Text(
+                          'UGX ${NumberFormat('#,###').format(item.subtotal)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
-                
+                ),
+
                 const Divider(),
                 const SizedBox(height: 8),
-                
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -692,9 +748,12 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
                     ),
                   ],
                 ),
-                
-                _buildDetailRow('Payment Method', _formatPaymentMethod(order.paymentMethod)),
-                
+
+                _buildDetailRow(
+                  'Payment Method',
+                  _formatPaymentMethod(order.paymentMethod),
+                ),
+
                 const SizedBox(height: 20),
                 // Contact Buyer Button
                 SizedBox(
@@ -726,19 +785,13 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
             width: 100,
             child: Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -768,9 +821,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Create or get conversation
@@ -783,7 +834,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
 
       if (mounted) {
         Navigator.pop(context); // Close loading
-        
+
         // Navigate to chat screen
         Navigator.push(
           context,
@@ -817,7 +868,9 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Order accepted successfully!\n📍 Delivery tracking created.'),
+            content: Text(
+              '✅ Order accepted successfully!\n📍 Delivery tracking created.',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
@@ -827,16 +880,18 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
       if (mounted) {
         String errorMessage = '❌ Error confirming order';
         String actionMessage = '';
-        
+
         // Check if it's a GPS-related error
         final errorString = e.toString();
-        if (errorString.contains('GPS_MISSING') || errorString.contains('GPS_INVALID')) {
+        if (errorString.contains('GPS_MISSING') ||
+            errorString.contains('GPS_INVALID')) {
           errorMessage = '📍 GPS Location Required';
-          actionMessage = '\n\nYou or the buyer need to add GPS coordinates in Profile Settings to enable delivery tracking.\n\nGo to: Profile → Edit Profile → Add GPS Location';
+          actionMessage =
+              '\n\nYou or the buyer need to add GPS coordinates in Profile Settings to enable delivery tracking.\n\nGo to: Profile → Edit Profile → Add GPS Location';
         } else {
           errorMessage = '❌ Error: $e';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage + actionMessage),
@@ -855,7 +910,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
 
   Future<void> _rejectOrder(app_order.Order order) async {
     final reasonController = TextEditingController();
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -894,9 +949,9 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
       try {
         await _orderService.rejectOrder(
           order.id,
-          reasonController.text.trim().isNotEmpty 
-            ? reasonController.text.trim() 
-            : 'No reason provided',
+          reasonController.text.trim().isNotEmpty
+              ? reasonController.text.trim()
+              : 'No reason provided',
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -909,23 +964,25 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
           );
         }
       }
     }
   }
 
-  Future<void> _updateStatus(app_order.Order order, app_order.OrderStatus newStatus) async {
+  Future<void> _updateStatus(
+    app_order.Order order,
+    app_order.OrderStatus newStatus,
+  ) async {
     try {
       await _orderService.updateOrderStatus(order.id, newStatus);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Order status updated to ${_formatStatus(newStatus)}'),
+            content: Text(
+              '✅ Order status updated to ${_formatStatus(newStatus)}',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -933,10 +990,7 @@ class _SHGOrdersScreenState extends State<SHGOrdersScreen> with SingleTickerProv
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

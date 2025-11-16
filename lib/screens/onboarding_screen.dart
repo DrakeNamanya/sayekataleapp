@@ -27,7 +27,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   UserRole _selectedRole = UserRole.shg;
   String? _selectedDistrict;
   final _authService = FirebaseEmailAuthService();
-  
+
   // Official districts from districtinformation.xlsx
   final List<String> _districts = [
     'BUGIRI',
@@ -68,8 +68,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    final authProvider = Provider.of<app_auth.AuthProvider>(context, listen: false);
-    
+    final authProvider = Provider.of<app_auth.AuthProvider>(
+      context,
+      listen: false,
+    );
+
     try {
       if (_isSignUpMode) {
         // Sign Up with Email
@@ -99,8 +102,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
 
         // Load user data from Firestore
-        final userProfile = await _authService.getUserProfile(userCredential.user!.uid);
-        
+        final userProfile = await _authService.getUserProfile(
+          userCredential.user!.uid,
+        );
+
         if (userProfile != null) {
           setState(() {
             _selectedRole = userProfile.role;
@@ -129,9 +134,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (kDebugMode) {
         debugPrint('🔥 FirebaseAuthException: ${e.code} - ${e.message}');
       }
-      
+
       String errorMessage = 'Authentication failed';
-      
+
       if (e.code == 'weak-password') {
         errorMessage = 'Password is too weak (min 6 characters)';
       } else if (e.code == 'email-already-in-use') {
@@ -160,7 +165,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         debugPrint('❌ Unexpected Error: $e');
         debugPrint('📍 Stack Trace: $stackTrace');
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -186,7 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     try {
       await _authService.sendPasswordResetEmail(_emailController.text.trim());
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -299,7 +304,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 24),
                 // Name Input (Sign Up Only)
-                if (_isSignUpMode) ...[                  
+                if (_isSignUpMode) ...[
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
@@ -307,7 +312,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       prefixIcon: Icon(Icons.person_outline),
                     ),
                     validator: (value) {
-                      if (_isSignUpMode && (value == null || value.trim().isEmpty)) {
+                      if (_isSignUpMode &&
+                          (value == null || value.trim().isEmpty)) {
                         return 'Please enter your name';
                       }
                       return null;
@@ -324,7 +330,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const SizedBox(height: 16),
                   // District Selection (Sign Up Only) - Required for User ID generation
                   DropdownButtonFormField<String>(
-                    value: _selectedDistrict,
+                    initialValue: _selectedDistrict,
                     decoration: const InputDecoration(
                       labelText: 'District',
                       prefixIcon: Icon(Icons.location_on_outlined),
@@ -380,7 +386,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -388,7 +396,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         });
                       },
                     ),
-                    hintText: _isSignUpMode ? 'Min 6 characters' : 'Enter your password',
+                    hintText: _isSignUpMode
+                        ? 'Min 6 characters'
+                        : 'Enter your password',
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -418,7 +428,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 const SizedBox(height: 16),
                 // Role Selection (Sign Up Only)
-                if (_isSignUpMode) ...[                  
+                if (_isSignUpMode) ...[
                   const Text(
                     'I am a:',
                     style: TextStyle(
@@ -526,7 +536,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : Text(_isSignUpMode ? 'Create Account' : 'Sign In'),
@@ -564,7 +576,9 @@ class _RoleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor.withValues(alpha: 0.1) : Colors.white,
+          color: isSelected
+              ? AppTheme.primaryColor.withValues(alpha: 0.1)
+              : Colors.white,
           border: Border.all(
             color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
@@ -576,7 +590,9 @@ class _RoleCard extends StatelessWidget {
             Icon(
               icon,
               size: 36,
-              color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : AppTheme.textSecondary,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -588,7 +604,9 @@ class _RoleCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+                      color: isSelected
+                          ? AppTheme.primaryColor
+                          : AppTheme.textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -597,8 +615,8 @@ class _RoleCard extends StatelessWidget {
                       subtitle!,
                       style: TextStyle(
                         fontSize: 13,
-                        color: isSelected 
-                            ? AppTheme.primaryColor.withValues(alpha: 0.8) 
+                        color: isSelected
+                            ? AppTheme.primaryColor.withValues(alpha: 0.8)
                             : AppTheme.textSecondary,
                       ),
                     ),

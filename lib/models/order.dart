@@ -29,19 +29,19 @@ class Order {
   final DateTime? sellerConfirmedAt;
   final int codRemindersSent;
   final Map<String, dynamic> metadata;
-  
+
   // Review and rating fields (legacy order system)
-  final double? rating;          // Customer rating (1-5 stars)
+  final double? rating; // Customer rating (1-5 stars)
   final String? rejectionReason; // Reason for order rejection
-  final bool? isFavoriteSeller;  // Whether seller is marked as favorite
-  
+  final bool? isFavoriteSeller; // Whether seller is marked as favorite
+
   // Backward compatibility fields (legacy order system)
-  final String? farmerId;       // Alias for sellerId
-  final String? farmerName;     // Alias for sellerName
-  final String? farmerPhone;    // Alias for sellerPhone
-  final DateTime? receivedAt;   // Alias for confirmedAt
+  final String? farmerId; // Alias for sellerId
+  final String? farmerName; // Alias for sellerName
+  final String? farmerPhone; // Alias for sellerPhone
+  final DateTime? receivedAt; // Alias for confirmedAt
   final bool? isReceivedByBuyer; // Alias for confirmed status
-  final String? orderNumber;    // Optional order number
+  final String? orderNumber; // Optional order number
 
   Order({
     required this.id,
@@ -82,18 +82,18 @@ class Order {
     this.sellerConfirmedAt,
     this.codRemindersSent = 0,
     this.metadata = const {},
-  }) :  // Initialize backward compatibility fields
-        farmerId = farmerId ?? sellerId,
-        farmerName = farmerName ?? sellerName,
-        farmerPhone = farmerPhone ?? sellerPhone,
-        receivedAt = receivedAt ?? confirmedAt,
-        isReceivedByBuyer = isReceivedByBuyer ?? (confirmedAt != null);
+  }) : // Initialize backward compatibility fields
+       farmerId = farmerId ?? sellerId,
+       farmerName = farmerName ?? sellerName,
+       farmerPhone = farmerPhone ?? sellerPhone,
+       receivedAt = receivedAt ?? confirmedAt,
+       isReceivedByBuyer = isReceivedByBuyer ?? (confirmedAt != null);
 
   // Check if COD confirmation deadline is approaching (within 48 hours)
   bool get isCodDeadlineApproaching {
     if (paymentMethod != PaymentMethod.cashOnDelivery) return false;
     if (status != OrderStatus.deliveredPendingConfirmation) return false;
-    
+
     final hoursElapsed = DateTime.now().difference(deliveredAt!).inHours;
     return hoursElapsed >= 24 && hoursElapsed < 48;
   }
@@ -102,7 +102,7 @@ class Order {
   bool get isCodDeadlinePassed {
     if (paymentMethod != PaymentMethod.cashOnDelivery) return false;
     if (status != OrderStatus.deliveredPendingConfirmation) return false;
-    
+
     final hoursElapsed = DateTime.now().difference(deliveredAt!).inHours;
     return hoursElapsed >= 48;
   }
@@ -139,7 +139,10 @@ class Order {
       'total_amount': totalAmount, // ✅ Snake case for queries
       'status': status.toString().split('.').last,
       'paymentMethod': paymentMethod.toString().split('.').last,
-      'payment_method': paymentMethod.toString().split('.').last, // ✅ Snake case
+      'payment_method': paymentMethod
+          .toString()
+          .split('.')
+          .last, // ✅ Snake case
       'transactionId': transactionId,
       'transaction_id': transactionId, // ✅ Snake case
       'deliveryAddress': deliveryAddress,
@@ -148,31 +151,51 @@ class Order {
       'delivery_notes': deliveryNotes, // ✅ Snake case
       'createdAt': Timestamp.fromDate(createdAt),
       'created_at': Timestamp.fromDate(createdAt), // ✅ Snake case
-      'deliveredAt': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
-      'delivered_at': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null, // ✅ Snake case
-      'confirmedAt': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null,
-      'confirmed_at': confirmedAt != null ? Timestamp.fromDate(confirmedAt!) : null, // ✅ Snake case
-      'cancelledAt': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null,
-      'cancelled_at': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null, // ✅ Snake case
+      'deliveredAt': deliveredAt != null
+          ? Timestamp.fromDate(deliveredAt!)
+          : null,
+      'delivered_at': deliveredAt != null
+          ? Timestamp.fromDate(deliveredAt!)
+          : null, // ✅ Snake case
+      'confirmedAt': confirmedAt != null
+          ? Timestamp.fromDate(confirmedAt!)
+          : null,
+      'confirmed_at': confirmedAt != null
+          ? Timestamp.fromDate(confirmedAt!)
+          : null, // ✅ Snake case
+      'cancelledAt': cancelledAt != null
+          ? Timestamp.fromDate(cancelledAt!)
+          : null,
+      'cancelled_at': cancelledAt != null
+          ? Timestamp.fromDate(cancelledAt!)
+          : null, // ✅ Snake case
       'cancellationReason': cancellationReason,
       'cancellation_reason': cancellationReason, // ✅ Snake case
       'codRequiresBothConfirmation': codRequiresBothConfirmation,
-      'cod_requires_both_confirmation': codRequiresBothConfirmation, // ✅ Snake case
-      'buyerConfirmedAt': buyerConfirmedAt != null ? Timestamp.fromDate(buyerConfirmedAt!) : null,
-      'buyer_confirmed_at': buyerConfirmedAt != null ? Timestamp.fromDate(buyerConfirmedAt!) : null, // ✅ Snake case
-      'sellerConfirmedAt': sellerConfirmedAt != null ? Timestamp.fromDate(sellerConfirmedAt!) : null,
-      'seller_confirmed_at': sellerConfirmedAt != null ? Timestamp.fromDate(sellerConfirmedAt!) : null, // ✅ Snake case
+      'cod_requires_both_confirmation':
+          codRequiresBothConfirmation, // ✅ Snake case
+      'buyerConfirmedAt': buyerConfirmedAt != null
+          ? Timestamp.fromDate(buyerConfirmedAt!)
+          : null,
+      'buyer_confirmed_at': buyerConfirmedAt != null
+          ? Timestamp.fromDate(buyerConfirmedAt!)
+          : null, // ✅ Snake case
+      'sellerConfirmedAt': sellerConfirmedAt != null
+          ? Timestamp.fromDate(sellerConfirmedAt!)
+          : null,
+      'seller_confirmed_at': sellerConfirmedAt != null
+          ? Timestamp.fromDate(sellerConfirmedAt!)
+          : null, // ✅ Snake case
       'codRemindersSent': codRemindersSent,
       'cod_reminders_sent': codRemindersSent, // ✅ Snake case
       'metadata': metadata,
-      
+
       // Review and rating fields (both formats)
       'rating': rating,
       'rejectionReason': rejectionReason,
       'rejection_reason': rejectionReason, // ✅ Snake case
       'isFavoriteSeller': isFavoriteSeller,
       'is_favorite_seller': isFavoriteSeller, // ✅ Snake case
-      
       // Backward compatibility fields (both formats)
       'farmerId': farmerId,
       'farmer_id': farmerId, // ✅ CRITICAL: Required for getFarmerOrders query
@@ -181,7 +204,9 @@ class Order {
       'farmerPhone': farmerPhone,
       'farmer_phone': farmerPhone, // ✅ Snake case
       'receivedAt': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null,
-      'received_at': receivedAt != null ? Timestamp.fromDate(receivedAt!) : null, // ✅ Snake case
+      'received_at': receivedAt != null
+          ? Timestamp.fromDate(receivedAt!)
+          : null, // ✅ Snake case
       'isReceivedByBuyer': isReceivedByBuyer,
       'is_received_by_buyer': isReceivedByBuyer, // ✅ Snake case
       'orderNumber': orderNumber,
@@ -194,7 +219,7 @@ class Order {
     // Smart type inference for backward compatibility
     OrderType orderType;
     final typeString = data['type'] ?? data['order_type'];
-    
+
     if (typeString != null) {
       // Type is explicitly stored
       orderType = OrderType.values.firstWhere(
@@ -212,69 +237,102 @@ class Order {
         orderType = OrderType.smeToShgProductPurchase;
       }
     }
-    
+
     return Order(
       // Always use Firestore document ID, ignore any stored 'id' field
       // This prevents bugs where corrupt 'id' data causes issues
-      id: docId, 
+      id: docId,
       type: orderType,
       // Read from both camelCase and snake_case
       buyerId: data['buyerId'] ?? data['buyer_id'] ?? '',
       buyerName: data['buyerName'] ?? data['buyer_name'] ?? '',
       buyerPhone: data['buyerPhone'] ?? data['buyer_phone'] ?? '',
-      sellerId: data['sellerId'] ?? data['seller_id'] ?? data['farmerId'] ?? data['farmer_id'] ?? '',
-      sellerName: data['sellerName'] ?? data['seller_name'] ?? data['farmerName'] ?? data['farmer_name'] ?? '',
-      sellerPhone: data['sellerPhone'] ?? data['seller_phone'] ?? data['farmerPhone'] ?? data['farmer_phone'] ?? '',
-      items: (data['items'] as List<dynamic>?)
-              ?.map((item) => OrderItem.fromFirestore(item as Map<String, dynamic>))
+      sellerId:
+          data['sellerId'] ??
+          data['seller_id'] ??
+          data['farmerId'] ??
+          data['farmer_id'] ??
+          '',
+      sellerName:
+          data['sellerName'] ??
+          data['seller_name'] ??
+          data['farmerName'] ??
+          data['farmer_name'] ??
+          '',
+      sellerPhone:
+          data['sellerPhone'] ??
+          data['seller_phone'] ??
+          data['farmerPhone'] ??
+          data['farmer_phone'] ??
+          '',
+      items:
+          (data['items'] as List<dynamic>?)
+              ?.map(
+                (item) => OrderItem.fromFirestore(item as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       subtotal: (data['subtotal'] ?? data['sub_total'] ?? 0).toDouble(),
       serviceFee: (data['serviceFee'] ?? data['service_fee'] ?? 0).toDouble(),
-      totalAmount: (data['totalAmount'] ?? data['total_amount'] ?? 0).toDouble(),
+      totalAmount: (data['totalAmount'] ?? data['total_amount'] ?? 0)
+          .toDouble(),
       status: OrderStatus.values.firstWhere(
         (e) => e.toString().split('.').last == data['status'],
         orElse: () => OrderStatus.pending,
       ),
       paymentMethod: PaymentMethod.values.firstWhere(
-        (e) => e.toString().split('.').last == (data['paymentMethod'] ?? data['payment_method']),
+        (e) =>
+            e.toString().split('.').last ==
+            (data['paymentMethod'] ?? data['payment_method']),
         orElse: () => PaymentMethod.mtnMobileMoney,
       ),
       transactionId: data['transactionId'] ?? data['transaction_id'],
-      deliveryAddress: data['deliveryAddress'] ?? data['delivery_address'] ?? '',
+      deliveryAddress:
+          data['deliveryAddress'] ?? data['delivery_address'] ?? '',
       deliveryNotes: data['deliveryNotes'] ?? data['delivery_notes'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
-                 (data['created_at'] as Timestamp?)?.toDate() ?? 
-                 DateTime.now(),
-      deliveredAt: (data['deliveredAt'] as Timestamp?)?.toDate() ?? 
-                   (data['delivered_at'] as Timestamp?)?.toDate(),
-      confirmedAt: (data['confirmedAt'] as Timestamp?)?.toDate() ?? 
-                   (data['confirmed_at'] as Timestamp?)?.toDate(),
-      cancelledAt: (data['cancelledAt'] as Timestamp?)?.toDate() ?? 
-                   (data['cancelled_at'] as Timestamp?)?.toDate(),
-      cancellationReason: data['cancellationReason'] ?? data['cancellation_reason'],
-      codRequiresBothConfirmation: data['codRequiresBothConfirmation'] ?? 
-                                    data['cod_requires_both_confirmation'] ?? 
-                                    false,
-      buyerConfirmedAt: (data['buyerConfirmedAt'] as Timestamp?)?.toDate() ?? 
-                        (data['buyer_confirmed_at'] as Timestamp?)?.toDate(),
-      sellerConfirmedAt: (data['sellerConfirmedAt'] as Timestamp?)?.toDate() ?? 
-                         (data['seller_confirmed_at'] as Timestamp?)?.toDate(),
-      codRemindersSent: data['codRemindersSent'] ?? data['cod_reminders_sent'] ?? 0,
+      createdAt:
+          (data['createdAt'] as Timestamp?)?.toDate() ??
+          (data['created_at'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      deliveredAt:
+          (data['deliveredAt'] as Timestamp?)?.toDate() ??
+          (data['delivered_at'] as Timestamp?)?.toDate(),
+      confirmedAt:
+          (data['confirmedAt'] as Timestamp?)?.toDate() ??
+          (data['confirmed_at'] as Timestamp?)?.toDate(),
+      cancelledAt:
+          (data['cancelledAt'] as Timestamp?)?.toDate() ??
+          (data['cancelled_at'] as Timestamp?)?.toDate(),
+      cancellationReason:
+          data['cancellationReason'] ?? data['cancellation_reason'],
+      codRequiresBothConfirmation:
+          data['codRequiresBothConfirmation'] ??
+          data['cod_requires_both_confirmation'] ??
+          false,
+      buyerConfirmedAt:
+          (data['buyerConfirmedAt'] as Timestamp?)?.toDate() ??
+          (data['buyer_confirmed_at'] as Timestamp?)?.toDate(),
+      sellerConfirmedAt:
+          (data['sellerConfirmedAt'] as Timestamp?)?.toDate() ??
+          (data['seller_confirmed_at'] as Timestamp?)?.toDate(),
+      codRemindersSent:
+          data['codRemindersSent'] ?? data['cod_reminders_sent'] ?? 0,
       metadata: data['metadata'] ?? {},
-      
+
       // Review and rating fields (both formats)
       rating: data['rating']?.toDouble(),
       rejectionReason: data['rejectionReason'] ?? data['rejection_reason'],
       isFavoriteSeller: data['isFavoriteSeller'] ?? data['is_favorite_seller'],
-      
+
       // Backward compatibility fields (both formats)
       farmerId: data['farmerId'] ?? data['farmer_id'],
       farmerName: data['farmerName'] ?? data['farmer_name'],
       farmerPhone: data['farmerPhone'] ?? data['farmer_phone'],
-      receivedAt: (data['receivedAt'] as Timestamp?)?.toDate() ?? 
-                  (data['received_at'] as Timestamp?)?.toDate(),
-      isReceivedByBuyer: data['isReceivedByBuyer'] ?? data['is_received_by_buyer'],
+      receivedAt:
+          (data['receivedAt'] as Timestamp?)?.toDate() ??
+          (data['received_at'] as Timestamp?)?.toDate(),
+      isReceivedByBuyer:
+          data['isReceivedByBuyer'] ?? data['is_received_by_buyer'],
       orderNumber: data['orderNumber'] ?? data['order_number'],
     );
   }
@@ -341,17 +399,18 @@ class Order {
       confirmedAt: confirmedAt ?? this.confirmedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancellationReason: cancellationReason ?? this.cancellationReason,
-      codRequiresBothConfirmation: codRequiresBothConfirmation ?? this.codRequiresBothConfirmation,
+      codRequiresBothConfirmation:
+          codRequiresBothConfirmation ?? this.codRequiresBothConfirmation,
       buyerConfirmedAt: buyerConfirmedAt ?? this.buyerConfirmedAt,
       sellerConfirmedAt: sellerConfirmedAt ?? this.sellerConfirmedAt,
       codRemindersSent: codRemindersSent ?? this.codRemindersSent,
       metadata: metadata ?? this.metadata,
-      
+
       // Review and rating fields
       rating: rating ?? this.rating,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       isFavoriteSeller: isFavoriteSeller ?? this.isFavoriteSeller,
-      
+
       // Backward compatibility fields
       farmerId: farmerId ?? this.farmerId,
       farmerName: farmerName ?? this.farmerName,
@@ -372,7 +431,7 @@ class OrderItem {
   final int quantity;
   final String unit;
   final double total;
-  
+
   // Backward compatibility: subtotal is alias for total
   double get subtotal => total;
 
@@ -407,36 +466,36 @@ class OrderItem {
       price: (data['price'] ?? 0).toDouble(),
       quantity: data['quantity'] ?? 0,
       unit: data['unit'] ?? '',
-      total: (data['total'] ?? data['subtotal'] ?? 0).toDouble(), // Support both fields
+      total: (data['total'] ?? data['subtotal'] ?? 0)
+          .toDouble(), // Support both fields
     );
   }
 }
 
 /// Type of order
 enum OrderType {
-  shgToPsaInputPurchase,  // SHG buying inputs from PSA
+  shgToPsaInputPurchase, // SHG buying inputs from PSA
   smeToShgProductPurchase, // SME buying products from SHG
 }
 
 /// Order status
 enum OrderStatus {
-  pending,                          // Order created, awaiting payment
-  paymentPending,                   // Payment initiated but not confirmed
-  paymentHeld,                      // Payment held in escrow
-  deliveryPending,                  // Payment secured, awaiting delivery
-  deliveredPendingConfirmation,     // Delivered, awaiting confirmation
-  confirmed,                        // Delivery confirmed
-  completed,                        // Order fully completed
-  cancelled,                        // Order cancelled
-  codPendingBothConfirmation,       // COD: Waiting for both parties
-  codOverdue,                       // COD: 48-hour deadline passed
-  
+  pending, // Order created, awaiting payment
+  paymentPending, // Payment initiated but not confirmed
+  paymentHeld, // Payment held in escrow
+  deliveryPending, // Payment secured, awaiting delivery
+  deliveredPendingConfirmation, // Delivered, awaiting confirmation
+  confirmed, // Delivery confirmed
+  completed, // Order fully completed
+  cancelled, // Order cancelled
+  codPendingBothConfirmation, // COD: Waiting for both parties
+  codOverdue, // COD: 48-hour deadline passed
   // Backward compatibility statuses (legacy order system)
-  preparing,                        // Preparing order (maps to deliveryPending)
-  ready,                            // Ready for pickup (maps to deliveryPending)
-  inTransit,                        // In transit (maps to deliveryPending)
-  delivered,                        // Delivered (maps to deliveredPendingConfirmation)
-  rejected,                         // Rejected (maps to cancelled)
+  preparing, // Preparing order (maps to deliveryPending)
+  ready, // Ready for pickup (maps to deliveryPending)
+  inTransit, // In transit (maps to deliveryPending)
+  delivered, // Delivered (maps to deliveredPendingConfirmation)
+  rejected, // Rejected (maps to cancelled)
 }
 
 /// Payment method
@@ -444,11 +503,11 @@ enum PaymentMethod {
   mtnMobileMoney,
   airtelMoney,
   cashOnDelivery,
-  
+
   // Backward compatibility payment methods (legacy order system)
-  cash,                             // Cash payment (maps to cashOnDelivery)
-  mobileMoney,                      // Mobile money (maps to mtnMobileMoney)
-  bankTransfer,                     // Bank transfer (deprecated)
+  cash, // Cash payment (maps to cashOnDelivery)
+  mobileMoney, // Mobile money (maps to mtnMobileMoney)
+  bankTransfer, // Bank transfer (deprecated)
 }
 
 /// Extension methods for OrderType
@@ -528,5 +587,3 @@ extension OrderStatusExtension on OrderStatus {
     }
   }
 }
-
-

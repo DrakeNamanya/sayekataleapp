@@ -40,7 +40,7 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
       const SMEFavoritesScreen(),
       const SMEProfileScreen(),
     ];
-    
+
     // Load cart when dashboard initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
@@ -241,7 +241,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           color: AppTheme.errorColor,
                           shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
                         child: Text(
                           unreadCount > 99 ? '99+' : unreadCount.toString(),
                           style: const TextStyle(
@@ -284,7 +287,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           color: AppTheme.errorColor,
                           shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
                         child: Text(
                           unreadCount > 99 ? '99+' : unreadCount.toString(),
                           style: const TextStyle(
@@ -323,7 +329,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       color: AppTheme.primaryColor,
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
                     child: Text(
                       '${cartProvider.itemCount}',
                       style: const TextStyle(
@@ -375,7 +384,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     readOnly: true,
                   ),
                 ),
-                
+
                 // New Features Banner
                 Container(
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -401,7 +410,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SMEBrowseProductsScreen(),
+                            builder: (context) =>
+                                const SMEBrowseProductsScreen(),
                           ),
                         );
                       },
@@ -456,7 +466,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     ),
                   ),
                 ),
-                
+
                 // Stats Overview
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -474,10 +484,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     children: [
                       const Text(
                         'This Month\'s Spending',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       const SizedBox(height: 8),
                       _isLoadingStats
@@ -489,7 +496,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -551,7 +560,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SMEBrowseProductsScreen(),
+                                    builder: (context) =>
+                                        const SMEBrowseProductsScreen(),
                                   ),
                                 );
                               },
@@ -567,7 +577,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SMEOrdersScreen(),
+                                    builder: (context) =>
+                                        const SMEOrdersScreen(),
                                   ),
                                 );
                               },
@@ -587,7 +598,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SMEFavoritesScreen(),
+                                    builder: (context) =>
+                                        const SMEFavoritesScreen(),
                                   ),
                                 );
                               },
@@ -603,7 +615,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SMEMessagesScreen(),
+                                    builder: (context) =>
+                                        const SMEMessagesScreen(),
                                   ),
                                 );
                               },
@@ -623,14 +636,19 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const ReceiptsListScreen(isSellerView: false),
+                                    builder: (context) =>
+                                        const ReceiptsListScreen(
+                                          isSellerView: false,
+                                        ),
                                   ),
                                 );
                               },
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(child: SizedBox()), // Empty space for alignment
+                          const Expanded(
+                            child: SizedBox(),
+                          ), // Empty space for alignment
                         ],
                       ),
                     ],
@@ -658,7 +676,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SMEBrowseProductsScreen(),
+                                  builder: (context) =>
+                                      const SMEBrowseProductsScreen(),
                                 ),
                               );
                             },
@@ -678,7 +697,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               color: Colors.green.shade700,
                               onTap: () {
                                 // Navigate to browse with crop filter
-                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'crop'});
+                                Navigator.pushNamed(
+                                  context,
+                                  '/sme/browse',
+                                  arguments: {'category': 'crop'},
+                                );
                               },
                             ),
                             _CategoryCard(
@@ -686,7 +709,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               label: 'Poultry',
                               color: AppTheme.accentColor,
                               onTap: () {
-                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'poultry'});
+                                Navigator.pushNamed(
+                                  context,
+                                  '/sme/browse',
+                                  arguments: {'category': 'poultry'},
+                                );
                               },
                             ),
                             _CategoryCard(
@@ -694,7 +721,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               label: 'Oil Seeds',
                               color: Colors.amber.shade800,
                               onTap: () {
-                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'oilSeeds'});
+                                Navigator.pushNamed(
+                                  context,
+                                  '/sme/browse',
+                                  arguments: {'category': 'oilSeeds'},
+                                );
                               },
                             ),
                             _CategoryCard(
@@ -702,7 +733,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               label: 'Goats',
                               color: Colors.brown.shade600,
                               onTap: () {
-                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'goats'});
+                                Navigator.pushNamed(
+                                  context,
+                                  '/sme/browse',
+                                  arguments: {'category': 'goats'},
+                                );
                               },
                             ),
                             _CategoryCard(
@@ -710,7 +745,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                               label: 'Cows',
                               color: AppTheme.primaryColor,
                               onTap: () {
-                                Navigator.pushNamed(context, '/sme/browse', arguments: {'category': 'cows'});
+                                Navigator.pushNamed(
+                                  context,
+                                  '/sme/browse',
+                                  arguments: {'category': 'cows'},
+                                );
                               },
                             ),
                           ],
@@ -750,11 +789,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                 const SizedBox(height: 8),
                 _RecentOrdersList(),
                 const SizedBox(height: 24),
-                
+
                 // AdMob Banner
-                const AdMobBannerWidget(
-                  backgroundColor: Colors.white,
-                ),
+                const AdMobBannerWidget(backgroundColor: Colors.white),
                 const SizedBox(height: 24),
               ],
             ),
@@ -794,10 +831,7 @@ class _MiniStatCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -945,7 +979,11 @@ class _RecentOrdersList extends StatelessWidget {
             child: const Center(
               child: Column(
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'No recent orders in the last 24 hours',
@@ -981,7 +1019,9 @@ class _RecentOrdersList extends StatelessWidget {
                   'Order #${order.id.substring(0, 8)}',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: Text('${order.farmerName} • ${order.items.length} items'),
+                subtitle: Text(
+                  '${order.farmerName} • ${order.items.length} items',
+                ),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -995,7 +1035,10 @@ class _RecentOrdersList extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),

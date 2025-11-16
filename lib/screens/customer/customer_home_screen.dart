@@ -20,7 +20,7 @@ class CustomerHomeScreen extends StatefulWidget {
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   int _selectedIndex = 0;
-  
+
   // Mock data - in production, this would come from Firebase
   final List<Farm> _nearbyFarms = _getMockFarms();
   final List<Product> _featuredProducts = _getMockProducts();
@@ -118,10 +118,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      _HomePage(
-        nearbyFarms: _nearbyFarms,
-        featuredProducts: _featuredProducts,
-      ),
+      _HomePage(nearbyFarms: _nearbyFarms, featuredProducts: _featuredProducts),
       const OrderTrackingScreen(),
       const Center(child: Text('Profile Page - Coming Soon')),
     ];
@@ -163,10 +160,7 @@ class _HomePage extends StatelessWidget {
   final List<Farm> nearbyFarms;
   final List<Product> featuredProducts;
 
-  const _HomePage({
-    required this.nearbyFarms,
-    required this.featuredProducts,
-  });
+  const _HomePage({required this.nearbyFarms, required this.featuredProducts});
 
   @override
   Widget build(BuildContext context) {
@@ -389,17 +383,12 @@ class _HomePage extends StatelessWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return _ProductCard(product: featuredProducts[index]);
-                },
-                childCount: featuredProducts.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return _ProductCard(product: featuredProducts[index]);
+              }, childCount: featuredProducts.length),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 24),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
     );
@@ -555,7 +544,8 @@ class _FarmCard extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  farm.location?.fullAddress ?? 'Location not set',
+                                  farm.location.fullAddress ??
+                                      'Location not set',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.textSecondary,
@@ -584,11 +574,7 @@ class _FarmCard extends StatelessWidget {
                 const Spacer(),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 16,
-                      color: Colors.amber,
-                    ),
+                    const Icon(Icons.star, size: 16, color: Colors.amber),
                     const SizedBox(width: 4),
                     Text(
                       farm.rating.toStringAsFixed(1),

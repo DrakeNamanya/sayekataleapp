@@ -17,7 +17,7 @@ class SMEBrowseMapView extends StatefulWidget {
 
 class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
   String _selectedDistrict = 'All Districts';
-  
+
   // Mock farmer data with locations (in real app, fetch from Firebase)
   final List<Farmer> _allFarmers = [
     Farmer(
@@ -121,7 +121,9 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
     if (_selectedDistrict == 'All Districts') {
       return _allFarmers;
     }
-    return _allFarmers.where((f) => f.location?.district == _selectedDistrict).toList();
+    return _allFarmers
+        .where((f) => f.location?.district == _selectedDistrict)
+        .toList();
   }
 
   List<String> get _districts {
@@ -146,13 +148,15 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final currentUser = authProvider.currentUser;
-    
+
     // Sort farmers by distance if user has location
     final sortedFarmers = _filteredFarmers.toList();
     if (currentUser?.location != null) {
       sortedFarmers.sort((a, b) {
-        final distA = a.getDistanceFrom(currentUser!.location) ?? double.infinity;
-        final distB = b.getDistanceFrom(currentUser.location) ?? double.infinity;
+        final distA =
+            a.getDistanceFrom(currentUser!.location) ?? double.infinity;
+        final distB =
+            b.getDistanceFrom(currentUser.location) ?? double.infinity;
         return distA.compareTo(distB);
       });
     }
@@ -203,7 +207,8 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                             ),
                           ),
                           Text(
-                            currentUser?.location?.fullAddress ?? 'Location not set',
+                            currentUser?.location?.fullAddress ??
+                                'Location not set',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -232,7 +237,9 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                     const SizedBox(width: 12),
                     _buildStatCard(
                       sortedFarmers.isNotEmpty && currentUser?.location != null
-                          ? sortedFarmers[0].getDistanceText(currentUser!.location).split(' ')[0]
+                          ? sortedFarmers[0]
+                                .getDistanceText(currentUser!.location)
+                                .split(' ')[0]
                           : '--',
                       'Nearest',
                       Icons.navigation,
@@ -261,11 +268,17 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                           _selectedDistrict = district;
                         });
                       },
-                      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                      selectedColor: AppTheme.primaryColor.withValues(
+                        alpha: 0.2,
+                      ),
                       checkmarkColor: AppTheme.primaryColor,
                       labelStyle: TextStyle(
-                        color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? AppTheme.primaryColor
+                            : AppTheme.textSecondary,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   );
@@ -288,7 +301,7 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No farmers found in ${_selectedDistrict}',
+                          'No farmers found in $_selectedDistrict',
                           style: TextStyle(
                             fontSize: 18,
                             color: AppTheme.textSecondary,
@@ -305,7 +318,7 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                       final distance = currentUser?.location != null
                           ? farmer.getDistanceText(currentUser!.location)
                           : 'Distance unknown';
-                      
+
                       return _FarmerMapCard(
                         farmer: farmer,
                         distance: distance,
@@ -314,7 +327,8 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SMEFarmerDetailScreen(farmer: farmer),
+                              builder: (context) =>
+                                  SMEFarmerDetailScreen(farmer: farmer),
                             ),
                           );
                         },
@@ -349,10 +363,7 @@ class _SMEBrowseMapViewState extends State<SMEBrowseMapView> {
             ),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
           ],
         ),
@@ -448,14 +459,16 @@ class _FarmerMapCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: rank <= 3 ? Colors.amber.shade800 : AppTheme.textSecondary,
+                      color: rank <= 3
+                          ? Colors.amber.shade800
+                          : AppTheme.textSecondary,
                     ),
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Farmer Info
               Expanded(
                 child: Column(
@@ -486,7 +499,7 @@ class _FarmerMapCard extends StatelessWidget {
                         const Icon(Icons.star, size: 16, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          '${farmer.rating.toStringAsFixed(1)}',
+                          farmer.rating.toStringAsFixed(1),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -527,7 +540,8 @@ class _FarmerMapCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            farmer.location?.fullAddress ?? 'Location not available',
+                            farmer.location?.fullAddress ??
+                                'Location not available',
                             style: TextStyle(
                               fontSize: 12,
                               color: AppTheme.textSecondary,
@@ -541,14 +555,17 @@ class _FarmerMapCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Distance Badge
               Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),

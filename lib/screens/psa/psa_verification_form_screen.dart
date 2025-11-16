@@ -3,22 +3,20 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../models/psa_verification.dart';
 import '../../services/psa_verification_service.dart';
 import '../../services/image_storage_service.dart';
 import '../../utils/app_theme.dart';
 import '../../data/location_data.dart';
+
 /// Comprehensive PSA Profile Verification Form
 /// All fields are mandatory for business verification
 class PSAVerificationFormScreen extends StatefulWidget {
-  final PsaVerification? existingVerification; // For editing existing submission
+  final PsaVerification?
+  existingVerification; // For editing existing submission
 
-  const PSAVerificationFormScreen({
-    super.key,
-    this.existingVerification,
-  });
+  const PSAVerificationFormScreen({super.key, this.existingVerification});
 
   @override
   State<PSAVerificationFormScreen> createState() =>
@@ -60,7 +58,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
   final List<String> _availablePaymentMethods = [
     'Mobile Money',
     'Bank Transfer',
-    'Cash on Delivery'
+    'Cash on Delivery',
   ];
   final List<String> _selectedPaymentMethods = [];
 
@@ -84,7 +82,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     'Warehouse/Storage',
     'Agricultural Processing',
     'Veterinary Services',
-    'Other'
+    'Other',
   ];
 
   final List<String> _banks = [
@@ -97,7 +95,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     'Absa Bank',
     'Housing Finance Bank',
     'Pride Microfinance',
-    'Other'
+    'Other',
   ];
 
   final _imagePicker = ImagePicker();
@@ -120,7 +118,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     _phoneController.text = verification.phoneNumber;
     _businessAddressController.text = verification.businessAddress;
     _selectedBusinessType = verification.businessType;
-    
+
     if (verification.businessDistrict != null) {
       _selectedDistrict = verification.businessDistrict!;
     }
@@ -154,7 +152,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     if (verification.bankBranch != null) {
       _bankBranchController.text = verification.bankBranch!;
     }
-    
+
     _selectedPaymentMethods.addAll(verification.paymentMethods);
     _businessLicenseUrl = verification.businessLicenseUrl;
     _taxIdDocumentUrl = verification.taxIdDocumentUrl;
@@ -206,9 +204,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -312,7 +310,8 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           imageFile: _businessLicenseFile!,
           folder: 'psa_verifications',
           userId: psaId,
-          customName: 'business_license_${DateTime.now().millisecondsSinceEpoch}',
+          customName:
+              'business_license_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
         );
       }
@@ -322,7 +321,8 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           imageFile: _taxIdDocumentFile!,
           folder: 'psa_verifications',
           userId: psaId,
-          customName: 'tax_id_document_${DateTime.now().millisecondsSinceEpoch}',
+          customName:
+              'tax_id_document_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
         );
       }
@@ -388,8 +388,12 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       );
 
       if (kDebugMode) {
-        debugPrint('✅ Verification object created with status: ${verification.status}');
-        debugPrint('   Has all documents: ${verification.hasAllRequiredDocuments}');
+        debugPrint(
+          '✅ Verification object created with status: ${verification.status}',
+        );
+        debugPrint(
+          '   Has all documents: ${verification.hasAllRequiredDocuments}',
+        );
       }
 
       if (widget.existingVerification != null) {
@@ -465,9 +469,11 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingVerification != null
-            ? 'Update Verification'
-            : 'Business Verification'),
+        title: Text(
+          widget.existingVerification != null
+              ? 'Update Verification'
+              : 'Business Verification',
+        ),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -543,10 +549,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           Text(
             'Step ${_currentStep + 1} of 6',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -589,10 +592,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Tell us about your business',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           TextFormField(
@@ -613,7 +613,10 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
             ),
             validator: (value) {
@@ -634,7 +637,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedBusinessType,
+            initialValue: _selectedBusinessType,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -648,15 +651,15 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.category),
             ),
             items: _businessTypes.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(type),
-              );
+              return DropdownMenuItem(value: type, child: Text(type));
             }).toList(),
             onChanged: (value) {
               if (value != null) {
@@ -732,10 +735,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Where is your business located?',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           _buildTextField(
@@ -752,7 +752,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // District Dropdown
           Text(
             'District *',
@@ -764,7 +764,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedDistrict,
+            initialValue: _selectedDistrict,
             hint: const Text('Select District'),
             decoration: InputDecoration(
               filled: true,
@@ -779,15 +779,15 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.map),
             ),
             items: _districts.map((district) {
-              return DropdownMenuItem(
-                value: district,
-                child: Text(district),
-              );
+              return DropdownMenuItem(value: district, child: Text(district));
             }).toList(),
             onChanged: (value) {
               if (value != null) {
@@ -807,7 +807,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Subcounty Dropdown
           Text(
             'Subcounty *',
@@ -819,7 +819,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedSubcounty,
+            initialValue: _selectedSubcounty,
             hint: const Text('Select Subcounty'),
             decoration: InputDecoration(
               filled: true,
@@ -834,13 +834,18 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.location_city),
             ),
             items: _selectedDistrict == null
                 ? []
-                : LocationData.getSubcounties(_selectedDistrict!).map((subcounty) {
+                : LocationData.getSubcounties(_selectedDistrict!).map((
+                    subcounty,
+                  ) {
                     return DropdownMenuItem(
                       value: subcounty,
                       child: Text(subcounty),
@@ -865,7 +870,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Parish Dropdown
           Text(
             'Parish *',
@@ -877,7 +882,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedParish,
+            initialValue: _selectedParish,
             hint: const Text('Select Parish'),
             decoration: InputDecoration(
               filled: true,
@@ -892,17 +897,20 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.home_work),
             ),
             items: _selectedDistrict == null || _selectedSubcounty == null
                 ? []
-                : LocationData.getParishes(_selectedDistrict!, _selectedSubcounty!).map((parish) {
-                    return DropdownMenuItem(
-                      value: parish,
-                      child: Text(parish),
-                    );
+                : LocationData.getParishes(
+                    _selectedDistrict!,
+                    _selectedSubcounty!,
+                  ).map((parish) {
+                    return DropdownMenuItem(value: parish, child: Text(parish));
                   }).toList(),
             onChanged: _selectedDistrict == null || _selectedSubcounty == null
                 ? null
@@ -922,7 +930,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Village Dropdown
           Text(
             'Village *',
@@ -934,7 +942,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedVillage,
+            initialValue: _selectedVillage,
             hint: const Text('Select Village'),
             decoration: InputDecoration(
               filled: true,
@@ -949,19 +957,32 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.location_on),
             ),
-            items: _selectedDistrict == null || _selectedSubcounty == null || _selectedParish == null
+            items:
+                _selectedDistrict == null ||
+                    _selectedSubcounty == null ||
+                    _selectedParish == null
                 ? []
-                : LocationVillageData.getVillages(_selectedDistrict!, _selectedSubcounty!, _selectedParish!).map((village) {
+                : LocationVillageData.getVillages(
+                    _selectedDistrict!,
+                    _selectedSubcounty!,
+                    _selectedParish!,
+                  ).map((village) {
                     return DropdownMenuItem(
                       value: village,
                       child: Text(village),
                     );
                   }).toList(),
-            onChanged: _selectedDistrict == null || _selectedSubcounty == null || _selectedParish == null
+            onChanged:
+                _selectedDistrict == null ||
+                    _selectedSubcounty == null ||
+                    _selectedParish == null
                 ? null
                 : (value) {
                     if (value != null) {
@@ -978,7 +999,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
             },
           ),
           const SizedBox(height: 24),
-          
+
           // GPS Capture Section
           Container(
             padding: const EdgeInsets.all(16),
@@ -1009,13 +1030,11 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Capture your business GPS coordinates to help customers find you easily.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue.shade700,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
                 ),
                 const SizedBox(height: 12),
-                if (_businessLatitude != null && _businessLongitude != null) ...[
+                if (_businessLatitude != null &&
+                    _businessLongitude != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -1027,7 +1046,11 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Location Captured',
@@ -1068,8 +1091,8 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                     _isCapturingGPS
                         ? 'Capturing Location...'
                         : _businessLatitude != null
-                            ? 'Update GPS Location'
-                            : 'Capture GPS Location',
+                        ? 'Update GPS Location'
+                        : 'Capture GPS Location',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
@@ -1090,12 +1113,14 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
 
   Future<void> _captureGPSLocation() async {
     setState(() => _isCapturingGPS = true);
-    
+
     // Show progress message to user
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('🛰️ Searching for GPS signal... This may take up to 45 seconds.'),
+          content: Text(
+            '🛰️ Searching for GPS signal... This may take up to 45 seconds.',
+          ),
           backgroundColor: Colors.blue,
           duration: Duration(seconds: 3),
         ),
@@ -1114,7 +1139,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       }
 
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled. Please enable location in your device settings.');
+        throw Exception(
+          'Location services are disabled. Please enable location in your device settings.',
+        );
       }
 
       // Check location permission
@@ -1128,14 +1155,18 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         if (kDebugMode) {
           debugPrint('🔐 Permission after request: $permission');
         }
-        
+
         if (permission == LocationPermission.denied) {
-          throw Exception('Location permission denied. Please allow location access.');
+          throw Exception(
+            'Location permission denied. Please allow location access.',
+          );
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied. Please enable them in your browser/device settings.');
+        throw Exception(
+          'Location permissions are permanently denied. Please enable them in your browser/device settings.',
+        );
       }
 
       // Get current position with web-compatible settings
@@ -1179,7 +1210,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       }
 
       if (kDebugMode) {
-        debugPrint('✅ Position captured: ${position.latitude}, ${position.longitude}');
+        debugPrint(
+          '✅ Position captured: ${position.latitude}, ${position.longitude}',
+        );
       }
 
       setState(() {
@@ -1201,7 +1234,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       }
     } catch (e) {
       setState(() => _isCapturingGPS = false);
-      
+
       if (kDebugMode) {
         debugPrint('❌ GPS capture error: $e');
       }
@@ -1209,25 +1242,30 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       if (mounted) {
         String errorMessage = 'Failed to capture GPS location';
         String details = '';
-        
+
         final errorStr = e.toString().toLowerCase();
-        
+
         if (errorStr.contains('denied') || errorStr.contains('permission')) {
           errorMessage = 'Location Permission Required';
-          details = 'Please allow location access in your browser when prompted, or check your browser settings.';
+          details =
+              'Please allow location access in your browser when prompted, or check your browser settings.';
         } else if (errorStr.contains('timeout') || errorStr.contains('time')) {
           errorMessage = 'Location Request Timed Out';
-          details = 'GPS signal is weak. Please try again in an open area with better signal.';
-        } else if (errorStr.contains('unavailable') || errorStr.contains('disabled')) {
+          details =
+              'GPS signal is weak. Please try again in an open area with better signal.';
+        } else if (errorStr.contains('unavailable') ||
+            errorStr.contains('disabled')) {
           errorMessage = 'Location Services Unavailable';
-          details = 'Please enable location services in your device/browser settings and try again.';
+          details =
+              'Please enable location services in your device/browser settings and try again.';
         } else if (errorStr.contains('not supported')) {
           errorMessage = 'Location Not Supported';
-          details = 'Your browser or device does not support location services.';
+          details =
+              'Your browser or device does not support location services.';
         } else {
           details = 'Error: ${e.toString()}';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
@@ -1240,10 +1278,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                 ),
                 if (details.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    details,
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                  Text(details, style: const TextStyle(fontSize: 12)),
                 ],
               ],
             ),
@@ -1277,10 +1312,22 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              _buildHelpStep('1', 'Allow location access when your browser asks'),
-              _buildHelpStep('2', 'Make sure location services are enabled on your device'),
-              _buildHelpStep('3', 'Try moving to an area with better GPS signal'),
-              _buildHelpStep('4', 'If using a browser, check location permissions in settings'),
+              _buildHelpStep(
+                '1',
+                'Allow location access when your browser asks',
+              ),
+              _buildHelpStep(
+                '2',
+                'Make sure location services are enabled on your device',
+              ),
+              _buildHelpStep(
+                '3',
+                'Try moving to an area with better GPS signal',
+              ),
+              _buildHelpStep(
+                '4',
+                'If using a browser, check location permissions in settings',
+              ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1359,10 +1406,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Provide your business tax details',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           _buildTextField(
@@ -1438,10 +1482,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Where should we send your payments?',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           _buildTextField(
@@ -1481,7 +1522,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedBank,
+            initialValue: _selectedBank,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -1495,15 +1536,15 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               prefixIcon: const Icon(Icons.account_balance),
             ),
             items: _banks.map((bank) {
-              return DropdownMenuItem(
-                value: bank,
-                child: Text(bank),
-              );
+              return DropdownMenuItem(value: bank, child: Text(bank));
             }).toList(),
             onChanged: (value) {
               if (value != null) {
@@ -1548,10 +1589,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Select the payment methods you accept',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           Text(
@@ -1699,10 +1737,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           const SizedBox(height: 8),
           Text(
             'Upload all required business documents',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           _buildDocumentUpload(
@@ -1765,9 +1800,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: hasDocument
-                ? AppTheme.primaryColor
-                : Colors.grey.shade300,
+            color: hasDocument ? AppTheme.primaryColor : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -1784,10 +1817,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         ),
         subtitle: Text(
           hasDocument ? 'Document uploaded' : description,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
         ),
         trailing: IconButton(
           icon: Icon(
@@ -1829,10 +1859,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                   ),
                   child: const Text(
                     'Back',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -1854,8 +1881,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Text(

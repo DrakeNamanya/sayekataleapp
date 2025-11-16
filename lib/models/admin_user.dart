@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 /// Admin user model with role-based permissions
 class AdminUser {
   final String id;
@@ -138,10 +136,7 @@ extension AdminRoleExtension on AdminRole {
           'handle_complaints',
         ];
       case AdminRole.analyst:
-        return [
-          'view_analytics',
-          'export_data',
-        ];
+        return ['view_analytics', 'export_data'];
       case AdminRole.finance:
         return [
           'view_analytics',
@@ -150,16 +145,9 @@ extension AdminRoleExtension on AdminRole {
           'export_data',
         ];
       case AdminRole.customerRelations:
-        return [
-          'view_analytics',
-          'handle_complaints',
-          'manage_users',
-        ];
+        return ['view_analytics', 'handle_complaints', 'manage_users'];
       case AdminRole.engineer:
-        return [
-          'view_analytics',
-          'system_settings',
-        ];
+        return ['view_analytics', 'system_settings'];
     }
   }
 }

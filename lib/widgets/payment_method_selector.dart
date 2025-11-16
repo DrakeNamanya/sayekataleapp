@@ -95,7 +95,10 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                     const SizedBox(width: 8),
                     const Text(
                       'Service Fee',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -141,14 +144,14 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           color: isDisabled
               ? Colors.grey.shade100
               : isSelected
-                  ? color.withValues(alpha: 0.1)
-                  : Colors.white,
+              ? color.withValues(alpha: 0.1)
+              : Colors.white,
           border: Border.all(
             color: isDisabled
                 ? Colors.grey.shade300
                 : isSelected
-                    ? color
-                    : Colors.grey.shade300,
+                ? color
+                : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -162,8 +165,8 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                 color: isDisabled
                     ? Colors.grey.shade300
                     : isSelected
-                        ? color
-                        : color.withValues(alpha: 0.2),
+                    ? color
+                    : color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -171,8 +174,8 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                 color: isDisabled
                     ? Colors.grey.shade600
                     : isSelected
-                        ? Colors.white
-                        : color,
+                    ? Colors.white
+                    : color,
                 size: 28,
               ),
             ),
@@ -190,13 +193,18 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDisabled ? Colors.grey.shade600 : Colors.black,
+                          color: isDisabled
+                              ? Colors.grey.shade600
+                              : Colors.black,
                         ),
                       ),
                       if (isDisabled && disabledText != null) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.orange.shade100,
                             borderRadius: BorderRadius.circular(8),
@@ -218,7 +226,9 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDisabled ? Colors.grey.shade600 : Colors.grey.shade700,
+                      color: isDisabled
+                          ? Colors.grey.shade600
+                          : Colors.grey.shade700,
                     ),
                   ),
                   if (warningText != null) ...[

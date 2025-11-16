@@ -19,26 +19,16 @@ class VerificationBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: showLabel ? 8 : 4,
-        vertical: 4,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: showLabel ? 8 : 4, vertical: 4),
       decoration: BoxDecoration(
         color: _getBackgroundColor(),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _getBorderColor(),
-          width: 1,
-        ),
+        border: Border.all(color: _getBorderColor(), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _getIcon(),
-            color: _getIconColor(),
-            size: size,
-          ),
+          Icon(_getIcon(), color: _getIconColor(), size: size),
           if (showLabel) ...[
             SizedBox(width: 4),
             Text(
@@ -121,10 +111,7 @@ class VerificationStatusCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: _getBorderColor(),
-          width: 2,
-        ),
+        side: BorderSide(color: _getBorderColor(), width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -133,11 +120,7 @@ class VerificationStatusCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  _getIcon(),
-                  color: _getIconColor(),
-                  size: 32,
-                ),
+                Icon(_getIcon(), color: _getIconColor(), size: 32),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

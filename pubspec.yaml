@@ -77,6 +77,7 @@ dependencies:
   csv: ^6.0.0  # CSV file generation and export
   uuid: ^4.5.1  # UUID generation for unique transaction IDs
   pdf: ^3.11.1  # PDF generation for receipts
+  logger: ^2.6.2
 
 dev_dependencies:
   flutter_test:

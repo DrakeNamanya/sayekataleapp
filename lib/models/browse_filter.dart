@@ -69,11 +69,11 @@ class BrowseFilter {
   /// Get filter description for display
   String getDescription() {
     final List<String> descriptions = [];
-    
+
     if (selectedCategories.isNotEmpty) {
       descriptions.add('${selectedCategories.length} categories');
     }
-    
+
     if (minPrice != null || maxPrice != null) {
       if (minPrice != null && maxPrice != null) {
         descriptions.add('UGX ${minPrice!.toInt()}K-${maxPrice!.toInt()}K');
@@ -83,19 +83,19 @@ class BrowseFilter {
         descriptions.add('≤ UGX ${maxPrice!.toInt()}K');
       }
     }
-    
+
     if (maxDistance != null) {
       descriptions.add('≤ ${maxDistance!.toInt()} km');
     }
-    
+
     if (minRating != null) {
       descriptions.add('≥ ${minRating!.toStringAsFixed(1)}★');
     }
-    
+
     if (inStockOnly) {
       descriptions.add('In stock');
     }
-    
+
     return descriptions.join(' • ');
   }
 

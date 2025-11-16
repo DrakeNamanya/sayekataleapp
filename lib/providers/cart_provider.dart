@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/cart_item.dart';
@@ -10,7 +9,7 @@ import '../models/product.dart';
 class CartProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   List<CartItem> _cartItems = [];
   bool _isLoading = false;
   String? _error;
@@ -18,7 +17,7 @@ class CartProvider with ChangeNotifier {
   List<CartItem> get cartItems => _cartItems;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
+
   /// Get current user ID
   String? get _userId => _auth.currentUser?.uid;
 
@@ -26,10 +25,12 @@ class CartProvider with ChangeNotifier {
   int get itemCount => _cartItems.length;
 
   /// Get total quantity of all items
-  int get totalQuantity => _cartItems.fold(0, (sum, item) => sum + item.quantity);
+  int get totalQuantity =>
+      _cartItems.fold(0, (sum, item) => sum + item.quantity);
 
   /// Calculate subtotal (sum of all item prices)
-  double get subtotal => _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+  double get subtotal =>
+      _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 
   /// Calculate total price (same as subtotal, no additional fees)
   double get total => subtotal;
@@ -128,11 +129,8 @@ class CartProvider with ChangeNotifier {
         // Update existing item quantity
         final existingItem = _cartItems[existingItemIndex];
         final newQuantity = existingItem.quantity + quantity;
-        
-        await _firestore
-            .collection('cart_items')
-            .doc(existingItem.id)
-            .update({
+
+        await _firestore.collection('cart_items').doc(existingItem.id).update({
           'quantity': newQuantity,
           'updated_at': FieldValue.serverTimestamp(),
         });
@@ -286,14 +284,14 @@ class CartProvider with ChangeNotifier {
   /// Group cart items by farmer
   Map<String, List<CartItem>> groupByFarmer() {
     final Map<String, List<CartItem>> grouped = {};
-    
+
     for (var item in _cartItems) {
       if (!grouped.containsKey(item.farmerId)) {
         grouped[item.farmerId] = [];
       }
       grouped[item.farmerId]!.add(item);
     }
-    
+
     return grouped;
   }
 

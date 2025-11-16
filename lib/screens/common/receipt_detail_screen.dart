@@ -8,10 +8,7 @@ import '../../utils/app_theme.dart';
 class ReceiptDetailScreen extends StatelessWidget {
   final Receipt receipt;
 
-  const ReceiptDetailScreen({
-    super.key,
-    required this.receipt,
-  });
+  const ReceiptDetailScreen({super.key, required this.receipt});
 
   @override
   Widget build(BuildContext context) {
@@ -85,13 +82,13 @@ class ReceiptDetailScreen extends StatelessWidget {
               children: [
                 const Text(
                   'Receipt',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(20),
@@ -99,7 +96,11 @@ class ReceiptDetailScreen extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                      Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Colors.green.shade700,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Confirmed',
@@ -126,10 +127,7 @@ class ReceiptDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Generated: ${DateFormat('MMM dd, yyyy • hh:mm a').format(receipt.createdAt)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -146,10 +144,7 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Transaction Details',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildDetailRow('Order ID', receipt.orderId),
@@ -176,19 +171,13 @@ class ReceiptDetailScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
         Expanded(
           child: Text(
             value,
             textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -204,10 +193,7 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Items Received',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ...receipt.items.asMap().entries.map((entry) {
@@ -244,20 +230,14 @@ class ReceiptDetailScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.pricePerUnit)}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),
         ),
         Text(
           'UGX ${NumberFormat('#,###').format(item.totalPrice)}',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -273,10 +253,7 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Total Amount',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
               'UGX ${NumberFormat('#,###').format(receipt.totalAmount)}',
@@ -301,10 +278,7 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Delivery Photo',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ClipRRect(
@@ -318,7 +292,11 @@ class ReceiptDetailScreen extends StatelessWidget {
                   height: 200,
                   color: Colors.grey.shade200,
                   child: const Center(
-                    child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -338,10 +316,7 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Rating & Feedback',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             if (receipt.rating != null) ...[
@@ -368,10 +343,7 @@ class ReceiptDetailScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   receipt.feedback!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ],
             ],
@@ -390,18 +362,12 @@ class ReceiptDetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Notes',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               receipt.notes!,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
           ],
         ),
@@ -422,18 +388,12 @@ class ReceiptDetailScreen extends StatelessWidget {
           const SizedBox(height: 8),
           const Text(
             'This is a digitally verified receipt',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             'Generated by SayeKatale Platform',
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
           ),
         ],
       ),

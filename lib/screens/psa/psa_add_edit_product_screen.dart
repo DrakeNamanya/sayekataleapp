@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +15,8 @@ class PSAAddEditProductScreen extends StatefulWidget {
   const PSAAddEditProductScreen({super.key, this.product});
 
   @override
-  State<PSAAddEditProductScreen> createState() => _PSAAddEditProductScreenState();
+  State<PSAAddEditProductScreen> createState() =>
+      _PSAAddEditProductScreenState();
 }
 
 class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
@@ -28,13 +28,14 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   final _unitSizeController = TextEditingController();
   final ProductService _productService = ProductService();
   final ImageStorageService _imageStorageService = ImageStorageService();
-  
+
   ProductCategory _selectedCategory = ProductCategory.crop;
   String? _selectedMainCategory;
   String? _selectedSubcategory;
   String _selectedUnit = 'KGs';
-  List<XFile> _selectedImages = []; // ✅ Store up to 3 images
-  List<String> _existingImageUrls = []; // ✅ Store existing Firebase URLs for edit mode
+  final List<XFile> _selectedImages = []; // ✅ Store up to 3 images
+  List<String> _existingImageUrls =
+      []; // ✅ Store existing Firebase URLs for edit mode
   bool _isLoading = false;
 
   @override
@@ -79,7 +80,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
     }
 
     final picker = ImagePicker();
-    
+
     // Show options for camera or gallery
     final ImageSource? source = await showDialog<ImageSource>(
       context: context,
@@ -135,7 +136,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
     // Get current PSA user
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final psaUser = authProvider.currentUser;
-    
+
     if (psaUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -155,22 +156,25 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
       final description = _descriptionController.text.trim();
       final price = double.parse(_priceController.text.trim());
       final stockQuantity = int.parse(_stockController.text.trim());
-      final unitSize = _unitSizeController.text.trim().isNotEmpty 
-          ? int.parse(_unitSizeController.text.trim()) 
+      final unitSize = _unitSizeController.text.trim().isNotEmpty
+          ? int.parse(_unitSizeController.text.trim())
           : 1;
 
       // ✅ Upload multiple images to Firebase Storage
       List<String> allImageUrls = List.from(_existingImageUrls);
       if (_selectedImages.isNotEmpty) {
         if (kDebugMode) {
-          debugPrint('📸 Uploading ${_selectedImages.length} product images to Firebase Storage...');
+          debugPrint(
+            '📸 Uploading ${_selectedImages.length} product images to Firebase Storage...',
+          );
         }
-        final newImageUrls = await _imageStorageService.uploadMultipleImagesFromXFiles(
-          images: _selectedImages,
-          folder: 'products',
-          userId: psaUser.id,
-          compress: true,
-        );
+        final newImageUrls = await _imageStorageService
+            .uploadMultipleImagesFromXFiles(
+              images: _selectedImages,
+              folder: 'products',
+              userId: psaUser.id,
+              compress: true,
+            );
         allImageUrls.addAll(newImageUrls);
         if (kDebugMode) {
           debugPrint('✅ Uploaded ${newImageUrls.length} images successfully');
@@ -191,9 +195,11 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           unit: _selectedUnit,
           unitSize: unitSize,
           stockQuantity: stockQuantity,
-          imageUrls: allImageUrls.isNotEmpty ? allImageUrls : null, // ✅ Use all images
+          imageUrls: allImageUrls.isNotEmpty
+              ? allImageUrls
+              : null, // ✅ Use all images
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -215,9 +221,11 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           unit: _selectedUnit,
           unitSize: unitSize,
           stockQuantity: stockQuantity,
-          imageUrls: allImageUrls.isNotEmpty ? allImageUrls : null, // ✅ Multiple images
+          imageUrls: allImageUrls.isNotEmpty
+              ? allImageUrls
+              : null, // ✅ Multiple images
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -275,10 +283,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
             // ✅ Product Images (up to 3)
             const Text(
               'Product Photos (up to 3)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -299,14 +304,14 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                             height: 110,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey.shade300, width: 2),
+                              border: Border.all(
+                                color: Colors.grey.shade300,
+                                width: 2,
+                              ),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(6),
-                              child: Image.network(
-                                url,
-                                fit: BoxFit.cover,
-                              ),
+                              child: Image.network(url, fit: BoxFit.cover),
                             ),
                           ),
                           Positioned(
@@ -345,7 +350,10 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                             height: 110,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppTheme.primaryColor, width: 2),
+                              border: Border.all(
+                                color: AppTheme.primaryColor,
+                                width: 2,
+                              ),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(6),
@@ -359,7 +367,9 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                                             fit: BoxFit.cover,
                                           );
                                         }
-                                        return const Center(child: CircularProgressIndicator());
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
                                       },
                                     )
                                   : Image.network(
@@ -391,7 +401,10 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                             bottom: 4,
                             right: 4,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green,
                                 borderRadius: BorderRadius.circular(4),
@@ -428,9 +441,19 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_photo_alternate, size: 32, color: AppTheme.primaryColor),
+                            Icon(
+                              Icons.add_photo_alternate,
+                              size: 32,
+                              color: AppTheme.primaryColor,
+                            ),
                             SizedBox(height: 4),
-                            Text('Add Photo', style: TextStyle(color: AppTheme.primaryColor, fontSize: 12)),
+                            Text(
+                              'Add Photo',
+                              style: TextStyle(
+                                color: AppTheme.primaryColor,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -442,7 +465,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
 
             // Main Category
             DropdownButtonFormField<String>(
-              value: _selectedMainCategory,
+              initialValue: _selectedMainCategory,
               decoration: const InputDecoration(
                 labelText: 'Main Category *',
                 prefixIcon: Icon(Icons.category),
@@ -455,10 +478,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                 if (key == 'poultry') displayName = 'Poultry';
                 if (key == 'goats') displayName = 'Goats';
                 if (key == 'cows') displayName = 'Cows';
-                return DropdownMenuItem(
-                  value: key,
-                  child: Text(displayName),
-                );
+                return DropdownMenuItem(value: key, child: Text(displayName));
               }).toList(),
               onChanged: (value) {
                 setState(() {
@@ -478,19 +498,21 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
             // Subcategory
             if (_selectedMainCategory != null)
               DropdownButtonFormField<String>(
-                value: _selectedSubcategory,
+                initialValue: _selectedSubcategory,
                 decoration: const InputDecoration(
                   labelText: 'Subcategory *',
                   prefixIcon: Icon(Icons.grain),
                   hintText: 'Select subcategory',
                 ),
-                items: ProductCategoryHierarchy.categoryMap[_selectedMainCategory]!
+                items: ProductCategoryHierarchy
+                    .categoryMap[_selectedMainCategory]!
                     .map((subcat) {
-                  return DropdownMenuItem(
-                    value: subcat.value,
-                    child: Text(subcat.displayName),
-                  );
-                }).toList(),
+                      return DropdownMenuItem(
+                        value: subcat.value,
+                        child: Text(subcat.displayName),
+                      );
+                    })
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedSubcategory = value;
@@ -503,8 +525,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                   return null;
                 },
               ),
-            if (_selectedMainCategory != null)
-              const SizedBox(height: 16),
+            if (_selectedMainCategory != null) const SizedBox(height: 16),
 
             // Product Name
             TextFormField(
@@ -565,16 +586,13 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedUnit,
+                    initialValue: _selectedUnit,
                     decoration: const InputDecoration(
                       labelText: 'Unit *',
                       prefixIcon: Icon(Icons.scale),
                     ),
                     items: ProductCategoryHierarchy.unitOptions.map((unit) {
-                      return DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit),
-                      );
+                      return DropdownMenuItem(value: unit, child: Text(unit));
                     }).toList(),
                     onChanged: (value) {
                       if (value != null) {
@@ -661,7 +679,9 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete ${widget.product!.name}?'),
+        content: Text(
+          'Are you sure you want to delete ${widget.product!.name}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -670,11 +690,14 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog
-              
+
               try {
                 await _productService.deleteProduct(widget.product!.id);
                 if (mounted) {
-                  Navigator.pop(context, 'deleted'); // Return to products screen
+                  Navigator.pop(
+                    context,
+                    'deleted',
+                  ); // Return to products screen
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('✅ Product deleted successfully'),

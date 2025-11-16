@@ -17,7 +17,8 @@ class SHGInputCartScreen extends StatefulWidget {
 
 class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
   final OrderService _orderService = OrderService();
-  app_order.PaymentMethod _selectedPaymentMethod = app_order.PaymentMethod.mtnMobileMoney;
+  app_order.PaymentMethod _selectedPaymentMethod =
+      app_order.PaymentMethod.mtnMobileMoney;
   final _deliveryAddressController = TextEditingController();
   final _deliveryNotesController = TextEditingController();
   bool _isPlacingOrder = false;
@@ -34,15 +35,12 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
     final cartProvider = Provider.of<CartProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final cartItems = cartProvider.cartItems;
-    
+
     // Calculate amounts (no service fees)
     final subtotal = cartProvider.subtotal;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Input Cart'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Input Cart'), elevation: 0),
       body: cartItems.isEmpty
           ? Center(
               child: Column(
@@ -65,10 +63,7 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Add farming inputs from PSA suppliers',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -102,12 +97,16 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                                   width: 60,
                                   height: 60,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.image, color: Colors.grey),
-                                  ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        color: Colors.grey[200],
+                                        child: const Icon(
+                                          Icons.image,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -156,10 +155,16 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                                   const SizedBox(height: 8),
                                   IconButton(
                                     onPressed: () {
-                                      cartProvider.removeItem(item.id);  // ✅ Use cart item ID, not product ID
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      cartProvider.removeItem(
+                                        item.id,
+                                      ); // ✅ Use cart item ID, not product ID
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Item removed from cart'),
+                                          content: Text(
+                                            'Item removed from cart',
+                                          ),
                                           duration: Duration(seconds: 2),
                                         ),
                                       );
@@ -224,7 +229,10 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                           child: ElevatedButton(
                             onPressed: _isPlacingOrder
                                 ? null
-                                : () => _showCheckoutDialog(authProvider, cartProvider),
+                                : () => _showCheckoutDialog(
+                                    authProvider,
+                                    cartProvider,
+                                  ),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               backgroundColor: AppTheme.primaryColor,
@@ -235,7 +243,9 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -256,7 +266,10 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
     );
   }
 
-  void _showCheckoutDialog(AuthProvider authProvider, CartProvider cartProvider) {
+  void _showCheckoutDialog(
+    AuthProvider authProvider,
+    CartProvider cartProvider,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -278,10 +291,7 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
               children: [
                 const Text(
                   'Checkout Details',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
 
@@ -295,8 +305,16 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildPaymentMethodOption(app_order.PaymentMethod.mtnMobileMoney, 'MTN Mobile Money', Icons.phone_android),
-                _buildPaymentMethodOption(app_order.PaymentMethod.cashOnDelivery, 'Cash on Delivery', Icons.money),
+                _buildPaymentMethodOption(
+                  app_order.PaymentMethod.mtnMobileMoney,
+                  'MTN Mobile Money',
+                  Icons.phone_android,
+                ),
+                _buildPaymentMethodOption(
+                  app_order.PaymentMethod.cashOnDelivery,
+                  'Cash on Delivery',
+                  Icons.money,
+                ),
 
                 const SizedBox(height: 20),
 
@@ -370,7 +388,11 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
     );
   }
 
-  Widget _buildPaymentMethodOption(app_order.PaymentMethod method, String label, IconData icon) {
+  Widget _buildPaymentMethodOption(
+    app_order.PaymentMethod method,
+    String label,
+    IconData icon,
+  ) {
     return RadioListTile<app_order.PaymentMethod>(
       value: method,
       groupValue: _selectedPaymentMethod,
@@ -380,18 +402,17 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
         });
       },
       title: Row(
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
+        children: [Icon(icon, size: 20), const SizedBox(width: 8), Text(label)],
       ),
       dense: true,
       contentPadding: EdgeInsets.zero,
     );
   }
 
-  Future<void> _placeOrder(AuthProvider authProvider, CartProvider cartProvider) async {
+  Future<void> _placeOrder(
+    AuthProvider authProvider,
+    CartProvider cartProvider,
+  ) async {
     final user = authProvider.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -448,7 +469,9 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -458,36 +481,23 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                   color: AppTheme.successColor,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 48,
-                ),
+                child: const Icon(Icons.check, color: Colors.white, size: 48),
               ),
               const SizedBox(height: 20),
               const Text(
                 'Order Placed Successfully!',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 '${orders.length} order${orders.length > 1 ? 's' : ''} created',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
               Text(
                 'PSA suppliers will process your order soon',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -539,10 +549,7 @@ class _QuantityControl extends StatefulWidget {
   final dynamic item;
   final CartProvider cartProvider;
 
-  const _QuantityControl({
-    required this.item,
-    required this.cartProvider,
-  });
+  const _QuantityControl({required this.item, required this.cartProvider});
 
   @override
   State<_QuantityControl> createState() => _QuantityControlState();
@@ -555,7 +562,9 @@ class _QuantityControlState extends State<_QuantityControl> {
   @override
   void initState() {
     super.initState();
-    _quantityController = TextEditingController(text: widget.item.quantity.toString());
+    _quantityController = TextEditingController(
+      text: widget.item.quantity.toString(),
+    );
   }
 
   @override
@@ -575,7 +584,10 @@ class _QuantityControlState extends State<_QuantityControl> {
   void _updateQuantityFromTextField() {
     final newQuantity = int.tryParse(_quantityController.text);
     if (newQuantity != null && newQuantity > 0 && newQuantity <= 9999) {
-      widget.cartProvider.updateQuantity(widget.item.id, newQuantity);  // ✅ Use cart item ID
+      widget.cartProvider.updateQuantity(
+        widget.item.id,
+        newQuantity,
+      ); // ✅ Use cart item ID
       setState(() {
         _isEditing = false;
       });
@@ -603,7 +615,10 @@ class _QuantityControlState extends State<_QuantityControl> {
         IconButton(
           onPressed: widget.item.quantity > 1
               ? () {
-                  widget.cartProvider.updateQuantity(widget.item.id, widget.item.quantity - 1);  // ✅ Use cart item ID
+                  widget.cartProvider.updateQuantity(
+                    widget.item.id,
+                    widget.item.quantity - 1,
+                  ); // ✅ Use cart item ID
                 }
               : null,
           icon: const Icon(Icons.remove_circle_outline),
@@ -682,7 +697,10 @@ class _QuantityControlState extends State<_QuantityControl> {
         // Increase quantity
         IconButton(
           onPressed: () {
-            widget.cartProvider.updateQuantity(widget.item.id, widget.item.quantity + 1);  // ✅ Use cart item ID
+            widget.cartProvider.updateQuantity(
+              widget.item.id,
+              widget.item.quantity + 1,
+            ); // ✅ Use cart item ID
           },
           icon: const Icon(Icons.add_circle_outline),
           iconSize: 24,

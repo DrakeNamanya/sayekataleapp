@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../models/psa_verification.dart';
 import '../../services/psa_verification_service.dart';
-import 'psa_edit_profile_screen.dart';
 import 'psa_verification_form_screen.dart';
 import 'psa_business_info_screen.dart';
 import '../common/help_support_screen.dart';
@@ -18,7 +17,7 @@ class PSAProfileScreen extends StatefulWidget {
 
 class _PSAProfileScreenState extends State<PSAProfileScreen> {
   final PSAVerificationService _verificationService = PSAVerificationService();
-  
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -39,10 +38,7 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppTheme.primaryColor,
-                      AppTheme.accentColor,
-                    ],
+                    colors: [AppTheme.primaryColor, AppTheme.accentColor],
                   ),
                 ),
                 child: SafeArea(
@@ -91,7 +87,10 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
@@ -99,7 +98,11 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified, size: 16, color: Colors.white),
+                            const Icon(
+                              Icons.verified,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                             const SizedBox(width: 4),
                             const Text(
                               'Supplier (PSA)',
@@ -135,20 +138,22 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                     }
 
                     final verification = snapshot.data;
-                    
+
                     if (verification == null) {
                       // No verification submitted - prompt to complete
                       return _VerificationBanner(
                         status: 'incomplete',
                         title: 'Complete Your Business Verification',
-                        subtitle: 'Submit your business documents to start selling',
+                        subtitle:
+                            'Submit your business documents to start selling',
                         icon: Icons.warning_amber,
                         color: Colors.orange,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const PSAVerificationFormScreen(),
+                              builder: (context) =>
+                                  const PSAVerificationFormScreen(),
                             ),
                           ).then((_) => setState(() {}));
                         },
@@ -157,7 +162,8 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
 
                     // Show verification status
                     if (verification.status == PsaVerificationStatus.pending ||
-                        verification.status == PsaVerificationStatus.underReview) {
+                        verification.status ==
+                            PsaVerificationStatus.underReview) {
                       return _VerificationBanner(
                         status: 'pending',
                         title: 'Verification Under Review',
@@ -183,7 +189,9 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                       return _VerificationBanner(
                         status: 'rejected',
                         title: 'Verification Rejected',
-                        subtitle: verification.rejectionReason ?? 'Please update your documents',
+                        subtitle:
+                            verification.rejectionReason ??
+                            'Please update your documents',
                         icon: Icons.cancel,
                         color: Colors.red,
                         onTap: () {
@@ -202,7 +210,7 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                     return const SizedBox.shrink();
                   },
                 ),
-                
+
                 const SizedBox(height: 16),
 
                 // Business Section
@@ -249,7 +257,8 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                   title: 'Verification Documents',
                   subtitle: 'Business license and certifications',
                   onTap: () async {
-                    final verification = await _verificationService.getPsaVerification(userId);
+                    final verification = await _verificationService
+                        .getPsaVerification(userId);
                     if (context.mounted) {
                       Navigator.push(
                         context,
@@ -398,7 +407,9 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content: const Text(
+                            'Are you sure you want to logout?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -429,7 +440,10 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                     label: const Text('Logout'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.errorColor,
-                      side: const BorderSide(color: AppTheme.errorColor, width: 2),
+                      side: const BorderSide(
+                        color: AppTheme.errorColor,
+                        width: 2,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
@@ -474,19 +488,17 @@ class _ProfileOption extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.textSecondary),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppTheme.textSecondary,
+        ),
       ),
     );
   }
@@ -556,8 +568,7 @@ class _VerificationBanner extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onTap != null)
-                Icon(Icons.arrow_forward, color: color),
+              if (onTap != null) Icon(Icons.arrow_forward, color: color),
             ],
           ),
         ),

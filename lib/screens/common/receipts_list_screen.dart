@@ -12,10 +12,7 @@ import 'receipt_detail_screen.dart';
 class ReceiptsListScreen extends StatefulWidget {
   final bool isSellerView; // true = seller receipts, false = buyer receipts
 
-  const ReceiptsListScreen({
-    super.key,
-    this.isSellerView = false,
-  });
+  const ReceiptsListScreen({super.key, this.isSellerView = false});
 
   @override
   State<ReceiptsListScreen> createState() => _ReceiptsListScreenState();
@@ -31,7 +28,9 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isSellerView ? 'Sales Receipts' : 'Purchase Receipts'),
+        title: Text(
+          widget.isSellerView ? 'Sales Receipts' : 'Purchase Receipts',
+        ),
         elevation: 0,
       ),
       body: StreamBuilder<List<Receipt>>(
@@ -52,18 +51,12 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Error loading receipts',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     snapshot.error.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -85,7 +78,9 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    widget.isSellerView ? 'No sales receipts yet' : 'No purchase receipts yet',
+                    widget.isSellerView
+                        ? 'No sales receipts yet'
+                        : 'No purchase receipts yet',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -97,10 +92,7 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                     widget.isSellerView
                         ? 'Sales receipts will appear here once buyers confirm deliveries'
                         : 'Purchase receipts will appear here once you confirm deliveries',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -157,7 +149,10 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -165,7 +160,11 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, size: 12, color: Colors.green.shade700),
+                        Icon(
+                          Icons.check_circle,
+                          size: 12,
+                          color: Colors.green.shade700,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Confirmed',
@@ -185,14 +184,17 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
               // Date
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    DateFormat('MMM dd, yyyy • hh:mm a').format(receipt.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    DateFormat(
+                      'MMM dd, yyyy • hh:mm a',
+                    ).format(receipt.createdAt),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -209,7 +211,9 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      widget.isSellerView ? receipt.buyerName : receipt.sellerName,
+                      widget.isSellerView
+                          ? receipt.buyerName
+                          : receipt.sellerName,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -223,10 +227,7 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
               // Items Summary
               Text(
                 '${receipt.items.length} item${receipt.items.length > 1 ? 's' : ''}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 8),
 
@@ -236,10 +237,7 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                 children: [
                   const Text(
                     'Total Amount',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                   ),
                   Text(
                     'UGX ${NumberFormat('#,###').format(receipt.totalAmount)}',
@@ -259,7 +257,9 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
                   children: [
                     ...List.generate(5, (index) {
                       return Icon(
-                        index < receipt.rating! ? Icons.star : Icons.star_border,
+                        index < receipt.rating!
+                            ? Icons.star
+                            : Icons.star_border,
                         color: Colors.amber,
                         size: 16,
                       );

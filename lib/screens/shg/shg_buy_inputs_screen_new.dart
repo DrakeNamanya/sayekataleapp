@@ -6,7 +6,6 @@ import '../../utils/app_theme.dart';
 import '../../models/product.dart';
 import '../../models/product_with_farmer.dart';
 import '../../models/user.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/product_with_farmer_service.dart';
@@ -22,14 +21,15 @@ class SHGBuyInputsScreen extends StatefulWidget {
 
 class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
   final ProductService _productService = ProductService();
-  final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
+  final ProductWithFarmerService _productWithFarmerService =
+      ProductWithFarmerService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  
+
   ProductCategory _selectedCategory = ProductCategory.crop;
   String _searchQuery = '';
   bool _isSearching = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -52,46 +52,61 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
     List<Product> filtered;
     switch (_selectedCategory) {
       case ProductCategory.crop:
-        filtered = products.where((p) =>
-            p.category == ProductCategory.fertilizers ||
-            p.category == ProductCategory.chemicals ||
-            p.category == ProductCategory.hoes ||
-            p.category == ProductCategory.crop
-        ).toList();
+        filtered = products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.fertilizers ||
+                  p.category == ProductCategory.chemicals ||
+                  p.category == ProductCategory.hoes ||
+                  p.category == ProductCategory.crop,
+            )
+            .toList();
         break;
       case ProductCategory.poultry:
-        filtered = products.where((p) =>
-            p.category == ProductCategory.dayOldChicks ||
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.poultry
-        ).toList();
+        filtered = products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.dayOldChicks ||
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.poultry,
+            )
+            .toList();
         break;
       case ProductCategory.goats:
-        filtered = products.where((p) =>
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.goats
-        ).toList();
+        filtered = products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.goats,
+            )
+            .toList();
         break;
       case ProductCategory.cows:
-        filtered = products.where((p) =>
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.cows
-        ).toList();
+        filtered = products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.cows,
+            )
+            .toList();
         break;
       default:
         filtered = products;
     }
-    
+
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      filtered = filtered.where((p) =>
-          p.name.toLowerCase().contains(query) ||
-          (p.description?.toLowerCase().contains(query) ?? false) ||
-          (p.businessName?.toLowerCase().contains(query) ?? false)
-      ).toList();
+      filtered = filtered
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(query) ||
+                (p.description?.toLowerCase().contains(query) ?? false) ||
+                (p.businessName?.toLowerCase().contains(query) ?? false),
+          )
+          .toList();
     }
-    
+
     return filtered;
   }
 
@@ -102,7 +117,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching ? _buildSearchField() : const Text('Buy Farming Inputs'),
+        title: _isSearching
+            ? _buildSearchField()
+            : const Text('Buy Farming Inputs'),
         centerTitle: !_isSearching,
         elevation: 0,
         leading: _isSearching
@@ -198,28 +215,36 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       icon: Icons.agriculture_outlined,
                       label: 'Crop Inputs',
                       isSelected: _selectedCategory == ProductCategory.crop,
-                      onTap: () => setState(() => _selectedCategory = ProductCategory.crop),
+                      onTap: () => setState(
+                        () => _selectedCategory = ProductCategory.crop,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     _CategoryTab(
                       icon: Icons.pets_outlined,
                       label: 'Poultry Inputs',
                       isSelected: _selectedCategory == ProductCategory.poultry,
-                      onTap: () => setState(() => _selectedCategory = ProductCategory.poultry),
+                      onTap: () => setState(
+                        () => _selectedCategory = ProductCategory.poultry,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     _CategoryTab(
                       icon: Icons.pets_outlined,
                       label: 'Goat Inputs',
                       isSelected: _selectedCategory == ProductCategory.goats,
-                      onTap: () => setState(() => _selectedCategory = ProductCategory.goats),
+                      onTap: () => setState(
+                        () => _selectedCategory = ProductCategory.goats,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     _CategoryTab(
                       icon: Icons.agriculture_outlined,
                       label: 'Cow Inputs',
                       isSelected: _selectedCategory == ProductCategory.cows,
-                      onTap: () => setState(() => _selectedCategory = ProductCategory.cows),
+                      onTap: () => setState(
+                        () => _selectedCategory = ProductCategory.cows,
+                      ),
                     ),
                   ],
                 ),
@@ -240,7 +265,11 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
                         Text('Error: ${snapshot.error}'),
                         const SizedBox(height: 16),
@@ -262,7 +291,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          _searchQuery.isNotEmpty ? Icons.search_off : Icons.inventory_2_outlined,
+                          _searchQuery.isNotEmpty
+                              ? Icons.search_off
+                              : Icons.inventory_2_outlined,
                           size: 64,
                           color: AppTheme.textSecondary.withValues(alpha: 0.5),
                         ),
@@ -271,8 +302,8 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           _searchQuery.isNotEmpty
                               ? 'No results found for "$_searchQuery"'
                               : allProducts.isEmpty
-                                  ? 'No PSA products available yet'
-                                  : 'No products in this category',
+                              ? 'No PSA products available yet'
+                              : 'No products in this category',
                           style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 16,
@@ -307,12 +338,15 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
                 // Load products with farmer details
                 return FutureBuilder<List<ProductWithFarmer>>(
-                  future: _productWithFarmerService.getProductsWithFarmersAndDistance(
-                    products: filteredProducts,
-                    buyerLocation: null, // No distance calculation needed for inputs
-                  ),
+                  future: _productWithFarmerService
+                      .getProductsWithFarmersAndDistance(
+                        products: filteredProducts,
+                        buyerLocation:
+                            null, // No distance calculation needed for inputs
+                      ),
                   builder: (context, farmerSnapshot) {
-                    if (farmerSnapshot.connectionState == ConnectionState.waiting) {
+                    if (farmerSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
@@ -329,7 +363,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       itemCount: productsWithFarmers.length,
                       itemBuilder: (context, index) {
                         final productWithFarmer = productsWithFarmers[index];
-                        return _ProductCard(productWithFarmer: productWithFarmer);
+                        return _ProductCard(
+                          productWithFarmer: productWithFarmer,
+                        );
                       },
                     );
                   },
@@ -529,25 +565,30 @@ class _ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Supplier name with PSA badge
                   Row(
                     children: [
                       Icon(
-                        supplier.role == UserRole.psa ? Icons.business : Icons.person,
+                        supplier.role == UserRole.psa
+                            ? Icons.business
+                            : Icons.person,
                         size: 14,
                         color: Colors.grey,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          supplier.role == UserRole.psa && product.businessName != null
+                          supplier.role == UserRole.psa &&
+                                  product.businessName != null
                               ? product.businessName!
                               : supplier.name,
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[700],
-                            fontWeight: supplier.role == UserRole.psa ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: supplier.role == UserRole.psa
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -556,7 +597,10 @@ class _ProductCard extends StatelessWidget {
                       if (supplier.role == UserRole.psa) ...[
                         const SizedBox(width: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.purple,
                             borderRadius: BorderRadius.circular(8),
@@ -564,7 +608,11 @@ class _ProductCard extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.verified, size: 10, color: Colors.white),
+                              Icon(
+                                Icons.verified,
+                                size: 10,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 3),
                               Text(
                                 'PSA',
@@ -581,9 +629,10 @@ class _ProductCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Description
-                  if (product.description != null && product.description!.isNotEmpty)
+                  if (product.description != null &&
+                      product.description!.isNotEmpty)
                     Text(
                       product.description!,
                       style: const TextStyle(
@@ -594,7 +643,7 @@ class _ProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 8),
-                  
+
                   // Price and Stock
                   Row(
                     children: [
@@ -622,7 +671,10 @@ class _ProductCard extends StatelessWidget {
                       ),
                       // Stock badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: product.isOutOfStock
                               ? Colors.red.withValues(alpha: 0.1)
@@ -633,15 +685,23 @@ class _ProductCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              product.isOutOfStock ? Icons.cancel : Icons.check_circle,
+                              product.isOutOfStock
+                                  ? Icons.cancel
+                                  : Icons.check_circle,
                               size: 12,
-                              color: product.isOutOfStock ? Colors.red : AppTheme.successColor,
+                              color: product.isOutOfStock
+                                  ? Colors.red
+                                  : AppTheme.successColor,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              product.isOutOfStock ? 'Out of Stock' : 'In Stock',
+                              product.isOutOfStock
+                                  ? 'Out of Stock'
+                                  : 'In Stock',
                               style: TextStyle(
-                                color: product.isOutOfStock ? Colors.red : AppTheme.successColor,
+                                color: product.isOutOfStock
+                                    ? Colors.red
+                                    : AppTheme.successColor,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -652,16 +712,20 @@ class _ProductCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Action buttons
                   Row(
                     children: [
                       // Call button
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _callSupplier(context, supplier.phone),
+                          onPressed: () =>
+                              _callSupplier(context, supplier.phone),
                           icon: const Icon(Icons.phone, size: 16),
-                          label: const Text('Call', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Call',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
@@ -674,9 +738,13 @@ class _ProductCard extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: product.isOutOfStock
                               ? null
-                              : () => _addToCart(context, product, cartProvider),
+                              : () =>
+                                    _addToCart(context, product, cartProvider),
                           icon: const Icon(Icons.shopping_cart, size: 16),
-                          label: const Text('Add to Cart', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Add to Cart',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
@@ -716,14 +784,18 @@ class _ProductCard extends StatelessWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot call $phone')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot call $phone')));
       }
     }
   }
 
-  void _addToCart(BuildContext context, Product product, CartProvider cartProvider) {
+  void _addToCart(
+    BuildContext context,
+    Product product,
+    CartProvider cartProvider,
+  ) {
     cartProvider.addItem(product);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -731,9 +803,7 @@ class _ProductCard extends StatelessWidget {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text('${product.name} added to cart'),
-            ),
+            Expanded(child: Text('${product.name} added to cart')),
           ],
         ),
         backgroundColor: AppTheme.successColor,

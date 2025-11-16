@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 /// Badge displayed on featured products
 class FeaturedBadge extends StatelessWidget {
   final bool isCompact;
-  
-  const FeaturedBadge({
-    super.key,
-    this.isCompact = false,
-  });
+
+  const FeaturedBadge({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +31,7 @@ class FeaturedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.star,
-            color: Colors.white,
-            size: isCompact ? 14 : 16,
-          ),
+          Icon(Icons.star, color: Colors.white, size: isCompact ? 14 : 16),
           const SizedBox(width: 4),
           Text(
             'Featured',
@@ -58,11 +51,8 @@ class FeaturedBadge extends StatelessWidget {
 /// Badge displayed on top-performing products (high sales + ratings)
 class TopBadge extends StatelessWidget {
   final bool isCompact;
-  
-  const TopBadge({
-    super.key,
-    this.isCompact = false,
-  });
+
+  const TopBadge({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {

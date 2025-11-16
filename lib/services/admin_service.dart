@@ -38,13 +38,20 @@ class AdminService {
       Query query = _firestore.collection('psa_verifications');
 
       if (status != null) {
-        query = query.where('status',
-            isEqualTo: status.toString().split('.').last);
+        query = query.where(
+          'status',
+          isEqualTo: status.toString().split('.').last,
+        );
       }
 
       final snapshot = await query.limit(limit).get();
       final verifications = snapshot.docs
-          .map((doc) => PsaVerification.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map(
+            (doc) => PsaVerification.fromFirestore(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ),
+          )
           .toList();
 
       // Sort by created date (newest first)
@@ -74,8 +81,9 @@ class AdminService {
       final batch = _firestore.batch();
 
       // Update verification record
-      final verificationRef =
-          _firestore.collection('psa_verifications').doc(verificationId);
+      final verificationRef = _firestore
+          .collection('psa_verifications')
+          .doc(verificationId);
       batch.update(verificationRef, {
         'status': 'approved',
         'reviewed_by': adminId,
@@ -87,7 +95,9 @@ class AdminService {
       // Get verification details to update user
       final verificationDoc = await verificationRef.get();
       final verification = PsaVerification.fromFirestore(
-          verificationDoc.data()!, verificationDoc.id);
+        verificationDoc.data()!,
+        verificationDoc.id,
+      );
 
       // Update PSA user status
       final userRef = _firestore.collection('users').doc(verification.psaId);
@@ -114,8 +124,9 @@ class AdminService {
       final batch = _firestore.batch();
 
       // Update verification record
-      final verificationRef =
-          _firestore.collection('psa_verifications').doc(verificationId);
+      final verificationRef = _firestore
+          .collection('psa_verifications')
+          .doc(verificationId);
       batch.update(verificationRef, {
         'status': 'rejected',
         'rejection_reason': rejectionReason,
@@ -128,7 +139,9 @@ class AdminService {
       // Get verification details to update user
       final verificationDoc = await verificationRef.get();
       final verification = PsaVerification.fromFirestore(
-          verificationDoc.data()!, verificationDoc.id);
+        verificationDoc.data()!,
+        verificationDoc.id,
+      );
 
       // Update PSA user status
       final userRef = _firestore.collection('users').doc(verification.psaId);
@@ -149,13 +162,16 @@ class AdminService {
     String adminId,
     String message,
   ) async {
-    await _firestore.collection('psa_verifications').doc(verificationId).update({
-      'status': 'moreInfoRequired',
-      'review_notes': message,
-      'reviewed_by': adminId,
-      'reviewed_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    });
+    await _firestore
+        .collection('psa_verifications')
+        .doc(verificationId)
+        .update({
+          'status': 'moreInfoRequired',
+          'review_notes': message,
+          'reviewed_by': adminId,
+          'reviewed_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
   }
 
   // ==================== User Management ====================
@@ -187,11 +203,7 @@ class AdminService {
   }
 
   /// Suspend user account
-  Future<void> suspendUser(
-    String userId,
-    String adminId,
-    String reason,
-  ) async {
+  Future<void> suspendUser(String userId, String adminId, String reason) async {
     await _firestore.collection('users').doc(userId).update({
       'is_suspended': true,
       'suspended_at': DateTime.now().toIso8601String(),
@@ -211,7 +223,7 @@ class AdminService {
       'updated_at': DateTime.now().toIso8601String(),
     });
   }
-  
+
   /// Get suspended users count
   Future<int> getSuspendedUsersCount() async {
     final snapshot = await _firestore
@@ -287,14 +299,19 @@ class AdminService {
       stats['total_users'] = users.length;
       stats['shg_count'] = users.where((u) => u.data()['role'] == 'shg').length;
       stats['psa_count'] = users.where((u) => u.data()['role'] == 'psa').length;
-      stats['customer_count'] =
-          users.where((u) => u.data()['role'] == 'customer').length;
-      
+      stats['customer_count'] = users
+          .where((u) => u.data()['role'] == 'customer')
+          .length;
+
       // Verified users
-      stats['verified_users'] = users.where((u) => u.data()['is_verified'] == true).length;
-      
+      stats['verified_users'] = users
+          .where((u) => u.data()['is_verified'] == true)
+          .length;
+
       // Active users (not suspended)
-      stats['active_users'] = users.where((u) => u.data()['is_active'] != false).length;
+      stats['active_users'] = users
+          .where((u) => u.data()['is_active'] != false)
+          .length;
 
       // Pending verifications
       final pendingPsa = await _firestore
@@ -311,15 +328,19 @@ class AdminService {
       stats['active_products'] = productsSnapshot.docs
           .where((p) => p.data()['is_active'] != false)
           .length;
-      
+
       // Flagged products
       stats['flagged_products'] = productsSnapshot.docs
           .where((p) => p.data()['is_flagged'] == true)
           .length;
-      
+
       // Low stock products (quantity < 10)
       stats['low_stock_products'] = productsSnapshot.docs
-          .where((p) => (p.data()['quantity'] ?? 0) < 10 && p.data()['is_active'] != false)
+          .where(
+            (p) =>
+                (p.data()['quantity'] ?? 0) < 10 &&
+                p.data()['is_active'] != false,
+          )
           .length;
 
       // Total orders
@@ -330,12 +351,12 @@ class AdminService {
       stats['pending_orders'] = ordersSnapshot.docs
           .where((o) => o.data()['status'] == 'pending')
           .length;
-      
+
       // Processing orders
       stats['processing_orders'] = ordersSnapshot.docs
           .where((o) => o.data()['status'] == 'processing')
           .length;
-      
+
       // Completed orders
       stats['completed_orders'] = ordersSnapshot.docs
           .where((o) => o.data()['status'] == 'delivered')
@@ -348,27 +369,47 @@ class AdminService {
         final amount = (order.data()['total_amount'] ?? 0.0).toDouble();
         if (order.data()['status'] == 'delivered') {
           totalRevenue += amount;
-        } else if (order.data()['status'] == 'pending' || order.data()['status'] == 'processing') {
+        } else if (order.data()['status'] == 'pending' ||
+            order.data()['status'] == 'processing') {
           pendingRevenue += amount;
         }
       }
       stats['total_revenue'] = totalRevenue;
       stats['pending_revenue'] = pendingRevenue;
-      
+
       // Today's stats
       final today = DateTime.now();
-      final todayStart = DateTime(today.year, today.month, today.day).toIso8601String();
-      
+      final todayStart = DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ).toIso8601String();
+
       stats['today_orders'] = ordersSnapshot.docs
-          .where((o) => (o.data()['created_at'] ?? '').toString().startsWith(todayStart.substring(0, 10)))
+          .where(
+            (o) => (o.data()['created_at'] ?? '').toString().startsWith(
+              todayStart.substring(0, 10),
+            ),
+          )
           .length;
-      
+
       stats['today_revenue'] = ordersSnapshot.docs
-          .where((o) => (o.data()['created_at'] ?? '').toString().startsWith(todayStart.substring(0, 10)) && o.data()['status'] == 'delivered')
-          .fold(0.0, (sum, o) => sum + ((o.data()['total_amount'] ?? 0.0).toDouble()));
+          .where(
+            (o) =>
+                (o.data()['created_at'] ?? '').toString().startsWith(
+                  todayStart.substring(0, 10),
+                ) &&
+                o.data()['status'] == 'delivered',
+          )
+          .fold(
+            0.0,
+            (sum, o) => sum + ((o.data()['total_amount'] ?? 0.0).toDouble()),
+          );
 
       // Complaints stats
-      final complaintsSnapshot = await _firestore.collection('user_complaints').get();
+      final complaintsSnapshot = await _firestore
+          .collection('user_complaints')
+          .get();
       stats['total_complaints'] = complaintsSnapshot.docs.length;
       stats['pending_complaints'] = complaintsSnapshot.docs
           .where((c) => c.data()['status'] == 'pending')
@@ -381,7 +422,9 @@ class AdminService {
   }
 
   /// Get recent activities
-  Future<List<Map<String, dynamic>>> getRecentActivities({int limit = 20}) async {
+  Future<List<Map<String, dynamic>>> getRecentActivities({
+    int limit = 20,
+  }) async {
     try {
       final activities = <Map<String, dynamic>>[];
 
@@ -480,9 +523,9 @@ class AdminService {
           .collection('user_complaints')
           .doc(complaintId)
           .get();
-      
+
       if (!doc.exists) return null;
-      
+
       return {'id': doc.id, ...doc.data() as Map<String, dynamic>};
     } catch (e) {
       throw Exception('Failed to get complaint: $e');
@@ -554,11 +597,21 @@ class AdminService {
 
       return {
         'total': complaints.length,
-        'pending': complaints.where((c) => c.data()['status'] == 'pending').length,
-        'in_progress': complaints.where((c) => c.data()['status'] == 'inProgress').length,
-        'resolved': complaints.where((c) => c.data()['status'] == 'resolved').length,
-        'closed': complaints.where((c) => c.data()['status'] == 'closed').length,
-        'urgent': complaints.where((c) => c.data()['priority'] == 'urgent').length,
+        'pending': complaints
+            .where((c) => c.data()['status'] == 'pending')
+            .length,
+        'in_progress': complaints
+            .where((c) => c.data()['status'] == 'inProgress')
+            .length,
+        'resolved': complaints
+            .where((c) => c.data()['status'] == 'resolved')
+            .length,
+        'closed': complaints
+            .where((c) => c.data()['status'] == 'closed')
+            .length,
+        'urgent': complaints
+            .where((c) => c.data()['priority'] == 'urgent')
+            .length,
         'high': complaints.where((c) => c.data()['priority'] == 'high').length,
       };
     } catch (e) {

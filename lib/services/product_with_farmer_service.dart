@@ -23,23 +23,25 @@ class ProductWithFarmerService {
       }
 
       if (kDebugMode) {
-        debugPrint('📦 Loading farmer details for ${products.length} products...');
+        debugPrint(
+          '📦 Loading farmer details for ${products.length} products...',
+        );
       }
 
       // Get unique farmer IDs
       final farmerIds = products.map((p) => p.farmId).toSet().toList();
-      
+
       if (kDebugMode) {
         debugPrint('👥 Unique farmer IDs to query: ${farmerIds.length}');
       }
 
       // Load all farmers in batches (Firestore has 10-item limit for whereIn)
       final farmerMap = <String, AppUser>{};
-      
+
       // Process farmer IDs in batches of 10
       for (var i = 0; i < farmerIds.length; i += 10) {
         final batch = farmerIds.skip(i).take(10).toList();
-        
+
         try {
           final farmerDocs = await _firestore
               .collection('users')
@@ -63,10 +65,10 @@ class ProductWithFarmerService {
       // Create ProductWithFarmer list
       final productsWithFarmers = <ProductWithFarmer>[];
       int missingFarmers = 0;
-      
+
       for (final product in products) {
         final farmer = farmerMap[product.farmId];
-        
+
         if (farmer != null) {
           // Calculate distance if both locations available
           double? distance;
@@ -74,24 +76,32 @@ class ProductWithFarmerService {
             distance = buyerLocation.distanceTo(farmer.location!);
           }
 
-          productsWithFarmers.add(ProductWithFarmer(
-            product: product,
-            farmer: farmer,
-            distanceKm: distance,
-          ));
+          productsWithFarmers.add(
+            ProductWithFarmer(
+              product: product,
+              farmer: farmer,
+              distanceKm: distance,
+            ),
+          );
         } else {
           missingFarmers++;
           if (kDebugMode) {
-            debugPrint('⚠️  Farmer not found for product: ${product.name} | System ID: ${product.systemId ?? "N/A"} | Farmer ID: ${product.farmId}');
+            debugPrint(
+              '⚠️  Farmer not found for product: ${product.name} | System ID: ${product.systemId ?? "N/A"} | Farmer ID: ${product.farmId}',
+            );
           }
         }
       }
 
       if (kDebugMode) {
         if (missingFarmers > 0) {
-          debugPrint('⚠️  ${missingFarmers} products skipped due to missing farmer profiles');
+          debugPrint(
+            '⚠️  $missingFarmers products skipped due to missing farmer profiles',
+          );
         }
-        debugPrint('📊 Final result: ${productsWithFarmers.length} products with farmer details');
+        debugPrint(
+          '📊 Final result: ${productsWithFarmers.length} products with farmer details',
+        );
       }
 
       // Sort by distance (nearest first)
@@ -104,9 +114,13 @@ class ProductWithFarmerService {
         });
 
         if (kDebugMode) {
-          debugPrint('📍 Sorted ${productsWithFarmers.length} products by distance');
+          debugPrint(
+            '📍 Sorted ${productsWithFarmers.length} products by distance',
+          );
           if (productsWithFarmers.isNotEmpty) {
-            debugPrint('   Nearest: ${productsWithFarmers.first.product.name} (${productsWithFarmers.first.distanceText})');
+            debugPrint(
+              '   Nearest: ${productsWithFarmers.first.product.name} (${productsWithFarmers.first.distanceText})',
+            );
           }
         }
       }
@@ -125,7 +139,7 @@ class ProductWithFarmerService {
   Future<AppUser?> getFarmerForProduct(String farmerId) async {
     try {
       final doc = await _firestore.collection('users').doc(farmerId).get();
-      
+
       if (doc.exists) {
         return AppUser.fromFirestore(doc.data()!, doc.id);
       }

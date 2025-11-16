@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../services/rating_service.dart';
 
 /// Admin screen for managing user ratings
-/// 
+///
 /// Features:
 /// - Calculate ratings for all users
 /// - View rating calculation results
@@ -60,7 +60,10 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  _buildInfoRow(Icons.check_circle, 'Order is completed by buyer'),
+                  _buildInfoRow(
+                    Icons.check_circle,
+                    'Order is completed by buyer',
+                  ),
                   _buildInfoRow(Icons.rate_review, 'Customer submits a review'),
                   const SizedBox(height: 12),
                   const Divider(),
@@ -70,9 +73,18 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  _buildInfoRow(Icons.shopping_bag, 'Completed Orders (40%): 0-50 orders = 0-5 stars'),
-                  _buildInfoRow(Icons.star_half, 'Customer Ratings (40%): Average review score'),
-                  _buildInfoRow(Icons.verified, 'Fulfillment Rate (20%): Delivery success rate'),
+                  _buildInfoRow(
+                    Icons.shopping_bag,
+                    'Completed Orders (40%): 0-50 orders = 0-5 stars',
+                  ),
+                  _buildInfoRow(
+                    Icons.star_half,
+                    'Customer Ratings (40%): Average review score',
+                  ),
+                  _buildInfoRow(
+                    Icons.verified,
+                    'Fulfillment Rate (20%): Delivery success rate',
+                  ),
                 ],
               ),
             ),
@@ -89,18 +101,12 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                 children: [
                   const Text(
                     'Manual Rating Calculation',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Recalculate ratings for all users in the system',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
@@ -111,12 +117,16 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Icon(Icons.refresh),
                     label: Text(
-                      _isCalculating ? 'Calculating...' : 'Calculate All Ratings',
+                      _isCalculating
+                          ? 'Calculating...'
+                          : 'Calculate All Ratings',
                       style: const TextStyle(fontSize: 16),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -215,7 +225,9 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...(_results!.map((metric) => _buildUserMetricCard(metric)).toList()),
+                    ...(_results!
+                        .map((metric) => _buildUserMetricCard(metric))
+                        .toList()),
                   ],
                 ),
               ),
@@ -256,7 +268,10 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade100,
                     borderRadius: BorderRadius.circular(4),
@@ -282,10 +297,7 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
                 ),
                 const Text(
                   '/5.0',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -351,7 +363,7 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
 
     try {
       final results = await _ratingService.calculateAllUserRatings();
-      
+
       if (mounted) {
         setState(() {
           _results = results;
@@ -360,7 +372,9 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Successfully updated ratings for ${results.length} users'),
+            content: Text(
+              '✅ Successfully updated ratings for ${results.length} users',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
@@ -370,7 +384,7 @@ class _RatingManagementScreenState extends State<RatingManagementScreen> {
       if (kDebugMode) {
         debugPrint('❌ Error calculating ratings: $e');
       }
-      
+
       if (mounted) {
         setState(() {
           _errorMessage = 'Error: $e';

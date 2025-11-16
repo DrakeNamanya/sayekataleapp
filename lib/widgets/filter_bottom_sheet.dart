@@ -6,10 +6,7 @@ import '../utils/app_theme.dart';
 class FilterBottomSheet extends StatefulWidget {
   final BrowseFilter initialFilter;
 
-  const FilterBottomSheet({
-    super.key,
-    required this.initialFilter,
-  });
+  const FilterBottomSheet({super.key, required this.initialFilter});
 
   @override
   State<FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -53,7 +50,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         children: [
           // Header
           _buildHeader(),
-          
+
           // Content
           Flexible(
             child: SingleChildScrollView(
@@ -75,7 +72,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               ),
             ),
           ),
-          
+
           // Bottom buttons
           _buildBottomButtons(),
         ],
@@ -87,18 +84,13 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey[200]!),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Row(
         children: [
           const Text(
             'Filters',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           TextButton(
@@ -120,10 +112,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             SizedBox(width: 8),
             Text(
               'Categories',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -164,10 +153,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             SizedBox(width: 8),
             Text(
               'Price Range',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -177,14 +163,20 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             Expanded(
               child: Text(
                 'UGX ${_minPrice.toInt()}K',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             Expanded(
               child: Text(
                 'UGX ${_maxPrice.toInt()}K',
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -194,10 +186,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           min: minPriceLimit,
           max: maxPriceLimit,
           divisions: 20,
-          labels: RangeLabels(
-            '${_minPrice.toInt()}K',
-            '${_maxPrice.toInt()}K',
-          ),
+          labels: RangeLabels('${_minPrice.toInt()}K', '${_maxPrice.toInt()}K'),
           onChanged: (RangeValues values) {
             setState(() {
               _minPrice = values.start;
@@ -219,10 +208,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             SizedBox(width: 8),
             Text(
               'Maximum Distance',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -269,10 +255,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             SizedBox(width: 8),
             Text(
               'Minimum Rating',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -309,10 +292,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         const SizedBox(width: 8),
         const Text(
           'Stock Availability',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const Spacer(),
         Switch(
@@ -327,10 +307,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         const SizedBox(width: 8),
         Text(
           _inStockOnly ? 'In Stock Only' : 'All Products',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[700],
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
         ),
       ],
     );
@@ -341,9 +318,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -365,10 +340,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
             child: const Text(
               'Apply Filters',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),

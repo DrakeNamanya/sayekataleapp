@@ -10,14 +10,16 @@ class SubscriptionPurchaseScreen extends StatefulWidget {
   const SubscriptionPurchaseScreen({super.key});
 
   @override
-  State<SubscriptionPurchaseScreen> createState() => _SubscriptionPurchaseScreenState();
+  State<SubscriptionPurchaseScreen> createState() =>
+      _SubscriptionPurchaseScreenState();
 }
 
-class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen> {
+class _SubscriptionPurchaseScreenState
+    extends State<SubscriptionPurchaseScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _referenceController = TextEditingController();
-  
+
   String _selectedPaymentMethod = 'MTN Mobile Money';
   bool _isProcessing = false;
   bool _agreedToTerms = false;
@@ -46,7 +48,8 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
       return;
     }
 
-    if (_selectedPaymentMethod.contains('Money') && _phoneController.text.trim().isEmpty) {
+    if (_selectedPaymentMethod.contains('Money') &&
+        _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter your phone number'),
@@ -76,7 +79,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
     try {
       // For demo purposes, we'll create an active subscription directly
       // In production, this would involve actual payment processing
-      
+
       final paymentReference = _referenceController.text.trim().isNotEmpty
           ? _referenceController.text.trim()
           : 'SUB-${DateTime.now().millisecondsSinceEpoch}';
@@ -98,7 +101,9 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.green, size: 32),
@@ -110,7 +115,9 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Your premium subscription has been activated successfully.'),
+                Text(
+                  'Your premium subscription has been activated successfully.',
+                ),
                 SizedBox(height: 12),
                 Text('You now have access to:'),
                 SizedBox(height: 8),
@@ -168,9 +175,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Premium Subscription'),
-      ),
+      appBar: AppBar(title: const Text('Premium Subscription')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -179,23 +184,23 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
             // Premium Package Card
             _buildPremiumPackageCard(),
             const SizedBox(height: 24),
-            
+
             // Features List
             _buildFeaturesList(),
             const SizedBox(height: 24),
-            
+
             // Payment Method Selection
             _buildPaymentMethodSection(),
             const SizedBox(height: 24),
-            
+
             // Payment Instructions
             _buildPaymentInstructions(),
             const SizedBox(height: 24),
-            
+
             // Terms and Conditions
             _buildTermsCheckbox(),
             const SizedBox(height: 24),
-            
+
             // Purchase Button
             _buildPurchaseButton(),
           ],
@@ -239,10 +244,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
           const SizedBox(height: 8),
           const Text(
             'Unlock Full Access',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 24),
           Row(
@@ -269,17 +271,17 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
               const SizedBox(width: 8),
               Container(
                 margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   '/year',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ],
@@ -287,10 +289,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
           const SizedBox(height: 12),
           const Text(
             'One-time annual payment',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),
@@ -309,10 +308,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
         children: [
           const Text(
             'What You Get',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildFeatureItem(
@@ -379,10 +375,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -404,10 +397,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
         children: [
           const Text(
             'Payment Method',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ..._paymentMethods.map((method) {
@@ -423,7 +413,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
               contentPadding: EdgeInsets.zero,
             );
           }),
-          
+
           if (_selectedPaymentMethod.contains('Money')) ...[
             const SizedBox(height: 16),
             TextField(
@@ -437,7 +427,7 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
               ),
             ),
           ],
-          
+
           const SizedBox(height: 16),
           TextField(
             controller: _referenceController,
@@ -455,31 +445,34 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
 
   Widget _buildPaymentInstructions() {
     String instructions = '';
-    
+
     switch (_selectedPaymentMethod) {
       case 'MTN Mobile Money':
-        instructions = '1. Dial *165# on your MTN phone\n'
-                      '2. Select Send Money\n'
-                      '3. Enter merchant number: 0700000000\n'
-                      '4. Enter amount: 50000\n'
-                      '5. Confirm payment\n'
-                      '6. Enter transaction reference above';
+        instructions =
+            '1. Dial *165# on your MTN phone\n'
+            '2. Select Send Money\n'
+            '3. Enter merchant number: 0700000000\n'
+            '4. Enter amount: 50000\n'
+            '5. Confirm payment\n'
+            '6. Enter transaction reference above';
         break;
       case 'Airtel Money':
-        instructions = '1. Dial *185# on your Airtel phone\n'
-                      '2. Select Send Money\n'
-                      '3. Enter merchant number: 0700000000\n'
-                      '4. Enter amount: 50000\n'
-                      '5. Confirm payment\n'
-                      '6. Enter transaction reference above';
+        instructions =
+            '1. Dial *185# on your Airtel phone\n'
+            '2. Select Send Money\n'
+            '3. Enter merchant number: 0700000000\n'
+            '4. Enter amount: 50000\n'
+            '5. Confirm payment\n'
+            '6. Enter transaction reference above';
         break;
       case 'Bank Transfer':
-        instructions = 'Bank: Stanbic Bank\n'
-                      'Account Name: Poultry Link Ltd\n'
-                      'Account Number: 1234567890\n'
-                      'Amount: UGX 50,000\n'
-                      'Reference: Your name + "Premium Sub"\n\n'
-                      'After transfer, enter transaction reference above';
+        instructions =
+            'Bank: Stanbic Bank\n'
+            'Account Name: Poultry Link Ltd\n'
+            'Account Number: 1234567890\n'
+            'Amount: UGX 50,000\n'
+            'Reference: Your name + "Premium Sub"\n\n'
+            'After transfer, enter transaction reference above';
         break;
     }
 
@@ -499,18 +492,12 @@ class _SubscriptionPurchaseScreenState extends State<SubscriptionPurchaseScreen>
               const SizedBox(width: 8),
               const Text(
                 'Payment Instructions',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            instructions,
-            style: const TextStyle(fontSize: 14, height: 1.5),
-          ),
+          Text(instructions, style: const TextStyle(fontSize: 14, height: 1.5)),
         ],
       ),
     );

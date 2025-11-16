@@ -138,7 +138,9 @@ class _SHGNotificationsScreenState extends State<SHGNotificationsScreen> {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Navigate to: ${notification.actionUrl}'),
+                              content: Text(
+                                'Navigate to: ${notification.actionUrl}',
+                              ),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -146,7 +148,9 @@ class _SHGNotificationsScreenState extends State<SHGNotificationsScreen> {
                       }
                     },
                     onDismissed: () async {
-                      await _notificationService.deleteNotification(notification.id);
+                      await _notificationService.deleteNotification(
+                        notification.id,
+                      );
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -196,11 +200,7 @@ class _NotificationCard extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-          size: 28,
-        ),
+        child: const Icon(Icons.delete, color: Colors.white, size: 28),
       ),
       onDismissed: (_) => onDismissed(),
       child: Card(
@@ -231,8 +231,9 @@ class _NotificationCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _getNotificationColor(notification.type)
-                        .withValues(alpha: 0.1),
+                    color: _getNotificationColor(
+                      notification.type,
+                    ).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

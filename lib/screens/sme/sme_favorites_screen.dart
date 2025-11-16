@@ -19,17 +19,18 @@ class SMEFavoritesScreen extends StatefulWidget {
 
 class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
   final FavoriteService _favoriteService = FavoriteService();
-  final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
+  final ProductWithFarmerService _productWithFarmerService =
+      ProductWithFarmerService();
   bool _isLoading = true;
   List<ProductWithFarmer> _favoriteProducts = [];
   String? _error;
-  
+
   @override
   void initState() {
     super.initState();
     _loadFavorites();
   }
-  
+
   /// Load user's favorite products with farmer details
   Future<void> _loadFavorites() async {
     setState(() {
@@ -62,10 +63,11 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
       }
 
       // Get products with farmer details and distance
-      final productsWithFarmers = await _productWithFarmerService.getProductsWithFarmersAndDistance(
-        products: products,
-        buyerLocation: buyerLocation,
-      );
+      final productsWithFarmers = await _productWithFarmerService
+          .getProductsWithFarmersAndDistance(
+            products: products,
+            buyerLocation: buyerLocation,
+          );
 
       setState(() {
         _favoriteProducts = productsWithFarmers;
@@ -78,7 +80,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
       });
     }
   }
-  
+
   /// Remove product from favorites
   Future<void> _removeFavorite(Product product) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -107,13 +109,13 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,11 +174,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_border,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.favorite_border, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No Favorite Products Yet',
@@ -192,10 +190,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
               child: Text(
                 'Browse products and tap the heart icon to save your favorites here',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               ),
             ),
             const SizedBox(height: 24),
@@ -239,7 +234,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
     final product = productWithFarmer.product;
     final farmer = productWithFarmer.farmer;
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -250,7 +245,9 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
           Expanded(
             flex: 3,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Stack(
                 children: [
                   // ✅ Only load images from Firebase (no placeholders)
@@ -266,12 +263,19 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.image_not_supported, size: 48, color: Colors.grey[400]),
+                                  Icon(
+                                    Icons.image_not_supported,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'Image unavailable',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -283,12 +287,20 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.favorite, size: 48, color: Colors.grey[400]),
+                              Icon(
+                                Icons.favorite,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
                               const SizedBox(height: 8),
                               Text(
                                 product.name,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -301,19 +313,26 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: productWithFarmer.isLocal
                               ? Colors.green
                               : productWithFarmer.isNearby
-                                  ? Colors.orange
-                                  : Colors.blue,
+                              ? Colors.orange
+                              : Colors.blue,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.location_on, size: 12, color: Colors.white),
+                            const Icon(
+                              Icons.location_on,
+                              size: 12,
+                              color: Colors.white,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               productWithFarmer.distanceText,
@@ -372,7 +391,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
               ),
             ),
           ),
-          
+
           // Product and Farmer Info
           Expanded(
             flex: 3,
@@ -392,7 +411,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Farmer Name
                   Row(
                     children: [
@@ -412,11 +431,15 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  
+
                   // District
                   Row(
                     children: [
-                      const Icon(Icons.location_city, size: 12, color: Colors.grey),
+                      const Icon(
+                        Icons.location_city,
+                        size: 12,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -432,28 +455,32 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Stock Info
                   Row(
                     children: [
                       Icon(
                         Icons.inventory_2,
                         size: 12,
-                        color: product.isLowStock ? Colors.orange : Colors.green,
+                        color: product.isLowStock
+                            ? Colors.orange
+                            : Colors.green,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Stock: ${product.stockQuantity} ${product.unit}',
                         style: TextStyle(
                           fontSize: 10,
-                          color: product.isLowStock ? Colors.orange : Colors.green,
+                          color: product.isLowStock
+                              ? Colors.orange
+                              : Colors.green,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  
+
                   // Price
                   Text(
                     'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
@@ -464,7 +491,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                     ),
                   ),
                   const Spacer(),
-                  
+
                   // Action Buttons Row
                   Row(
                     children: [
@@ -473,7 +500,10 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                         child: OutlinedButton(
                           onPressed: () => _callFarmer(farmer.phone),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
+                            ),
                             minimumSize: const Size(0, 32),
                           ),
                           child: const Icon(Icons.phone, size: 16),
@@ -486,9 +516,16 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                         child: ElevatedButton(
                           onPressed: product.isOutOfStock
                               ? null
-                              : () => _addToCart(product, farmer.name, cartProvider),
+                              : () => _addToCart(
+                                  product,
+                                  farmer.name,
+                                  cartProvider,
+                                ),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             minimumSize: const Size(0, 32),
                           ),
                           child: const Row(
@@ -529,9 +566,7 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
               Navigator.pop(context);
               _removeFavorite(product);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Remove'),
           ),
         ],
@@ -546,15 +581,19 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot call $phone')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot call $phone')));
       }
     }
   }
 
   /// Add product to cart
-  void _addToCart(Product product, String farmerName, CartProvider cartProvider) {
+  void _addToCart(
+    Product product,
+    String farmerName,
+    CartProvider cartProvider,
+  ) {
     showDialog(
       context: context,
       builder: (context) => _AddToCartDialog(product: product),
@@ -608,19 +647,27 @@ class _AddToCartDialogState extends State<_AddToCartDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                onPressed: _quantity > 1
+                    ? () => setState(() => _quantity--)
+                    : null,
                 icon: const Icon(Icons.remove_circle_outline),
                 iconSize: 32,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '$_quantity ${widget.product.unit}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(

@@ -10,11 +10,8 @@ import '../screens/customer/product_detail_screen.dart';
 /// Hero carousel for featured products
 class HeroCarousel extends StatefulWidget {
   final List<ProductWithRating> featuredProducts;
-  
-  const HeroCarousel({
-    super.key,
-    required this.featuredProducts,
-  });
+
+  const HeroCarousel({super.key, required this.featuredProducts});
 
   @override
   State<HeroCarousel> createState() => _HeroCarouselState();
@@ -22,7 +19,8 @@ class HeroCarousel extends StatefulWidget {
 
 class _HeroCarouselState extends State<HeroCarousel> {
   int _currentIndex = 0;
-  final CarouselSliderController _carouselController = CarouselSliderController();
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +59,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Dots indicator
           if (widget.featuredProducts.length > 1)
             DotsIndicator(
@@ -121,13 +119,15 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: const Center(child: CircularProgressIndicator()),
                   ),
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[200],
-                    child: const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
                   ),
                 )
               else
@@ -135,7 +135,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   color: Colors.grey[200],
                   child: const Icon(Icons.image, size: 50, color: Colors.grey),
                 ),
-              
+
               // Gradient Overlay
               Positioned.fill(
                 child: Container(
@@ -151,13 +151,16 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   ),
                 ),
               ),
-              
+
               // Featured Badge
               Positioned(
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber[600],
                     borderRadius: BorderRadius.circular(20),
@@ -186,7 +189,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   ),
                 ),
               ),
-              
+
               // Product Info
               Positioned(
                 bottom: 0,
@@ -205,22 +208,21 @@ class _HeroCarouselState extends State<HeroCarousel> {
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 4,
-                            ),
-                          ],
+                          shadows: [Shadow(color: Colors.black, blurRadius: 4)],
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
-                      
+
                       // Farmer Name
                       Row(
                         children: [
-                          const Icon(Icons.person, size: 14, color: Colors.white70),
+                          const Icon(
+                            Icons.person,
+                            size: 14,
+                            color: Colors.white70,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -229,10 +231,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                                 color: Colors.white70,
                                 fontSize: 13,
                                 shadows: [
-                                  Shadow(
-                                    color: Colors.black,
-                                    blurRadius: 2,
-                                  ),
+                                  Shadow(color: Colors.black, blurRadius: 2),
                                 ],
                               ),
                               maxLines: 1,
@@ -242,14 +241,17 @@ class _HeroCarouselState extends State<HeroCarousel> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // Rating
                           if (rating != null && rating.totalRatings > 0)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(12),
@@ -257,7 +259,11 @@ class _HeroCarouselState extends State<HeroCarousel> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.star, size: 14, color: Colors.amber),
+                                  const Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: Colors.amber,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     rating.averageRating.toStringAsFixed(1),
@@ -270,10 +276,13 @@ class _HeroCarouselState extends State<HeroCarousel> {
                                 ],
                               ),
                             ),
-                          
+
                           // Price
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.primaryColor,
                               borderRadius: BorderRadius.circular(12),

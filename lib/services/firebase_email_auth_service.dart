@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
-import '../utils/district_codes.dart';
 
 /// Firebase Email Authentication Service
 /// Handles email/password authentication and user management with Firestore
@@ -39,10 +38,8 @@ class FirebaseEmailAuthService {
       }
 
       // Create user with email and password
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       if (kDebugMode) {
         debugPrint('✅ User created. UID: ${userCredential.user?.uid}');
@@ -63,7 +60,7 @@ class FirebaseEmailAuthService {
         if (kDebugMode) {
           debugPrint('🔄 Creating Firestore profile...');
         }
-        
+
         await createOrUpdateUser(
           uid: userCredential.user!.uid,
           email: email,
@@ -72,7 +69,7 @@ class FirebaseEmailAuthService {
           role: role,
           district: district,
         );
-        
+
         if (kDebugMode) {
           debugPrint('✅ Firestore profile created successfully');
         }
@@ -82,7 +79,9 @@ class FirebaseEmailAuthService {
         }
         // Authentication succeeded but profile creation failed
         // User can still sign in, but needs profile
-        throw Exception('Account created but profile setup failed. Please try signing in.');
+        throw Exception(
+          'Account created but profile setup failed. Please try signing in.',
+        );
       }
 
       return userCredential;
@@ -121,13 +120,13 @@ class FirebaseEmailAuthService {
         debugPrint('🔐 Signing in with email: $email');
       }
 
-      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final UserCredential userCredential = await _auth
+          .signInWithEmailAndPassword(email: email, password: password);
 
       if (kDebugMode) {
-        debugPrint('✅ Signed in successfully. UID: ${userCredential.user?.uid}');
+        debugPrint(
+          '✅ Signed in successfully. UID: ${userCredential.user?.uid}',
+        );
       }
 
       return userCredential;
@@ -162,7 +161,7 @@ class FirebaseEmailAuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      
+
       if (kDebugMode) {
         debugPrint('📧 Password reset email sent to $email');
       }
@@ -190,7 +189,7 @@ class FirebaseEmailAuthService {
       final user = _auth.currentUser;
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        
+
         if (kDebugMode) {
           debugPrint('📨 Verification email resent');
         }
@@ -225,16 +224,16 @@ class FirebaseEmailAuthService {
   }) async {
     try {
       final userRef = _firestore.collection('users').doc(uid);
-      
+
       // Check if user exists
       final userDoc = await userRef.get();
-      
+
       if (userDoc.exists) {
         // User exists, fetch and return existing user data
         if (kDebugMode) {
           debugPrint('👤 User exists. Fetching data...');
         }
-        
+
         return AppUser.fromFirestore(userDoc.data()!, uid);
       } else {
         // New user, create profile
@@ -245,7 +244,7 @@ class FirebaseEmailAuthService {
         // ✅ FIXED: Use Firebase UID as id field (not generated system ID)
         // Generate system ID for display purposes only
         final systemId = await _generateUserId(role, district: district);
-        
+
         // Set profile completion deadline (24 hours from now)
         final profileDeadline = DateTime.now().add(const Duration(hours: 24));
 
@@ -288,35 +287,43 @@ class FirebaseEmailAuthService {
       if (kDebugMode) {
         debugPrint('🔄 AUTH SERVICE - Fetching user profile for UID: $uid');
       }
-      
+
       final userDoc = await _firestore.collection('users').doc(uid).get();
-      
+
       if (userDoc.exists) {
         final data = userDoc.data()!;
-        
+
         if (kDebugMode) {
           debugPrint('📄 AUTH SERVICE - Firestore document data:');
           debugPrint('   - profile_image: ${data['profile_image'] ?? "NULL"}');
-          debugPrint('   - national_id_photo: ${data['national_id_photo'] ?? "NULL"}');
+          debugPrint(
+            '   - national_id_photo: ${data['national_id_photo'] ?? "NULL"}',
+          );
           debugPrint('   - name: ${data['name'] ?? "NULL"}');
-          debugPrint('   - is_profile_complete: ${data['is_profile_complete'] ?? "NULL"}');
+          debugPrint(
+            '   - is_profile_complete: ${data['is_profile_complete'] ?? "NULL"}',
+          );
         }
-        
+
         final user = AppUser.fromFirestore(data, uid);
-        
+
         if (kDebugMode) {
           debugPrint('✅ AUTH SERVICE - AppUser object created:');
           debugPrint('   - user.profileImage: ${user.profileImage ?? "NULL"}');
-          debugPrint('   - user.nationalIdPhoto: ${user.nationalIdPhoto ?? "NULL"}');
+          debugPrint(
+            '   - user.nationalIdPhoto: ${user.nationalIdPhoto ?? "NULL"}',
+          );
         }
-        
+
         return user;
       }
-      
+
       if (kDebugMode) {
-        debugPrint('⚠️ AUTH SERVICE - User document does not exist for UID: $uid');
+        debugPrint(
+          '⚠️ AUTH SERVICE - User document does not exist for UID: $uid',
+        );
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -330,9 +337,9 @@ class FirebaseEmailAuthService {
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     try {
       data['updated_at'] = DateTime.now().toIso8601String();
-      
+
       await _firestore.collection('users').doc(uid).update(data);
-      
+
       if (kDebugMode) {
         debugPrint('✅ User profile updated');
       }
@@ -351,20 +358,20 @@ class FirebaseEmailAuthService {
   Future<String> _generateUserId(UserRole role, {String? district}) async {
     try {
       final roleStr = role.toString().split('.').last.toUpperCase();
-      
+
       // Get next sequential number for this role (no district)
       final sequentialNumber = await _getNextUserNumber(roleStr);
-      
+
       // Format: ROLE-NUMBER (zero-padded to 5 digits)
       final formattedNumber = sequentialNumber.toString().padLeft(5, '0');
       final userId = '$roleStr-$formattedNumber';
-      
+
       if (kDebugMode) {
         debugPrint('✅ Generated user ID: $userId');
         debugPrint('   - Role: $roleStr');
         debugPrint('   - Sequential Number: $formattedNumber');
       }
-      
+
       return userId;
     } catch (e) {
       if (kDebugMode) {
@@ -374,42 +381,42 @@ class FirebaseEmailAuthService {
       return '${role.toString().split('.').last.toUpperCase()}-${DateTime.now().millisecondsSinceEpoch}';
     }
   }
-  
+
   /// Get next sequential number for a role
   /// This ensures unique, incremental user IDs
   Future<int> _getNextUserNumber(String roleStr) async {
     try {
       // Query Firestore to find the highest number for this role
       final prefix = '$roleStr-';
-      
+
       final querySnapshot = await _firestore
           .collection('users')
           .where('id', isGreaterThanOrEqualTo: prefix)
-          .where('id', isLessThan: '${roleStr}.') // Get all IDs with this prefix
+          .where('id', isLessThan: '$roleStr.') // Get all IDs with this prefix
           .get();
-      
+
       if (querySnapshot.docs.isEmpty) {
         // First user with this role
         return 1;
       }
-      
+
       // Find the highest number from existing IDs
       int maxNumber = 0;
       for (final doc in querySnapshot.docs) {
         final data = doc.data();
         final userId = data['id'] as String?;
-        
+
         if (userId != null && userId.startsWith(prefix)) {
           // Extract the number part (everything after prefix)
           final numberPart = userId.substring(prefix.length);
           final number = int.tryParse(numberPart);
-          
+
           if (number != null && number > maxNumber) {
             maxNumber = number;
           }
         }
       }
-      
+
       // Return next number
       return maxNumber + 1;
     } catch (e) {
@@ -430,7 +437,7 @@ class FirebaseEmailAuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      
+
       if (kDebugMode) {
         debugPrint('👋 User signed out');
       }

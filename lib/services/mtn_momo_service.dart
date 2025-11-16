@@ -9,24 +9,28 @@ class MtnMomoService {
   // MTN MoMo API Configuration
   static const String _sandboxBaseUrl = 'https://sandbox.momodeveloper.mtn.com';
   static const String _productionBaseUrl = 'https://momodeveloper.mtn.com';
-  
+
   // Collection API Credentials (Receive Payments)
   static const String _collectionApiKey = '671e6e6fda93459987a2c8a9a4ac17ec';
-  static const String _collectionSecondaryKey = 'f509a9d571254950a07d8c074afa9715';
-  static const String _collectionSubscriptionKey = '671e6e6fda93459987a2c8a9a4ac17ec';
-  
+  static const String _collectionSecondaryKey =
+      'f509a9d571254950a07d8c074afa9715';
+  static const String _collectionSubscriptionKey =
+      '671e6e6fda93459987a2c8a9a4ac17ec';
+
   // Disbursement API Credentials (Send Payments)
   static const String _disbursementApiKey = 'b37dc5e1948f4f8dab7e8e882867c1d1';
-  static const String _disbursementSecondaryKey = '52d54ed5795f4bb39b9d3c8c0458aabb';
-  static const String _disbursementSubscriptionKey = 'b37dc5e1948f4f8dab7e8e882867c1d1';
-  
+  static const String _disbursementSecondaryKey =
+      '52d54ed5795f4bb39b9d3c8c0458aabb';
+  static const String _disbursementSubscriptionKey =
+      'b37dc5e1948f4f8dab7e8e882867c1d1';
+
   // Environment configuration
   bool _useSandbox = true;
   String? _collectionAccessToken;
   String? _disbursementAccessToken;
   DateTime? _collectionTokenExpiry;
   DateTime? _disbursementTokenExpiry;
-  
+
   final Uuid _uuid = const Uuid();
 
   /// Constructor
@@ -42,7 +46,9 @@ class MtnMomoService {
     _collectionAccessToken = null;
     _disbursementAccessToken = null;
     if (kDebugMode) {
-      debugPrint('🔄 MTN MoMo environment: ${useSandbox ? 'SANDBOX' : 'PRODUCTION'}');
+      debugPrint(
+        '🔄 MTN MoMo environment: ${useSandbox ? 'SANDBOX' : 'PRODUCTION'}',
+      );
     }
   }
 
@@ -53,8 +59,8 @@ class MtnMomoService {
   /// Get Collection API access token
   Future<String> _getCollectionAccessToken() async {
     // Return cached token if still valid
-    if (_collectionAccessToken != null && 
-        _collectionTokenExpiry != null && 
+    if (_collectionAccessToken != null &&
+        _collectionTokenExpiry != null &&
         DateTime.now().isBefore(_collectionTokenExpiry!)) {
       return _collectionAccessToken!;
     }
@@ -63,7 +69,8 @@ class MtnMomoService {
       final response = await http.post(
         Uri.parse('$_baseUrl/collection/token/'),
         headers: {
-          'Authorization': 'Basic ${base64Encode(utf8.encode('$_collectionApiKey:$_collectionSecondaryKey'))}',
+          'Authorization':
+              'Basic ${base64Encode(utf8.encode('$_collectionApiKey:$_collectionSecondaryKey'))}',
           'Ocp-Apim-Subscription-Key': _collectionSubscriptionKey,
         },
       );
@@ -71,10 +78,12 @@ class MtnMomoService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _collectionAccessToken = data['access_token'];
-        
+
         // Token typically valid for 1 hour, refresh 5 minutes before expiry
-        _collectionTokenExpiry = DateTime.now().add(const Duration(minutes: 55));
-        
+        _collectionTokenExpiry = DateTime.now().add(
+          const Duration(minutes: 55),
+        );
+
         if (kDebugMode) {
           debugPrint('✅ Collection access token obtained');
         }
@@ -93,8 +102,8 @@ class MtnMomoService {
   /// Get Disbursement API access token
   Future<String> _getDisbursementAccessToken() async {
     // Return cached token if still valid
-    if (_disbursementAccessToken != null && 
-        _disbursementTokenExpiry != null && 
+    if (_disbursementAccessToken != null &&
+        _disbursementTokenExpiry != null &&
         DateTime.now().isBefore(_disbursementTokenExpiry!)) {
       return _disbursementAccessToken!;
     }
@@ -103,7 +112,8 @@ class MtnMomoService {
       final response = await http.post(
         Uri.parse('$_baseUrl/disbursement/token/'),
         headers: {
-          'Authorization': 'Basic ${base64Encode(utf8.encode('$_disbursementApiKey:$_disbursementSecondaryKey'))}',
+          'Authorization':
+              'Basic ${base64Encode(utf8.encode('$_disbursementApiKey:$_disbursementSecondaryKey'))}',
           'Ocp-Apim-Subscription-Key': _disbursementSubscriptionKey,
         },
       );
@@ -111,10 +121,12 @@ class MtnMomoService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _disbursementAccessToken = data['access_token'];
-        
+
         // Token typically valid for 1 hour, refresh 5 minutes before expiry
-        _disbursementTokenExpiry = DateTime.now().add(const Duration(minutes: 55));
-        
+        _disbursementTokenExpiry = DateTime.now().add(
+          const Duration(minutes: 55),
+        );
+
         if (kDebugMode) {
           debugPrint('✅ Disbursement access token obtained');
         }
@@ -126,7 +138,10 @@ class MtnMomoService {
         );
       }
     } catch (e) {
-      throw MtnMomoException('Error obtaining disbursement token', e.toString());
+      throw MtnMomoException(
+        'Error obtaining disbursement token',
+        e.toString(),
+      );
     }
   }
 
@@ -135,12 +150,12 @@ class MtnMomoService {
   // ============================================================================
 
   /// Request payment from user (Collection)
-  /// 
+  ///
   /// [amount] - Amount to collect
   /// [phoneNumber] - User's phone number (format: 256XXXXXXXXX)
   /// [payerMessage] - Message shown to payer
   /// [payeeNote] - Internal note for payee
-  /// 
+  ///
   /// Returns transaction reference ID
   Future<String> requestPayment({
     required double amount,
@@ -164,16 +179,15 @@ class MtnMomoService {
         'amount': amount.toStringAsFixed(0),
         'currency': 'UGX',
         'externalId': referenceId,
-        'payer': {
-          'partyIdType': 'MSISDN',
-          'partyId': formattedPhone,
-        },
+        'payer': {'partyIdType': 'MSISDN', 'partyId': formattedPhone},
         'payerMessage': payerMessage,
         'payeeNote': payeeNote ?? 'Payment for Poultry Link order',
       };
 
       if (kDebugMode) {
-        debugPrint('💳 Requesting payment: UGX ${amount.toStringAsFixed(0)} from $formattedPhone');
+        debugPrint(
+          '💳 Requesting payment: UGX ${amount.toStringAsFixed(0)} from $formattedPhone',
+        );
       }
 
       final response = await http.post(
@@ -205,9 +219,9 @@ class MtnMomoService {
   }
 
   /// Check payment status
-  /// 
+  ///
   /// [referenceId] - Transaction reference ID from requestPayment
-  /// 
+  ///
   /// Returns payment status information
   Future<PaymentStatus> checkPaymentStatus(String referenceId) async {
     try {
@@ -241,12 +255,12 @@ class MtnMomoService {
   // ============================================================================
 
   /// Send money to user (Disbursement)
-  /// 
+  ///
   /// [amount] - Amount to send
   /// [phoneNumber] - Recipient's phone number (format: 256XXXXXXXXX)
   /// [payeeNote] - Message shown to recipient
   /// [payerMessage] - Internal note
-  /// 
+  ///
   /// Returns transaction reference ID
   Future<String> sendPayment({
     required double amount,
@@ -270,16 +284,15 @@ class MtnMomoService {
         'amount': amount.toStringAsFixed(0),
         'currency': 'UGX',
         'externalId': referenceId,
-        'payee': {
-          'partyIdType': 'MSISDN',
-          'partyId': formattedPhone,
-        },
+        'payee': {'partyIdType': 'MSISDN', 'partyId': formattedPhone},
         'payerMessage': payerMessage ?? 'Payment from Poultry Link',
         'payeeNote': payeeNote,
       };
 
       if (kDebugMode) {
-        debugPrint('💸 Sending payment: UGX ${amount.toStringAsFixed(0)} to $formattedPhone');
+        debugPrint(
+          '💸 Sending payment: UGX ${amount.toStringAsFixed(0)} to $formattedPhone',
+        );
       }
 
       final response = await http.post(
@@ -311,9 +324,9 @@ class MtnMomoService {
   }
 
   /// Check disbursement status
-  /// 
+  ///
   /// [referenceId] - Transaction reference ID from sendPayment
-  /// 
+  ///
   /// Returns disbursement status information
   Future<PaymentStatus> checkDisbursementStatus(String referenceId) async {
     try {
@@ -338,7 +351,10 @@ class MtnMomoService {
         );
       }
     } catch (e) {
-      throw MtnMomoException('Error checking disbursement status', e.toString());
+      throw MtnMomoException(
+        'Error checking disbursement status',
+        e.toString(),
+      );
     }
   }
 
@@ -401,7 +417,9 @@ class PaymentStatus {
       status: json['status'] ?? 'UNKNOWN',
       financialTransactionId: json['financialTransactionId'],
       externalId: json['externalId'],
-      amount: json['amount'] != null ? double.tryParse(json['amount'].toString()) : null,
+      amount: json['amount'] != null
+          ? double.tryParse(json['amount'].toString())
+          : null,
       currency: json['currency'],
       reason: json['reason'],
     );

@@ -35,7 +35,11 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
               color: Colors.green.shade100,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.check_circle, color: Colors.green.shade700, size: 28),
+            child: Icon(
+              Icons.check_circle,
+              color: Colors.green.shade700,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -70,7 +74,9 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
                   const Divider(height: 20),
                   _buildInfoRow(
                     widget.isBuyer ? 'Seller' : 'Buyer',
-                    widget.isBuyer ? widget.order.sellerName : widget.order.buyerName,
+                    widget.isBuyer
+                        ? widget.order.sellerName
+                        : widget.order.buyerName,
                   ),
                 ],
               ),
@@ -103,7 +109,10 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
                       const SizedBox(width: 8),
                       const Text(
                         'Important Deadline',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -217,7 +226,9 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
       return const SizedBox.shrink();
     }
 
-    final hoursElapsed = DateTime.now().difference(widget.order.deliveredAt!).inHours;
+    final hoursElapsed = DateTime.now()
+        .difference(widget.order.deliveredAt!)
+        .inHours;
     final hoursRemaining = 48 - hoursElapsed;
 
     if (hoursRemaining <= 0) {
@@ -278,16 +289,18 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
 
     try {
       await widget.onConfirm();
-      
+
       if (mounted) {
         Navigator.pop(context, true);
-        
+
         // Show success dialog
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Row(
               children: [
                 Container(
@@ -296,7 +309,11 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
                     color: Colors.green.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.check_circle, color: Colors.green.shade700, size: 32),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade700,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text('Confirmed!'),
@@ -323,12 +340,9 @@ class _CodConfirmationDialogState extends State<CodConfirmationDialog> {
         setState(() {
           _confirming = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

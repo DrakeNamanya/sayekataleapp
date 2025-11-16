@@ -97,7 +97,9 @@ class Transaction {
       'paymentReference': paymentReference,
       'disbursementReference': disbursementReference,
       'createdAt': Timestamp.fromDate(createdAt),
-      'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
+      'completedAt': completedAt != null
+          ? Timestamp.fromDate(completedAt!)
+          : null,
       'receiptUrl': receiptUrl,
       'failureReason': failureReason,
       'metadata': metadata,
@@ -128,7 +130,8 @@ class Transaction {
       status: status ?? this.status,
       paymentMethod: paymentMethod,
       paymentReference: paymentReference ?? this.paymentReference,
-      disbursementReference: disbursementReference ?? this.disbursementReference,
+      disbursementReference:
+          disbursementReference ?? this.disbursementReference,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
       receiptUrl: receiptUrl ?? this.receiptUrl,
@@ -140,10 +143,10 @@ class Transaction {
 
 /// Types of transactions in the system
 enum TransactionType {
-  shgToPsaInputPurchase,    // SHG buying inputs from PSA (UGX 7,000 fee)
-  smeToShgProductPurchase,  // SME buying products from SHG (FREE)
-  shgPremiumSubscription,   // SHG subscribing to premium (UGX 50,000)
-  psaAnnualSubscription,    // PSA annual subscription (UGX 120,000)
+  shgToPsaInputPurchase, // SHG buying inputs from PSA (UGX 7,000 fee)
+  smeToShgProductPurchase, // SME buying products from SHG (FREE)
+  shgPremiumSubscription, // SHG subscribing to premium (UGX 50,000)
+  psaAnnualSubscription, // PSA annual subscription (UGX 120,000)
 }
 
 extension TransactionTypeExtension on TransactionType {
@@ -176,16 +179,16 @@ extension TransactionTypeExtension on TransactionType {
 
 /// Transaction status lifecycle
 enum TransactionStatus {
-  initiated,                        // Transaction created
-  paymentPending,                   // Waiting for payment
-  paymentHeld,                      // Payment collected, held in escrow
-  deliveryPending,                  // Waiting for delivery
-  deliveredPendingConfirmation,     // Delivered, waiting for buyer confirmation
-  confirmed,                        // Buyer confirmed receipt
-  disbursementPending,              // Waiting for disbursement to seller
-  completed,                        // Transaction completed successfully
-  failed,                           // Transaction failed
-  refunded,                         // Payment refunded to buyer
+  initiated, // Transaction created
+  paymentPending, // Waiting for payment
+  paymentHeld, // Payment collected, held in escrow
+  deliveryPending, // Waiting for delivery
+  deliveredPendingConfirmation, // Delivered, waiting for buyer confirmation
+  confirmed, // Buyer confirmed receipt
+  disbursementPending, // Waiting for disbursement to seller
+  completed, // Transaction completed successfully
+  failed, // Transaction failed
+  refunded, // Payment refunded to buyer
 }
 
 extension TransactionStatusExtension on TransactionStatus {
@@ -241,21 +244,15 @@ extension TransactionStatusExtension on TransactionStatus {
 
   bool get isInProgress {
     return this != TransactionStatus.completed &&
-           this != TransactionStatus.failed &&
-           this != TransactionStatus.refunded;
+        this != TransactionStatus.failed &&
+        this != TransactionStatus.refunded;
   }
 
   bool get canRefund {
     return this == TransactionStatus.paymentHeld ||
-           this == TransactionStatus.deliveryPending;
+        this == TransactionStatus.deliveryPending;
   }
 }
 
 /// Payment methods supported
-enum PaymentMethod {
-  mtnMobileMoney,
-  airtelMoney,
-  cashOnDelivery,
-}
-
-
+enum PaymentMethod { mtnMobileMoney, airtelMoney, cashOnDelivery }

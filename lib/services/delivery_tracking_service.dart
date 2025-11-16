@@ -27,10 +27,10 @@ class DeliveryTrackingService {
     try {
       // Get tracking to access order ID
       final tracking = await getDeliveryTracking(trackingId);
-      
+
       // Get current location
       final position = await _getCurrentPosition();
-      
+
       await _firestore.collection('delivery_tracking').doc(trackingId).update({
         'status': DeliveryStatus.inProgress.toString().split('.').last,
         'started_at': FieldValue.serverTimestamp(),
@@ -44,11 +44,11 @@ class DeliveryTrackingService {
             'latitude': position.latitude,
             'longitude': position.longitude,
             'timestamp': DateTime.now().toIso8601String(),
-          }
+          },
         ]),
         'updated_at': FieldValue.serverTimestamp(),
       });
-      
+
       // Update order status to shipped (in transit)
       if (tracking != null) {
         try {
@@ -86,7 +86,7 @@ class DeliveryTrackingService {
             'latitude': latitude,
             'longitude': longitude,
             'timestamp': DateTime.now().toIso8601String(),
-          }
+          },
         ]),
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -103,16 +103,16 @@ class DeliveryTrackingService {
     try {
       // Get tracking to access order ID
       final tracking = await getDeliveryTracking(trackingId);
-      
+
       await _firestore.collection('delivery_tracking').doc(trackingId).update({
         'status': DeliveryStatus.completed.toString().split('.').last,
         'completed_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
-      
+
       // Stop location tracking
       stopLocationTracking();
-      
+
       // Update order status (avoiding circular dependency)
       if (tracking != null) {
         try {
@@ -137,16 +137,16 @@ class DeliveryTrackingService {
     try {
       // Get tracking to access order ID
       final tracking = await getDeliveryTracking(trackingId);
-      
+
       await _firestore.collection('delivery_tracking').doc(trackingId).update({
         'status': DeliveryStatus.cancelled.toString().split('.').last,
         'notes': reason,
         'updated_at': FieldValue.serverTimestamp(),
       });
-      
+
       // Stop location tracking
       stopLocationTracking();
-      
+
       // Update order status to cancelled
       if (tracking != null) {
         try {
@@ -208,11 +208,11 @@ class DeliveryTrackingService {
         .doc(trackingId)
         .snapshots()
         .map((doc) {
-      if (doc.exists && doc.data() != null) {
-        return DeliveryTracking.fromFirestore(doc.data()!, doc.id);
-      }
-      return null;
-    });
+          if (doc.exists && doc.data() != null) {
+            return DeliveryTracking.fromFirestore(doc.data()!, doc.id);
+          }
+          return null;
+        });
   }
 
   /// Get active deliveries for delivery person
@@ -223,11 +223,14 @@ class DeliveryTrackingService {
       final querySnapshot = await _firestore
           .collection('delivery_tracking')
           .where('delivery_person_id', isEqualTo: deliveryPersonId)
-          .where('status', whereIn: [
-            DeliveryStatus.pending.toString().split('.').last,
-            DeliveryStatus.confirmed.toString().split('.').last,
-            DeliveryStatus.inProgress.toString().split('.').last,
-          ])
+          .where(
+            'status',
+            whereIn: [
+              DeliveryStatus.pending.toString().split('.').last,
+              DeliveryStatus.confirmed.toString().split('.').last,
+              DeliveryStatus.inProgress.toString().split('.').last,
+            ],
+          )
           .orderBy('created_at', descending: true)
           .get();
 

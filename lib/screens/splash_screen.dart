@@ -11,11 +11,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _personController;
   late AnimationController _exchangeController;
   late AnimationController _textController;
-  
+
   late Animation<Offset> _leftPersonAnimation;
   late Animation<Offset> _rightPersonAnimation;
   late Animation<double> _henRotationAnimation;
@@ -52,92 +53,90 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
 
     // Left person (with hen) slides in from left
-    _leftPersonAnimation = Tween<Offset>(
-      begin: const Offset(-1.5, 0.0),
-      end: const Offset(-0.15, 0.0),
-    ).animate(CurvedAnimation(
-      parent: _personController,
-      curve: Curves.easeOutCubic,
-    ));
+    _leftPersonAnimation =
+        Tween<Offset>(
+          begin: const Offset(-1.5, 0.0),
+          end: const Offset(-0.15, 0.0),
+        ).animate(
+          CurvedAnimation(
+            parent: _personController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // Right person (with money) slides in from right
-    _rightPersonAnimation = Tween<Offset>(
-      begin: const Offset(1.5, 0.0),
-      end: const Offset(0.15, 0.0),
-    ).animate(CurvedAnimation(
-      parent: _personController,
-      curve: Curves.easeOutCubic,
-    ));
+    _rightPersonAnimation =
+        Tween<Offset>(
+          begin: const Offset(1.5, 0.0),
+          end: const Offset(0.15, 0.0),
+        ).animate(
+          CurvedAnimation(
+            parent: _personController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // Hen rotation during exchange
-    _henRotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _exchangeController,
-      curve: Curves.easeInOut,
-    ));
+    _henRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _exchangeController, curve: Curves.easeInOut),
+    );
 
     // Money rotation during exchange
-    _moneyRotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _exchangeController,
-      curve: Curves.easeInOut,
-    ));
+    _moneyRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _exchangeController, curve: Curves.easeInOut),
+    );
 
     // Hen moves from left person to right person
-    _henPositionAnimation = Tween<Offset>(
-      begin: const Offset(-0.15, 0.0),
-      end: const Offset(0.15, 0.0),
-    ).animate(CurvedAnimation(
-      parent: _exchangeController,
-      curve: Curves.easeInOutCubic,
-    ));
+    _henPositionAnimation =
+        Tween<Offset>(
+          begin: const Offset(-0.15, 0.0),
+          end: const Offset(0.15, 0.0),
+        ).animate(
+          CurvedAnimation(
+            parent: _exchangeController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
 
     // Money moves from right person to left person
-    _moneyPositionAnimation = Tween<Offset>(
-      begin: const Offset(0.15, 0.0),
-      end: const Offset(-0.15, 0.0),
-    ).animate(CurvedAnimation(
-      parent: _exchangeController,
-      curve: Curves.easeInOutCubic,
-    ));
+    _moneyPositionAnimation =
+        Tween<Offset>(
+          begin: const Offset(0.15, 0.0),
+          end: const Offset(-0.15, 0.0),
+        ).animate(
+          CurvedAnimation(
+            parent: _exchangeController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
 
     // "SAYE KATALE" text slides from right to left
-    _textSlideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _textController,
-      curve: Curves.easeOutCubic,
-    ));
+    _textSlideAnimation =
+        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
+          CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
+        );
 
     _textOpacityAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _textController,
-      curve: Curves.easeIn,
-    ));
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
   }
 
   Future<void> _startAnimation() async {
     // Start person movement
     await _personController.forward();
-    
+
     // Wait a moment
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     // Start exchange animation and text animation simultaneously
     _exchangeController.forward();
     await Future.delayed(const Duration(milliseconds: 500));
     _textController.forward();
-    
+
     // Wait for all animations to complete
     await Future.delayed(const Duration(milliseconds: 2000));
-    
+
     // DON'T auto-navigate - let user choose
     // Animation complete, buttons are now visible
   }
@@ -196,7 +195,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 ),
               ),
             ),
-            
+
             // Hidden Animal Icons for Navigation (bottom center)
             Positioned(
               bottom: 40,
@@ -268,7 +267,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 ],
               ),
             ),
-            
+
             // Main animation area
             Center(
               child: Column(
@@ -325,7 +324,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 child: Transform.rotate(
                                   angle: _henRotationAnimation.value * 3.14,
                                   child: Transform.scale(
-                                    scale: 1.0 + (_henRotationAnimation.value * 0.3),
+                                    scale:
+                                        1.0 +
+                                        (_henRotationAnimation.value * 0.3),
                                     child: child,
                                   ),
                                 ),
@@ -347,7 +348,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 child: Transform.rotate(
                                   angle: -_moneyRotationAnimation.value * 3.14,
                                   child: Transform.scale(
-                                    scale: 1.0 + (_moneyRotationAnimation.value * 0.3),
+                                    scale:
+                                        1.0 +
+                                        (_moneyRotationAnimation.value * 0.3),
                                     child: child,
                                   ),
                                 ),
@@ -387,7 +390,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             letterSpacing: 2,
                             shadows: [
                               Shadow(
-                                color: AppTheme.secondary.withValues(alpha: 0.5),
+                                color: AppTheme.secondary.withValues(
+                                  alpha: 0.5,
+                                ),
                                 offset: const Offset(2, 2),
                                 blurRadius: 4,
                               ),
@@ -408,17 +413,24 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         // Continue Button
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pushReplacementNamed('/onboarding');
+                            Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/onboarding');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 16,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
                             elevation: 8,
-                            shadowColor: AppTheme.primary.withValues(alpha: 0.5),
+                            shadowColor: AppTheme.primary.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -540,7 +552,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                   width: 30,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: (isLeft ? AppTheme.secondary : AppTheme.accent).withValues(alpha: 0.8),
+                    color: (isLeft ? AppTheme.secondary : AppTheme.accent)
+                        .withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -712,7 +725,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               decoration: BoxDecoration(
                 color: AppTheme.success,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.success.withValues(alpha: 0.3), width: 2),
+                border: Border.all(
+                  color: AppTheme.success.withValues(alpha: 0.3),
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),

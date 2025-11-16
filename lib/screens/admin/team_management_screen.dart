@@ -7,10 +7,7 @@ import '../../services/admin_auth_service.dart';
 class TeamManagementScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const TeamManagementScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const TeamManagementScreen({super.key, required this.adminUser});
 
   @override
   State<TeamManagementScreen> createState() => _TeamManagementScreenState();
@@ -19,11 +16,11 @@ class TeamManagementScreen extends StatefulWidget {
 class _TeamManagementScreenState extends State<TeamManagementScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AdminAuthService _authService = AdminAuthService();
-  
+
   bool _isLoading = true;
   List<AdminUser> _teamMembers = [];
   List<AdminUser> _filteredMembers = [];
-  
+
   String _selectedRole = 'all';
   String _selectedStatus = 'all';
   final TextEditingController _searchController = TextEditingController();
@@ -48,7 +45,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
 
     try {
       final querySnapshot = await _firestore.collection('admin_users').get();
-      
+
       final members = <AdminUser>[];
       for (var doc in querySnapshot.docs) {
         members.add(AdminUser.fromFirestore(doc.data(), doc.id));
@@ -78,7 +75,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
     setState(() {
       _filteredMembers = _teamMembers.where((member) {
         // Filter by role
-        if (_selectedRole != 'all' && member.role.toString().split('.').last != _selectedRole) {
+        if (_selectedRole != 'all' &&
+            member.role.toString().split('.').last != _selectedRole) {
           return false;
         }
 
@@ -154,23 +152,34 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<AdminRole>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                     items: AdminRole.values
-                        .where((role) => role != AdminRole.superAdmin || widget.adminUser.role == AdminRole.superAdmin)
-                        .map((role) => DropdownMenuItem(
-                              value: role,
-                              child: Text(role.displayName),
-                            ))
+                        .where(
+                          (role) =>
+                              role != AdminRole.superAdmin ||
+                              widget.adminUser.role == AdminRole.superAdmin,
+                        )
+                        .map(
+                          (role) => DropdownMenuItem(
+                            value: role,
+                            child: Text(role.displayName),
+                          ),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setDialogState(() {
                           selectedRole = value;
-                          selectedPermissions = List.from(value.defaultPermissions);
+                          selectedPermissions = List.from(
+                            value.defaultPermissions,
+                          );
                         });
                       }
                     },
@@ -280,14 +289,18 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                     emailController.text.trim().isEmpty ||
                     passwordController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all required fields')),
+                    const SnackBar(
+                      content: Text('Please fill all required fields'),
+                    ),
                   );
                   return;
                 }
 
                 if (passwordController.text.length < 8) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Password must be at least 8 characters')),
+                    const SnackBar(
+                      content: Text('Password must be at least 8 characters'),
+                    ),
                   );
                   return;
                 }
@@ -350,9 +363,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Create admin account
@@ -389,12 +400,14 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
 
   Future<void> _toggleAdminStatus(AdminUser admin) async {
     final action = admin.isActive ? 'deactivate' : 'activate';
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('${action[0].toUpperCase()}${action.substring(1)} Account'),
-        content: Text('Are you sure you want to $action ${admin.name}\'s account?'),
+        content: Text(
+          'Are you sure you want to $action ${admin.name}\'s account?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -421,7 +434,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ Account ${admin.isActive ? 'deactivated' : 'activated'} successfully'),
+              content: Text(
+                '✅ Account ${admin.isActive ? 'deactivated' : 'activated'} successfully',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -454,9 +469,15 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                 admin.isActive ? 'Active' : 'Inactive',
                 valueColor: admin.isActive ? Colors.green : Colors.red,
               ),
-              _buildDetailRow('Created', DateFormat('MMM dd, yyyy').format(admin.createdAt)),
+              _buildDetailRow(
+                'Created',
+                DateFormat('MMM dd, yyyy').format(admin.createdAt),
+              ),
               if (admin.lastLoginAt != null)
-                _buildDetailRow('Last Login', DateFormat('MMM dd, yyyy HH:mm').format(admin.lastLoginAt!)),
+                _buildDetailRow(
+                  'Last Login',
+                  DateFormat('MMM dd, yyyy HH:mm').format(admin.lastLoginAt!),
+                ),
               const Divider(),
               const Text(
                 'Permissions:',
@@ -464,23 +485,28 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
               ),
               const SizedBox(height: 8),
               if (admin.permissions.isEmpty)
-                const Text('No permissions assigned', style: TextStyle(color: Colors.grey))
+                const Text(
+                  'No permissions assigned',
+                  style: TextStyle(color: Colors.grey),
+                )
               else
-                ...admin.permissions.map((perm) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check, size: 16, color: Colors.green),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _getPermissionLabel(perm),
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                ...admin.permissions.map(
+                  (perm) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check, size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _getPermissionLabel(perm),
+                            style: const TextStyle(fontSize: 13),
                           ),
-                        ],
-                      ),
-                    )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -561,7 +587,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
           ),
         ],
       ),
-      floatingActionButton: widget.adminUser.hasPermission(AdminPermissions.manageAdmins)
+      floatingActionButton:
+          widget.adminUser.hasPermission(AdminPermissions.manageAdmins)
           ? FloatingActionButton.extended(
               onPressed: _showCreateAdminDialog,
               backgroundColor: const Color(0xFF2E7D32),
@@ -639,7 +666,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedRole,
+                        initialValue: _selectedRole,
                         decoration: InputDecoration(
                           labelText: 'Filter by Role',
                           border: OutlineInputBorder(
@@ -651,11 +678,16 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                           ),
                         ),
                         items: [
-                          const DropdownMenuItem(value: 'all', child: Text('All Roles')),
-                          ...AdminRole.values.map((role) => DropdownMenuItem(
-                                value: role.toString().split('.').last,
-                                child: Text(role.displayName),
-                              )),
+                          const DropdownMenuItem(
+                            value: 'all',
+                            child: Text('All Roles'),
+                          ),
+                          ...AdminRole.values.map(
+                            (role) => DropdownMenuItem(
+                              value: role.toString().split('.').last,
+                              child: Text(role.displayName),
+                            ),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -668,7 +700,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         decoration: InputDecoration(
                           labelText: 'Filter by Status',
                           border: OutlineInputBorder(
@@ -680,9 +712,18 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                           ),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All Status')),
-                          DropdownMenuItem(value: 'active', child: Text('Active')),
-                          DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                          DropdownMenuItem(
+                            value: 'all',
+                            child: Text('All Status'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'active',
+                            child: Text('Active'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'inactive',
+                            child: Text('Inactive'),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -703,41 +744,49 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredMembers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No team members found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Colors.grey.shade400,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadTeamMembers,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredMembers.length,
-                          itemBuilder: (context, index) {
-                            final member = _filteredMembers[index];
-                            return _buildTeamMemberCard(member);
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No team members found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadTeamMembers,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredMembers.length,
+                      itemBuilder: (context, index) {
+                        final member = _filteredMembers[index];
+                        return _buildTeamMemberCard(member);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -759,10 +808,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
             textAlign: TextAlign.center,
           ),
         ],
@@ -908,7 +954,10 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
               ),
 
               // Action Button
-              if (widget.adminUser.hasPermission(AdminPermissions.manageAdmins) && !isCurrentUser)
+              if (widget.adminUser.hasPermission(
+                    AdminPermissions.manageAdmins,
+                  ) &&
+                  !isCurrentUser)
                 IconButton(
                   icon: Icon(
                     member.isActive ? Icons.block : Icons.check_circle,

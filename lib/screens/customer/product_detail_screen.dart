@@ -7,10 +7,7 @@ import '../../utils/app_theme.dart';
 import '../../services/message_service.dart';
 import '../../services/firebase_user_service.dart';
 import '../../services/rating_service.dart';
-import '../../widgets/star_rating_widget.dart';
-import '../../widgets/rating_breakdown_chart.dart';
 // import '../../widgets/review_list.dart'; // Unused widget with compilation errors
-import '../../widgets/review_card.dart';
 import '../common/chat_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -47,14 +44,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Get seller information
       final seller = await _userService.getUserById(widget.product.farmId);
-      
+
       if (seller == null) {
         if (mounted) {
           Navigator.pop(context); // Close loading
@@ -78,7 +73,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       if (mounted) {
         Navigator.pop(context); // Close loading
-        
+
         // Navigate to chat screen
         Navigator.push(
           context,
@@ -160,7 +155,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           const SizedBox(height: 8),
                           Chip(
                             label: Text(widget.product.category.displayName),
-                            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            backgroundColor: AppTheme.primaryColor.withValues(
+                              alpha: 0.1,
+                            ),
                             labelStyle: const TextStyle(
                               color: AppTheme.primaryColor,
                               fontWeight: FontWeight.w600,
@@ -207,24 +204,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: widget.product.isOutOfStock
-                                      ? AppTheme.errorColor.withValues(alpha: 0.1)
+                                      ? AppTheme.errorColor.withValues(
+                                          alpha: 0.1,
+                                        )
                                       : widget.product.isLowStock
-                                          ? AppTheme.warningColor.withValues(alpha: 0.1)
-                                          : AppTheme.successColor.withValues(alpha: 0.1),
+                                      ? AppTheme.warningColor.withValues(
+                                          alpha: 0.1,
+                                        )
+                                      : AppTheme.successColor.withValues(
+                                          alpha: 0.1,
+                                        ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   widget.product.isOutOfStock
                                       ? 'Out of Stock'
                                       : widget.product.isLowStock
-                                          ? 'Low Stock'
-                                          : 'In Stock',
+                                      ? 'Low Stock'
+                                      : 'In Stock',
                                   style: TextStyle(
                                     color: widget.product.isOutOfStock
                                         ? AppTheme.errorColor
                                         : widget.product.isLowStock
-                                            ? AppTheme.warningColor
-                                            : AppTheme.successColor,
+                                        ? AppTheme.warningColor
+                                        : AppTheme.successColor,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12,
                                   ),
@@ -244,7 +247,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.product.description ?? 'Fresh quality poultry product from local farms.',
+                            widget.product.description ??
+                                'Fresh quality poultry product from local farms.',
                             style: const TextStyle(
                               fontSize: 15,
                               color: AppTheme.textSecondary,
@@ -276,7 +280,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     : null,
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
                                 child: Text(
                                   '$_quantity',
                                   style: const TextStyle(
@@ -351,10 +357,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           onPressed: widget.product.isOutOfStock
                               ? null
                               : () {
-                                  cartProvider.addItem(widget.product, quantity: _quantity);
+                                  cartProvider.addItem(
+                                    widget.product,
+                                    quantity: _quantity,
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Added $_quantity x ${widget.product.name} to cart'),
+                                      content: Text(
+                                        'Added $_quantity x ${widget.product.name} to cart',
+                                      ),
                                       action: SnackBarAction(
                                         label: 'View Cart',
                                         onPressed: () {
@@ -416,10 +427,7 @@ class _QuantityButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
 
-  const _QuantityButton({
-    required this.icon,
-    required this.onPressed,
-  });
+  const _QuantityButton({required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -428,7 +436,9 @@ class _QuantityButton extends StatelessWidget {
       height: 40,
       decoration: BoxDecoration(
         border: Border.all(
-          color: onPressed != null ? AppTheme.primaryColor : Colors.grey.shade300,
+          color: onPressed != null
+              ? AppTheme.primaryColor
+              : Colors.grey.shade300,
         ),
         borderRadius: BorderRadius.circular(8),
       ),

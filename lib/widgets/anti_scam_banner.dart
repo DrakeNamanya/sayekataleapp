@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 class AntiScamBanner extends StatelessWidget {
   final bool isCheckout;
 
-  const AntiScamBanner({
-    super.key,
-    this.isCheckout = true,
-  });
+  const AntiScamBanner({super.key, this.isCheckout = true});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +37,11 @@ class AntiScamBanner extends StatelessWidget {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.warning, color: Colors.red.shade700, size: 32),
+                child: Icon(
+                  Icons.warning,
+                  color: Colors.red.shade700,
+                  size: 32,
+                ),
               ),
               const SizedBox(width: 16),
               const Expanded(

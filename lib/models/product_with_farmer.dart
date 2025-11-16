@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'product.dart';
 import 'user.dart';
 
@@ -6,7 +5,7 @@ import 'user.dart';
 class ProductWithFarmer {
   final Product product;
   final AppUser farmer;
-  final double? distanceKm;  // Distance from buyer to farmer in kilometers
+  final double? distanceKm; // Distance from buyer to farmer in kilometers
 
   ProductWithFarmer({
     required this.product,
@@ -37,7 +36,8 @@ class ProductWithFarmer {
   String get farmerDistrict => farmer.location?.district ?? 'Unknown district';
 
   /// Get farmer address
-  String get farmerAddress => farmer.location?.fullAddress ?? 'Address not available';
+  String get farmerAddress =>
+      farmer.location?.fullAddress ?? 'Address not available';
 
   /// Get product stock quantity
   int get stockQuantity => product.stockQuantity;

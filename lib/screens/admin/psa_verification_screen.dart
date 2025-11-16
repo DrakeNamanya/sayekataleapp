@@ -8,10 +8,7 @@ import 'package:timeago/timeago.dart' as timeago;
 class PsaVerificationScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const PsaVerificationScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const PsaVerificationScreen({super.key, required this.adminUser});
 
   @override
   State<PsaVerificationScreen> createState() => _PsaVerificationScreenState();
@@ -72,10 +69,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               _loadVerifications();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: null,
-                child: Text('All'),
-              ),
+              const PopupMenuItem(value: null, child: Text('All')),
               const PopupMenuItem(
                 value: PsaVerificationStatus.pending,
                 child: Text('Pending'),
@@ -136,9 +130,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _showVerificationDetails(verification),
         borderRadius: BorderRadius.circular(12),
@@ -150,11 +142,14 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(verification.status)
-                          .withValues(alpha: 0.1),
+                      color: _getStatusColor(
+                        verification.status,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -169,10 +164,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
                   const Spacer(),
                   Text(
                     timeago.format(verification.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -187,10 +179,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               const SizedBox(height: 4),
               Text(
                 verification.businessType,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 8),
               _buildInfoRow(Icons.person, verification.contactPerson),
@@ -273,10 +262,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade800,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
             ),
           ),
         ],
@@ -336,11 +322,14 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(verification.status)
-                      .withValues(alpha: 0.1),
+                  color: _getStatusColor(
+                    verification.status,
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -353,7 +342,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Business Information
               _buildSectionTitle('Business Information'),
               _buildDetailItem('Business Type', verification.businessType),
@@ -369,15 +358,30 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
 
               // Tax Information
               _buildSectionTitle('Tax Information'),
-              _buildDetailItem('Tax ID (TIN)', verification.taxId ?? 'Not provided'),
+              _buildDetailItem(
+                'Tax ID (TIN)',
+                verification.taxId ?? 'Not provided',
+              ),
               const SizedBox(height: 24),
 
               // Bank Account Details
               _buildSectionTitle('Bank Account Details'),
-              _buildDetailItem('Account Holder', verification.bankAccountHolderName ?? 'Not provided'),
-              _buildDetailItem('Account Number', verification.bankAccountNumber ?? 'Not provided'),
-              _buildDetailItem('Bank Name', verification.bankName ?? 'Not provided'),
-              _buildDetailItem('Branch', verification.bankBranch ?? 'Not provided'),
+              _buildDetailItem(
+                'Account Holder',
+                verification.bankAccountHolderName ?? 'Not provided',
+              ),
+              _buildDetailItem(
+                'Account Number',
+                verification.bankAccountNumber ?? 'Not provided',
+              ),
+              _buildDetailItem(
+                'Bank Name',
+                verification.bankName ?? 'Not provided',
+              ),
+              _buildDetailItem(
+                'Branch',
+                verification.bankBranch ?? 'Not provided',
+              ),
               const SizedBox(height: 24),
 
               // Payment Methods
@@ -407,18 +411,25 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               // Documents
               _buildSectionTitle('Submitted Documents'),
               _buildDocumentSection(
-                  'Business License', verification.businessLicenseUrl),
+                'Business License',
+                verification.businessLicenseUrl,
+              ),
               _buildDocumentSection(
-                  'Tax ID Document', verification.taxIdDocumentUrl),
+                'Tax ID Document',
+                verification.taxIdDocumentUrl,
+              ),
               _buildDocumentSection('National ID', verification.nationalIdUrl),
               _buildDocumentSection(
-                  'Trade License', verification.tradeLicenseUrl),
+                'Trade License',
+                verification.tradeLicenseUrl,
+              ),
 
               if (verification.additionalDocuments.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 _buildSectionTitle('Additional Documents'),
-                ...verification.additionalDocuments
-                    .map((url) => _buildDocumentSection('Document', url)),
+                ...verification.additionalDocuments.map(
+                  (url) => _buildDocumentSection('Document', url),
+                ),
               ],
 
               if (verification.reviewNotes != null) ...[
@@ -447,10 +458,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -470,10 +478,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
+          Text(value, style: const TextStyle(fontSize: 16)),
         ],
       ),
     );
@@ -532,13 +537,20 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error, size: 48, color: Colors.red),
+                            const Icon(
+                              Icons.error,
+                              size: 48,
+                              color: Colors.red,
+                            ),
                             const SizedBox(height: 16),
                             const Text('Failed to load document'),
                             const SizedBox(height: 8),
                             Text(
                               error.toString(),
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -641,7 +653,8 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
               if (reasonController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Please provide a rejection reason')),
+                    content: Text('Please provide a rejection reason'),
+                  ),
                 );
                 return;
               }
@@ -663,8 +676,7 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
     );
   }
 
-  Future<void> _approvePsa(
-      PsaVerification verification, String? notes) async {
+  Future<void> _approvePsa(PsaVerification verification, String? notes) async {
     try {
       await _adminService.approvePsaVerification(
         verification.id,
@@ -679,9 +691,9 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
       await _loadVerifications();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to approve PSA: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to approve PSA: $e')));
       }
     }
   }
@@ -699,16 +711,16 @@ class _PsaVerificationScreenState extends State<PsaVerificationScreen> {
         reviewNotes: notes,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PSA rejected')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('PSA rejected')));
       }
       await _loadVerifications();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to reject PSA: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to reject PSA: $e')));
       }
     }
   }

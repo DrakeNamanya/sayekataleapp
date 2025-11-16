@@ -1,5 +1,5 @@
 // Uganda Phone Number Validator
-// 
+//
 // Validates Ugandan telephone numbers according to official specifications:
 // - Country code: +256
 // - National Significant Number (NSN): 9 digits
@@ -18,17 +18,26 @@ class UgandaPhoneValidator {
 
   // All valid mobile prefixes (first 2 digits after country code or trunk prefix)
   static const List<String> validMobilePrefixes = [
-    '70', '71', '72', '73', '74', '75', '76', '77', '78', '79'
+    '70',
+    '71',
+    '72',
+    '73',
+    '74',
+    '75',
+    '76',
+    '77',
+    '78',
+    '79',
   ];
 
   /// Validates if the phone number is a valid Ugandan mobile number
-  /// 
+  ///
   /// Accepts formats:
   /// - +256712345678 (E.164 international format)
   /// - 256712345678 (without plus)
   /// - 0712345678 (domestic format with trunk prefix)
   /// - 712345678 (without prefix - less common but handled)
-  /// 
+  ///
   /// Returns error message if invalid, null if valid
   static String? validate(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
@@ -45,7 +54,7 @@ class UgandaPhoneValidator {
 
     // Extract the mobile prefix (first 2 digits after country code/trunk)
     String prefix = extractMobilePrefix(cleaned);
-    
+
     if (!validMobilePrefixes.contains(prefix)) {
       return 'Invalid mobile operator prefix. Must start with 70-79';
     }
@@ -145,7 +154,7 @@ class UgandaPhoneValidator {
   /// Returns format: +256 7XX XXX XXX
   static String formatForDisplay(String phoneNumber) {
     String e164 = normalizeToE164(phoneNumber);
-    
+
     if (e164.startsWith('+256') && e164.length == 13) {
       // +256 7XX XXX XXX
       return '${e164.substring(0, 4)} ${e164.substring(4, 7)} ${e164.substring(7, 10)} ${e164.substring(10)}';
@@ -158,7 +167,7 @@ class UgandaPhoneValidator {
   /// Returns format: 07XX XXX XXX
   static String formatForDomesticDisplay(String phoneNumber) {
     String e164 = normalizeToE164(phoneNumber);
-    
+
     if (e164.startsWith('+256') && e164.length == 13) {
       String nsn = e164.substring(4); // Remove +256
       // 07XX XXX XXX
@@ -198,7 +207,8 @@ Valid Operators:
   /// Checks if phone number belongs to a specific operator
   static bool isOperator(String phoneNumber, String operatorName) {
     String? operator = getOperatorName(phoneNumber);
-    return operator?.toLowerCase().contains(operatorName.toLowerCase()) ?? false;
+    return operator?.toLowerCase().contains(operatorName.toLowerCase()) ??
+        false;
   }
 
   /// Gets a list of example valid phone numbers
@@ -236,5 +246,6 @@ extension UgandaPhoneStringExtension on String {
   String get formatUgandaPhone => UgandaPhoneValidator.formatForDisplay(this);
 
   /// Format for domestic display
-  String get formatUgandaPhoneDomestic => UgandaPhoneValidator.formatForDomesticDisplay(this);
+  String get formatUgandaPhoneDomestic =>
+      UgandaPhoneValidator.formatForDomesticDisplay(this);
 }

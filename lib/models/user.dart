@@ -9,7 +9,8 @@ class AppUser {
   final String? profileImage;
   final String? nationalId;
   final String? nationalIdPhoto;
-  final String? nameOnIdPhoto; // Name extracted from National ID photo for verification
+  final String?
+  nameOnIdPhoto; // Name extracted from National ID photo for verification
   final Sex? sex;
   final DisabilityStatus disabilityStatus;
   final Location? location;
@@ -22,15 +23,17 @@ class AppUser {
   final DateTime? suspendedAt; // When account was suspended
   final String? suspensionReason; // Reason for suspension
   final String? suspendedBy; // Admin ID who suspended the account
-  final PartnerInfo? partnerInfo; // Partner information for tracking user sources
+  final PartnerInfo?
+  partnerInfo; // Partner information for tracking user sources
   final DateTime createdAt;
   final DateTime updatedAt;
-  
+
   // System Rating Fields (Auto-calculated based on performance)
   final double systemRating; // 0-5 stars, automatically calculated
   final int totalCompletedOrders; // Total successfully completed orders
   final double averageCustomerRating; // 0-5, average from customer reviews
-  final double orderFulfillmentRate; // 0-100%, percentage of successful deliveries
+  final double
+  orderFulfillmentRate; // 0-100%, percentage of successful deliveries
   final DateTime? lastRatingUpdate; // When rating was last calculated
 
   AppUser({
@@ -64,17 +67,18 @@ class AppUser {
     this.orderFulfillmentRate = 0.0,
     this.lastRatingUpdate,
   });
-  
+
   // Check if user can sell (profile must be complete)
   bool get canSell {
     if (role != UserRole.shg) return false;
     if (!isProfileComplete) return false;
-    if (profileCompletionDeadline != null && DateTime.now().isAfter(profileCompletionDeadline!)) {
+    if (profileCompletionDeadline != null &&
+        DateTime.now().isAfter(profileCompletionDeadline!)) {
       return isProfileComplete;
     }
     return true;
   }
-  
+
   // Calculate remaining time to complete profile
   Duration? get timeRemainingToCompleteProfile {
     if (isProfileComplete) return null;
@@ -95,21 +99,25 @@ class AppUser {
       }
       return null;
     }
-    
+
     return AppUser(
-      id: data['id'] ?? id, // Use stored ID if available, fallback to document ID
+      id:
+          data['id'] ??
+          id, // Use stored ID if available, fallback to document ID
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
       email: data['email'],
       role: UserRole.values.firstWhere(
-        (e) => e.toString().toLowerCase() == 'userrole.${(data['role'] as String).toLowerCase()}',
+        (e) =>
+            e.toString().toLowerCase() ==
+            'userrole.${(data['role'] as String).toLowerCase()}',
         orElse: () => UserRole.shg,
       ),
       profileImage: data['profile_image'],
       nationalId: data['national_id'],
       nationalIdPhoto: data['national_id_photo'],
       nameOnIdPhoto: data['name_on_id_photo'],
-      sex: data['sex'] != null 
+      sex: data['sex'] != null
           ? Sex.values.firstWhere(
               (e) => e.toString() == 'Sex.${data['sex']}',
               orElse: () => Sex.male,
@@ -123,10 +131,13 @@ class AppUser {
           ? Location.fromMap(data['location'])
           : null,
       isProfileComplete: data['is_profile_complete'] ?? false,
-      profileCompletionDeadline: parseDateTime(data['profile_completion_deadline']),
+      profileCompletionDeadline: parseDateTime(
+        data['profile_completion_deadline'],
+      ),
       isVerified: data['is_verified'] ?? false,
       verificationStatus: VerificationStatus.values.firstWhere(
-        (e) => e.toString() == 'VerificationStatus.${data['verification_status']}',
+        (e) =>
+            e.toString() == 'VerificationStatus.${data['verification_status']}',
         orElse: () => VerificationStatus.pending,
       ),
       verifiedAt: parseDateTime(data['verified_at']),
@@ -140,9 +151,12 @@ class AppUser {
       createdAt: parseDateTime(data['created_at']) ?? DateTime.now(),
       updatedAt: parseDateTime(data['updated_at']) ?? DateTime.now(),
       systemRating: (data['system_rating'] as num?)?.toDouble() ?? 0.0,
-      totalCompletedOrders: (data['total_completed_orders'] as num?)?.toInt() ?? 0,
-      averageCustomerRating: (data['average_customer_rating'] as num?)?.toDouble() ?? 0.0,
-      orderFulfillmentRate: (data['order_fulfillment_rate'] as num?)?.toDouble() ?? 0.0,
+      totalCompletedOrders:
+          (data['total_completed_orders'] as num?)?.toInt() ?? 0,
+      averageCustomerRating:
+          (data['average_customer_rating'] as num?)?.toDouble() ?? 0.0,
+      orderFulfillmentRate:
+          (data['order_fulfillment_rate'] as num?)?.toDouble() ?? 0.0,
       lastRatingUpdate: parseDateTime(data['last_rating_update']),
     );
   }
@@ -162,7 +176,8 @@ class AppUser {
       'disability_status': disabilityStatus.toString().split('.').last,
       'location': location?.toMap(),
       'is_profile_complete': isProfileComplete,
-      'profile_completion_deadline': profileCompletionDeadline?.toIso8601String(),
+      'profile_completion_deadline': profileCompletionDeadline
+          ?.toIso8601String(),
       'is_verified': isVerified,
       'verification_status': verificationStatus.toString().split('.').last,
       'verified_at': verifiedAt?.toIso8601String(),
@@ -180,7 +195,7 @@ class AppUser {
       'last_rating_update': lastRatingUpdate?.toIso8601String(),
     };
   }
-  
+
   // Generate user ID based on role
   static String generateUserId(UserRole role, int count) {
     String prefix;
@@ -203,9 +218,9 @@ class AppUser {
 }
 
 enum UserRole {
-  shg,      // Self-Help Group (Farmers) - Sell products, buy inputs
-  sme,      // Small & Medium Enterprise (Buyers) - Purchase agricultural products
-  psa,      // Private Sector Aggregator (Suppliers) - Sell seeds, fertilizers, equipment
+  shg, // Self-Help Group (Farmers) - Sell products, buy inputs
+  sme, // Small & Medium Enterprise (Buyers) - Purchase agricultural products
+  psa, // Private Sector Aggregator (Suppliers) - Sell seeds, fertilizers, equipment
   admin,
 }
 
@@ -237,10 +252,7 @@ extension UserRoleExtension on UserRole {
   }
 }
 
-enum Sex {
-  male,
-  female,
-}
+enum Sex { male, female }
 
 extension SexExtension on Sex {
   String get displayName {
@@ -272,11 +284,11 @@ extension DisabilityStatusExtension on DisabilityStatus {
 class Location {
   final double latitude;
   final double longitude;
-  final String? district;  // Optional - can be null when only GPS provided
+  final String? district; // Optional - can be null when only GPS provided
   final String? subcounty; // Optional - can be null when only GPS provided
-  final String? parish;    // Optional - can be null when only GPS provided
-  final String? village;   // Optional - can be null when only GPS provided
-  final String? address;   // Full address for display
+  final String? parish; // Optional - can be null when only GPS provided
+  final String? village; // Optional - can be null when only GPS provided
+  final String? address; // Full address for display
 
   Location({
     required this.latitude,
@@ -287,46 +299,49 @@ class Location {
     this.village,
     this.address,
   });
-  
+
   String get fullAddress {
     if (address != null && address!.isNotEmpty) {
       return address!;
     }
-    
+
     // Build address from administrative divisions if available
     final parts = <String>[];
     if (village != null && village!.isNotEmpty) parts.add(village!);
     if (parish != null && parish!.isNotEmpty) parts.add(parish!);
     if (subcounty != null && subcounty!.isNotEmpty) parts.add(subcounty!);
     if (district != null && district!.isNotEmpty) parts.add(district!);
-    
+
     if (parts.isNotEmpty) {
       return parts.join(', ');
     }
-    
+
     // Fallback to GPS coordinates if no address parts available
     return 'GPS: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
   }
-  
+
   /// Calculate distance to another location using Haversine formula (in kilometers)
   double distanceTo(Location other) {
     const double earthRadius = 6371.0; // Earth's radius in kilometers
-    
+
     // Convert degrees to radians
     final lat1Rad = latitude * (math.pi / 180.0);
     final lat2Rad = other.latitude * (math.pi / 180.0);
     final deltaLatRad = (other.latitude - latitude) * (math.pi / 180.0);
     final deltaLonRad = (other.longitude - longitude) * (math.pi / 180.0);
-    
+
     // Haversine formula
-    final a = math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
-        math.cos(lat1Rad) * math.cos(lat2Rad) *
-        math.sin(deltaLonRad / 2) * math.sin(deltaLonRad / 2);
+    final a =
+        math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
+        math.cos(lat1Rad) *
+            math.cos(lat2Rad) *
+            math.sin(deltaLonRad / 2) *
+            math.sin(deltaLonRad / 2);
     final c = 2 * math.asin(math.sqrt(a));
-    
+
     return earthRadius * c;
   }
-  
+
   /// Get formatted distance string
   String distanceTextTo(Location other) {
     final distance = distanceTo(other);
@@ -415,12 +430,7 @@ class PartnerInfo {
 }
 
 /// Partner organizations
-enum PartnerType {
-  heifer,
-  fsme,
-  curad,
-  asgima,
-}
+enum PartnerType { heifer, fsme, curad, asgima }
 
 extension PartnerTypeExtension on PartnerType {
   String get displayName {
@@ -439,11 +449,11 @@ extension PartnerTypeExtension on PartnerType {
 
 /// Verification status for user identity
 enum VerificationStatus {
-  pending,    // Initial state - not yet verified
-  inReview,   // Under manual review
-  verified,   // Fully verified (NIN + name match confirmed)
-  rejected,   // Verification failed
-  suspended,  // Account suspended due to verification issues
+  pending, // Initial state - not yet verified
+  inReview, // Under manual review
+  verified, // Fully verified (NIN + name match confirmed)
+  rejected, // Verification failed
+  suspended, // Account suspended due to verification issues
 }
 
 extension VerificationStatusExtension on VerificationStatus {
@@ -461,7 +471,7 @@ extension VerificationStatusExtension on VerificationStatus {
         return 'Suspended';
     }
   }
-  
+
   String get description {
     switch (this) {
       case VerificationStatus.pending:

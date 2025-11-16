@@ -85,11 +85,11 @@ class ReceiptService {
   Future<Receipt?> getReceipt(String receiptId) async {
     try {
       final doc = await _firestore.collection('receipts').doc(receiptId).get();
-      
+
       if (doc.exists && doc.data() != null) {
         return Receipt.fromFirestore(doc.data()!, doc.id);
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -172,10 +172,10 @@ class ReceiptService {
         .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
+              .toList();
+        });
   }
 
   /// Stream receipts for a seller
@@ -186,9 +186,9 @@ class ReceiptService {
         .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
+              .toList();
+        });
   }
 }

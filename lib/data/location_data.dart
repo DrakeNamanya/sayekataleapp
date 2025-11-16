@@ -49,7 +49,11 @@ class LocationData {
     return _parishData[district]?[subcounty]?.keys.toList() ?? [];
   }
 
-  static List<String> getVillages(String district, String subcounty, String parish) {
+  static List<String> getVillages(
+    String district,
+    String subcounty,
+    String parish,
+  ) {
     return _villageData[district]?[subcounty]?[parish] ?? [];
   }
 
@@ -125,10 +129,7 @@ class LocationData {
       'KAKIRA TOWN COUNCIL': true,
       'NAMAGERA TOWN COUNCIL': true,
     },
-    'JINJA CITY': {
-      'JINJA NORTH DIVISION': true,
-      'JINJA SOUTH DIVISION': true,
-    },
+    'JINJA CITY': {'JINJA NORTH DIVISION': true, 'JINJA SOUTH DIVISION': true},
     'KALIRO': {
       'BUDOMERO': true,
       'BUKAMBA': true,
@@ -242,11 +243,7 @@ class LocationData {
   // Parish data
   static const Map<String, Map<String, Map<String, bool>>> _parishData = {
     'BUGIRI': {
-      'BUDHAYA': {
-        'BUDHAYA': true,
-        'BUKATU': true,
-        'MAYUGE RURAL': true,
-      },
+      'BUDHAYA': {'BUDHAYA': true, 'BUKATU': true, 'MAYUGE RURAL': true},
       'BULESA': {
         'BULUWE': true,
         'IGGWE': true,
@@ -261,11 +258,7 @@ class LocationData {
         'NABIGINGO': true,
         'WAKAWAKA': true,
       },
-      'BULUGUYI': {
-        'BUFUNDA': true,
-        'BUGAYI': true,
-        'NSANGO': true,
-      },
+      'BULUGUYI': {'BUFUNDA': true, 'BUGAYI': true, 'NSANGO': true},
       'BUSOWA TOWN COUNCIL': {
         'BUDUNDULI WARD': true,
         'BULUME WARD': true,
@@ -295,10 +288,7 @@ class LocationData {
         'NAMASERE B WARD': true,
         'NANKONKOLO WARD': true,
       },
-      'EASTERN DIVISION': {
-        'NALUWERERE WARD': true,
-        'NKUSI WARD': true,
-      },
+      'EASTERN DIVISION': {'NALUWERERE WARD': true, 'NKUSI WARD': true},
       'IWEMBA': {
         'BUGESO': true,
         'BUYALA': true,
@@ -330,11 +320,7 @@ class LocationData {
         'MUTERERE EAST WARD': true,
         'NAKASERO WARD': true,
       },
-      'MUTERERE': {
-        'BULULU': true,
-        'KAYOGERA': true,
-        'KITUMBA': true,
-      },
+      'MUTERERE': {'BULULU': true, 'KAYOGERA': true, 'KITUMBA': true},
       'MUWAYO TOWN COUNCIL': {
         'BUDUMA WARD': true,
         'BULUGUYI WARD': true,
@@ -380,10 +366,7 @@ class LocationData {
         'NANKOMA EAST WARD': true,
         'NAWANGO WARD': true,
       },
-      'WESTERN DIVISION': {
-        'BWOLE WARD': true,
-        'NDIFAKULYA A WARD': true,
-      },
+      'WESTERN DIVISION': {'BWOLE WARD': true, 'NDIFAKULYA A WARD': true},
     },
     'BUGWERI': {
       'BUSEMBATIA TOWN COUNCIL': {
@@ -393,10 +376,7 @@ class LocationData {
         'KAKOGE WARD': true,
         'MAJENGO WARD': true,
       },
-      'BUSESA TOWN COUNCIL': {
-        'BUTENDE WARD': true,
-        'IBAAKO WARD': true,
-      },
+      'BUSESA TOWN COUNCIL': {'BUTENDE WARD': true, 'IBAAKO WARD': true},
       'BUYANGA': {
         'BULUNGULI': true,
         'BUMOOZI': true,
@@ -454,11 +434,7 @@ class LocationData {
         'KIBAALE WARD': true,
         'KYANKOOLE WARD': true,
       },
-      'BUYANJA': {
-        'BUTAYUNJWA': true,
-        'BUYANJA': true,
-        'NTAALA': true,
-      },
+      'BUYANJA': {'BUTAYUNJWA': true, 'BUYANJA': true, 'NTAALA': true},
       'BUYENDE': {
         'IKANDA': true,
         'KAKOOGE': true,
@@ -585,11 +561,7 @@ class LocationData {
         'KABIRA': true,
         'WAIRAMA': true,
       },
-      'NAMBALE': {
-        'MWIRA': true,
-        'NAMBALE': true,
-        'NASUTI': true,
-      },
+      'NAMBALE': {'MWIRA': true, 'NAMBALE': true, 'NASUTI': true},
       'NAMUNGALWE TOWN COUNCIL': {
         'BULUMWAKI WARD': true,
         'MWENDANFUKO WARD': true,
@@ -606,11 +578,7 @@ class LocationData {
         'NAMUSIISI': true,
         'NAWANGAIZA': true,
       },
-      'NAWANYINGI': {
-        'BUNYIRO': true,
-        'MAGOGO': true,
-        'NAWANYINGI': true,
-      },
+      'NAWANYINGI': {'BUNYIRO': true, 'MAGOGO': true, 'NAWANYINGI': true},
       'NORTHERN DIVISION': {
         'BUGUMBA WARD': true,
         'IGAMBA WARD': true,
@@ -820,10 +788,7 @@ class LocationData {
       },
     },
     'KAMULI': {
-      'BALAWOLI': {
-        'NABULEZI': true,
-        'NAMAIRA': true,
-      },
+      'BALAWOLI': {'NABULEZI': true, 'NAMAIRA': true},
       'BALAWOLI TOWN COUNCIL': {
         'BALAWOLI NORTHERN': true,
         'KAWAGA SOUTHERN': true,
@@ -855,18 +820,9 @@ class LocationData {
         'KIBUYE': true,
         'KIIGE': true,
       },
-      'KASAMBIRA TOWN COUNCIL': {
-        'KASAMBIRA WARD': true,
-      },
-      'KISOZI': {
-        'IZANIRO': true,
-        'KIYUNGA': true,
-        'NAMAGANDA': true,
-      },
-      'KISOZI TOWN COUNCIL': {
-        'EAST WARD': true,
-        'WEST WARD': true,
-      },
+      'KASAMBIRA TOWN COUNCIL': {'KASAMBIRA WARD': true},
+      'KISOZI': {'IZANIRO': true, 'KIYUNGA': true, 'NAMAGANDA': true},
+      'KISOZI TOWN COUNCIL': {'EAST WARD': true, 'WEST WARD': true},
       'KITAYUNJWA': {
         'BUDHATEMWA': true,
         'BUGANZA': true,
@@ -885,11 +841,7 @@ class LocationData {
         'MATUMU': true,
         'NANKANDULO': true,
       },
-      'MBULAMUTI': {
-        'BUGONDHA': true,
-        'BULUYA': true,
-        'KIYUNGA': true,
-      },
+      'MBULAMUTI': {'BUGONDHA': true, 'BULUYA': true, 'KIYUNGA': true},
       'MBULAMUTI TOWN COUNCIL': {
         'LUGOLOIRE WARD': true,
         'MBULAMUTI WARD': true,
@@ -923,11 +875,7 @@ class LocationData {
         'BUSIMBA WARD': true,
         'MISSION WARD': true,
       },
-      'NAWANYAGO': {
-        'BUPADHENGO': true,
-        'NAWANTUMBI': true,
-        'NAWANYAGO': true,
-      },
+      'NAWANYAGO': {'BUPADHENGO': true, 'NAWANTUMBI': true, 'NAWANYAGO': true},
       'NAWANYAGO TOWN COUNCIL': {
         'BUPADHENGO URBAN WARD': true,
         'NAWANTUMBI URBAN WARD': true,
@@ -948,11 +896,7 @@ class LocationData {
         'MULAMBA WARD': true,
         'NAKULYAKU WARD': true,
       },
-      'WANKOLE': {
-        'LULYAMBUZI': true,
-        'LUZINGA': true,
-        'WANKOLE': true,
-      },
+      'WANKOLE': {'LULYAMBUZI': true, 'LUZINGA': true, 'WANKOLE': true},
     },
     'LUUKA': {
       'BUKANGA': {
@@ -1163,11 +1107,7 @@ class LocationData {
       },
     },
     'NAMAYINGO': {
-      'BANDA': {
-        'BUCHUMBA': true,
-        'BUJWANGA': true,
-        'LUGALA': true,
-      },
+      'BANDA': {'BUCHUMBA': true, 'BUJWANGA': true, 'LUGALA': true},
       'BANDA TOWN COUNCIL': {
         'BUKEDA WARD': true,
         'BUWOYA WARD': true,
@@ -1183,11 +1123,7 @@ class LocationData {
         'DOHWE': true,
         'SINDE': true,
       },
-      'BUKANA': {
-        'BIISA': true,
-        'BUDUMA': true,
-        'BUGANA': true,
-      },
+      'BUKANA': {'BIISA': true, 'BUDUMA': true, 'BUGANA': true},
       'BUSWALE': {
         'BUBANGO': true,
         'BUNGECHA': true,
@@ -1203,16 +1139,8 @@ class LocationData {
         'NSONO': true,
         'SYANYONJA': true,
       },
-      'LOLWE': {
-        'HAMA': true,
-        'LOLWE EAST': true,
-        'LOLWE WEST': true,
-      },
-      'MUTUMBA': {
-        'BUCHIMO': true,
-        'LUBANGO': true,
-        'MWEMA': true,
-      },
+      'LOLWE': {'HAMA': true, 'LOLWE EAST': true, 'LOLWE WEST': true},
+      'MUTUMBA': {'BUCHIMO': true, 'LUBANGO': true, 'MWEMA': true},
       'MUTUMBA TOWN COUNCIL': {
         'BULULE WARD': true,
         'HATUMBA BANJA WARD': true,
@@ -1330,11 +1258,7 @@ class LocationData {
         'NAWANZALI': true,
         'NSOOLA': true,
       },
-      'NABWEYO': {
-        'BUDATU': true,
-        'BUSINI': true,
-        'NABWEYO': true,
-      },
+      'NABWEYO': {'BUDATU': true, 'BUSINI': true, 'NABWEYO': true},
       'NAMUTUMBA': {
         'ITUBA': true,
         'KIGALAMA': true,
@@ -1391,14 +1315,15 @@ class LocationData {
     },
   };
 
-
   // Village data reference
-  static const Map<String, Map<String, Map<String, List<String>>>> _villageData = {};
+  static const Map<String, Map<String, Map<String, List<String>>>>
+  _villageData = {};
 }
 
 // Village data (part 2)
 class LocationVillageData {
-  static const Map<String, Map<String, Map<String, List<String>>>> _villageData = {
+  static const Map<String, Map<String, Map<String, List<String>>>>
+  _villageData = {
     'BUGIRI': {
       'BUDHAYA': {
         'BUDHAYA': [
@@ -1418,12 +1343,7 @@ class LocationVillageData {
           'MAZIRIGA',
           'NAMATU',
         ],
-        'MAYUGE RURAL': [
-          'BULYAIYOBYO',
-          'MUSIRISISI',
-          'NSAVU',
-          'WALUMBE',
-        ],
+        'MAYUGE RURAL': ['BULYAIYOBYO', 'MUSIRISISI', 'NSAVU', 'WALUMBE'],
       },
       'BULESA': {
         'BULUWE': [
@@ -1442,13 +1362,7 @@ class LocationVillageData {
           'NAKABALE A',
           'NAMIGUWA',
         ],
-        'KITODHA': [
-          'IDHUBU',
-          'KITODHA',
-          'LUVUNYA',
-          'NAKISAMO',
-          'NAWANSONGA',
-        ],
+        'KITODHA': ['IDHUBU', 'KITODHA', 'LUVUNYA', 'NAKISAMO', 'NAWANSONGA'],
         'NAMASERE': [
           'BUKOVU',
           'BUKUTA',
@@ -1465,23 +1379,9 @@ class LocationVillageData {
           'NANSAGA',
           'NANYONJO',
         ],
-        'BULIDHA B': [
-          'BUKUDULU',
-          'ITOOLO',
-        ],
-        'ISAKABUSOLO': [
-          'BUSINDA',
-          'ISAKABUSOLO',
-          'MATYAMA',
-          'NAMUNGODI',
-        ],
-        'MAKOMA': [
-          'BUSAKIRA',
-          'BUSANO',
-          'MAKOMA I',
-          'MASOLYA',
-          'NAKISENYI',
-        ],
+        'BULIDHA B': ['BUKUDULU', 'ITOOLO'],
+        'ISAKABUSOLO': ['BUSINDA', 'ISAKABUSOLO', 'MATYAMA', 'NAMUNGODI'],
+        'MAKOMA': ['BUSAKIRA', 'BUSANO', 'MAKOMA I', 'MASOLYA', 'NAKISENYI'],
         'NABIGINGO': [
           'KISENYI',
           'MAYOLE',
@@ -1489,26 +1389,11 @@ class LocationVillageData {
           'NABIGINGO A',
           'NABIGINGO B',
         ],
-        'WAKAWAKA': [
-          'KIBUYE A',
-          'KIBUYE B',
-          'NAGURU',
-          'NAKAWA',
-          'WAKAWAKA',
-        ],
+        'WAKAWAKA': ['KIBUYE A', 'KIBUYE B', 'NAGURU', 'NAKAWA', 'WAKAWAKA'],
       },
       'BULUGUYI': {
-        'BUFUNDA': [
-          'BUDUNYI',
-          'BUFUNDA \'A\'',
-          'BUFUNDA \'B\'',
-          'GAWUNIRE',
-        ],
-        'BUGAYI': [
-          'BUGAYI',
-          'BULESI',
-          'BUTUNDULA',
-        ],
+        'BUFUNDA': ['BUDUNYI', 'BUFUNDA \'A\'', 'BUFUNDA \'B\'', 'GAWUNIRE'],
+        'BUGAYI': ['BUGAYI', 'BULESI', 'BUTUNDULA'],
         'NSANGO': [
           'BUDEMBE',
           'HASHEBA',
@@ -1520,12 +1405,7 @@ class LocationVillageData {
         ],
       },
       'BUSOWA TOWN COUNCIL': {
-        'BUDUNDULI WARD': [
-          'BUGONGO',
-          'BUTEEBE',
-          'MAKALU',
-          'NAMALENHA',
-        ],
+        'BUDUNDULI WARD': ['BUGONGO', 'BUTEEBE', 'MAKALU', 'NAMALENHA'],
         'BULUME WARD': [
           'BUBONGOYI',
           'BULUME A',
@@ -1539,22 +1419,14 @@ class LocationVillageData {
           'BUSOWA SOUTH C',
           'TAKIWEREZA',
         ],
-        'NAKAWA WARD': [
-          'ABALLA',
-          'NAKAWA',
-          'NAWANYAGO',
-        ],
+        'NAKAWA WARD': ['ABALLA', 'NAKAWA', 'NAWANYAGO'],
         'NAKIDUDULA WARD': [
           'BUSOWA CENTRAL A',
           'BUSOWA CENTRAL B',
           'BUSOWA CENTRAL C',
           'BUSOWA NORTH',
         ],
-        'NAWANDHUKI WARD': [
-          'KIKWAYA',
-          'KINABIRYE',
-          'NAWANDHUKI',
-        ],
+        'NAWANDHUKI WARD': ['KIKWAYA', 'KINABIRYE', 'NAWANDHUKI'],
       },
       'BUWUNGA': {
         'BUBUGO': [
@@ -1572,13 +1444,7 @@ class LocationVillageData {
           'WALUGOMA',
           'WANZERERE',
         ],
-        'BUSOGA': [
-          'BUSOGA',
-          'BUWUGE',
-          'NABIRARA',
-          'NAKAMINI',
-          'NAKISENYI',
-        ],
+        'BUSOGA': ['BUSOGA', 'BUWUGE', 'NABIRARA', 'NAKAMINI', 'NAKISENYI'],
         'BUWUNGA': [
           'BUDIIDI',
           'MUGERA',
@@ -1586,12 +1452,7 @@ class LocationVillageData {
           'NAMATANGA',
           'WANDEGEIRE',
         ],
-        'KAVULE': [
-          'BUKEREKERE',
-          'KASAALA',
-          'KATOOKO',
-          'KAVULE CENTRAL',
-        ],
+        'KAVULE': ['BUKEREKERE', 'KASAALA', 'KATOOKO', 'KAVULE CENTRAL'],
         'LUWOOKO': [
           'BUKALAIKOTI',
           'KITEIGALWA',
@@ -1599,73 +1460,24 @@ class LocationVillageData {
           'LUWOOKO B',
           'LUWOOKO CENTRAL',
         ],
-        'MAGOOLA': [
-          'IMULI',
-          'KAYANDHA KATO',
-          'MAGOOLA',
-          'MAKOMA',
-          'NAKATWE',
-        ],
-        'MAWANGA': [
-          'BUDHEBERO',
-          'BUSAMBIRA',
-          'MAWANGA',
-          'NAKAWA',
-        ],
-        'NAMBALE': [
-          'BUGOMBO',
-          'BUTUMBA',
-          'KATALA',
-          'KAYAIGO',
-          'NAMBALE',
-        ],
+        'MAGOOLA': ['IMULI', 'KAYANDHA KATO', 'MAGOOLA', 'MAKOMA', 'NAKATWE'],
+        'MAWANGA': ['BUDHEBERO', 'BUSAMBIRA', 'MAWANGA', 'NAKAWA'],
+        'NAMBALE': ['BUGOMBO', 'BUTUMBA', 'KATALA', 'KAYAIGO', 'NAMBALE'],
       },
       'BUWUNI TOWN COUNCIL': {
-        'BUWUNI RURAL WARD': [
-          'BUGOSERE A',
-          'BUGOSERE B',
-          'BULENDE',
-          'BUWUNI',
-        ],
-        'BUWUNI WARD': [
-          'BUYEBE A',
-          'BUYEBE B',
-          'BUYEBE C',
-          'BUYEBE D',
-        ],
-        'KASEBERE WARD': [
-          'BUBUZI A',
-          'BUBUZI B',
-          'KASEBERE A',
-          'KASEBERE B',
-        ],
+        'BUWUNI RURAL WARD': ['BUGOSERE A', 'BUGOSERE B', 'BULENDE', 'BUWUNI'],
+        'BUWUNI WARD': ['BUYEBE A', 'BUYEBE B', 'BUYEBE C', 'BUYEBE D'],
+        'KASEBERE WARD': ['BUBUZI A', 'BUBUZI B', 'KASEBERE A', 'KASEBERE B'],
         'MAKHOMA NORTH WARD': [
           'KIBIMBA',
           'MAKHOMA A',
           'MAKHOMA NORTH',
           'MAKHOMA WEST',
         ],
-        'MAKHOMA SOUTH WARD': [
-          'MAKHOMA B',
-          'MAKHOMA C',
-          'MAKHOMA D',
-        ],
-        'NAINALA WARD': [
-          'NAINALA A',
-          'NAINALA B',
-          'NAINALA C',
-          'NAMAGONJO',
-        ],
-        'NAMASERE B WARD': [
-          'BUTUKA',
-          'NAWAMBIDHI A',
-          'NAWAMBIDHI B',
-        ],
-        'NANKONKOLO WARD': [
-          'MUCHOMO',
-          'NANKONKOLO A',
-          'NANKONKOLO B',
-        ],
+        'MAKHOMA SOUTH WARD': ['MAKHOMA B', 'MAKHOMA C', 'MAKHOMA D'],
+        'NAINALA WARD': ['NAINALA A', 'NAINALA B', 'NAINALA C', 'NAMAGONJO'],
+        'NAMASERE B WARD': ['BUTUKA', 'NAWAMBIDHI A', 'NAWAMBIDHI B'],
+        'NANKONKOLO WARD': ['MUCHOMO', 'NANKONKOLO A', 'NANKONKOLO B'],
       },
       'EASTERN DIVISION': {
         'NALUWERERE WARD': [
@@ -1676,43 +1488,14 @@ class LocationVillageData {
           'KIYINIKIBI EAST',
           'KIYINIKIBI WEST',
         ],
-        'NKUSI WARD': [
-          'KATAWO',
-          'MUKUBA',
-          'NKUSI A',
-          'NKUSI B',
-        ],
+        'NKUSI WARD': ['KATAWO', 'MUKUBA', 'NKUSI A', 'NKUSI B'],
       },
       'IWEMBA': {
-        'BUGESO': [
-          'BUKAKAIRE',
-          'KAZIMBAKUNGIRA',
-          'NABYUNU',
-        ],
-        'BUYALA': [
-          'BUDOME',
-          'BUKASOLO',
-          'BUYALA',
-          'KIGULU',
-          'KIMIRA',
-        ],
-        'IWEMBA': [
-          'BUKANDA',
-          'BUKIRI',
-          'BULYAMBOLI',
-          'BUSIMBA',
-        ],
-        'NABIRERE': [
-          'BUSOLO',
-          'KASOKWE',
-          'NABIRERE',
-          'WALUSAKA',
-        ],
-        'NAMBO': [
-          'NAMBO \'\'B\'\'',
-          'NAWANGALI',
-          'WALIKO',
-        ],
+        'BUGESO': ['BUKAKAIRE', 'KAZIMBAKUNGIRA', 'NABYUNU'],
+        'BUYALA': ['BUDOME', 'BUKASOLO', 'BUYALA', 'KIGULU', 'KIMIRA'],
+        'IWEMBA': ['BUKANDA', 'BUKIRI', 'BULYAMBOLI', 'BUSIMBA'],
+        'NABIRERE': ['BUSOLO', 'KASOKWE', 'NABIRERE', 'WALUSAKA'],
+        'NAMBO': ['NAMBO \'\'B\'\'', 'NAWANGALI', 'WALIKO'],
       },
       'KAPYANGA': {
         'BUGIRI A': [
@@ -1746,13 +1529,7 @@ class LocationVillageData {
           'NAMINYAGWE',
           'WANENGA',
         ],
-        'NAKAVULE': [
-          'IZIRA',
-          'KAMANGO',
-          'KIDHEBERO',
-          'KIKABALA',
-          'NAKAVULE',
-        ],
+        'NAKAVULE': ['IZIRA', 'KAMANGO', 'KIDHEBERO', 'KIKABALA', 'NAKAVULE'],
         'NAMUKONGE': [
           'BUGODO \'A\'',
           'BUGODO \'B\'',
@@ -1773,30 +1550,10 @@ class LocationVillageData {
         ],
       },
       'MAYUGE TOWN COUNCIL': {
-        'BUDDE WARD': [
-          'BUDDE',
-          'BUKAGOLO',
-          'BUVUTWA',
-          'GALASE',
-          'NABWALA',
-        ],
-        'BUWOLYA WARD': [
-          'BUTIBWA',
-          'MAKOOVA',
-          'MAKOOVA CENTRAL',
-        ],
-        'KIMASA WARD': [
-          'BUVUTWA CENTRAL',
-          'KIMASA',
-          'KIMBUGUTI',
-          'LUWA',
-        ],
-        'KOLOLO WARD': [
-          'KAMWOKYA',
-          'KOLOLO',
-          'KOLOLO WEST',
-          'NANTAKYA B',
-        ],
+        'BUDDE WARD': ['BUDDE', 'BUKAGOLO', 'BUVUTWA', 'GALASE', 'NABWALA'],
+        'BUWOLYA WARD': ['BUTIBWA', 'MAKOOVA', 'MAKOOVA CENTRAL'],
+        'KIMASA WARD': ['BUVUTWA CENTRAL', 'KIMASA', 'KIMBUGUTI', 'LUWA'],
+        'KOLOLO WARD': ['KAMWOKYA', 'KOLOLO', 'KOLOLO WEST', 'NANTAKYA B'],
         'MAYUGE WARD': [
           'MAYUGE CENTRAL A',
           'MAYUGE CENTRAL B',
@@ -1804,24 +1561,11 @@ class LocationVillageData {
           'NANTAKYA A',
           'NTEBBE',
         ],
-        'NILE WARD': [
-          'EAST NILE',
-          'NILE A',
-          'NILE MARKET',
-          'WEST NILE',
-        ],
+        'NILE WARD': ['EAST NILE', 'NILE A', 'NILE MARKET', 'WEST NILE'],
       },
       'MUTELELE TOWN COUNCIL': {
-        'BUSINI WARD': [
-          'BUSINI A',
-          'BUSINI B',
-          'CENTRAL',
-        ],
-        'LYAVALA WARD': [
-          'KABUGUTE',
-          'KYAIKU EAST',
-          'KYAIKU WEST',
-        ],
+        'BUSINI WARD': ['BUSINI A', 'BUSINI B', 'CENTRAL'],
+        'LYAVALA WARD': ['KABUGUTE', 'KYAIKU EAST', 'KYAIKU WEST'],
         'MUTANDA WARD': [
           'BUKABUDDO',
           'KIGUSA A',
@@ -1873,20 +1617,8 @@ class LocationVillageData {
         ],
       },
       'MUWAYO TOWN COUNCIL': {
-        'BUDUMA WARD': [
-          'BUDUMA A',
-          'BUDUMA B',
-          'BUKHOHE',
-          'BUTEMA',
-          'NAKAWA',
-        ],
-        'BULUGUYI WARD': [
-          'BUBWOKI',
-          'BULUGUYI',
-          'BUYINDI',
-          'KITOVU',
-          'LUGANO',
-        ],
+        'BUDUMA WARD': ['BUDUMA A', 'BUDUMA B', 'BUKHOHE', 'BUTEMA', 'NAKAWA'],
+        'BULUGUYI WARD': ['BUBWOKI', 'BULUGUYI', 'BUYINDI', 'KITOVU', 'LUGANO'],
         'MUWAYO WARD': [
           'HALF LONDON',
           'MUDAWO',
@@ -1926,12 +1658,7 @@ class LocationVillageData {
           'LWANIKA NORTH',
           'LWANIKA SOUTH',
         ],
-        'NKAIZA': [
-          'BUKAZITO',
-          'BULALO',
-          'BULANGA',
-          'KAKOGE',
-        ],
+        'NKAIZA': ['BUKAZITO', 'BULALO', 'BULANGA', 'KAKOGE'],
         'WANGOBO': [
           'BUKAKAIRE',
           'BUSAALA',
@@ -1958,30 +1685,10 @@ class LocationVillageData {
           'KASOOBA',
           'KATETEMPE',
         ],
-        'KALULU WARD': [
-          'BUKANDA',
-          'KITUMBA',
-          'MASANDA',
-          'NAMAKOKO',
-        ],
-        'KASITA WARD': [
-          'BUDHEBERO',
-          'KAKINDU',
-          'MAGOLO',
-          'NAMADHI',
-        ],
-        'LUYA WARD': [
-          'BUDWADU',
-          'BUYAYA',
-          'KABASALA',
-          'NAWANZU',
-        ],
-        'NABUKALU WARD': [
-          'BUTONGOLE',
-          'NABUKALU',
-          'NABWEYA',
-          'NAMUNDOLERA',
-        ],
+        'KALULU WARD': ['BUKANDA', 'KITUMBA', 'MASANDA', 'NAMAKOKO'],
+        'KASITA WARD': ['BUDHEBERO', 'KAKINDU', 'MAGOLO', 'NAMADHI'],
+        'LUYA WARD': ['BUDWADU', 'BUYAYA', 'KABASALA', 'NAWANZU'],
+        'NABUKALU WARD': ['BUTONGOLE', 'NABUKALU', 'NABWEYA', 'NAMUNDOLERA'],
         'NAKIVAMBA WARD': [
           'BUDANDO',
           'BUKAYE',
@@ -1991,10 +1698,7 @@ class LocationVillageData {
         ],
       },
       'NAMAYEMBA TOWN COUNCIL': {
-        'BUKONDE WARD': [
-          'BUKONDE A',
-          'BUKONDE B',
-        ],
+        'BUKONDE WARD': ['BUKONDE A', 'BUKONDE B'],
         'GULIMWOYO WARD': [
           'EKWARO',
           'KAJUMBURA',
@@ -2003,12 +1707,7 @@ class LocationVillageData {
           'NAMAYEMBA CENTRAL B',
           'SCHEME',
         ],
-        'ISAGAZA WARD': [
-          'BUBUGU',
-          'ISAGAZA A',
-          'ISAGAZA B',
-          'ISAGAZA NORTH',
-        ],
+        'ISAGAZA WARD': ['BUBUGU', 'ISAGAZA A', 'ISAGAZA B', 'ISAGAZA NORTH'],
         'KAFUFU WARD': [
           'IBUKKA',
           'KAFUFU',
@@ -2079,47 +1778,20 @@ class LocationVillageData {
           'LWAMUNYU',
           'NAWAMPANDA',
         ],
-        'MASITA WARD': [
-          'BUDHEBERA',
-          'MASITA',
-          'NAKASISI A',
-          'NAKASISI B',
-        ],
-        'NAKASITA WARD': [
-          'KYEMEIRE',
-          'NAKASITA',
-          'NALWESAMBULA',
-        ],
+        'MASITA WARD': ['BUDHEBERA', 'MASITA', 'NAKASISI A', 'NAKASISI B'],
+        'NAKASITA WARD': ['KYEMEIRE', 'NAKASITA', 'NALWESAMBULA'],
         'NAMUNTENGA WARD': [
           'KASOBA A',
           'KASOBA B',
           'NAMUTENGA A',
           'NAMUTENGA B',
         ],
-        'NANKOMA CENTRAL WARD': [
-          'NANKOMA B',
-          'NANKOMA C',
-          'NANKOMA WEST',
-        ],
-        'NANKOMA EAST WARD': [
-          'KISAWO',
-          'NANKOMA A',
-          'NANKOMA EAST',
-        ],
-        'NAWANGO WARD': [
-          'NAMUNDORELA',
-          'NANKOMA D',
-          'NAWANGO A',
-          'NAWANGO B',
-        ],
+        'NANKOMA CENTRAL WARD': ['NANKOMA B', 'NANKOMA C', 'NANKOMA WEST'],
+        'NANKOMA EAST WARD': ['KISAWO', 'NANKOMA A', 'NANKOMA EAST'],
+        'NAWANGO WARD': ['NAMUNDORELA', 'NANKOMA D', 'NAWANGO A', 'NAWANGO B'],
       },
       'WESTERN DIVISION': {
-        'BWOLE WARD': [
-          'BUSANZI \'B\'',
-          'BWOLE',
-          'KAMWOKYA',
-          'MUSONGOLA',
-        ],
+        'BWOLE WARD': ['BUSANZI \'B\'', 'BWOLE', 'KAMWOKYA', 'MUSONGOLA'],
         'NDIFAKULYA A WARD': [
           'KIMOMBASA',
           'KIREKA',
@@ -2131,46 +1803,18 @@ class LocationVillageData {
     },
     'BUGWERI': {
       'BUSEMBATIA TOWN COUNCIL': {
-        'BUSEMBATIA CENTRAL WARD': [
-          'BUSEMBATIA ZONE IV',
-          'BUTANDWE (ZONE VI)',
-        ],
-        'BUSEMBATIA MARKET WARD': [
-          'BUSEMBATIA ZONE II',
-          'BUSEMBATIA ZONE III',
-        ],
-        'BUYIRIMA WARD': [
-          'BUYIRIMA  A',
-          'BUYIRIMA  B',
-        ],
-        'KAKOGE WARD': [
-          'KAKOGE A',
-          'KAKOGE B',
-        ],
-        'MAJENGO WARD': [
-          'BUBONYE',
-          'MAJENGO',
-        ],
+        'BUSEMBATIA CENTRAL WARD': ['BUSEMBATIA ZONE IV', 'BUTANDWE (ZONE VI)'],
+        'BUSEMBATIA MARKET WARD': ['BUSEMBATIA ZONE II', 'BUSEMBATIA ZONE III'],
+        'BUYIRIMA WARD': ['BUYIRIMA  A', 'BUYIRIMA  B'],
+        'KAKOGE WARD': ['KAKOGE A', 'KAKOGE B'],
+        'MAJENGO WARD': ['BUBONYE', 'MAJENGO'],
       },
       'BUSESA TOWN COUNCIL': {
-        'BUTENDE WARD': [
-          'BUKOTEKA',
-          'BUTENDE',
-          'LUSAGHA',
-        ],
-        'IBAAKO WARD': [
-          'BUSESA',
-          'IBAAKO',
-          'KAGAMBA',
-          'NAMIYANGU',
-        ],
+        'BUTENDE WARD': ['BUKOTEKA', 'BUTENDE', 'LUSAGHA'],
+        'IBAAKO WARD': ['BUSESA', 'IBAAKO', 'KAGAMBA', 'NAMIYANGU'],
       },
       'BUYANGA': {
-        'BULUNGULI': [
-          'BULUNGULI',
-          'KIWANYI A',
-          'KIWANYI B',
-        ],
+        'BULUNGULI': ['BULUNGULI', 'KIWANYI A', 'KIWANYI B'],
         'BUMOOZI': [
           'BUBONYI',
           'BUMOOZI',
@@ -2190,37 +1834,14 @@ class LocationVillageData {
           'BUYIRIMA',
           'NASILARO',
         ],
-        'BWIGULA': [
-          'BUBINGA',
-          'BUKASOZI',
-          'BUTABA',
-          'BWIGULA',
-          'NAKAWOIZA',
-        ],
-        'KALALU': [
-          'KALALU A',
-          'KALALU B',
-        ],
-        'LUBIRA': [
-          'BUTYABULE',
-          'LUBIRA',
-        ],
+        'BWIGULA': ['BUBINGA', 'BUKASOZI', 'BUTABA', 'BWIGULA', 'NAKAWOIZA'],
+        'KALALU': ['KALALU A', 'KALALU B'],
+        'LUBIRA': ['BUTYABULE', 'LUBIRA'],
       },
       'IBULANKU': {
-        'BUNIANTOLE': [
-          'BUNIANTOLE',
-          'BUTENKAIRE',
-          'KABUGWERI',
-        ],
-        'IBULANKU': [
-          'BUSOOLERA',
-          'IBULANKU',
-          'MULANGA',
-        ],
-        'NAMIGANDA': [
-          'BUKENKE',
-          'NAMIGANDA',
-        ],
+        'BUNIANTOLE': ['BUNIANTOLE', 'BUTENKAIRE', 'KABUGWERI'],
+        'IBULANKU': ['BUSOOLERA', 'IBULANKU', 'MULANGA'],
+        'NAMIGANDA': ['BUKENKE', 'NAMIGANDA'],
         'NAWANSEGA': [
           'BUGHODANDALA',
           'BUMPINGU',
@@ -2245,37 +1866,14 @@ class LocationVillageData {
           'IDUDI OGAYA',
           'IDUDI WEST',
         ],
-        'IDUDI B WARD': [
-          'BUZAMA EAST',
-          'MUGOYA WEST',
-        ],
-        'IDUDI C WARD': [
-          'IDUDI MUTEGA NORTH',
-          'KYOZIRA SOUTH',
-        ],
-        'IDUDI D WARD': [
-          'BUGAMBUZE CENTRAL',
-          'DHAMUSAMULA EAST',
-          'GONGO WEST',
-        ],
-        'KIKUNYU WARD': [
-          'BUKABEGA',
-          'KIYOYI',
-          'NAKAWA',
-          'NAKITIBA',
-        ],
-        'MIFUMI WARD': [
-          'MIFUMI CENTRAL',
-          'MIFUMI SOUTH',
-          'NAWAMPITI',
-        ],
+        'IDUDI B WARD': ['BUZAMA EAST', 'MUGOYA WEST'],
+        'IDUDI C WARD': ['IDUDI MUTEGA NORTH', 'KYOZIRA SOUTH'],
+        'IDUDI D WARD': ['BUGAMBUZE CENTRAL', 'DHAMUSAMULA EAST', 'GONGO WEST'],
+        'KIKUNYU WARD': ['BUKABEGA', 'KIYOYI', 'NAKAWA', 'NAKITIBA'],
+        'MIFUMI WARD': ['MIFUMI CENTRAL', 'MIFUMI SOUTH', 'NAWAMPITI'],
       },
       'IGOMBE': {
-        'BUBENGE': [
-          'BUBENGE A',
-          'BUBENGE B',
-          'MATOVU',
-        ],
+        'BUBENGE': ['BUBENGE A', 'BUBENGE B', 'MATOVU'],
         'IGOMBE': [
           'BULYANSIME',
           'BUTALANGO',
@@ -2283,17 +1881,8 @@ class LocationVillageData {
           'MBULAMUTI',
           'NAMAKUNYU',
         ],
-        'KIKUNYU': [
-          'BUBINGA',
-          'BUBONGHE',
-          'BUSINDA',
-          'KIKUNYU',
-          'MPIITA',
-        ],
-        'WALANGA': [
-          'NAWAMPENDO',
-          'WALANGA',
-        ],
+        'KIKUNYU': ['BUBINGA', 'BUBONGHE', 'BUSINDA', 'KIKUNYU', 'MPIITA'],
+        'WALANGA': ['NAWAMPENDO', 'WALANGA'],
       },
       'MAKUUTU': {
         'KASOZI': [
@@ -2309,12 +1898,7 @@ class LocationVillageData {
           'NONDWE',
           'WAIBALE',
         ],
-        'KIGULAMO': [
-          'BUBETO',
-          'KIGULAMO',
-          'NAITANDU A',
-          'NAITANDU B',
-        ],
+        'KIGULAMO': ['BUBETO', 'KIGULAMO', 'NAITANDU A', 'NAITANDU B'],
         'MAKANDWA': [
           'BUYAYU',
           'MAKANDWA CENTRAL',
@@ -2480,11 +2064,7 @@ class LocationVillageData {
           'KIWONGOIRE A',
           'KIWONGOIRE B',
         ],
-        'BUYANJA': [
-          'KASAATO',
-          'NAWANSASO A',
-          'NAWANSASO B',
-        ],
+        'BUYANJA': ['KASAATO', 'NAWANSASO A', 'NAWANSASO B'],
         'NTAALA': [
           'KASAALA',
           'NAKAWA A',
@@ -2600,12 +2180,7 @@ class LocationVillageData {
         ],
       },
       'GUMPI': {
-        'BUDOLA': [
-          'BUNABALA',
-          'BUSULU',
-          'KIRONGO',
-          'KIRONGO T.C',
-        ],
+        'BUDOLA': ['BUNABALA', 'BUSULU', 'KIRONGO', 'KIRONGO T.C'],
         'GUMPI': [
           'BUDONGA',
           'BUDOPE',
@@ -2666,13 +2241,7 @@ class LocationVillageData {
         ],
       },
       'IRUNDU': {
-        'BUDIPA': [
-          'BUDIPA I',
-          'BUDIPA II',
-          'BULUNDA',
-          'KASEKENYI',
-          'KIBUGO',
-        ],
+        'BUDIPA': ['BUDIPA I', 'BUDIPA II', 'BULUNDA', 'KASEKENYI', 'KIBUGO'],
         'BUKUTULA': [
           'BUGANZA',
           'BUKUTULA',
@@ -2705,12 +2274,7 @@ class LocationVillageData {
         ],
       },
       'IRUNDU TOWN COUNCIL': {
-        'BUGULUSI WARD': [
-          'BUKOSI',
-          'BUSAMBA',
-          'KUBOTA A',
-          'KUBOTA B',
-        ],
+        'BUGULUSI WARD': ['BUKOSI', 'BUSAMBA', 'KUBOTA A', 'KUBOTA B'],
         'IRUNDU WARD': [
           'BUKOKOLA A',
           'BUKOKOLA B',
@@ -2831,12 +2395,7 @@ class LocationVillageData {
           'NAKITUBA',
           'NAWANSEGA',
         ],
-        'KASIIRA': [
-          'KAMASIIRA',
-          'KASIIRA TC',
-          'KIRIMUNSEEGE',
-          'NAIROLWA',
-        ],
+        'KASIIRA': ['KAMASIIRA', 'KASIIRA TC', 'KIRIMUNSEEGE', 'NAIROLWA'],
         'KISAIKYE': [
           'KISAIKYE',
           'NAKIMUNKU',
@@ -3089,16 +2648,8 @@ class LocationVillageData {
     },
     'IGANGA': {
       'BULAMAGI': {
-        'BUKOYO': [
-          'BUDHWEGE',
-          'BUKABISI',
-          'BUKOYO',
-          'NAWANSINGE',
-        ],
-        'BULAMAGI': [
-          'BUBAKA',
-          'BULAMAGI',
-        ],
+        'BUKOYO': ['BUDHWEGE', 'BUKABISI', 'BUKOYO', 'NAWANSINGE'],
+        'BULAMAGI': ['BUBAKA', 'BULAMAGI'],
         'BULOWOOZA': [
           'BULOWOOZA',
           'KASOLO',
@@ -3134,10 +2685,7 @@ class LocationVillageData {
           'KASOKOSO SOUTH',
           'KAYAGA',
         ],
-        'KASOKOSO WARD': [
-          'KASOKOSO CENTRAL I',
-          'KASOKOSO CENTRAL II',
-        ],
+        'KASOKOSO WARD': ['KASOKOSO CENTRAL I', 'KASOKOSO CENTRAL II'],
         'NABIDONGHA PRISON WARD': [
           'BULIGO SOUTH',
           'BULIGO SOUTH A',
@@ -3155,20 +2703,11 @@ class LocationVillageData {
           'NAKAVULE \'B\'',
           'NAKAVULE MAIN',
         ],
-        'WALUGOGO WARD': [
-          'KASOKOSO CENTRAL III',
-          'WALUGOGO HOUSING ESTATE',
-        ],
+        'WALUGOGO WARD': ['KASOKOSO CENTRAL III', 'WALUGOGO HOUSING ESTATE'],
       },
       'KIDAAGO': {
-        'KAZIGO': [
-          'KAZIGO  A',
-          'KAZIGO  B',
-        ],
-        'KIDAAGO': [
-          'KIDAAGO A',
-          'KIDAAGO B',
-        ],
+        'KAZIGO': ['KAZIGO  A', 'KAZIGO  B'],
+        'KIDAAGO': ['KIDAAGO A', 'KIDAAGO B'],
         'NABITENDE': [
           'BUKOSE ZONE',
           'BUSABI ZONE',
@@ -3176,24 +2715,11 @@ class LocationVillageData {
           'NABITENDE A',
           'NABITENDE B',
         ],
-        'NAIBIRI': [
-          'NAIBIRI CENTRAL',
-          'NAIBIRI NORTH',
-          'NAIBIRI SOUTH',
-        ],
+        'NAIBIRI': ['NAIBIRI CENTRAL', 'NAIBIRI NORTH', 'NAIBIRI SOUTH'],
       },
       'NABITENDE': {
-        'BUGONO': [
-          'BUGONO',
-          'BUGONO B',
-          'NABINONYI',
-        ],
-        'ITANDA': [
-          'BUKAIGO',
-          'BUVULE',
-          'ITANDA - BUWEIRA',
-          'KINU',
-        ],
+        'BUGONO': ['BUGONO', 'BUGONO B', 'NABINONYI'],
+        'ITANDA': ['BUKAIGO', 'BUVULE', 'ITANDA - BUWEIRA', 'KINU'],
         'KABIRA-ITUBA': [
           'BUIGANHA B',
           'BULIGANHA',
@@ -3240,11 +2766,7 @@ class LocationVillageData {
           'NAMUNDUDI B',
           'NAMUNDUDI C',
         ],
-        'BUSEYI': [
-          'BUSEYI A',
-          'BUSEYI B',
-          'BUSEYI CENTRAL',
-        ],
+        'BUSEYI': ['BUSEYI A', 'BUSEYI B', 'BUSEYI CENTRAL'],
         'NAKALAMA': [
           'BUKOBOOLI',
           'BUKYAYE',
@@ -3263,12 +2785,7 @@ class LocationVillageData {
           'NANDEKULA A',
           'NANDEKULA B',
         ],
-        'BUNYAMA': [
-          'BUKWAYA',
-          'BUNYAMA',
-          'KIBOYO',
-          'NAMIRALI',
-        ],
+        'BUNYAMA': ['BUKWAYA', 'BUNYAMA', 'KIBOYO', 'NAMIRALI'],
         'BUSOWOOBI': [
           'BUSOWOOBI CENTRAL',
           'BUSOWOOBI- NYENGA',
@@ -3277,31 +2794,12 @@ class LocationVillageData {
           'NAKIGO I',
           'NAKIGO II',
         ],
-        'KABIRA': [
-          'BULUZA',
-          'KABIRA',
-          'NAMUSENWA',
-          'NAWANZU',
-        ],
-        'WAIRAMA': [
-          'IZIMBA',
-          'KAKOMBO',
-          'NAKISENYI',
-          'WAIRAMA',
-        ],
+        'KABIRA': ['BULUZA', 'KABIRA', 'NAMUSENWA', 'NAWANZU'],
+        'WAIRAMA': ['IZIMBA', 'KAKOMBO', 'NAKISENYI', 'WAIRAMA'],
       },
       'NAMBALE': {
-        'MWIRA': [
-          'KAMIRABIKOMO',
-          'MWIRA',
-          'NABITOVU',
-          'NABITOVU NORTH',
-        ],
-        'NAMBALE': [
-          'NAMBALE I A',
-          'NAMBALE I B',
-          'NAMBALE II',
-        ],
+        'MWIRA': ['KAMIRABIKOMO', 'MWIRA', 'NABITOVU', 'NABITOVU NORTH'],
+        'NAMBALE': ['NAMBALE I A', 'NAMBALE I B', 'NAMBALE II'],
         'NASUTI': [
           'BUSIMBA',
           'KAKIRA',
@@ -3311,25 +2809,15 @@ class LocationVillageData {
         ],
       },
       'NAMUNGALWE TOWN COUNCIL': {
-        'BULUMWAKI WARD': [
-          'BULUMWAKI I',
-          'BULUMWAKI II',
-          'NSINZE',
-        ],
-        'MWENDANFUKO WARD': [
-          'BULANGA',
-          'MWENDANFUKO',
-        ],
+        'BULUMWAKI WARD': ['BULUMWAKI I', 'BULUMWAKI II', 'NSINZE'],
+        'MWENDANFUKO WARD': ['BULANGA', 'MWENDANFUKO'],
         'NAMUNGALWE WARD': [
           'KAWETE',
           'NAMUNGALWE A',
           'NAMUNGALWE B',
           'NAMUNGALWE RURAL',
         ],
-        'NAMUNKANAGA WARD': [
-          'NAMUNKANAGA I',
-          'NAMUNKANAGA II',
-        ],
+        'NAMUNKANAGA WARD': ['NAMUNKANAGA I', 'NAMUNKANAGA II'],
         'NAMUNKESU WARD': [
           'BUBOGO A',
           'BUBOGO B',
@@ -3337,15 +2825,8 @@ class LocationVillageData {
           'NAMUFUMA',
           'NAMUNKESU',
         ],
-        'NAMUNSAALA WARD': [
-          'BUFUTULA A',
-          'BUFUTULA B',
-          'NAMUNSAALA',
-        ],
-        'NAWANSEGA WARD': [
-          'NAWANSEGA A',
-          'NAWANSEGA B',
-        ],
+        'NAMUNSAALA WARD': ['BUFUTULA A', 'BUFUTULA B', 'NAMUNSAALA'],
+        'NAWANSEGA WARD': ['NAWANSEGA A', 'NAWANSEGA B'],
       },
       'NAWANDALA': {
         'BUGONGO': [
@@ -3378,17 +2859,8 @@ class LocationVillageData {
           'KABULI II',
           'KYENDABAWALA',
         ],
-        'NAMUSIISI': [
-          'BUGANZA',
-          'BUYUNGA',
-          'MALOBI',
-          'NAMUSIISI',
-        ],
-        'NAWANGAIZA': [
-          'KIRINGA A',
-          'KIRINGA B',
-          'NAWANGAIZA I',
-        ],
+        'NAMUSIISI': ['BUGANZA', 'BUYUNGA', 'MALOBI', 'NAMUSIISI'],
+        'NAWANGAIZA': ['KIRINGA A', 'KIRINGA B', 'NAWANGAIZA I'],
       },
       'NAWANYINGI': {
         'BUNYIRO': [
@@ -3425,27 +2897,10 @@ class LocationVillageData {
           'BUGUMBA  CENTRAL',
           'BUGUMBA  UPPER',
         ],
-        'IGAMBA WARD': [
-          'BIKADHO',
-          'IGAMBA',
-          'IGAMBA SOUTH',
-        ],
-        'MUTUKULA WARD': [
-          'MUTAMBALA',
-          'MUTUKULA',
-          'NKONO I',
-          'NKONO III',
-        ],
-        'NKATU WARD': [
-          'KILOWA',
-          'NKAATU MAIN',
-          'NKAATU PROPER',
-        ],
-        'NKONO WARD': [
-          'NKONO CENTRAL',
-          'NKONO II',
-          'SILIVE',
-        ],
+        'IGAMBA WARD': ['BIKADHO', 'IGAMBA', 'IGAMBA SOUTH'],
+        'MUTUKULA WARD': ['MUTAMBALA', 'MUTUKULA', 'NKONO I', 'NKONO III'],
+        'NKATU WARD': ['KILOWA', 'NKAATU MAIN', 'NKAATU PROPER'],
+        'NKONO WARD': ['NKONO CENTRAL', 'NKONO II', 'SILIVE'],
       },
     },
     'JINJA': {
@@ -3598,13 +3053,7 @@ class LocationVillageData {
           'MUWANGI BULAGALA',
           'MUWANGI BULUMBA',
         ],
-        'KITANABA': [
-          'BUSIA II',
-          'IDOOME',
-          'ISIRI',
-          'KITANABA',
-          'MPUNGWE',
-        ],
+        'KITANABA': ['BUSIA II', 'IDOOME', 'ISIRI', 'KITANABA', 'MPUNGWE'],
         'MAGAMAGA': [
           'BUTANGALA A',
           'BUTANGALA B',
@@ -3635,12 +3084,7 @@ class LocationVillageData {
           'KILANGIRA ZONE',
           'SWANU ZONE',
         ],
-        'KAMWANI WARD': [
-          'BWASE',
-          'CHURCH ZONE',
-          'KABI ZONE',
-          'MUZIGITI ZONE',
-        ],
+        'KAMWANI WARD': ['BWASE', 'CHURCH ZONE', 'KABI ZONE', 'MUZIGITI ZONE'],
         'KASALINA WARD': [
           'KADIBA ZONE',
           'KIGENYI ZONE',
@@ -3791,14 +3235,8 @@ class LocationVillageData {
     },
     'JINJA CITY': {
       'JINJA NORTH DIVISION': {
-        'BUDHUMBULI EAST WARD': [
-          'CHURCH ZONE',
-          'COMMERCIAL ZONE',
-        ],
-        'BUDHUMBULI WEST WARD': [
-          'KALINA ZONE',
-          'SCHOOL ZONE',
-        ],
+        'BUDHUMBULI EAST WARD': ['CHURCH ZONE', 'COMMERCIAL ZONE'],
+        'BUDHUMBULI WEST WARD': ['KALINA ZONE', 'SCHOOL ZONE'],
         'BUWAGI (KAKYOMYA) WARD': [
           'BULEEBA',
           'BUWAGI',
@@ -3811,12 +3249,7 @@ class LocationVillageData {
           'KYOMYA EAST',
           'KYOMYA WEST',
         ],
-        'BUWEKULA WARD': [
-          'BUWEKULA',
-          'KAINOGOGA',
-          'MAUTA',
-          'WAKITAKA',
-        ],
+        'BUWEKULA WARD': ['BUWEKULA', 'KAINOGOGA', 'MAUTA', 'WAKITAKA'],
         'BUWENDA TC WARD': [
           'BUTIKI KYEKIDDE',
           'BUTIKI MATAALA',
@@ -3835,11 +3268,7 @@ class LocationVillageData {
           'KIVUBUKA B',
           'KYABIRWA',
         ],
-        'KATENDE WARD': [
-          'IGENGE HILL',
-          'STADIUM',
-          'TRIANGLE ZONE',
-        ],
+        'KATENDE WARD': ['IGENGE HILL', 'STADIUM', 'TRIANGLE ZONE'],
         'KIBIBI WARD': [
           'BUKOSE',
           'BUSUSWA',
@@ -3923,22 +3352,9 @@ class LocationVillageData {
           'MAIN STREET WEST',
           'RIPPON GARDEN NILE AVENUE',
         ],
-        'KIMAKA WARD': [
-          'AMBERCOURT',
-          'KIMAKA',
-        ],
-        'LUBAGA WARD': [
-          'COMMERCIAL',
-          'KAMULI ROAD',
-          'RUBAGA',
-          'UPLAND',
-        ],
-        'MAGGWA WARD': [
-          'GOKHALE',
-          'MADHIVANI',
-          'MVULE',
-          'NIZAM',
-        ],
+        'KIMAKA WARD': ['AMBERCOURT', 'KIMAKA'],
+        'LUBAGA WARD': ['COMMERCIAL', 'KAMULI ROAD', 'RUBAGA', 'UPLAND'],
+        'MAGGWA WARD': ['GOKHALE', 'MADHIVANI', 'MVULE', 'NIZAM'],
         'MASESE WARD': [
           'KILEMBE',
           'KISIMA I',
@@ -3956,10 +3372,7 @@ class LocationVillageData {
           'WEST ZONE B',
           'WEST ZONE C',
         ],
-        'NALUFENYA WARD': [
-          'NALUFENYA A',
-          'NALUFENYA B',
-        ],
+        'NALUFENYA WARD': ['NALUFENYA A', 'NALUFENYA B'],
         'OLD BOMA WARD': [
           'GRANT ROAD',
           'KIRINYA PRISON',
@@ -4126,11 +3539,7 @@ class LocationVillageData {
           'BULONDO',
           'MUKASA',
         ],
-        'BUSUNGA WARD': [
-          'BUMPI',
-          'BUSUNGA',
-          'BWISOBA',
-        ],
+        'BUSUNGA WARD': ['BUMPI', 'BUSUNGA', 'BWISOBA'],
         'LONDE WARD': [
           'KOSAMU',
           'LONDE A',
@@ -4138,11 +3547,7 @@ class LocationVillageData {
           'ZEFANIA A',
           'ZEFANIA B',
         ],
-        'MASUNA WARD': [
-          'BUMPULI',
-          'MASUNA',
-          'WANKESA',
-        ],
+        'MASUNA WARD': ['BUMPULI', 'MASUNA', 'WANKESA'],
         'NALENYA WARD': [
           'BUNOGA',
           'BUTITI',
@@ -4389,13 +3794,7 @@ class LocationVillageData {
         ],
       },
       'KASOKWE': {
-        'BUSANDA': [
-          'BULANGIRA',
-          'BUSANDA',
-          'BUSANDA B',
-          'BUSANDA C',
-          'MAKERE',
-        ],
+        'BUSANDA': ['BULANGIRA', 'BUSANDA', 'BUSANDA B', 'BUSANDA C', 'MAKERE'],
         'BUTAJJUBE': [
           'BUKAKUBBE',
           'BUTUJU',
@@ -4473,21 +3872,10 @@ class LocationVillageData {
           'NANDERE A',
           'NANDERE B',
         ],
-        'NAWANDYO': [
-          'BULEEMO',
-          'IGEMBE',
-          'KIROBA',
-          'NAWANDYO',
-        ],
+        'NAWANDYO': ['BULEEMO', 'IGEMBE', 'KIROBA', 'NAWANDYO'],
       },
       'NAMUGONGO': {
-        'BUGODA': [
-          'BUGODA',
-          'BUTINDA',
-          'KALUNGU',
-          'KASOZI',
-          'KASULETA',
-        ],
+        'BUGODA': ['BUGODA', 'BUTINDA', 'KALUNGU', 'KASOZI', 'KASULETA'],
         'BUGONZA': [
           'BUDANGHA/BULALA',
           'BUHODI',
@@ -4587,12 +3975,7 @@ class LocationVillageData {
           'NAMULUNGU TC',
           'NAWANGOMA',
         ],
-        'BUKAIRE WARD': [
-          'BUKAIRE A',
-          'BUKAIRE B',
-          'BUKUNYA',
-          'KANABUGO B',
-        ],
+        'BUKAIRE WARD': ['BUKAIRE A', 'BUKAIRE B', 'BUKUNYA', 'KANABUGO B'],
         'BUNSWEZYA WARD': [
           'BUNSWEZYA',
           'BUTENDE',
@@ -4614,18 +3997,8 @@ class LocationVillageData {
           'WAMPITEKU',
           'WANGOBO B',
         ],
-        'NAMWIWA WARD': [
-          'BAGANZI',
-          'GABWIIRE',
-          'MUTENDERI',
-          'NAMWIWA A',
-        ],
-        'WANGOBO WARD': [
-          'BUNGUBEKA',
-          'NABUHALI',
-          'WANGOBO A',
-          'WANGOBO C',
-        ],
+        'NAMWIWA WARD': ['BAGANZI', 'GABWIIRE', 'MUTENDERI', 'NAMWIWA A'],
+        'WANGOBO WARD': ['BUNGUBEKA', 'NABUHALI', 'WANGOBO A', 'WANGOBO C'],
       },
       'NANSOLOLO': {
         'BULIKE': [
@@ -4955,13 +4328,7 @@ class LocationVillageData {
           'BUWANDE',
           'BUYIMA/BWEBYA',
         ],
-        'NAGWENYI': [
-          'BUGANZA',
-          'BUGWANO',
-          'BUKAIBALE',
-          'BUNANGWE',
-          'BUYEGO',
-        ],
+        'NAGWENYI': ['BUGANZA', 'BUGWANO', 'BUKAIBALE', 'BUNANGWE', 'BUYEGO'],
       },
       'BUTANSI': {
         'BUGEYWA': [
@@ -5270,11 +4637,7 @@ class LocationVillageData {
           'KAWULE WEST',
           'KIRANGIRA',
         ],
-        'LWANYAMA': [
-          'KISEEGE',
-          'LUGADA',
-          'NKOLONGO',
-        ],
+        'LWANYAMA': ['KISEEGE', 'LUGADA', 'NKOLONGO'],
         'MAGOGO': [
           'BUKWALU',
           'BUSANGA A',
@@ -5362,18 +4725,8 @@ class LocationVillageData {
         ],
       },
       'NABWIGULU': {
-        'NABIRUMBA I': [
-          'BUNAKABOKO',
-          'BUSANA',
-          'BWOKO',
-          'BWOZIIRA',
-        ],
-        'NABIRUMBA II': [
-          'BUGONDE',
-          'BUKALU',
-          'BULUTA',
-          'BUTWALE',
-        ],
+        'NABIRUMBA I': ['BUNAKABOKO', 'BUSANA', 'BWOKO', 'BWOZIIRA'],
+        'NABIRUMBA II': ['BUGONDE', 'BUKALU', 'BULUTA', 'BUTWALE'],
         'NABWIGULU': [
           'BUDUULI',
           'BUGAYA',
@@ -5443,10 +4796,7 @@ class LocationVillageData {
           'NANSOLOLO C',
           'NANSOLOLO D',
         ],
-        'NAMASAGALI': [
-          'KABAGANDA',
-          'KABANYORO',
-        ],
+        'NAMASAGALI': ['KABAGANDA', 'KABANYORO'],
       },
       'NAMWENDWA': {
         'BUGONDHA': [
@@ -5483,10 +4833,7 @@ class LocationVillageData {
           'BUTYABULE',
           'DEMBE',
         ],
-        'ISINGO': [
-          'BUGAGA',
-          'ISINGO B.',
-        ],
+        'ISINGO': ['BUGAGA', 'ISINGO B.'],
         'KINU': [
           'BUBWANA/BUBANDA',
           'BUKOOMA/BUNYIRWA',
@@ -5538,18 +4885,8 @@ class LocationVillageData {
         ],
       },
       'NAMWENDWA TOWN COUNCIL': {
-        'BULUUYA WARD': [
-          'BUGOBI',
-          'BULUUYA',
-          'BUTOGONYHA',
-          'BUTOOKE-BUSAMBWA',
-        ],
-        'BULYANGO WARD': [
-          'BULONDO',
-          'BULYANGO',
-          'BUSAAKWA',
-          'BUYOMBA',
-        ],
+        'BULUUYA WARD': ['BUGOBI', 'BULUUYA', 'BUTOGONYHA', 'BUTOOKE-BUSAMBWA'],
+        'BULYANGO WARD': ['BULONDO', 'BULYANGO', 'BUSAAKWA', 'BUYOMBA'],
         'BUSEJJA WARD': [
           'BUGOLE',
           'BUKAFUGA A',
@@ -5609,14 +4946,8 @@ class LocationVillageData {
         ],
       },
       'NAWANYAGO TOWN COUNCIL': {
-        'BUPADHENGO URBAN WARD': [
-          'KIROLO',
-          'KIROLO B',
-        ],
-        'NAWANTUMBI URBAN WARD': [
-          'BUBAMBWE',
-          'BUGAGA B',
-        ],
+        'BUPADHENGO URBAN WARD': ['KIROLO', 'KIROLO B'],
+        'NAWANTUMBI URBAN WARD': ['BUBAMBWE', 'BUGAGA B'],
         'NAWANYAGO EAST WARD': [
           'BLOCK A',
           'BLOCK B',
@@ -5626,12 +4957,7 @@ class LocationVillageData {
           'BUSUULI B',
           'BUWAIBALE B',
         ],
-        'NAWANYAGO WEST WARD': [
-          'BLOCK C',
-          'BLOCK D',
-          'BUSIITI',
-          'BUWAIBALE A',
-        ],
+        'NAWANYAGO WEST WARD': ['BLOCK C', 'BLOCK D', 'BUSIITI', 'BUWAIBALE A'],
       },
       'NORTHERN DIVISION': {
         'BUWANUME WARD': [
@@ -5714,18 +5040,8 @@ class LocationVillageData {
           'BUWALALA',
           'BUWUDHA',
         ],
-        'MANDWA WARD': [
-          'INDUSTRIAL AREA',
-          'MUTEKANGA',
-          'SOROTI',
-        ],
-        'MULAMBA WARD': [
-          'DENNING',
-          'MUKASA',
-          'MULAMBA',
-          'NABIKAMBA',
-          'SAZA',
-        ],
+        'MANDWA WARD': ['INDUSTRIAL AREA', 'MUTEKANGA', 'SOROTI'],
+        'MULAMBA WARD': ['DENNING', 'MUKASA', 'MULAMBA', 'NABIKAMBA', 'SAZA'],
         'NAKULYAKU WARD': [
           'BULONGO',
           'BUSIBA',
@@ -5840,17 +5156,8 @@ class LocationVillageData {
         ],
       },
       'BUKOOMA': {
-        'BUKOOMA': [
-          'BUKOOMA A',
-          'BUKOOMA B',
-          'MISITA',
-        ],
-        'BUKYANGWA': [
-          'BUDHANA A',
-          'BUDHANA B',
-          'BUKYANGWA A',
-          'BUKYANGWA B',
-        ],
+        'BUKOOMA': ['BUKOOMA A', 'BUKOOMA B', 'MISITA'],
+        'BUKYANGWA': ['BUDHANA A', 'BUDHANA B', 'BUKYANGWA A', 'BUKYANGWA B'],
         'NAIGOBYA': [
           'NAIGOBYA A',
           'NAIGOBYA B',
@@ -5868,12 +5175,7 @@ class LocationVillageData {
           'NAMANSENDA A',
           'NAMANSENDA B',
         ],
-        'NAMULANDA': [
-          'GWEMBUZI A',
-          'GWEMBUZI B',
-          'NAMULANDA A',
-          'NAMULANDA B',
-        ],
+        'NAMULANDA': ['GWEMBUZI A', 'GWEMBUZI B', 'NAMULANDA A', 'NAMULANDA B'],
       },
       'BUKOOVA TOWN COUNCIL': {
         'BUKANHA WARD': [
@@ -5948,43 +5250,14 @@ class LocationVillageData {
         ],
       },
       'BULANGA TOWN COUNCIL': {
-        'BULANGA WARD': [
-          'BULANGA ESTATE',
-          'KASOKOSO',
-          'KATAIKE',
-          'KIWUMBI',
-        ],
-        'ITWE WARD': [
-          'BUGWANALA A',
-          'BUGWANALA B',
-          'ITWE',
-          'TAGOOLE',
-        ],
-        'MAWUNDO WARD': [
-          'BUDHEBERA',
-          'KYANKUZI',
-          'MUFUWA',
-          'NABUKALU',
-        ],
-        'NANTAMU WARD': [
-          'ABALAWUWE',
-          'LUMBUYE',
-          'LUSWIGA',
-          'NANTAMU',
-        ],
-        'WALIBO WARD': [
-          'KISANSA',
-          'LUWANGULA',
-          'WALIBO',
-          'WALIBO LULENZI',
-        ],
+        'BULANGA WARD': ['BULANGA ESTATE', 'KASOKOSO', 'KATAIKE', 'KIWUMBI'],
+        'ITWE WARD': ['BUGWANALA A', 'BUGWANALA B', 'ITWE', 'TAGOOLE'],
+        'MAWUNDO WARD': ['BUDHEBERA', 'KYANKUZI', 'MUFUWA', 'NABUKALU'],
+        'NANTAMU WARD': ['ABALAWUWE', 'LUMBUYE', 'LUSWIGA', 'NANTAMU'],
+        'WALIBO WARD': ['KISANSA', 'LUWANGULA', 'WALIBO', 'WALIBO LULENZI'],
       },
       'BULONGO': {
-        'BUDHABANGULA': [
-          'BUDHABANGULA A',
-          'BUDHABANGULA B',
-          'KIBUUTU',
-        ],
+        'BUDHABANGULA': ['BUDHABANGULA A', 'BUDHABANGULA B', 'KIBUUTU'],
         'BUGONYOKA': [
           'BUGONYOKA A',
           'BUGONYOKA B',
@@ -5999,11 +5272,7 @@ class LocationVillageData {
           'NABITAAMA A',
           'NABITAAMA B',
         ],
-        'BULONGO': [
-          'BUWAISWA',
-          'KAMWIRUNGU A',
-          'KAMWIRUNGU B',
-        ],
+        'BULONGO': ['BUWAISWA', 'KAMWIRUNGU A', 'KAMWIRUNGU B'],
         'NAKABUGU': [
           'BUSEETE',
           'BUYUNZE A',
@@ -6011,12 +5280,7 @@ class LocationVillageData {
           'NAKABUGU A',
           'NAKABUGU B',
         ],
-        'NAMALEMBA': [
-          'BULIKE',
-          'BUSALA',
-          'KASOZI',
-          'NAMALEMBA',
-        ],
+        'NAMALEMBA': ['BULIKE', 'BUSALA', 'KASOZI', 'NAMALEMBA'],
       },
       'BUSALAMU TOWN COUNCIL': {
         'BUSALAMU EAST WARD': [
@@ -6045,24 +5309,9 @@ class LocationVillageData {
         ],
       },
       'IKUMBYA': {
-        'BUNAFU': [
-          'BUNAFU A',
-          'BUNAFU B',
-          'NABISIRA',
-          'NAWANYAGO',
-        ],
-        'IKUMBYA': [
-          'BUWUTU',
-          'IKUMBYA',
-          'NSAMBYA',
-          'WANDAGO',
-        ],
-        'INUULA': [
-          'BUDHUUBA  A',
-          'BUDHUUBA  B',
-          'BUGAMBO',
-          'INUULA',
-        ],
+        'BUNAFU': ['BUNAFU A', 'BUNAFU B', 'NABISIRA', 'NAWANYAGO'],
+        'IKUMBYA': ['BUWUTU', 'IKUMBYA', 'NSAMBYA', 'WANDAGO'],
+        'INUULA': ['BUDHUUBA  A', 'BUDHUUBA  B', 'BUGAMBO', 'INUULA'],
         'NAWAKA': [
           'BUGONZA',
           'KAWANGA',
@@ -6092,12 +5341,7 @@ class LocationVillageData {
           'NAIMULI B',
           'NSIRIRA',
         ],
-        'KALYOWA': [
-          'BUKYAMATA',
-          'KALYOWA A',
-          'KALYOWA B',
-          'KIGUNGA',
-        ],
+        'KALYOWA': ['BUKYAMATA', 'KALYOWA A', 'KALYOWA B', 'KIGUNGA'],
         'KIBINGA': [
           'KANTENGA',
           'KIBINGA A',
@@ -6124,28 +5368,10 @@ class LocationVillageData {
         ],
       },
       'KYANVUMA TOWN COUNCIL': {
-        'BUNIKO WARD': [
-          'BUNIKO A',
-          'BUNIKO B',
-          'MAWALE',
-          'MBOGA',
-        ],
-        'MAGADA WARD': [
-          'KASOKOSO',
-          'KIBUYE LC1',
-          'OLD MARKET',
-        ],
-        'NAKABAALE WARD': [
-          'BONDO',
-          'NAKABAALE A',
-          'NAKABAALE SCHEME',
-        ],
-        'NAKABAMBWE WARD': [
-          'KIGAITO',
-          'KYANVUMA',
-          'NABIKAMBA',
-          'NAKABAMBWE',
-        ],
+        'BUNIKO WARD': ['BUNIKO A', 'BUNIKO B', 'MAWALE', 'MBOGA'],
+        'MAGADA WARD': ['KASOKOSO', 'KIBUYE LC1', 'OLD MARKET'],
+        'NAKABAALE WARD': ['BONDO', 'NAKABAALE A', 'NAKABAALE SCHEME'],
+        'NAKABAMBWE WARD': ['KIGAITO', 'KYANVUMA', 'NABIKAMBA', 'NAKABAMBWE'],
         'NSIMAKATONO WARD': [
           'BUDUGU',
           'BULINDA',
@@ -6154,37 +5380,18 @@ class LocationVillageData {
         ],
       },
       'LUUKA TOWN COUNCIL': {
-        'BUSIMAWU WARD': [
-          'BUDHUMBWIRE',
-          'BUSIMAWU',
-          'WAIGUGWE',
-        ],
-        'BUSONGA WARD': [
-          'BUKABOLI',
-          'BUSONGA',
-        ],
-        'KITWEKYAMBOGO WARD': [
-          'MBOGO',
-          'NAWAMWENA',
-          'NAWANSUDE',
-        ],
+        'BUSIMAWU WARD': ['BUDHUMBWIRE', 'BUSIMAWU', 'WAIGUGWE'],
+        'BUSONGA WARD': ['BUKABOLI', 'BUSONGA'],
+        'KITWEKYAMBOGO WARD': ['MBOGO', 'NAWAMWENA', 'NAWANSUDE'],
         'KIYUNGA WARD': [
           'KIYUNGA CENTRAL',
           'KIYUNGA HOSPITAL',
           'KIYUNGA INDUSTRIAL',
         ],
-        'LWADA WARD': [
-          'BUWAMBUZI',
-          'LWANDA',
-          'NTANDAGWE',
-        ],
+        'LWADA WARD': ['BUWAMBUZI', 'LWANDA', 'NTANDAGWE'],
       },
       'NAWAMPITI': {
-        'BUGOMBA': [
-          'BUGOMBA',
-          'BUWANDA',
-          'NAWANDYO',
-        ],
+        'BUGOMBA': ['BUGOMBA', 'BUWANDA', 'NAWANDYO'],
         'BUYOOLA': [
           'BUYOOLA',
           'IKONIA A',
@@ -6206,12 +5413,7 @@ class LocationVillageData {
           'KITUUTO B',
           'NAWAMPITI-BUKYANGWA',
         ],
-        'NAWANKOMPE': [
-          'KASOZI',
-          'NAWANKOMPE A',
-          'NAWANKOMPE B',
-          'WALUGABA',
-        ],
+        'NAWANKOMPE': ['KASOZI', 'NAWANKOMPE A', 'NAWANKOMPE B', 'WALUGABA'],
       },
       'WAIBUGA': {
         'BUSIIRO': [
@@ -6242,50 +5444,17 @@ class LocationVillageData {
           'ITAKAIBOLU B',
           'KIGAYA',
         ],
-        'LWAKI': [
-          'KIWANYI',
-          'LWAKI',
-          'MAUMO',
-          'NAMADOPE',
-        ],
+        'LWAKI': ['KIWANYI', 'LWAKI', 'MAUMO', 'NAMADOPE'],
       },
     },
     'MAYUGE': {
       'BAITAMBOGWE': {
-        'BUGODI': [
-          'BUGODI A',
-          'BUGODI B',
-          'MUSITA B',
-          'NAWANGIRI',
-        ],
-        'BUTTE': [
-          'BUTE \'A\'',
-          'BUTE \'B\'',
-          'NALWESAMBULA',
-        ],
-        'IGEYERO': [
-          'IGEYERO A',
-          'IGEYERO B',
-          'MUKUTA',
-          'WAGONA',
-        ],
-        'KATONTE': [
-          'BUWANGA \'A\'',
-          'BUWANGA \'B\'',
-          'KATONTE',
-          'NAMAGERA',
-        ],
-        'LUGOLOLE': [
-          'BAITAMBOGWE',
-          'LUGOLOLE B',
-          'LUGULOLE A',
-          'MBIRIZI',
-        ],
-        'LUKONE': [
-          'LUKONE',
-          'MAGAMAGA',
-          'NSINDA',
-        ],
+        'BUGODI': ['BUGODI A', 'BUGODI B', 'MUSITA B', 'NAWANGIRI'],
+        'BUTTE': ['BUTE \'A\'', 'BUTE \'B\'', 'NALWESAMBULA'],
+        'IGEYERO': ['IGEYERO A', 'IGEYERO B', 'MUKUTA', 'WAGONA'],
+        'KATONTE': ['BUWANGA \'A\'', 'BUWANGA \'B\'', 'KATONTE', 'NAMAGERA'],
+        'LUGOLOLE': ['BAITAMBOGWE', 'LUGOLOLE B', 'LUGULOLE A', 'MBIRIZI'],
+        'LUKONE': ['LUKONE', 'MAGAMAGA', 'NSINDA'],
         'MULINGILIRE': [
           'BUBAMBWE',
           'IZINGA',
@@ -6310,22 +5479,9 @@ class LocationVillageData {
           'BUGADDE WEST',
           'BUGOYA',
         ],
-        'BUSENDA WARD': [
-          'BUSENDA A',
-          'BUSENDA B',
-          'BUSENDA C',
-        ],
-        'KITYERERA WARD': [
-          'KITYERERA A',
-          'KITYERERA B',
-          'KITYERERA C',
-        ],
-        'NAKIBENGO WARD': [
-          'ITUBA A',
-          'ITUBA B',
-          'KIKOKOLI',
-          'NAKIBENGO',
-        ],
+        'BUSENDA WARD': ['BUSENDA A', 'BUSENDA B', 'BUSENDA C'],
+        'KITYERERA WARD': ['KITYERERA A', 'KITYERERA B', 'KITYERERA C'],
+        'NAKIBENGO WARD': ['ITUBA A', 'ITUBA B', 'KIKOKOLI', 'NAKIBENGO'],
       },
       'BUKABOOLI': {
         'BUGOTO': [
@@ -6367,12 +5523,7 @@ class LocationVillageData {
           'NABYAMA BEACH',
           'NAMAKOKO',
         ],
-        'MATOVU': [
-          'BUKANGA',
-          'MATOVU',
-          'NABIWERO',
-          'NAKIBAGO',
-        ],
+        'MATOVU': ['BUKANGA', 'MATOVU', 'NABIWERO', 'NAKIBAGO'],
         'MAYIRINYA': [
           'BUSIRA',
           'KASOZI',
@@ -6419,13 +5570,7 @@ class LocationVillageData {
           'NDHOKERO B',
           'WAMONDO',
         ],
-        'MAUTA': [
-          'BUGULUMA',
-          'BUYOKA',
-          'KABUKI',
-          'KYANDO',
-          'MAUTA',
-        ],
+        'MAUTA': ['BUGULUMA', 'BUYOKA', 'KABUKI', 'KYANDO', 'MAUTA'],
         'MBIRABIRA': [
           'BUFUTA A',
           'BUFUTA B',
@@ -6464,13 +5609,7 @@ class LocationVillageData {
           'KALUUBA \'B\'',
           'KALUUBA \'C\'',
         ],
-        'MAUMU': [
-          'BUSEERA B',
-          'BUYANIRWA',
-          'MAUMU A',
-          'MAUMU B',
-          'NAMWOBA',
-        ],
+        'MAUMU': ['BUSEERA B', 'BUYANIRWA', 'MAUMU A', 'MAUMU B', 'NAMWOBA'],
         'WAMBETE': [
           'BUSEERA \'A\'',
           'BUSEERA \'C\'',
@@ -6487,20 +5626,8 @@ class LocationVillageData {
           'NABUYAGI',
           'NTAFUNGIRWA',
         ],
-        'BUWOLYA': [
-          'BUWOLYA',
-          'IVUGUNYU',
-          'IWUUBA',
-          'KAKINDU',
-          'NTINDA',
-        ],
-        'ISIKIRO': [
-          'BUKOOBA',
-          'IBANGA',
-          'ISIKIRO',
-          'KANYABWINA',
-          'KIKUBO',
-        ],
+        'BUWOLYA': ['BUWOLYA', 'IVUGUNYU', 'IWUUBA', 'KAKINDU', 'NTINDA'],
+        'ISIKIRO': ['BUKOOBA', 'IBANGA', 'ISIKIRO', 'KANYABWINA', 'KIKUBO'],
         'KABAINGIRE': [
           'KABAINGIRE',
           'NAKATE',
@@ -6508,25 +5635,11 @@ class LocationVillageData {
           'NAMATALE',
           'NAWANVUBU',
         ],
-        'NSANGO': [
-          'BULONDO',
-          'LUGANGU',
-          'NABITTU',
-          'NAMAGO',
-          'NSANGO',
-        ],
+        'NSANGO': ['BULONDO', 'LUGANGU', 'NABITTU', 'NAMAGO', 'NSANGO'],
       },
       'BWONDHA TOWN COUNCIL': {
-        'BWONDHA CENTRAL WARD': [
-          'BWONDHA B',
-          'BWONDHA CENTRAL',
-          'BWONDHA D',
-        ],
-        'BWONDHA SOUTH WARD': [
-          'BWONDHA A',
-          'BWONDHA EAST',
-          'NABIDONGA',
-        ],
+        'BWONDHA CENTRAL WARD': ['BWONDHA B', 'BWONDHA CENTRAL', 'BWONDHA D'],
+        'BWONDHA SOUTH WARD': ['BWONDHA A', 'BWONDHA EAST', 'NABIDONGA'],
         'MAKONKO WARD': [
           'KAYANJA',
           'KIYONJO',
@@ -6534,11 +5647,7 @@ class LocationVillageData {
           'MAKONKO B',
           'MIREMBE',
         ],
-        'MUSOMA WARD': [
-          'BUKIMERA',
-          'MUSOMA',
-          'NAKAWA',
-        ],
+        'MUSOMA WARD': ['BUKIMERA', 'MUSOMA', 'NAKAWA'],
         'NALUBABWE WARD': [
           'BWONDHA C',
           'MULOWOZA',
@@ -6571,13 +5680,7 @@ class LocationVillageData {
           'WALUGOGO',
           'WANTE',
         ],
-        'MAYUGE': [
-          'BUDHEBERA',
-          'BUKAWONGO',
-          'BWIWULA',
-          'LUWANULA',
-          'MATUBA',
-        ],
+        'MAYUGE': ['BUDHEBERA', 'BUKAWONGO', 'BWIWULA', 'LUWANULA', 'MATUBA'],
         'MBAALE': [
           'IGUNDA',
           'IMANYIRO',
@@ -6597,12 +5700,7 @@ class LocationVillageData {
         ],
       },
       'JAGUZI': {
-        'BUMBA': [
-          'BUKABAMBWE',
-          'BUYAKO BEACH',
-          'BUYAKO VILLAGE',
-          'GALILAYA',
-        ],
+        'BUMBA': ['BUKABAMBWE', 'BUYAKO BEACH', 'BUYAKO VILLAGE', 'GALILAYA'],
         'JAGUZI': [
           'BUSABALA A',
           'BUSABALA B',
@@ -6615,36 +5713,13 @@ class LocationVillageData {
           'NABUKALU A',
           'NABUKALU B',
         ],
-        'KAAZA': [
-          'KAAZA A',
-          'KAAZA B',
-          'SIMWE ISLAND',
-        ],
-        'MASOLYA': [
-          'MASOLYA \'A\'',
-          'MASOLYA \'B\'',
-          'MASOLYA CENTRAL',
-        ],
-        'SAGITU': [
-          'BUSWETA',
-          'DEMBE',
-          'MAGANDA',
-          'NALUWERERE',
-        ],
-        'SERINYABI': [
-          'KOLOLO',
-          'LUKOBA',
-          'MASAMBA',
-        ],
+        'KAAZA': ['KAAZA A', 'KAAZA B', 'SIMWE ISLAND'],
+        'MASOLYA': ['MASOLYA \'A\'', 'MASOLYA \'B\'', 'MASOLYA CENTRAL'],
+        'SAGITU': ['BUSWETA', 'DEMBE', 'MAGANDA', 'NALUWERERE'],
+        'SERINYABI': ['KOLOLO', 'LUKOBA', 'MASAMBA'],
       },
       'KIGANDALO': {
-        'BUGONDO': [
-          'BUGONDO',
-          'NABUKONE',
-          'NAKAWA',
-          'NAMALEGE',
-          'WALUKOKO',
-        ],
+        'BUGONDO': ['BUGONDO', 'NABUKONE', 'NAKAWA', 'NAMALEGE', 'WALUKOKO'],
         'ISENDA': [
           'BUGUNDA',
           'ISENDA',
@@ -6698,13 +5773,7 @@ class LocationVillageData {
         ],
       },
       'KITYERERA': {
-        'BUBINGE': [
-          'BUBINGE',
-          'BULIDHA',
-          'BUSIMO',
-          'IGUNDA',
-          'KIKANDWA',
-        ],
+        'BUBINGE': ['BUBINGE', 'BULIDHA', 'BUSIMO', 'IGUNDA', 'KIKANDWA'],
         'BUKALENZI': [
           'BUKALENZI',
           'BUKOBA \'B\'',
@@ -6747,18 +5816,8 @@ class LocationVillageData {
         ],
       },
       'MAGAMAGA TOWN COUNCIL': {
-        'BUKOLI WARD': [
-          'BUKOLI A',
-          'BUKOLI B',
-          'BUKOLI C',
-          'MUTUKULA',
-        ],
-        'MAGAMAGA WARD': [
-          'KAWUDHU',
-          'MAGAMAGA T/C',
-          'MARKET ZONE',
-          'TASAGA',
-        ],
+        'BUKOLI WARD': ['BUKOLI A', 'BUKOLI B', 'BUKOLI C', 'MUTUKULA'],
+        'MAGAMAGA WARD': ['KAWUDHU', 'MAGAMAGA T/C', 'MARKET ZONE', 'TASAGA'],
         'WABULUNGU WARD': [
           'BODA',
           'BRIDGE',
@@ -6852,52 +5911,15 @@ class LocationVillageData {
         ],
       },
       'MAYUGE TOWN COUNCIL': {
-        'IKULWE WARD': [
-          'BUGINGO',
-          'IGAMBA A',
-          'IGAMBA B',
-          'KATWE',
-          'TSE-TSE',
-        ],
-        'KASUGU WARD': [
-          'DWALIRO',
-          'KASUGU \'A\'',
-          'KASUGU \'B\'',
-        ],
-        'KAVULE WARD': [
-          'BUDHEBERA',
-          'DFI',
-          'KAVULE',
-          'MAYUGE CENTRAL',
-        ],
-        'KYEBANDO WARD': [
-          'KYEBANDO',
-          'NAKABAFU',
-          'ST. MULUMBA',
-          'WAKALENDE',
-        ],
+        'IKULWE WARD': ['BUGINGO', 'IGAMBA A', 'IGAMBA B', 'KATWE', 'TSE-TSE'],
+        'KASUGU WARD': ['DWALIRO', 'KASUGU \'A\'', 'KASUGU \'B\''],
+        'KAVULE WARD': ['BUDHEBERA', 'DFI', 'KAVULE', 'MAYUGE CENTRAL'],
+        'KYEBANDO WARD': ['KYEBANDO', 'NAKABAFU', 'ST. MULUMBA', 'WAKALENDE'],
       },
       'MPUNGWE': {
-        'BUYERE': [
-          'BUGUWA',
-          'BUYERE',
-          'MUSIMA',
-          'MUSITA',
-          'NAKITAMU',
-        ],
-        'MAINA': [
-          'BUSU',
-          'KABERE',
-          'KYETE',
-          'MAINA',
-          'MWEZI',
-        ],
-        'MUGGI': [
-          'BUWANUKA',
-          'KASOKWE',
-          'MPUNGWE',
-          'MUGGI',
-        ],
+        'BUYERE': ['BUGUWA', 'BUYERE', 'MUSIMA', 'MUSITA', 'NAKITAMU'],
+        'MAINA': ['BUSU', 'KABERE', 'KYETE', 'MAINA', 'MWEZI'],
+        'MUGGI': ['BUWANUKA', 'KASOKWE', 'MPUNGWE', 'MUGGI'],
         'WAIRAMA': [
           'BULYANGADA',
           'BUWALIRA',
@@ -6917,19 +5939,8 @@ class LocationVillageData {
         ],
       },
       'WAIRASA': {
-        'BUSUYI': [
-          'BUGABWE',
-          'BUSOWANIRE',
-          'BUSUYI',
-          'BUYEMBA',
-          'KASITA',
-        ],
-        'IGULUIBI': [
-          'IGULUIBI  A',
-          'IGULUIBI B',
-          'NTOKOLO',
-          'WAIBALE',
-        ],
+        'BUSUYI': ['BUGABWE', 'BUSOWANIRE', 'BUSUYI', 'BUYEMBA', 'KASITA'],
+        'IGULUIBI': ['IGULUIBI  A', 'IGULUIBI B', 'NTOKOLO', 'WAIBALE'],
         'MISOLI': [
           'BUSALAMU',
           'MISOLI BEACH',
@@ -6937,11 +5948,7 @@ class LocationVillageData {
           'MISOLI VILLAGE',
           'NTINKALU T/C',
         ],
-        'WANDAGO': [
-          'LUGWARA QTRS',
-          'NAMALERE',
-          'WAIRASA TRADING CENTRE',
-        ],
+        'WANDAGO': ['LUGWARA QTRS', 'NAMALERE', 'WAIRASA TRADING CENTRE'],
       },
     },
     'NAMAYINGO': {
@@ -6983,19 +5990,8 @@ class LocationVillageData {
         ],
       },
       'BANDA TOWN COUNCIL': {
-        'BUKEDA WARD': [
-          'BUHULA',
-          'BUKEDA',
-          'BUTEMO',
-          'SIABONA',
-        ],
-        'BUWOYA WARD': [
-          'BUNYALAWO',
-          'BUSEKESE',
-          'BUSUDIA',
-          'BUWOYA',
-          'MUHUBU',
-        ],
+        'BUKEDA WARD': ['BUHULA', 'BUKEDA', 'BUTEMO', 'SIABONA'],
+        'BUWOYA WARD': ['BUNYALAWO', 'BUSEKESE', 'BUSUDIA', 'BUWOYA', 'MUHUBU'],
         'BUYOMBO WARD': [
           'BUDIANGA',
           'BUYOMBO',
@@ -7003,22 +5999,9 @@ class LocationVillageData {
           'SIAHOOLI',
           'SIAMBA',
         ],
-        'LUTOLO WARD': [
-          'LUNAYE',
-          'LUTOLO',
-          'SIROWA',
-        ],
-        'MAGOOLI WARD': [
-          'BAALE',
-          'BWOGOMI',
-          'MAGOOLI',
-          'NAMABONI',
-        ],
-        'NANGERA WARD': [
-          'BUCHUNIA',
-          'GAMBABWAMI',
-          'NANGERA',
-        ],
+        'LUTOLO WARD': ['LUNAYE', 'LUTOLO', 'SIROWA'],
+        'MAGOOLI WARD': ['BAALE', 'BWOGOMI', 'MAGOOLI', 'NAMABONI'],
+        'NANGERA WARD': ['BUCHUNIA', 'GAMBABWAMI', 'NANGERA'],
       },
       'BUHEMBA': {
         'BUHEMBA': [
@@ -7059,19 +6042,10 @@ class LocationVillageData {
           'NABWERE SOUTH',
           'NAMUWONGO',
         ],
-        'SINDE': [
-          'GENGULUHO',
-          'MAKADA',
-          'NAMALERE',
-          'NAMAYOMBE',
-          'SINDE',
-        ],
+        'SINDE': ['GENGULUHO', 'MAKADA', 'NAMALERE', 'NAMAYOMBE', 'SINDE'],
       },
       'BUKANA': {
-        'BIISA': [
-          'BIISA',
-          'YEBE',
-        ],
+        'BIISA': ['BIISA', 'YEBE'],
         'BUDUMA': [
           'BUDUMA',
           'BUHERE',
@@ -7155,12 +6129,7 @@ class LocationVillageData {
         ],
       },
       'BUYINJA': {
-        'GONDOHERA': [
-          'BUDIMO',
-          'BUTAJJA',
-          'GONDOHERA',
-          'NAMUHOLOHOHO',
-        ],
+        'GONDOHERA': ['BUDIMO', 'BUTAJJA', 'GONDOHERA', 'NAMUHOLOHOHO'],
         'KIFUYO': [
           'KIFUYO \'A\'',
           'KIFUYO \'B\'',
@@ -7201,12 +6170,7 @@ class LocationVillageData {
         ],
       },
       'LOLWE': {
-        'HAMA': [
-          'MAKINDYE',
-          'SIAMULALA',
-          'SIRO',
-          'WAYASI',
-        ],
+        'HAMA': ['MAKINDYE', 'SIAMULALA', 'SIRO', 'WAYASI'],
         'LOLWE EAST': [
           'BUKANGAWA',
           'BUTANIRA',
@@ -7262,29 +6226,10 @@ class LocationVillageData {
           'NAMAGANDA \'B\'',
           'NAMAGENGE',
         ],
-        'HATUMBA BANJA WARD': [
-          'BUMECHI',
-          'NAHAIGA',
-          'NAMAVUNDU',
-        ],
-        'LUBIRA WARD': [
-          'BUGALI \'A\'',
-          'BUGALI \'B\'',
-          'LUBIRA',
-          'NATIHALU',
-        ],
-        'MAWA WARD': [
-          'BUSIULA',
-          'LUFUDU',
-          'MAAWA',
-          'SIMASE',
-        ],
-        'MUTUMBA NORTH WARD': [
-          'BUDIBA',
-          'HAGULU',
-          'MUTUMBA \'B\'',
-          'NATOHOLO',
-        ],
+        'HATUMBA BANJA WARD': ['BUMECHI', 'NAHAIGA', 'NAMAVUNDU'],
+        'LUBIRA WARD': ['BUGALI \'A\'', 'BUGALI \'B\'', 'LUBIRA', 'NATIHALU'],
+        'MAWA WARD': ['BUSIULA', 'LUFUDU', 'MAAWA', 'SIMASE'],
+        'MUTUMBA NORTH WARD': ['BUDIBA', 'HAGULU', 'MUTUMBA \'B\'', 'NATOHOLO'],
         'MUTUMBA SOUTH WARD': [
           'MUTUMBA \'A\'',
           'MUTUMBA CENTRAL',
@@ -7317,12 +6262,7 @@ class LocationVillageData {
           'NAMAYINGO WEST',
           'NAMAYUNJU',
         ],
-        'NAMBUGU WARD': [
-          'BUWAYE',
-          'BUYINJA',
-          'NAMBUGU',
-          'WALUMBE',
-        ],
+        'NAMBUGU WARD': ['BUWAYE', 'BUYINJA', 'NAMBUGU', 'WALUMBE'],
         'NASINU WARD': [
           'BUNYIKA A',
           'BUNYIKA B',
@@ -7376,17 +6316,8 @@ class LocationVillageData {
     },
     'NAMUTUMBA': {
       'BUGOBI': {
-        'BUWANGA': [
-          'BUWANGA A',
-          'BUWANGA B',
-          'LUGULU',
-          'MAGHANGA',
-        ],
-        'KIBIGO': [
-          'MAKOMA A',
-          'MAKOMA B',
-          'MAKOMA C',
-        ],
+        'BUWANGA': ['BUWANGA A', 'BUWANGA B', 'LUGULU', 'MAGHANGA'],
+        'KIBIGO': ['MAKOMA A', 'MAKOMA B', 'MAKOMA C'],
         'KISIIRO': [
           'ISAMBA',
           'KAMWOKYA',
@@ -7441,12 +6372,7 @@ class LocationVillageData {
           'NSONGWE A',
           'NSONGWE B',
         ],
-        'KIBIGO WARD': [
-          'ASUPASA',
-          'ITENGESA',
-          'KIBIGO A',
-          'KIBIGO B',
-        ],
+        'KIBIGO WARD': ['ASUPASA', 'ITENGESA', 'KIBIGO A', 'KIBIGO B'],
         'TOWN SIDE WARD': [
           'MUGEMULE',
           'NABUNERE',
@@ -7544,18 +6470,8 @@ class LocationVillageData {
           'NAMUSITA A',
           'NAMUSITA B',
         ],
-        'IVUKULA': [
-          'BUKAYE',
-          'BULEMBO',
-          'BULEMBO EAST',
-          'BWIITE',
-          'IVUKULA',
-        ],
-        'KAMUDOKE': [
-          'IDUDI',
-          'KIRANGA',
-          'NALUWERERE',
-        ],
+        'IVUKULA': ['BUKAYE', 'BULEMBO', 'BULEMBO EAST', 'BWIITE', 'IVUKULA'],
+        'KAMUDOKE': ['IDUDI', 'KIRANGA', 'NALUWERERE'],
         'KIMENYULO': [
           'BUNAMAIZI',
           'IGONGERYA',
@@ -7563,13 +6479,7 @@ class LocationVillageData {
           'NABITOVU',
           'NAWAIBETE',
         ],
-        'KIRONGO': [
-          'BUPALUKA',
-          'KIRONGO',
-          'MAWEMBE',
-          'NAISAMULA',
-          'NAWAMBIRI',
-        ],
+        'KIRONGO': ['BUPALUKA', 'KIRONGO', 'MAWEMBE', 'NAISAMULA', 'NAWAMBIRI'],
         'KISEWUZI': [
           'BUDUMBA',
           'BUKALAMAISO',
@@ -7592,17 +6502,8 @@ class LocationVillageData {
         ],
       },
       'IVUKULA TOWN COUNCIL': {
-        'BUGABULA WARD': [
-          'BUGABULA A',
-          'BUGABULA B',
-          'BWIITE',
-          'BWIITE B',
-        ],
-        'GASANI WARD': [
-          'BUDYANGA',
-          'GASANI A',
-          'GASANI B',
-        ],
+        'BUGABULA WARD': ['BUGABULA A', 'BUGABULA B', 'BWIITE', 'BWIITE B'],
+        'GASANI WARD': ['BUDYANGA', 'GASANI A', 'GASANI B'],
         'IVUKULA WARD': [
           'IVUKULA C',
           'IVUKULA CENTRAL',
@@ -7623,12 +6524,7 @@ class LocationVillageData {
           'MPANDE B',
           'MPANDE CENTRAL',
         ],
-        'NAKAZINGA WARD': [
-          'BUGWERE',
-          'BUSUBO',
-          'NAKAZINGA A',
-          'NAKAZINGA B',
-        ],
+        'NAKAZINGA WARD': ['BUGWERE', 'BUSUBO', 'NAKAZINGA A', 'NAKAZINGA B'],
         'NAWANKIMA WARD': [
           'KAMUDOOKE',
           'NALUWERERE A',
@@ -7638,12 +6534,7 @@ class LocationVillageData {
         ],
       },
       'KAGULU': {
-        'BUGIRI': [
-          'BUGIRI',
-          'KASEDE',
-          'NABISWA',
-          'NAKAWA',
-        ],
+        'BUGIRI': ['BUGIRI', 'KASEDE', 'NABISWA', 'NAKAWA'],
         'IRWANIRO': [
           'IRWANIRO',
           'NABIGALATA',
@@ -7659,13 +6550,7 @@ class LocationVillageData {
           'KISYAIKE',
           'NAMUSAYI',
         ],
-        'NABWEYO': [
-          'IZIMBA',
-          'KAWANAMO',
-          'LUZINGA',
-          'NABWEYO',
-          'NAWANTALE',
-        ],
+        'NABWEYO': ['IZIMBA', 'KAWANAMO', 'LUZINGA', 'NABWEYO', 'NAWANTALE'],
       },
       'KIBAALE': {
         'KASOZI': [
@@ -7855,12 +6740,7 @@ class LocationVillageData {
           'KITAAMA',
           'KIZUBA',
         ],
-        'NAKALOKWE': [
-          'BUNYAGWE A',
-          'BUNYAGWE B',
-          'NAKALOKWE',
-          'SEMBERA',
-        ],
+        'NAKALOKWE': ['BUNYAGWE A', 'BUNYAGWE B', 'NAKALOKWE', 'SEMBERA'],
         'NAWANSAGWA': [
           'KAVULE',
           'NAKAGHANO',
@@ -7871,13 +6751,7 @@ class LocationVillageData {
         ],
       },
       'MAGADA': {
-        'BUYANGE': [
-          'BUKASA',
-          'BUYANGE',
-          'KAMWENGE',
-          'KATAKWITE',
-          'NFUKIRANI',
-        ],
+        'BUYANGE': ['BUKASA', 'BUYANGE', 'KAMWENGE', 'KATAKWITE', 'NFUKIRANI'],
         'KATEGERE': [
           'BUKEMBA A',
           'BUKEMBA B',
@@ -8024,17 +6898,8 @@ class LocationVillageData {
           'KASIMIZI',
           'NAKYERE',
         ],
-        'NAMATO': [
-          'NAMATO CENTRAL',
-          'NAMATO EAST',
-          'NAMATO WEST',
-          'NAWAMPITI',
-        ],
-        'NAWAMPANDU': [
-          'NAWAMPANDU A',
-          'NAWAMPANDU B',
-          'NAWAMPANDU C',
-        ],
+        'NAMATO': ['NAMATO CENTRAL', 'NAMATO EAST', 'NAMATO WEST', 'NAWAMPITI'],
+        'NAWAMPANDU': ['NAWAMPANDU A', 'NAWAMPANDU B', 'NAWAMPANDU C'],
       },
       'NAMUTUMBA TOWN COUNCIL': {
         'NAMUTUMBA CENTRAL WARD': [
@@ -8044,16 +6909,8 @@ class LocationVillageData {
           'NAMUTUMBA A',
           'NAMUTUMBA B',
         ],
-        'NAMUTUMBA NORTH WARD': [
-          'BUKAABA',
-          'BULOGO',
-          'KALAMIRA',
-          'MATYAMA',
-        ],
-        'NAMUTUMBA SOUTH WARD': [
-          'BUWAMBI',
-          'ITONKO',
-        ],
+        'NAMUTUMBA NORTH WARD': ['BUKAABA', 'BULOGO', 'KALAMIRA', 'MATYAMA'],
+        'NAMUTUMBA SOUTH WARD': ['BUWAMBI', 'ITONKO'],
       },
       'NANGONDE': {
         'BUWALIRA': [
@@ -8065,17 +6922,8 @@ class LocationVillageData {
           'BUWONGERA',
           'KAKOKOLA',
         ],
-        'IWUNGIRO': [
-          'IWUNGIRO',
-          'KIKALU',
-          'MAKWI',
-        ],
-        'KISEGA': [
-          'BUGAYI',
-          'BUHOLO',
-          'IZINGA',
-          'KISEGA',
-        ],
+        'IWUNGIRO': ['IWUNGIRO', 'KIKALU', 'MAKWI'],
+        'KISEGA': ['BUGAYI', 'BUHOLO', 'IZINGA', 'KISEGA'],
         'LWATAMA': [
           'KABIRA',
           'LWATAMA A',
@@ -8155,12 +7003,7 @@ class LocationVillageData {
           'NAWAIBETE',
           'NKONTE',
         ],
-        'KIVULE': [
-          'BUBINGA',
-          'KIVULE',
-          'NABITULUNTU',
-          'NAWAMPIITI',
-        ],
+        'KIVULE': ['BUBINGA', 'KIVULE', 'NABITULUNTU', 'NAWAMPIITI'],
         'NAKAWUNZO': [
           'BUKAIRU',
           'BULONGO',
@@ -8200,11 +7043,7 @@ class LocationVillageData {
           'MALIGA',
           'MALIGA TRADING CENTRE',
         ],
-        'BUWONGO': [
-          'KATENGEREIRE',
-          'NAIGOMBWA',
-          'SIIRA',
-        ],
+        'BUWONGO': ['KATENGEREIRE', 'NAIGOMBWA', 'SIIRA'],
         'ISEGERO': [
           'BUSEENE',
           'BUWOITO',
@@ -8216,59 +7055,29 @@ class LocationVillageData {
         ],
       },
       'NSINZE TOWN COUNCIL': {
-        'BUKENHE WARD': [
-          'BUKENHE',
-          'GATONGANA',
-          'KIBUKA',
-          'WALUMBE',
-        ],
-        'BUKOLO WARD': [
-          'BUGEMBE',
-          'BUKOLO',
-          'BUSUBO',
-          'WALUTENTE',
-        ],
-        'BUWONGO A WARD': [
-          'BUWONGO A',
-          'CHURCH ZONE',
-          'NABUSIGO',
-        ],
-        'BUWONGO B WARD': [
-          'BUWONGO B',
-          'IBALE',
-          'NABAGISA',
-        ],
-        'BUYUNGA WARD': [
-          'BUYUNGA',
-          'SALIM',
-        ],
-        'NABUKALU WARD': [
-          'KIZUNGU',
-          'NABUKALU A',
-          'NABUKALU B',
-        ],
-        'NAMASERE WARD': [
-          'BABUZE',
-          'KIBOGA',
-          'NAMASERE',
-        ],
+        'BUKENHE WARD': ['BUKENHE', 'GATONGANA', 'KIBUKA', 'WALUMBE'],
+        'BUKOLO WARD': ['BUGEMBE', 'BUKOLO', 'BUSUBO', 'WALUTENTE'],
+        'BUWONGO A WARD': ['BUWONGO A', 'CHURCH ZONE', 'NABUSIGO'],
+        'BUWONGO B WARD': ['BUWONGO B', 'IBALE', 'NABAGISA'],
+        'BUYUNGA WARD': ['BUYUNGA', 'SALIM'],
+        'NABUKALU WARD': ['KIZUNGU', 'NABUKALU A', 'NABUKALU B'],
+        'NAMASERE WARD': ['BABUZE', 'KIBOGA', 'NAMASERE'],
         'NAMAVUNDU WARD': [
           'KYABAZINGA',
           'NAMAVUNDU',
           'NAMAVUNDU CENTRAL',
           'NKOTA',
         ],
-        'NSINZE WARD': [
-          'MUSEREBENDE',
-          'NSINZE',
-          'NSINZE CENTRAL',
-          'YOSIYA',
-        ],
+        'NSINZE WARD': ['MUSEREBENDE', 'NSINZE', 'NSINZE CENTRAL', 'YOSIYA'],
       },
     },
   };
 
-  static List<String> getVillages(String district, String subcounty, String parish) {
+  static List<String> getVillages(
+    String district,
+    String subcounty,
+    String parish,
+  ) {
     return _villageData[district]?[subcounty]?[parish] ?? [];
   }
 }

@@ -7,9 +7,7 @@ class PSAFinancialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Financial Analytics'),
-      ),
+      appBar: AppBar(title: const Text('Financial Analytics')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,10 +32,7 @@ class PSAFinancialScreen extends StatelessWidget {
               child: Text(
                 'Analytics dashboard with earnings trends, revenue reports, and financial insights',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
               ),
             ),
           ],

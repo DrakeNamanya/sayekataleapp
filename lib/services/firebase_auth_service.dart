@@ -47,7 +47,7 @@ class FirebaseAuthService {
       await _auth.verifyPhoneNumber(
         phoneNumber: formattedPhone,
         timeout: const Duration(seconds: 60),
-        
+
         // Auto-verification successful (instant login without OTP)
         verificationCompleted: (PhoneAuthCredential credential) async {
           if (kDebugMode) {
@@ -61,7 +61,7 @@ class FirebaseAuthService {
           if (kDebugMode) {
             debugPrint('❌ Verification failed: ${e.message}');
           }
-          
+
           String errorMessage = 'Verification failed';
           if (e.code == 'invalid-phone-number') {
             errorMessage = 'Invalid phone number format';
@@ -72,7 +72,7 @@ class FirebaseAuthService {
           } else {
             errorMessage = e.message ?? 'Verification failed';
           }
-          
+
           onError(errorMessage);
         },
 
@@ -121,10 +121,14 @@ class FirebaseAuthService {
       );
 
       // Sign in with credential
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
 
       if (kDebugMode) {
-        debugPrint('✅ OTP verified successfully. UID: ${userCredential.user?.uid}');
+        debugPrint(
+          '✅ OTP verified successfully. UID: ${userCredential.user?.uid}',
+        );
       }
 
       return userCredential;
@@ -152,12 +156,18 @@ class FirebaseAuthService {
   }
 
   /// Sign in with phone credential (for auto-verification)
-  Future<UserCredential> signInWithCredential(PhoneAuthCredential credential) async {
+  Future<UserCredential> signInWithCredential(
+    PhoneAuthCredential credential,
+  ) async {
     try {
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       if (kDebugMode) {
-        debugPrint('✅ Signed in with credential. UID: ${userCredential.user?.uid}');
+        debugPrint(
+          '✅ Signed in with credential. UID: ${userCredential.user?.uid}',
+        );
       }
 
       return userCredential;
@@ -183,16 +193,16 @@ class FirebaseAuthService {
   }) async {
     try {
       final userRef = _firestore.collection('users').doc(uid);
-      
+
       // Check if user exists
       final userDoc = await userRef.get();
-      
+
       if (userDoc.exists) {
         // User exists, fetch and return existing user data
         if (kDebugMode) {
           debugPrint('👤 User exists. Fetching data...');
         }
-        
+
         return AppUser.fromFirestore(userDoc.data()!, uid);
       } else {
         // New user, create profile
@@ -203,7 +213,7 @@ class FirebaseAuthService {
         // ✅ FIXED: Use Firebase UID as id field (not generated system ID)
         // Generate system ID for display purposes only
         final systemId = await _generateUserId(role);
-        
+
         // Set profile completion deadline (24 hours from now)
         final profileDeadline = DateTime.now().add(const Duration(hours: 24));
 
@@ -243,11 +253,11 @@ class FirebaseAuthService {
   Future<AppUser?> getUserProfile(String uid) async {
     try {
       final userDoc = await _firestore.collection('users').doc(uid).get();
-      
+
       if (userDoc.exists) {
         return AppUser.fromFirestore(userDoc.data()!, uid);
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) {
@@ -261,9 +271,9 @@ class FirebaseAuthService {
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     try {
       data['updated_at'] = DateTime.now().toIso8601String();
-      
+
       await _firestore.collection('users').doc(uid).update(data);
-      
+
       if (kDebugMode) {
         debugPrint('✅ User profile updated');
       }
@@ -286,10 +296,10 @@ class FirebaseAuthService {
           .get();
 
       final userCount = querySnapshot.docs.length;
-      
+
       // Generate ID: SHG-00001, SME-00001, PSA-00001
-      final userId = '${roleStr}-${(userCount + 1).toString().padLeft(5, '0')}';
-      
+      final userId = '$roleStr-${(userCount + 1).toString().padLeft(5, '0')}';
+
       return userId;
     } catch (e) {
       if (kDebugMode) {
@@ -308,7 +318,7 @@ class FirebaseAuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      
+
       if (kDebugMode) {
         debugPrint('👋 User signed out');
       }
@@ -328,7 +338,7 @@ class FirebaseAuthService {
   String formatPhoneNumber(String phone) {
     // Remove all non-digit characters
     String digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
-    
+
     // Handle different formats
     if (digitsOnly.startsWith('256')) {
       // Already has country code
@@ -349,12 +359,12 @@ class FirebaseAuthService {
   bool isValidUgandaPhone(String phone) {
     // Remove all non-digit characters
     String digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
-    
+
     // Valid formats:
     // - 0712345678 (10 digits starting with 0)
     // - 712345678 (9 digits starting with 7)
     // - 256712345678 (12 digits starting with 256)
-    
+
     if (digitsOnly.length == 10 && digitsOnly.startsWith('0')) {
       return digitsOnly[1] == '7'; // Second digit must be 7
     } else if (digitsOnly.length == 9) {
@@ -362,7 +372,7 @@ class FirebaseAuthService {
     } else if (digitsOnly.length == 12 && digitsOnly.startsWith('256')) {
       return digitsOnly[3] == '7'; // Fourth digit must be 7
     }
-    
+
     return false;
   }
 }

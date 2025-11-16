@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Reusable star rating widget with interactive and read-only modes
-/// 
+///
 /// Usage:
 /// ```dart
 /// // Read-only display
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 ///   rating: 4.5,
 ///   size: 20,
 /// )
-/// 
+///
 /// // Interactive rating input
 /// StarRatingWidget.interactive(
 ///   initialRating: 3.0,
@@ -37,9 +37,9 @@ class StarRatingWidget extends StatefulWidget {
     this.starCount = 5,
     this.mainAxisSize = MainAxisSize.min,
     this.mainAxisAlignment = MainAxisAlignment.start,
-  })  : interactive = false,
-        onRatingChanged = null,
-        allowHalfStars = true;
+  }) : interactive = false,
+       onRatingChanged = null,
+       allowHalfStars = true;
 
   /// Create an interactive star rating input
   const StarRatingWidget.interactive({
@@ -52,8 +52,8 @@ class StarRatingWidget extends StatefulWidget {
     this.starCount = 5,
     this.mainAxisSize = MainAxisSize.min,
     this.mainAxisAlignment = MainAxisAlignment.center,
-  })  : rating = initialRating,
-        interactive = true;
+  }) : rating = initialRating,
+       interactive = true;
 
   @override
   State<StarRatingWidget> createState() => _StarRatingWidgetState();
@@ -113,14 +113,12 @@ class _StarRatingWidgetState extends State<StarRatingWidget> {
       }
     } else {
       // Full stars only
-      iconData = starValue <= _currentRating.round() ? Icons.star : Icons.star_border;
+      iconData = starValue <= _currentRating.round()
+          ? Icons.star
+          : Icons.star_border;
     }
 
-    return Icon(
-      iconData,
-      color: widget.color,
-      size: widget.size,
-    );
+    return Icon(iconData, color: widget.color, size: widget.size);
   }
 
   Widget _buildInteractiveStar(int index) {

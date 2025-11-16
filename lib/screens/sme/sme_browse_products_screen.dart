@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/product.dart';
 import '../../models/product_with_farmer.dart';
 import '../../models/product_with_rating.dart';
-import '../../models/farmer_rating.dart';
 import '../../models/browse_filter.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
@@ -27,25 +26,28 @@ class SMEBrowseProductsScreen extends StatefulWidget {
   const SMEBrowseProductsScreen({super.key});
 
   @override
-  State<SMEBrowseProductsScreen> createState() => _SMEBrowseProductsScreenState();
+  State<SMEBrowseProductsScreen> createState() =>
+      _SMEBrowseProductsScreenState();
 }
 
 class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   final ProductService _productService = ProductService();
-  final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
+  final ProductWithFarmerService _productWithFarmerService =
+      ProductWithFarmerService();
   final FavoriteService _favoriteService = FavoriteService();
   final RatingService _ratingService = RatingService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   ProductCategory? _selectedCategory;
   String _searchQuery = '';
-  bool _sortByDistance = true;  // Default to sorting by distance
-  String _sortBy = 'distance';  // 'distance', 'rating', 'price_low', 'price_high'
-  Set<String> _favoriteProductIds = {};  // Track favorite products
-  bool _isSearching = false;  // Track if search bar is active
-  BrowseFilter _activeFilter = const BrowseFilter();  // Active filters
-  ViewMode _viewMode = ViewMode.grid;  // Current view mode
-  
+  final bool _sortByDistance = true; // Default to sorting by distance
+  String _sortBy =
+      'distance'; // 'distance', 'rating', 'price_low', 'price_high'
+  Set<String> _favoriteProductIds = {}; // Track favorite products
+  bool _isSearching = false; // Track if search bar is active
+  BrowseFilter _activeFilter = const BrowseFilter(); // Active filters
+  ViewMode _viewMode = ViewMode.grid; // Current view mode
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +72,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userId = authProvider.currentUser?.id;
     if (userId != null) {
-      final favoriteIds = await _favoriteService.getUserFavoriteProductIds(userId);
+      final favoriteIds = await _favoriteService.getUserFavoriteProductIds(
+        userId,
+      );
       setState(() {
         _favoriteProductIds = favoriteIds.toSet();
       });
@@ -94,12 +98,18 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
         });
         break;
       case 'price_low':
-        products.sort((a, b) => 
-          a.productWithFarmer.product.price.compareTo(b.productWithFarmer.product.price));
+        products.sort(
+          (a, b) => a.productWithFarmer.product.price.compareTo(
+            b.productWithFarmer.product.price,
+          ),
+        );
         break;
       case 'price_high':
-        products.sort((a, b) => 
-          b.productWithFarmer.product.price.compareTo(a.productWithFarmer.product.price));
+        products.sort(
+          (a, b) => b.productWithFarmer.product.price.compareTo(
+            a.productWithFarmer.product.price,
+          ),
+        );
         break;
       case 'distance':
       default:
@@ -112,7 +122,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching ? _buildSearchField() : const Text('Browse Products'),
+        title: _isSearching
+            ? _buildSearchField()
+            : const Text('Browse Products'),
         centerTitle: !_isSearching,
         elevation: 0,
         leading: _isSearching
@@ -142,12 +154,20 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                 value: 'distance',
                 child: Row(
                   children: [
-                    Icon(Icons.location_on, size: 18, 
-                      color: _sortBy == 'distance' ? AppTheme.primaryColor : Colors.grey),
+                    Icon(
+                      Icons.location_on,
+                      size: 18,
+                      color: _sortBy == 'distance'
+                          ? AppTheme.primaryColor
+                          : Colors.grey,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Distance', 
+                    Text(
+                      'Distance',
                       style: TextStyle(
-                        fontWeight: _sortBy == 'distance' ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _sortBy == 'distance'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -157,12 +177,20 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                 value: 'rating',
                 child: Row(
                   children: [
-                    Icon(Icons.star, size: 18, 
-                      color: _sortBy == 'rating' ? AppTheme.primaryColor : Colors.grey),
+                    Icon(
+                      Icons.star,
+                      size: 18,
+                      color: _sortBy == 'rating'
+                          ? AppTheme.primaryColor
+                          : Colors.grey,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Rating', 
+                    Text(
+                      'Rating',
                       style: TextStyle(
-                        fontWeight: _sortBy == 'rating' ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _sortBy == 'rating'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -172,12 +200,20 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                 value: 'price_low',
                 child: Row(
                   children: [
-                    Icon(Icons.arrow_upward, size: 18, 
-                      color: _sortBy == 'price_low' ? AppTheme.primaryColor : Colors.grey),
+                    Icon(
+                      Icons.arrow_upward,
+                      size: 18,
+                      color: _sortBy == 'price_low'
+                          ? AppTheme.primaryColor
+                          : Colors.grey,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Price: Low to High', 
+                    Text(
+                      'Price: Low to High',
                       style: TextStyle(
-                        fontWeight: _sortBy == 'price_low' ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _sortBy == 'price_low'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -187,12 +223,20 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                 value: 'price_high',
                 child: Row(
                   children: [
-                    Icon(Icons.arrow_downward, size: 18, 
-                      color: _sortBy == 'price_high' ? AppTheme.primaryColor : Colors.grey),
+                    Icon(
+                      Icons.arrow_downward,
+                      size: 18,
+                      color: _sortBy == 'price_high'
+                          ? AppTheme.primaryColor
+                          : Colors.grey,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Price: High to Low', 
+                    Text(
+                      'Price: High to Low',
                       style: TextStyle(
-                        fontWeight: _sortBy == 'price_high' ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _sortBy == 'price_high'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -246,8 +290,12 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
             ),
           if (!_isSearching)
             IconButton(
-              icon: Icon(_viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view),
-              tooltip: _viewMode == ViewMode.grid ? 'Switch to list view' : 'Switch to grid view',
+              icon: Icon(
+                _viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view,
+              ),
+              tooltip: _viewMode == ViewMode.grid
+                  ? 'Switch to list view'
+                  : 'Switch to grid view',
               onPressed: _toggleViewMode,
             ),
           if (_isSearching && _searchQuery.isNotEmpty)
@@ -270,7 +318,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
               stream: _productService.streamAllAvailableProducts(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
+                  return ProductSkeletonLoader(
+                    isListView: _viewMode == ViewMode.list,
+                  );
                 }
 
                 if (snapshot.hasError) {
@@ -278,7 +328,11 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
                         Text('Error loading products: ${snapshot.error}'),
                         const SizedBox(height: 16),
@@ -295,16 +349,22 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
 
                 // Apply category filter
                 if (_selectedCategory != null) {
-                  products = products.where((p) => p.category == _selectedCategory).toList();
+                  products = products
+                      .where((p) => p.category == _selectedCategory)
+                      .toList();
                 }
 
                 // Apply search filter (product name, description)
                 if (_searchQuery.isNotEmpty) {
                   final query = _searchQuery.toLowerCase();
-                  products = products.where((p) =>
-                      p.name.toLowerCase().contains(query) ||
-                      (p.description?.toLowerCase().contains(query) ?? false)
-                  ).toList();
+                  products = products
+                      .where(
+                        (p) =>
+                            p.name.toLowerCase().contains(query) ||
+                            (p.description?.toLowerCase().contains(query) ??
+                                false),
+                      )
+                      .toList();
                 }
 
                 if (products.isEmpty) {
@@ -312,18 +372,28 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_basket_outlined, size: 80, color: Colors.grey[400]),
+                        Icon(
+                          Icons.shopping_basket_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           _searchQuery.isNotEmpty
                               ? 'No products match your search'
                               : 'No products available',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Check back later for new products',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
                         ),
                       ],
                     ),
@@ -331,17 +401,24 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                 }
 
                 // Load products with farmer details, distance, and ratings
-                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final authProvider = Provider.of<AuthProvider>(
+                  context,
+                  listen: false,
+                );
                 final buyerLocation = authProvider.currentUser?.location;
 
                 return FutureBuilder<List<ProductWithFarmer>>(
-                  future: _productWithFarmerService.getProductsWithFarmersAndDistance(
-                    products: products,
-                    buyerLocation: _sortByDistance ? buyerLocation : null,
-                  ),
+                  future: _productWithFarmerService
+                      .getProductsWithFarmersAndDistance(
+                        products: products,
+                        buyerLocation: _sortByDistance ? buyerLocation : null,
+                      ),
                   builder: (context, farmerSnapshot) {
-                    if (farmerSnapshot.connectionState == ConnectionState.waiting) {
-                      return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
+                    if (farmerSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return ProductSkeletonLoader(
+                        isListView: _viewMode == ViewMode.list,
+                      );
                     }
 
                     var productsWithFarmers = farmerSnapshot.data ?? [];
@@ -351,13 +428,23 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       final query = _searchQuery.toLowerCase();
                       productsWithFarmers = productsWithFarmers.where((pwf) {
                         // Check farmer name
-                        final farmerNameMatch = pwf.farmer.name.toLowerCase().contains(query);
+                        final farmerNameMatch = pwf.farmer.name
+                            .toLowerCase()
+                            .contains(query);
                         // Check product name (already filtered above, but double-check)
-                        final productNameMatch = pwf.product.name.toLowerCase().contains(query);
+                        final productNameMatch = pwf.product.name
+                            .toLowerCase()
+                            .contains(query);
                         // Check description
-                        final descriptionMatch = pwf.product.description?.toLowerCase().contains(query) ?? false;
-                        
-                        return farmerNameMatch || productNameMatch || descriptionMatch;
+                        final descriptionMatch =
+                            pwf.product.description?.toLowerCase().contains(
+                              query,
+                            ) ??
+                            false;
+
+                        return farmerNameMatch ||
+                            productNameMatch ||
+                            descriptionMatch;
                       }).toList();
                     }
 
@@ -366,20 +453,30 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
+                            Icon(
+                              Icons.search_off,
+                              size: 80,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               _searchQuery.isNotEmpty
-                                  ? 'No results found for "${_searchQuery}"'
+                                  ? 'No results found for "$_searchQuery"'
                                   : 'Unable to load product details',
-                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             if (_searchQuery.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Text(
                                 'Try different keywords or check spelling',
-                                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
@@ -399,62 +496,73 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                     // Load ratings for all farmers
                     // Ratings display temporarily disabled
                     var productsWithRatings = productsWithFarmers
-                        .map((pwf) => ProductWithRating(
-                              productWithFarmer: pwf,
-                              farmerRating: null, // Rating display disabled
-                            ))
+                        .map(
+                          (pwf) => ProductWithRating(
+                            productWithFarmer: pwf,
+                            farmerRating: null, // Rating display disabled
+                          ),
+                        )
                         .toList();
 
-                        // Apply active filters
-                        productsWithRatings = _applyFilters(productsWithRatings);
+                    // Apply active filters
+                    productsWithRatings = _applyFilters(productsWithRatings);
 
-                        // Sort products based on selected sort option
-                        _sortProducts(productsWithRatings);
+                    // Sort products based on selected sort option
+                    _sortProducts(productsWithRatings);
 
-                        // Get featured products (top 5 highly rated with sufficient reviews)
-                        final featuredProducts = _getFeaturedProducts(productsWithRatings);
+                    // Get featured products (top 5 highly rated with sufficient reviews)
+                    final featuredProducts = _getFeaturedProducts(
+                      productsWithRatings,
+                    );
 
-                        // Conditional rendering based on view mode
-                        return CustomScrollView(
-                          slivers: [
-                            // Hero Carousel
-                            if (featuredProducts.isNotEmpty)
-                              SliverToBoxAdapter(
-                                child: HeroCarousel(featuredProducts: featuredProducts),
-                              ),
-                            
-                            // Product Grid or List
-                            _viewMode == ViewMode.grid
-                                ? SliverPadding(
-                                    padding: const EdgeInsets.all(16),
-                                    sliver: SliverGrid(
-                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    // Conditional rendering based on view mode
+                    return CustomScrollView(
+                      slivers: [
+                        // Hero Carousel
+                        if (featuredProducts.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: HeroCarousel(
+                              featuredProducts: featuredProducts,
+                            ),
+                          ),
+
+                        // Product Grid or List
+                        _viewMode == ViewMode.grid
+                            ? SliverPadding(
+                                padding: const EdgeInsets.all(16),
+                                sliver: SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: 2,
                                         childAspectRatio: 0.60,
                                         crossAxisSpacing: 12,
                                         mainAxisSpacing: 12,
                                       ),
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          return _buildEnhancedProductCard(productsWithRatings[index]);
-                                        },
-                                        childCount: productsWithRatings.length,
-                                      ),
-                                    ),
-                                  )
-                                : SliverPadding(
-                                    padding: const EdgeInsets.all(16),
-                                    sliver: SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          return _buildListViewCard(productsWithRatings[index]);
-                                        },
-                                        childCount: productsWithRatings.length,
-                                      ),
-                                    ),
-                                  ),
-                          ],
-                        );
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    index,
+                                  ) {
+                                    return _buildEnhancedProductCard(
+                                      productsWithRatings[index],
+                                    );
+                                  }, childCount: productsWithRatings.length),
+                                ),
+                              )
+                            : SliverPadding(
+                                padding: const EdgeInsets.all(16),
+                                sliver: SliverList(
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    index,
+                                  ) {
+                                    return _buildListViewCard(
+                                      productsWithRatings[index],
+                                    );
+                                  }, childCount: productsWithRatings.length),
+                                ),
+                              ),
+                      ],
+                    );
                   },
                 );
               },
@@ -509,7 +617,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
 
   Widget _buildProductCard(Product product) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -520,7 +628,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
           Expanded(
             flex: 3,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Stack(
                 children: [
                   // ✅ Only load images from Firebase (no placeholders)
@@ -536,12 +646,19 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.image_not_supported, size: 48, color: Colors.grey[400]),
+                                  Icon(
+                                    Icons.image_not_supported,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'Image unavailable',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -553,12 +670,20 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inventory_2, size: 48, color: Colors.grey[400]),
+                              Icon(
+                                Icons.inventory_2,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
                               const SizedBox(height: 8),
                               Text(
                                 product.name,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -582,7 +707,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
               ),
             ),
           ),
-          
+
           // Product Info
           Expanded(
             flex: 2,
@@ -608,10 +733,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       // Farmer name - get from farmId (this is the user ID)
                       Text(
                         'Farmer', // We don't have farmer name in Product model
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -626,7 +748,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       ),
                     ],
                   ),
-                  
+
                   // Add to Cart Button
                   SizedBox(
                     width: double.infinity,
@@ -670,7 +792,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     final farmer = productWithFarmer.farmer;
     final rating = productWithRating.farmerRating;
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+
     return InkWell(
       onTap: () {
         // Navigate to product detail screen
@@ -686,383 +808,460 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image with Distance Badge
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Stack(
-                children: [
-                  // ✅ Only load images from Firebase (no placeholders)
-                  product.images.isNotEmpty
-                      ? Image.network(
-                          product.images.first,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image with Distance Badge
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    // ✅ Only load images from Firebase (no placeholders)
+                    product.images.isNotEmpty
+                        ? Image.network(
+                            product.images.first,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.image_not_supported,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Image unavailable',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: Colors.grey[200],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.inventory_2,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  product.name,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                    // PSA Badge (top left)
+                    if (farmer.role == UserRole.psa)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'PSA',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Distance Badge
+                    if (productWithFarmer.distanceKm != null)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: productWithFarmer.isLocal
+                                ? Colors.green
+                                : productWithFarmer.isNearby
+                                ? Colors.orange
+                                : Colors.blue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.location_on,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                productWithFarmer.distanceText,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Favorite Heart Button (adjust position if PSA)
+                    Positioned(
+                      top: farmer.role == UserRole.psa ? 44 : 8,
+                      left: 8,
+                      child: _buildFavoriteButton(product),
+                    ),
+                    // Out of Stock Overlay
+                    if (product.isOutOfStock)
+                      Container(
+                        color: Colors.black54,
+                        child: const Center(
+                          child: Text(
+                            'OUT OF STOCK',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Product and Farmer Info
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+
+                    // System ID and Subcategory badges
+                    if (product.systemId != null || product.subcategory != null)
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 2,
+                        children: [
+                          if (product.systemId != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(
+                                  color: Colors.blue[200]!,
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.image_not_supported, size: 48, color: Colors.grey[400]),
-                                  const SizedBox(height: 8),
+                                  Icon(
+                                    Icons.qr_code_2,
+                                    size: 8,
+                                    color: Colors.blue[700],
+                                  ),
+                                  const SizedBox(width: 2),
                                   Text(
-                                    'Image unavailable',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                    product.systemId!,
+                                    style: TextStyle(
+                                      fontSize: 7,
+                                      color: Colors.blue[900],
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'monospace',
+                                    ),
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.inventory_2, size: 48, color: Colors.grey[400]),
-                              const SizedBox(height: 8),
-                              Text(
-                                product.name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.w500),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                  // PSA Badge (top left)
-                  if (farmer.role == UserRole.psa)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.verified, size: 12, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text(
-                              'PSA',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  // Distance Badge
-                  if (productWithFarmer.distanceKm != null)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: productWithFarmer.isLocal
-                              ? Colors.green
-                              : productWithFarmer.isNearby
-                                  ? Colors.orange
-                                  : Colors.blue,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on, size: 12, color: Colors.white),
-                            const SizedBox(width: 2),
-                            Text(
-                              productWithFarmer.distanceText,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                          if (product.subcategory != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  // Favorite Heart Button (adjust position if PSA)
-                  Positioned(
-                    top: farmer.role == UserRole.psa ? 44 : 8,
-                    left: 8,
-                    child: _buildFavoriteButton(product),
-                  ),
-                  // Out of Stock Overlay
-                  if (product.isOutOfStock)
-                    Container(
-                      color: Colors.black54,
-                      child: const Center(
-                        child: Text(
-                          'OUT OF STOCK',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Product and Farmer Info
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Name
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  // System ID and Subcategory badges
-                  if (product.systemId != null || product.subcategory != null)
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 2,
-                      children: [
-                        if (product.systemId != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(3),
-                              border: Border.all(color: Colors.blue[200]!, width: 0.5),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.qr_code_2, size: 8, color: Colors.blue[700]),
-                                const SizedBox(width: 2),
-                                Text(
-                                  product.systemId!,
-                                  style: TextStyle(
-                                    fontSize: 7,
-                                    color: Colors.blue[900],
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'monospace',
-                                  ),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(
+                                  color: Colors.green[200]!,
+                                  width: 0.5,
                                 ),
-                              ],
-                            ),
-                          ),
-                        if (product.subcategory != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(3),
-                              border: Border.all(color: Colors.green[200]!, width: 0.5),
-                            ),
-                            child: Text(
-                              product.subcategory!,
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.green[900],
-                                fontWeight: FontWeight.w500,
+                              ),
+                              child: Text(
+                                product.subcategory!,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.green[900],
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  if (product.systemId != null || product.subcategory != null)
-                    const SizedBox(height: 2),
-                  
-                  // Farmer/Supplier Name (show business name for PSA)
-                  Row(
-                    children: [
-                      Icon(
-                        farmer.role == UserRole.psa ? Icons.business : Icons.person, 
-                        size: 12, 
-                        color: Colors.grey,
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          farmer.role == UserRole.psa && product.businessName != null
-                              ? product.businessName!
-                              : farmer.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[700],
-                            fontWeight: farmer.role == UserRole.psa ? FontWeight.w600 : FontWeight.normal,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  
-                  // Rating Display
-                  if (rating != null && rating.totalRatings > 0)
+                    if (product.systemId != null || product.subcategory != null)
+                      const SizedBox(height: 2),
+
+                    // Farmer/Supplier Name (show business name for PSA)
                     Row(
                       children: [
-                        _buildStarRating(rating.averageRating),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${rating.totalRatings})',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
+                        Icon(
+                          farmer.role == UserRole.psa
+                              ? Icons.business
+                              : Icons.person,
+                          size: 12,
+                          color: Colors.grey,
                         ),
                         const SizedBox(width: 4),
-                        // Highly Rated Badge
-                        if (rating.isHighlyRated && rating.hasSufficientRatings)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.amber[100],
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.amber[700]!, width: 0.5),
+                        Expanded(
+                          child: Text(
+                            farmer.role == UserRole.psa &&
+                                    product.businessName != null
+                                ? product.businessName!
+                                : farmer.name,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: farmer.role == UserRole.psa
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.verified, size: 10, color: Colors.amber[700]),
-                                const SizedBox(width: 2),
-                                Text(
-                                  'Top',
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber[900],
-                                  ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+
+                    // Rating Display
+                    if (rating != null && rating.totalRatings > 0)
+                      Row(
+                        children: [
+                          _buildStarRating(rating.averageRating),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${rating.totalRatings})',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // Highly Rated Badge
+                          if (rating.isHighlyRated &&
+                              rating.hasSufficientRatings)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber[100],
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.amber[700]!,
+                                  width: 0.5,
                                 ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.verified,
+                                    size: 10,
+                                    color: Colors.amber[700],
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'Top',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber[900],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (rating != null && rating.totalRatings > 0)
+                      const SizedBox(height: 2),
+
+                    // District
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_city,
+                          size: 12,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            productWithFarmer.farmerDistrict,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Stock Info
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.inventory_2,
+                          size: 12,
+                          color: product.isLowStock
+                              ? Colors.orange
+                              : Colors.green,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Stock: ${product.stockQuantity} ${product.unit}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: product.isLowStock
+                                ? Colors.orange
+                                : Colors.green,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Price
+                    Text(
+                      'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Action Buttons Row
+                    Row(
+                      children: [
+                        // Call Button
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _callFarmer(farmer.phone),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
+                              minimumSize: const Size(0, 32),
+                            ),
+                            child: const Icon(Icons.phone, size: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Add to Cart Button
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: product.isOutOfStock
+                                ? null
+                                : () => _addToCart(product, cartProvider),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
+                              minimumSize: const Size(0, 32),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_shopping_cart, size: 14),
+                                SizedBox(width: 4),
+                                Text('Add', style: TextStyle(fontSize: 12)),
                               ],
                             ),
                           ),
+                        ),
                       ],
                     ),
-                  if (rating != null && rating.totalRatings > 0)
-                    const SizedBox(height: 2),
-                  
-                  // District
-                  Row(
-                    children: [
-                      const Icon(Icons.location_city, size: 12, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          productWithFarmer.farmerDistrict,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  // Stock Info
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.inventory_2,
-                        size: 12,
-                        color: product.isLowStock ? Colors.orange : Colors.green,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Stock: ${product.stockQuantity} ${product.unit}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: product.isLowStock ? Colors.orange : Colors.green,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  // Price
-                  Text(
-                    'UGX ${NumberFormat('#,###').format(product.price)}/${product.unit}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  const Spacer(),
-                  
-                  // Action Buttons Row
-                  Row(
-                    children: [
-                      // Call Button
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _callFarmer(farmer.phone),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                            minimumSize: const Size(0, 32),
-                          ),
-                          child: const Icon(Icons.phone, size: 16),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Add to Cart Button
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: product.isOutOfStock
-                              ? null
-                              : () => _addToCart(product, cartProvider),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                            minimumSize: const Size(0, 32),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_shopping_cart, size: 14),
-                              SizedBox(width: 4),
-                              Text('Add', style: TextStyle(fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -1073,7 +1272,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     final farmer = productWithFarmer.farmer;
     final rating = productWithRating.farmerRating;
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -1106,7 +1305,11 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                             width: 120,
                             height: 120,
                             color: Colors.grey[200],
-                            child: const Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                           );
                         },
                       )
@@ -1114,11 +1317,15 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         width: 120,
                         height: 120,
                         color: Colors.grey[200],
-                        child: const Icon(Icons.image, size: 40, color: Colors.grey),
+                        child: const Icon(
+                          Icons.image,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
                       ),
               ),
               const SizedBox(width: 12),
-              
+
               // Product Details
               Expanded(
                 child: Column(
@@ -1135,7 +1342,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Product ID and Subcategory
                     Wrap(
                       spacing: 8,
@@ -1143,16 +1350,26 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       children: [
                         if (product.systemId != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.blue[200]!, width: 0.5),
+                              border: Border.all(
+                                color: Colors.blue[200]!,
+                                width: 0.5,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.qr_code_2, size: 10, color: Colors.blue[700]),
+                                Icon(
+                                  Icons.qr_code_2,
+                                  size: 10,
+                                  color: Colors.blue[700],
+                                ),
                                 const SizedBox(width: 3),
                                 Text(
                                   product.systemId!,
@@ -1168,11 +1385,17 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                           ),
                         if (product.subcategory != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green[50],
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.green[200]!, width: 0.5),
+                              border: Border.all(
+                                color: Colors.green[200]!,
+                                width: 0.5,
+                              ),
                             ),
                             child: Text(
                               product.subcategory!,
@@ -1186,25 +1409,30 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Farmer/Supplier Name with PSA badge
                     Row(
                       children: [
                         Icon(
-                          farmer.role == UserRole.psa ? Icons.business : Icons.person, 
-                          size: 14, 
+                          farmer.role == UserRole.psa
+                              ? Icons.business
+                              : Icons.person,
+                          size: 14,
                           color: Colors.grey,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            farmer.role == UserRole.psa && product.businessName != null
+                            farmer.role == UserRole.psa &&
+                                    product.businessName != null
                                 ? product.businessName!
                                 : farmer.name,
                             style: TextStyle(
-                              fontSize: 13, 
+                              fontSize: 13,
                               color: Colors.grey[700],
-                              fontWeight: farmer.role == UserRole.psa ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: farmer.role == UserRole.psa
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1213,7 +1441,10 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         if (farmer.role == UserRole.psa) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.purple,
                               borderRadius: BorderRadius.circular(8),
@@ -1231,7 +1462,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Rating
                     if (rating != null && rating.totalRatings > 0)
                       Row(
@@ -1240,21 +1471,35 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                           const SizedBox(width: 4),
                           Text(
                             '(${rating.totalRatings})',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                           ),
-                          if (rating.isHighlyRated && rating.hasSufficientRatings) ...[
+                          if (rating.isHighlyRated &&
+                              rating.hasSufficientRatings) ...[
                             const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.amber[100],
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: Colors.amber[700]!, width: 0.5),
+                                border: Border.all(
+                                  color: Colors.amber[700]!,
+                                  width: 0.5,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.verified, size: 12, color: Colors.amber[700]),
+                                  Icon(
+                                    Icons.verified,
+                                    size: 12,
+                                    color: Colors.amber[700],
+                                  ),
                                   const SizedBox(width: 3),
                                   Text(
                                     'Top',
@@ -1271,21 +1516,28 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         ],
                       ),
                     const SizedBox(height: 4),
-                    
+
                     // Distance
                     if (productWithFarmer.distanceKm != null)
                       Row(
                         children: [
-                          const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                          const Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${productWithFarmer.distanceKm!.toStringAsFixed(1)} km away',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                           ),
                         ],
                       ),
                     const SizedBox(height: 8),
-                    
+
                     // Price and Stock
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1303,20 +1555,28 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                             ),
                             Text(
                               'per ${product.unit}',
-                              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
-                        
+
                         // Add to Cart Button
                         ElevatedButton.icon(
                           onPressed: product.isOutOfStock
                               ? null
                               : () => _addToCart(product, cartProvider),
                           icon: const Icon(Icons.add_shopping_cart, size: 18),
-                          label: Text(product.isOutOfStock ? 'Out of Stock' : 'Add'),
+                          label: Text(
+                            product.isOutOfStock ? 'Out of Stock' : 'Add',
+                          ),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                       ],
@@ -1335,7 +1595,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   Widget _buildStarRating(double rating, {double size = 12}) {
     final fullStars = rating.floor();
     final hasHalfStar = (rating - fullStars) >= 0.5;
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
@@ -1353,7 +1613,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   /// Build favorite button (heart icon)
   Widget _buildFavoriteButton(Product product) {
     final isFavorite = _favoriteProductIds.contains(product.id);
-    
+
     return GestureDetector(
       onTap: () => _toggleFavorite(product),
       child: Container(
@@ -1409,9 +1669,7 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              nowFavorite
-                  ? '❤️ Added to favorites'
-                  : 'Removed from favorites',
+              nowFavorite ? '❤️ Added to favorites' : 'Removed from favorites',
             ),
             backgroundColor: nowFavorite ? Colors.green : Colors.grey[700],
             duration: const Duration(seconds: 1),
@@ -1420,9 +1678,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -1434,9 +1692,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot call $phone')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot call $phone')));
       }
     }
   }
@@ -1451,7 +1709,8 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
           product,
           quantity: quantity,
           farmerId: product.farmId,
-          farmerName: 'Farmer', // We'll need to fetch this from users collection
+          farmerName:
+              'Farmer', // We'll need to fetch this from users collection
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1541,7 +1800,10 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   /// Save view preference to storage
   Future<void> _saveViewPreference() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('browse_view_mode', _viewMode == ViewMode.grid ? 'grid' : 'list');
+    await prefs.setString(
+      'browse_view_mode',
+      _viewMode == ViewMode.grid ? 'grid' : 'list',
+    );
   }
 
   /// Apply filters to products
@@ -1551,7 +1813,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
     // Category filter
     if (_activeFilter.selectedCategories.isNotEmpty) {
       filtered = filtered.where((p) {
-        return _activeFilter.selectedCategories.contains(p.productWithFarmer.product.category.name);
+        return _activeFilter.selectedCategories.contains(
+          p.productWithFarmer.product.category.name,
+        );
       }).toList();
     }
 
@@ -1597,14 +1861,16 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
   }
 
   /// Get featured products (highly rated with sufficient reviews)
-  List<ProductWithRating> _getFeaturedProducts(List<ProductWithRating> products) {
+  List<ProductWithRating> _getFeaturedProducts(
+    List<ProductWithRating> products,
+  ) {
     // Filter products that are highly rated and have sufficient reviews
     final featured = products.where((p) {
       final rating = p.farmerRating;
-      return rating != null && 
-             rating.isHighlyRated && 
-             rating.hasSufficientRatings &&
-             !p.productWithFarmer.product.isOutOfStock;
+      return rating != null &&
+          rating.isHighlyRated &&
+          rating.hasSufficientRatings &&
+          !p.productWithFarmer.product.isOutOfStock;
     }).toList();
 
     // Sort by rating and review count
@@ -1613,11 +1879,11 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
       final ratingB = b.farmerRating?.averageRating ?? 0;
       final countA = a.farmerRating?.totalRatings ?? 0;
       final countB = b.farmerRating?.totalRatings ?? 0;
-      
+
       // First compare by rating
       final ratingComparison = ratingB.compareTo(ratingA);
       if (ratingComparison != 0) return ratingComparison;
-      
+
       // If ratings are equal, compare by review count
       return countB.compareTo(countA);
     });
@@ -1651,9 +1917,13 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      final newCategories = Set<String>.from(_activeFilter.selectedCategories);
+                      final newCategories = Set<String>.from(
+                        _activeFilter.selectedCategories,
+                      );
                       newCategories.remove(categoryName);
-                      _activeFilter = _activeFilter.copyWith(selectedCategories: newCategories);
+                      _activeFilter = _activeFilter.copyWith(
+                        selectedCategories: newCategories,
+                      );
                     });
                   },
                   backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -1663,16 +1933,18 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
             }),
 
             // Price chip
-            if (_activeFilter.minPrice != null || _activeFilter.maxPrice != null)
+            if (_activeFilter.minPrice != null ||
+                _activeFilter.maxPrice != null)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
                   label: Text(
-                    _activeFilter.minPrice != null && _activeFilter.maxPrice != null
+                    _activeFilter.minPrice != null &&
+                            _activeFilter.maxPrice != null
                         ? 'UGX ${_activeFilter.minPrice!.toInt()}K-${_activeFilter.maxPrice!.toInt()}K'
                         : _activeFilter.minPrice != null
-                            ? '≥ UGX ${_activeFilter.minPrice!.toInt()}K'
-                            : '≤ UGX ${_activeFilter.maxPrice!.toInt()}K',
+                        ? '≥ UGX ${_activeFilter.minPrice!.toInt()}K'
+                        : '≤ UGX ${_activeFilter.maxPrice!.toInt()}K',
                     style: const TextStyle(fontSize: 12),
                   ),
                   deleteIcon: const Icon(Icons.close, size: 16),
@@ -1693,11 +1965,16 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('≤ ${_activeFilter.maxDistance!.toInt()} km', style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    '≤ ${_activeFilter.maxDistance!.toInt()} km',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(clearMaxDistance: true);
+                      _activeFilter = _activeFilter.copyWith(
+                        clearMaxDistance: true,
+                      );
                     });
                   },
                   backgroundColor: Colors.blue.withValues(alpha: 0.1),
@@ -1709,11 +1986,16 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('≥ ${_activeFilter.minRating!.toStringAsFixed(1)}★', style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    '≥ ${_activeFilter.minRating!.toStringAsFixed(1)}★',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(clearMinRating: true);
+                      _activeFilter = _activeFilter.copyWith(
+                        clearMinRating: true,
+                      );
                     });
                   },
                   backgroundColor: Colors.amber.withValues(alpha: 0.2),
@@ -1729,7 +2011,9 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(inStockOnly: false);
+                      _activeFilter = _activeFilter.copyWith(
+                        inStockOnly: false,
+                      );
                     });
                   },
                   backgroundColor: Colors.orange.withValues(alpha: 0.1),
@@ -1803,19 +2087,27 @@ class _AddToCartDialogState extends State<_AddToCartDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                onPressed: _quantity > 1
+                    ? () => setState(() => _quantity--)
+                    : null,
                 icon: const Icon(Icons.remove_circle_outline),
                 iconSize: 32,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '$_quantity ${widget.product.unit}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(

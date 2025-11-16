@@ -7,7 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 class PhotoGalleryViewer extends StatefulWidget {
   final List<String> photoUrls;
   final int initialIndex;
-  
+
   const PhotoGalleryViewer({
     super.key,
     required this.photoUrls,
@@ -70,14 +70,13 @@ class _PhotoGalleryViewerState extends State<PhotoGalleryViewer> {
             child: CircularProgressIndicator(
               value: event == null
                   ? 0
-                  : event.cumulativeBytesLoaded / (event.expectedTotalBytes ?? 1),
+                  : event.cumulativeBytesLoaded /
+                        (event.expectedTotalBytes ?? 1),
               color: Colors.white,
             ),
           ),
         ),
-        backgroundDecoration: const BoxDecoration(
-          color: Colors.black,
-        ),
+        backgroundDecoration: const BoxDecoration(color: Colors.black),
         pageController: _pageController,
         onPageChanged: (index) {
           setState(() {
@@ -93,7 +92,7 @@ class _PhotoGalleryViewerState extends State<PhotoGalleryViewer> {
 class PhotoThumbnailGrid extends StatelessWidget {
   final List<String> photoUrls;
   final int maxDisplay;
-  
+
   const PhotoThumbnailGrid({
     super.key,
     required this.photoUrls,
@@ -104,7 +103,9 @@ class PhotoThumbnailGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     if (photoUrls.isEmpty) return const SizedBox.shrink();
 
-    final displayCount = photoUrls.length > maxDisplay ? maxDisplay : photoUrls.length;
+    final displayCount = photoUrls.length > maxDisplay
+        ? maxDisplay
+        : photoUrls.length;
     final hasMore = photoUrls.length > maxDisplay;
 
     return Wrap(
@@ -112,7 +113,7 @@ class PhotoThumbnailGrid extends StatelessWidget {
       runSpacing: 8,
       children: List.generate(displayCount, (index) {
         final isLast = index == displayCount - 1 && hasMore;
-        
+
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -150,7 +151,7 @@ class PhotoThumbnailGrid extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // "+X more" overlay on last thumbnail
               if (isLast)
                 Positioned.fill(

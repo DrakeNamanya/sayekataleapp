@@ -12,9 +12,7 @@ class FarmerDashboardScreen extends StatelessWidget {
     final user = authProvider.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Farmer Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Farmer Dashboard')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -32,10 +30,7 @@ class FarmerDashboardScreen extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 'Manage your farm and orders',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 24),
               Row(
@@ -128,10 +123,7 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 13,
-              color: color.withValues(alpha: 0.8),
-            ),
+            style: TextStyle(fontSize: 13, color: color.withValues(alpha: 0.8)),
           ),
         ],
       ),
@@ -163,12 +155,7 @@ class _ActionButton extends StatelessWidget {
           ),
           child: Icon(icon, color: AppTheme.primaryColor),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),

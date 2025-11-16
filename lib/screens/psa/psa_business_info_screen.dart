@@ -192,7 +192,10 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
           if (verification.businessDistrict != null) ...[
             const SizedBox(height: 24),
             _buildSection('Location Information', [
-              _buildInfoTile('District', verification.businessDistrict ?? 'N/A'),
+              _buildInfoTile(
+                'District',
+                verification.businessDistrict ?? 'N/A',
+              ),
               if (verification.businessSubcounty != null)
                 _buildInfoTile('Subcounty', verification.businessSubcounty!),
               if (verification.businessParish != null)
@@ -212,7 +215,10 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
           if (verification.taxId != null) ...[
             const SizedBox(height: 24),
             _buildSection('Tax Information', [
-              _buildInfoTile('Tax ID (TIN)', verification.taxId ?? 'Not provided'),
+              _buildInfoTile(
+                'Tax ID (TIN)',
+                verification.taxId ?? 'Not provided',
+              ),
             ]),
           ],
 
@@ -228,8 +234,14 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
                 'Account Number',
                 verification.bankAccountNumber ?? 'Not provided',
               ),
-              _buildInfoTile('Bank Name', verification.bankName ?? 'Not provided'),
-              _buildInfoTile('Branch', verification.bankBranch ?? 'Not provided'),
+              _buildInfoTile(
+                'Bank Name',
+                verification.bankName ?? 'Not provided',
+              ),
+              _buildInfoTile(
+                'Branch',
+                verification.bankBranch ?? 'Not provided',
+              ),
             ]),
           ],
 
@@ -243,7 +255,9 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
                 children: verification.paymentMethods.map((method) {
                   return Chip(
                     label: Text(method),
-                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    backgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.1,
+                    ),
                     labelStyle: const TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w600,
@@ -257,8 +271,14 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
           // Verification Documents
           const SizedBox(height: 24),
           _buildSection('Verification Documents', [
-            _buildDocumentTile('Business License', verification.businessLicenseUrl),
-            _buildDocumentTile('Tax ID Document', verification.taxIdDocumentUrl),
+            _buildDocumentTile(
+              'Business License',
+              verification.businessLicenseUrl,
+            ),
+            _buildDocumentTile(
+              'Tax ID Document',
+              verification.taxIdDocumentUrl,
+            ),
             _buildDocumentTile('National ID', verification.nationalIdUrl),
             _buildDocumentTile('Trade License', verification.tradeLicenseUrl),
           ]),
@@ -310,10 +330,7 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppTheme.textPrimary,
-            ),
+            style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
           ),
         ],
       ),
@@ -356,7 +373,9 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
                   hasDocument ? 'Document verified' : 'Not submitted',
                   style: TextStyle(
                     fontSize: 12,
-                    color: hasDocument ? Colors.green.shade700 : Colors.grey.shade600,
+                    color: hasDocument
+                        ? Colors.green.shade700
+                        : Colors.grey.shade600,
                   ),
                 ),
               ],
@@ -408,13 +427,20 @@ class _PSABusinessInfoScreenState extends State<PSABusinessInfoScreen> {
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error, size: 48, color: Colors.red),
+                            const Icon(
+                              Icons.error,
+                              size: 48,
+                              color: Colors.red,
+                            ),
                             const SizedBox(height: 16),
                             const Text('Failed to load document'),
                             const SizedBox(height: 8),
                             Text(
                               error.toString(),
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],

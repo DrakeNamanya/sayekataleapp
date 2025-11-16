@@ -8,10 +8,7 @@ import 'complaint_detail_screen.dart';
 class ComplaintsScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const ComplaintsScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const ComplaintsScreen({super.key, required this.adminUser});
 
   @override
   State<ComplaintsScreen> createState() => _ComplaintsScreenState();
@@ -25,7 +22,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   Map<String, int>? _stats;
   bool _isLoading = true;
   bool _isExporting = false;
-  
+
   String _selectedStatus = 'all';
   String _selectedCategory = 'all';
   String _selectedPriority = 'all';
@@ -128,17 +125,20 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     setState(() {
       _filteredComplaints = _complaints.where((complaint) {
         // Filter by status
-        if (_selectedStatus != 'all' && complaint['status'] != _selectedStatus) {
+        if (_selectedStatus != 'all' &&
+            complaint['status'] != _selectedStatus) {
           return false;
         }
 
         // Filter by category
-        if (_selectedCategory != 'all' && complaint['category'] != _selectedCategory) {
+        if (_selectedCategory != 'all' &&
+            complaint['category'] != _selectedCategory) {
           return false;
         }
 
         // Filter by priority
-        if (_selectedPriority != 'all' && complaint['priority'] != _selectedPriority) {
+        if (_selectedPriority != 'all' &&
+            complaint['priority'] != _selectedPriority) {
           return false;
         }
 
@@ -146,9 +146,15 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
         final query = _searchController.text.toLowerCase();
         if (query.isNotEmpty) {
           final subject = (complaint['subject'] ?? '').toString().toLowerCase();
-          final userName = (complaint['user_name'] ?? '').toString().toLowerCase();
-          final description = (complaint['description'] ?? '').toString().toLowerCase();
-          return subject.contains(query) || userName.contains(query) || description.contains(query);
+          final userName = (complaint['user_name'] ?? '')
+              .toString()
+              .toLowerCase();
+          final description = (complaint['description'] ?? '')
+              .toString()
+              .toLowerCase();
+          return subject.contains(query) ||
+              userName.contains(query) ||
+              description.contains(query);
         }
 
         return true;
@@ -160,11 +166,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
         final priorityOrder = {'urgent': 0, 'high': 1, 'medium': 2, 'low': 3};
         final aPriority = priorityOrder[a['priority']] ?? 99;
         final bPriority = priorityOrder[b['priority']] ?? 99;
-        
+
         if (aPriority != bPriority) {
           return aPriority.compareTo(bPriority);
         }
-        
+
         // If same priority, sort by date (newest first)
         final aDate = a['created_at']?.toString() ?? '';
         final bDate = b['created_at']?.toString() ?? '';
@@ -321,7 +327,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                     children: [
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.red.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -330,7 +339,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.priority_high, color: Colors.red, size: 20),
+                              Icon(
+                                Icons.priority_high,
+                                color: Colors.red,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Urgent: ${_stats!['urgent']}',
@@ -346,7 +359,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.orange.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -355,7 +371,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+                              Icon(
+                                Icons.warning_amber,
+                                color: Colors.orange.shade700,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'High: ${_stats!['high']}',
@@ -403,39 +423,54 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterChip('Status', _selectedStatus, [
-                        {'value': 'all', 'label': 'All'},
-                        {'value': 'pending', 'label': 'Pending'},
-                        {'value': 'inProgress', 'label': 'In Progress'},
-                        {'value': 'resolved', 'label': 'Resolved'},
-                        {'value': 'closed', 'label': 'Closed'},
-                      ], (value) {
-                        setState(() => _selectedStatus = value);
-                        _filterComplaints();
-                      }),
+                      _buildFilterChip(
+                        'Status',
+                        _selectedStatus,
+                        [
+                          {'value': 'all', 'label': 'All'},
+                          {'value': 'pending', 'label': 'Pending'},
+                          {'value': 'inProgress', 'label': 'In Progress'},
+                          {'value': 'resolved', 'label': 'Resolved'},
+                          {'value': 'closed', 'label': 'Closed'},
+                        ],
+                        (value) {
+                          setState(() => _selectedStatus = value);
+                          _filterComplaints();
+                        },
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Category', _selectedCategory, [
-                        {'value': 'all', 'label': 'All'},
-                        {'value': 'payment', 'label': 'Payment'},
-                        {'value': 'delivery', 'label': 'Delivery'},
-                        {'value': 'product', 'label': 'Product'},
-                        {'value': 'account', 'label': 'Account'},
-                        {'value': 'technical', 'label': 'Technical'},
-                      ], (value) {
-                        setState(() => _selectedCategory = value);
-                        _filterComplaints();
-                      }),
+                      _buildFilterChip(
+                        'Category',
+                        _selectedCategory,
+                        [
+                          {'value': 'all', 'label': 'All'},
+                          {'value': 'payment', 'label': 'Payment'},
+                          {'value': 'delivery', 'label': 'Delivery'},
+                          {'value': 'product', 'label': 'Product'},
+                          {'value': 'account', 'label': 'Account'},
+                          {'value': 'technical', 'label': 'Technical'},
+                        ],
+                        (value) {
+                          setState(() => _selectedCategory = value);
+                          _filterComplaints();
+                        },
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Priority', _selectedPriority, [
-                        {'value': 'all', 'label': 'All'},
-                        {'value': 'urgent', 'label': 'Urgent'},
-                        {'value': 'high', 'label': 'High'},
-                        {'value': 'medium', 'label': 'Medium'},
-                        {'value': 'low', 'label': 'Low'},
-                      ], (value) {
-                        setState(() => _selectedPriority = value);
-                        _filterComplaints();
-                      }),
+                      _buildFilterChip(
+                        'Priority',
+                        _selectedPriority,
+                        [
+                          {'value': 'all', 'label': 'All'},
+                          {'value': 'urgent', 'label': 'Urgent'},
+                          {'value': 'high', 'label': 'High'},
+                          {'value': 'medium', 'label': 'Medium'},
+                          {'value': 'low', 'label': 'Low'},
+                        ],
+                        (value) {
+                          setState(() => _selectedPriority = value);
+                          _filterComplaints();
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -448,44 +483,52 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredComplaints.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.support_agent,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No complaints found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.support_agent,
+                          size: 64,
+                          color: Colors.grey.shade400,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          await _loadComplaints();
-                          await _loadStats();
-                        },
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredComplaints.length,
-                          itemBuilder: (context, index) {
-                            final complaint = _filteredComplaints[index];
-                            return _buildComplaintCard(complaint);
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No complaints found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await _loadComplaints();
+                      await _loadStats();
+                    },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredComplaints.length,
+                      itemBuilder: (context, index) {
+                        final complaint = _filteredComplaints[index];
+                        return _buildComplaintCard(complaint);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatChip(String label, String value, Color color, IconData icon) {
+  Widget _buildStatChip(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -507,10 +550,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
           ),
         ],
       ),
@@ -524,6 +564,15 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
     Function(String) onChanged,
   ) {
     return PopupMenuButton<String>(
+      onSelected: onChanged,
+      itemBuilder: (context) => options
+          .map(
+            (option) => PopupMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            ),
+          )
+          .toList(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -543,13 +592,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
           ],
         ),
       ),
-      onSelected: onChanged,
-      itemBuilder: (context) => options
-          .map((option) => PopupMenuItem(
-                value: option['value'],
-                child: Text(option['label']!),
-              ))
-          .toList(),
     );
   }
 
@@ -580,7 +622,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               ),
             ),
           );
-          
+
           if (result == true) {
             _loadComplaints();
             _loadStats();
@@ -678,24 +720,22 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
               const SizedBox(height: 12),
               Text(
                 complaint['description'] ?? 'No description',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                  Icon(
+                    Icons.access_time,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     _formatTimeAgo(complaint['created_at']),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                   const Spacer(),
                   if (complaint['assigned_to'] != null) ...[

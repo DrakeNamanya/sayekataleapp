@@ -9,7 +9,7 @@ class GPSLocationPicker extends StatefulWidget {
   final double? initialLongitude;
   final Function(double latitude, double longitude) onLocationSelected;
   final bool showCurrentLocationButton;
-  
+
   const GPSLocationPicker({
     super.key,
     this.initialLatitude,
@@ -26,7 +26,7 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
   GoogleMapController? _mapController;
   LatLng? _selectedLocation;
   bool _isLoadingLocation = false;
-  
+
   // Default to Kampala, Uganda
   static const LatLng _defaultLocation = LatLng(0.347596, 32.582520);
 
@@ -34,7 +34,10 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
   void initState() {
     super.initState();
     if (widget.initialLatitude != null && widget.initialLongitude != null) {
-      _selectedLocation = LatLng(widget.initialLatitude!, widget.initialLongitude!);
+      _selectedLocation = LatLng(
+        widget.initialLatitude!,
+        widget.initialLongitude!,
+      );
     }
   }
 
@@ -69,20 +72,17 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
       );
 
       final location = LatLng(position.latitude, position.longitude);
-      
+
       setState(() {
         _selectedLocation = location;
         _isLoadingLocation = false;
       });
 
       // Move camera to current location
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(location, 15),
-      );
+      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 15));
 
       // Call callback
       widget.onLocationSelected(position.latitude, position.longitude);
-
     } catch (e) {
       setState(() {
         _isLoadingLocation = false;
@@ -117,10 +117,7 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
           children: [
             const Text(
               'Select Location on Map',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             if (widget.showCurrentLocationButton)
               ElevatedButton.icon(
@@ -131,13 +128,18 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.my_location, size: 18),
                 label: const Text('Use Current'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
           ],
@@ -224,10 +226,7 @@ class _GPSLocationPickerState extends State<GPSLocationPicker> {
                       Text(
                         'Lat: ${_selectedLocation!.latitude.toStringAsFixed(6)}, '
                         'Lng: ${_selectedLocation!.longitude.toStringAsFixed(6)}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[700],
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
                       ),
                     ],
                   ),
@@ -258,7 +257,7 @@ class GPSCoordinatesDisplay extends StatelessWidget {
   final double longitude;
   final String? label;
   final VoidCallback? onEdit;
-  
+
   const GPSCoordinatesDisplay({
     super.key,
     required this.latitude,
@@ -296,10 +295,7 @@ class GPSCoordinatesDisplay extends StatelessWidget {
                 ],
                 Text(
                   '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey[700]),
                 ),
               ],
             ),

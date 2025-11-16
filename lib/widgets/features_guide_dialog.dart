@@ -5,17 +5,12 @@ import '../utils/app_theme.dart';
 class FeaturesGuideDialog extends StatelessWidget {
   final bool isSHG; // true for farmers, false for buyers
 
-  const FeaturesGuideDialog({
-    super.key,
-    required this.isSHG,
-  });
+  const FeaturesGuideDialog({super.key, required this.isSHG});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
         child: Column(
@@ -34,11 +29,7 @@ class FeaturesGuideDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
@@ -88,10 +79,7 @@ class FeaturesGuideDialog extends StatelessWidget {
     return [
       const Text(
         'For Farmers (SHG):',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 16),
       _buildFeatureCard(
@@ -103,7 +91,8 @@ class FeaturesGuideDialog extends StatelessWidget {
       _buildFeatureCard(
         icon: Icons.receipt_long,
         title: 'Order Management',
-        description: '📱 Go to Orders tab\n✅ Accept or Reject orders\n🍳 Mark as Preparing\n📦 Mark as Ready',
+        description:
+            '📱 Go to Orders tab\n✅ Accept or Reject orders\n🍳 Mark as Preparing\n📦 Mark as Ready',
         color: Colors.blue,
       ),
       _buildFeatureCard(
@@ -121,7 +110,8 @@ class FeaturesGuideDialog extends StatelessWidget {
       _buildFeatureCard(
         icon: Icons.shopping_cart,
         title: 'Buy Inputs from PSA',
-        description: '📱 Go to Buy Inputs tab\n🛒 Add items to cart\n📦 Order supplies',
+        description:
+            '📱 Go to Buy Inputs tab\n🛒 Add items to cart\n📦 Order supplies',
         color: Colors.teal,
       ),
     ];
@@ -131,28 +121,28 @@ class FeaturesGuideDialog extends StatelessWidget {
     return [
       const Text(
         'For Buyers (SME):',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 16),
       _buildFeatureCard(
         icon: Icons.map,
         title: 'Map View',
-        description: '📱 Go to Browse tab\n🗺️ Tap Map icon (top-right)\n📍 See farmers by distance',
+        description:
+            '📱 Go to Browse tab\n🗺️ Tap Map icon (top-right)\n📍 See farmers by distance',
         color: Colors.blue,
       ),
       _buildFeatureCard(
         icon: Icons.star,
         title: 'Reviews & Ratings',
-        description: '📱 Go to Orders tab\n✅ View completed orders\n⭐ Click "Leave a Review"',
+        description:
+            '📱 Go to Orders tab\n✅ View completed orders\n⭐ Click "Leave a Review"',
         color: Colors.amber,
       ),
       _buildFeatureCard(
         icon: Icons.camera_alt,
         title: 'Photo Verification',
-        description: '📱 Open delivered order\n📸 Tap "Mark as Received & Take Photo"\n✅ Confirm delivery',
+        description:
+            '📱 Open delivered order\n📸 Tap "Mark as Received & Take Photo"\n✅ Confirm delivery',
         color: Colors.green,
       ),
       _buildFeatureCard(
@@ -164,7 +154,8 @@ class FeaturesGuideDialog extends StatelessWidget {
       _buildFeatureCard(
         icon: Icons.shopping_cart,
         title: 'Shopping Cart',
-        description: '🛒 Add products to cart\n💰 Choose payment method\n📦 Track your orders',
+        description:
+            '🛒 Add products to cart\n💰 Choose payment method\n📦 Track your orders',
         color: Colors.teal,
       ),
     ];
@@ -182,9 +173,7 @@ class FeaturesGuideDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,11 +184,7 @@ class FeaturesGuideDialog extends StatelessWidget {
               color: color,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -217,10 +202,7 @@ class FeaturesGuideDialog extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
+                  style: const TextStyle(fontSize: 13, height: 1.4),
                 ),
               ],
             ),

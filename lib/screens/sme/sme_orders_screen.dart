@@ -20,7 +20,8 @@ class SMEOrdersScreen extends StatefulWidget {
   State<SMEOrdersScreen> createState() => _SMEOrdersScreenState();
 }
 
-class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProviderStateMixin {
+class _SMEOrdersScreenState extends State<SMEOrdersScreen>
+    with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
   final MessageService _messageService = MessageService();
   final DeliveryTrackingService _trackingService = DeliveryTrackingService();
@@ -62,9 +63,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildOrdersList(buyerId, [
-            app_order.OrderStatus.pending,
-          ]),
+          _buildOrdersList(buyerId, [app_order.OrderStatus.pending]),
           _buildOrdersList(buyerId, [
             app_order.OrderStatus.confirmed,
             app_order.OrderStatus.preparing,
@@ -73,7 +72,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
           ]),
           _buildOrdersList(buyerId, [
             app_order.OrderStatus.delivered, // ✅ Include delivered orders
-            app_order.OrderStatus.deliveredPendingConfirmation, // ✅ Include pending confirmation
+            app_order
+                .OrderStatus
+                .deliveredPendingConfirmation, // ✅ Include pending confirmation
             app_order.OrderStatus.completed,
             app_order.OrderStatus.rejected,
             app_order.OrderStatus.cancelled,
@@ -83,7 +84,10 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildOrdersList(String buyerId, List<app_order.OrderStatus> statusFilter) {
+  Widget _buildOrdersList(
+    String buyerId,
+    List<app_order.OrderStatus> statusFilter,
+  ) {
     return StreamBuilder<List<app_order.Order>>(
       stream: _orderService.streamBuyerOrders(buyerId),
       builder: (context, snapshot) {
@@ -91,8 +95,12 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
         if (kDebugMode) {
           debugPrint('📊 SME Orders - Connection: ${snapshot.connectionState}');
           debugPrint('📊 SME Orders - Has Error: ${snapshot.hasError}');
-          debugPrint('📊 SME Orders - Data: ${snapshot.data?.length ?? 0} orders');
-          debugPrint('📊 SME Orders - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}');
+          debugPrint(
+            '📊 SME Orders - Data: ${snapshot.data?.length ?? 0} orders',
+          );
+          debugPrint(
+            '📊 SME Orders - Status Filter: ${statusFilter.map((s) => s.toString()).join(", ")}',
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -120,7 +128,11 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 const SizedBox(height: 16),
                 Text(
                   'Error loading orders',
-                  style: TextStyle(fontSize: 18, color: Colors.red[700], fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -145,7 +157,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
           debugPrint('📦 Total orders fetched: ${orders.length}');
         }
 
-        orders = orders.where((order) => statusFilter.contains(order.status)).toList();
+        orders = orders
+            .where((order) => statusFilter.contains(order.status))
+            .toList();
         if (kDebugMode) {
           debugPrint('📦 After status filter: ${orders.length}');
         }
@@ -161,7 +175,11 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   const SizedBox(height: 16),
                   Text(
                     'No orders found',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -225,7 +243,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                          DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(order.createdAt),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -235,7 +255,10 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -261,7 +284,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
               const SizedBox(height: 12),
               const Divider(),
               const SizedBox(height: 12),
-              
+
               // Farmer Info
               Row(
                 children: [
@@ -294,7 +317,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Order Items Summary
               Container(
                 padding: const EdgeInsets.all(12),
@@ -307,7 +330,11 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.shopping_basket, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.shopping_basket,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '${order.items.length} item(s)',
@@ -326,7 +353,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ],
                 ),
               ),
-              
+
               // Status Message
               if (order.status == app_order.OrderStatus.pending) ...[
                 const SizedBox(height: 8),
@@ -350,8 +377,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
-              if (order.status == app_order.OrderStatus.rejected && order.rejectionReason != null) ...[
+
+              if (order.status == app_order.OrderStatus.rejected &&
+                  order.rejectionReason != null) ...[
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -361,21 +389,28 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cancel_outlined, size: 16, color: Colors.red),
+                      const Icon(
+                        Icons.cancel_outlined,
+                        size: 16,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Rejected: ${order.rejectionReason}',
-                          style: const TextStyle(fontSize: 12, color: Colors.red),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.red,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
-              
+
               // Track Delivery Button (for orders in transit)
-              if (order.status == app_order.OrderStatus.confirmed || 
+              if (order.status == app_order.OrderStatus.confirmed ||
                   order.status == app_order.OrderStatus.preparing ||
                   order.status == app_order.OrderStatus.ready ||
                   order.status == app_order.OrderStatus.inTransit) ...[
@@ -397,9 +432,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               // Confirm Receipt Button (for delivered orders not yet confirmed)
-              if (order.status == app_order.OrderStatus.delivered && 
+              if (order.status == app_order.OrderStatus.delivered &&
                   !(order.isReceivedByBuyer ?? false)) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -419,9 +454,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               // View Receipt Button (for confirmed orders with receipts)
-              if (order.status == app_order.OrderStatus.delivered && 
+              if (order.status == app_order.OrderStatus.delivered &&
                   (order.isReceivedByBuyer ?? false)) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -441,10 +476,10 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               // Rate Order Button (for delivered orders without review)
-              if (order.status == app_order.OrderStatus.delivered && 
-                  (order.isReceivedByBuyer ?? false) && 
+              if (order.status == app_order.OrderStatus.delivered &&
+                  (order.isReceivedByBuyer ?? false) &&
                   order.rating == null) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -462,7 +497,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   ),
                 ),
               ],
-              
+
               // Already Reviewed Badge
               if (order.rating != null) ...[
                 const SizedBox(height: 12),
@@ -479,7 +514,10 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                       Expanded(
                         child: Text(
                           'You rated this order ${order.rating} star${order.rating! > 1 ? 's' : ''}',
-                          style: TextStyle(fontSize: 12, color: Colors.amber[900]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.amber[900],
+                          ),
                         ),
                       ),
                     ],
@@ -500,13 +538,13 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Get delivery tracking
-      final tracking = await _trackingService.getDeliveryTrackingByOrderId(order.id);
+      final tracking = await _trackingService.getDeliveryTrackingByOrderId(
+        order.id,
+      );
 
       // Close loading
       if (mounted) Navigator.pop(context);
@@ -524,10 +562,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 'Please check back after the order is confirmed.',
               ),
               duration: const Duration(seconds: 6),
-              action: SnackBarAction(
-                label: 'Got it',
-                onPressed: () {},
-              ),
+              action: SnackBarAction(label: 'Got it', onPressed: () {}),
             ),
           );
         }
@@ -564,11 +599,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
   Future<void> _navigateToReviewScreen(app_order.Order order) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => OrderReviewScreen(order: order),
-      ),
+      MaterialPageRoute(builder: (context) => OrderReviewScreen(order: order)),
     );
-    
+
     // Refresh orders list if review was submitted
     if (result == true && mounted) {
       setState(() {}); // Trigger rebuild to fetch updated orders
@@ -598,7 +631,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Rating
                 const Text(
                   'Rate your experience',
@@ -623,7 +656,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   }),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Feedback
                 const Text(
                   'Feedback (optional)',
@@ -640,7 +673,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                   onChanged: (value) => feedback = value,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Notes
                 const Text(
                   'Additional notes (optional)',
@@ -666,9 +699,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text('Confirm Receipt'),
             ),
           ],
@@ -683,9 +714,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -704,7 +733,9 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Receipt confirmed! Your receipt has been generated.'),
+            content: Text(
+              '✅ Receipt confirmed! Your receipt has been generated.',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
@@ -737,9 +768,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -816,11 +845,17 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 ),
                 const Divider(),
                 const SizedBox(height: 12),
-                
-                _buildDetailRow('Order ID', '#${order.id.substring(0, 12).toUpperCase()}'),
-                _buildDetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
+
+                _buildDetailRow(
+                  'Order ID',
+                  '#${order.id.substring(0, 12).toUpperCase()}',
+                ),
+                _buildDetailRow(
+                  'Date',
+                  DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                ),
                 _buildDetailRow('Status', _formatStatus(order.status)),
-                
+
                 const SizedBox(height: 16),
                 const Text(
                   'Farmer Information',
@@ -829,83 +864,91 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                 const SizedBox(height: 8),
                 _buildDetailRow('Name', order.farmerName ?? 'Unknown'),
                 _buildDetailRow('Phone', order.farmerPhone ?? ''),
-                
-                if (order.deliveryAddress != null) ...[
+
+                ...[
                   const SizedBox(height: 16),
                   const Text(
                     'Delivery Details',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  _buildDetailRow('Address', order.deliveryAddress!),
+                  _buildDetailRow('Address', order.deliveryAddress),
                   if (order.deliveryNotes != null)
                     _buildDetailRow('Notes', order.deliveryNotes!),
                 ],
-                
+
                 const SizedBox(height: 16),
                 const Text(
                   'Order Items',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                
-                ...order.items.map((item) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item.productImage ?? '',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+
+                ...order.items.map(
+                  (item) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            item.productImage ?? '',
                             width: 50,
                             height: 50,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image, color: Colors.grey),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.productName,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.productName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                '${item.quantity} ${item.unit} × UGX ${NumberFormat('#,###').format(item.price)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        'UGX ${NumberFormat('#,###').format(item.subtotal)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                        Text(
+                          'UGX ${NumberFormat('#,###').format(item.subtotal)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
-                
+                ),
+
                 const Divider(),
                 const SizedBox(height: 8),
-                
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -926,10 +969,14 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                     ),
                   ],
                 ),
-                
-                _buildDetailRow('Payment Method', _formatPaymentMethod(order.paymentMethod)),
-                
-                if (order.status == app_order.OrderStatus.rejected && order.rejectionReason != null) ...[
+
+                _buildDetailRow(
+                  'Payment Method',
+                  _formatPaymentMethod(order.paymentMethod),
+                ),
+
+                if (order.status == app_order.OrderStatus.rejected &&
+                    order.rejectionReason != null) ...[
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -953,7 +1000,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 20),
                 // Contact Seller Button
                 SizedBox(
@@ -997,9 +1044,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Create or get conversation
@@ -1012,7 +1057,7 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
 
       if (mounted) {
         Navigator.pop(context); // Close loading
-        
+
         // Navigate to chat screen
         Navigator.push(
           context,
@@ -1050,19 +1095,13 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen> with SingleTickerProv
             width: 100,
             child: Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
         ],

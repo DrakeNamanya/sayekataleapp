@@ -44,13 +44,20 @@ class FavoriteService {
     required String farmerId,
   }) async {
     try {
-      final isFavorite = await isFavorited(userId: userId, productId: productId);
-      
+      final isFavorite = await isFavorited(
+        userId: userId,
+        productId: productId,
+      );
+
       if (isFavorite) {
         await removeFavorite(userId: userId, productId: productId);
         return false; // Now unfavorited
       } else {
-        await addFavorite(userId: userId, productId: productId, farmerId: farmerId);
+        await addFavorite(
+          userId: userId,
+          productId: productId,
+          farmerId: farmerId,
+        );
         return true; // Now favorited
       }
     } catch (e) {
@@ -65,7 +72,10 @@ class FavoriteService {
   }) async {
     try {
       final favoriteId = '${userId}_$productId';
-      final doc = await _firestore.collection('favorite_products').doc(favoriteId).get();
+      final doc = await _firestore
+          .collection('favorite_products')
+          .doc(favoriteId)
+          .get();
       return doc.exists;
     } catch (e) {
       return false;
@@ -80,7 +90,9 @@ class FavoriteService {
           .where('user_id', isEqualTo: userId)
           .get();
 
-      return snapshot.docs.map((doc) => doc.data()['product_id'] as String).toList();
+      return snapshot.docs
+          .map((doc) => doc.data()['product_id'] as String)
+          .toList();
     } catch (e) {
       throw Exception('Failed to get favorite product IDs: $e');
     }
@@ -99,10 +111,10 @@ class FavoriteService {
       // Firestore 'in' query has a limit of 10 items
       // Split into batches if more than 10 favorites
       final List<Product> allFavoriteProducts = [];
-      
+
       for (int i = 0; i < favoriteProductIds.length; i += 10) {
         final batch = favoriteProductIds.skip(i).take(10).toList();
-        
+
         final productsSnapshot = await _firestore
             .collection('products')
             .where(FieldPath.documentId, whereIn: batch)
@@ -129,8 +141,10 @@ class FavoriteService {
         .where('user_id', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()['product_id'] as String).toList();
-    });
+          return snapshot.docs
+              .map((doc) => doc.data()['product_id'] as String)
+              .toList();
+        });
   }
 
   /// Get count of favorite products for a user
