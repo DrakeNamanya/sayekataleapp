@@ -144,8 +144,9 @@ class ProductService {
 
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
-      if (category != null)
+      if (category != null) {
         updates['category'] = category.toString().split('.').last;
+      }
       if (mainCategory != null) updates['main_category'] = mainCategory;
       if (subcategory != null) updates['subcategory'] = subcategory;
       if (price != null) updates['price'] = price;

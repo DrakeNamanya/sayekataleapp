@@ -190,7 +190,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                     final farmerName = items[0].farmerName;
                     final farmerTotal = items.fold(
                       0.0,
-                      (sum, item) => sum + (item.price * item.quantity),
+                      (acc, item) => acc + (item.price * item.quantity),
                     );
 
                     return Card(

@@ -224,13 +224,18 @@ class PsaVerification {
     if (phoneNumber.isEmpty) missing.add('Phone Number');
     if (businessAddress.isEmpty) missing.add('Business Address');
     if (businessType.isEmpty) missing.add('Business Type');
-    if (businessDistrict == null || businessDistrict!.isEmpty)
+    if (businessDistrict == null || businessDistrict!.isEmpty) {
       missing.add('Business District');
-    if (taxId == null || taxId!.isEmpty) missing.add('Tax ID');
-    if (bankAccountHolderName == null || bankAccountHolderName!.isEmpty)
+    }
+    if (taxId == null || taxId!.isEmpty) {
+      missing.add('Tax ID');
+    }
+    if (bankAccountHolderName == null || bankAccountHolderName!.isEmpty) {
       missing.add('Bank Account Holder');
-    if (bankAccountNumber == null || bankAccountNumber!.isEmpty)
+    }
+    if (bankAccountNumber == null || bankAccountNumber!.isEmpty) {
       missing.add('Bank Account Number');
+    }
     if (bankName == null || bankName!.isEmpty) missing.add('Bank Name');
     if (paymentMethods.isEmpty) missing.add('Payment Methods');
     return missing;
