@@ -1,7 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
+
 
 /// Standardized Firebase Storage upload service
 /// Uses fixed path conventions matching security rules
