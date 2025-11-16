@@ -27,7 +27,7 @@ class StorageService {
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('users/$uid/profile/profile.jpg');
     
-    final task = await ref.putData(
+    await ref.putData(
       imageBytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );
@@ -47,7 +47,7 @@ class StorageService {
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('products/$uid/$productId.jpg');
     
-    final task = await ref.putData(
+    await ref.putData(
       imageBytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );
@@ -67,7 +67,7 @@ class StorageService {
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('users/$uid/verification/$fileName');
     
-    final task = await ref.putData(
+    await ref.putData(
       imageBytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );
@@ -83,12 +83,12 @@ class StorageService {
     String orderId,
     String fileName,
   ) async {
-    final uid = _currentUserId; // Ensure authenticated
+    _currentUserId; // Ensure authenticated
     
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('orders/$orderId/$fileName');
     
-    final task = await ref.putData(
+    await ref.putData(
       imageBytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );
@@ -104,12 +104,12 @@ class StorageService {
     String groupId,
     String fileName,
   ) async {
-    final uid = _currentUserId; // Ensure authenticated
+    _currentUserId; // Ensure authenticated
     
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('groups/$groupId/$fileName');
     
-    final task = await ref.putData(
+    await ref.putData(
       imageBytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );

@@ -7,7 +7,7 @@ class SubscriptionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Subscription pricing
-  static const double YEARLY_SME_DIRECTORY_PRICE = 50000.0; // UGX 50,000
+  static const double yearlySmeDirectoryPrice = 50000.0; // UGX 50,000
 
   /// Check if user has active SME directory subscription
   /// Uses direct document lookup for better performance
@@ -85,7 +85,7 @@ class SubscriptionService {
         status: SubscriptionStatus.active,
         startDate: startDate,
         endDate: endDate,
-        amount: YEARLY_SME_DIRECTORY_PRICE,
+        amount: yearlySmeDirectoryPrice,
         paymentMethod: paymentMethod,
         paymentReference: paymentReference,
         createdAt: DateTime.now(),
@@ -127,7 +127,7 @@ class SubscriptionService {
         status: SubscriptionStatus.pending,
         startDate: startDate,
         endDate: endDate,
-        amount: YEARLY_SME_DIRECTORY_PRICE,
+        amount: yearlySmeDirectoryPrice,
         paymentMethod: paymentMethod,
         createdAt: DateTime.now(),
       );
