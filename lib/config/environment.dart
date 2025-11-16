@@ -104,6 +104,24 @@ class Environment {
   );
 
   // ========================================
+  // AdMob Configuration
+  // ========================================
+
+  /// AdMob App ID for Android
+  /// Production: ca-app-pub-6557386913540479~2174503706
+  static const String admobAppIdAndroid = String.fromEnvironment(
+    'ADMOB_APP_ID_ANDROID',
+    defaultValue: 'ca-app-pub-6557386913540479~2174503706',
+  );
+
+  /// AdMob Banner Ad Unit ID for Android
+  /// Production: ca-app-pub-6557386913540479/5529911893
+  static const String admobBannerIdAndroid = String.fromEnvironment(
+    'ADMOB_BANNER_ID_ANDROID',
+    defaultValue: 'ca-app-pub-6557386913540479/5529911893',
+  );
+
+  // ========================================
   // Feature Flags
   // ========================================
 
