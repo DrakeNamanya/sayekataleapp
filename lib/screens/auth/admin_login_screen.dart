@@ -16,7 +16,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -37,7 +37,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   /// Check if admin is already logged in
   Future<void> _checkExistingSession() async {
     final isLoggedIn = await _authService.isAdminLoggedIn();
-    
+
     if (isLoggedIn && mounted) {
       final adminUser = await _authService.getCurrentAdmin();
       if (adminUser != null) {
@@ -215,10 +215,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Sayekatale Agricultural Marketplace',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
@@ -235,8 +232,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              color: Colors.red.shade700, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade700,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -348,8 +348,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
@@ -370,9 +371,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
                   // Back to App
                   TextButton.icon(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.pop(context),
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Back to App'),
                     style: TextButton.styleFrom(

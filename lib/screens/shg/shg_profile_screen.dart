@@ -13,7 +13,7 @@ class SHGProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
-    
+
     if (kDebugMode) {
       debugPrint('🖼️ SHG PROFILE SCREEN - Rendering with:');
       debugPrint('   - user: ${user != null ? user.name : "NULL"}');
@@ -22,9 +22,7 @@ class SHGProfileScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-      ),
+      appBar: AppBar(title: const Text('My Profile')),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -45,10 +43,14 @@ class SHGProfileScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.white,
-                      backgroundImage: user?.profileImage != null && user!.profileImage!.isNotEmpty
+                      backgroundImage:
+                          user?.profileImage != null &&
+                              user!.profileImage!.isNotEmpty
                           ? NetworkImage(user.profileImage!)
                           : null,
-                      child: user?.profileImage == null || user!.profileImage!.isEmpty
+                      child:
+                          user?.profileImage == null ||
+                              user!.profileImage!.isEmpty
                           ? Icon(
                               Icons.person,
                               size: 50,
@@ -78,7 +80,10 @@ class SHGProfileScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -94,7 +99,10 @@ class SHGProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: (user?.isProfileComplete ?? false)
                                 ? AppTheme.successColor.withValues(alpha: 0.2)
@@ -131,11 +139,14 @@ class SHGProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Profile Completion Warning
               if (!(user?.isProfileComplete ?? true))
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppTheme.warningColor.withValues(alpha: 0.1),
@@ -160,7 +171,7 @@ class SHGProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              
+
               // Profile Options
               _ProfileOption(
                 icon: Icons.edit_outlined,
@@ -169,7 +180,9 @@ class SHGProfileScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SHGEditProfileScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SHGEditProfileScreen(),
+                    ),
                   );
                 },
               ),
@@ -238,7 +251,9 @@ class SHGProfileScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content: const Text(
+                            'Are you sure you want to logout?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -310,17 +325,11 @@ class _ProfileOption extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 15,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppTheme.textSecondary,
-        ),
+        style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
       ),
       trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
       onTap: onTap,

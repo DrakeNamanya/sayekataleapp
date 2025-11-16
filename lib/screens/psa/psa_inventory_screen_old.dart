@@ -60,9 +60,12 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
   List<MutableProduct> get _filteredInventory {
     switch (_filterType) {
       case 'low_stock':
-        return _inventory.where((p) => 
-          p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold
-        ).toList();
+        return _inventory
+            .where(
+              (p) =>
+                  p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold,
+            )
+            .toList();
       case 'out_of_stock':
         return _inventory.where((p) => p.stockQuantity == 0).toList();
       default:
@@ -70,20 +73,19 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
     }
   }
 
-  int get _lowStockCount => _inventory.where((p) => 
-    p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold
-  ).length;
+  int get _lowStockCount => _inventory
+      .where(
+        (p) => p.stockQuantity > 0 && p.stockQuantity <= p.lowStockThreshold,
+      )
+      .length;
 
-  int get _outOfStockCount => _inventory.where((p) => 
-    p.stockQuantity == 0
-  ).length;
+  int get _outOfStockCount =>
+      _inventory.where((p) => p.stockQuantity == 0).length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventory Management'),
-      ),
+      appBar: AppBar(title: const Text('Inventory Management')),
       body: Column(
         children: [
           // Summary Cards
@@ -218,7 +220,7 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Adjustment Type Toggle
               Row(
                 children: [
@@ -230,8 +232,8 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                         });
                       },
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: adjustmentType == 'add' 
-                            ? AppTheme.successColor 
+                        backgroundColor: adjustmentType == 'add'
+                            ? AppTheme.successColor
                             : Colors.transparent,
                         foregroundColor: adjustmentType == 'add'
                             ? Colors.white
@@ -262,7 +264,7 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Quantity Input
               TextField(
                 controller: controller,
@@ -279,10 +281,7 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                 adjustmentType == 'add'
                     ? 'Stock after adjustment: ${product.stockQuantity + (int.tryParse(controller.text) ?? 0)} ${product.unit}s'
                     : 'Stock after adjustment: ${(product.stockQuantity - (int.tryParse(controller.text) ?? 0)).clamp(0, product.stockQuantity)} ${product.unit}s',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -308,7 +307,8 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                   if (adjustmentType == 'add') {
                     product.stockQuantity += quantity;
                   } else {
-                    product.stockQuantity = (product.stockQuantity - quantity).clamp(0, product.stockQuantity);
+                    product.stockQuantity = (product.stockQuantity - quantity)
+                        .clamp(0, product.stockQuantity);
                   }
                 });
 
@@ -447,14 +447,12 @@ class _InventoryCard extends StatelessWidget {
   final MutableProduct product;
   final VoidCallback onAdjustStock;
 
-  const _InventoryCard({
-    required this.product,
-    required this.onAdjustStock,
-  });
+  const _InventoryCard({required this.product, required this.onAdjustStock});
 
   Color get _stockColor {
     if (product.stockQuantity == 0) return AppTheme.errorColor;
-    if (product.stockQuantity <= product.lowStockThreshold) return AppTheme.warningColor;
+    if (product.stockQuantity <= product.lowStockThreshold)
+      return AppTheme.warningColor;
     return AppTheme.successColor;
   }
 
@@ -515,7 +513,10 @@ class _InventoryCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _stockColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -584,7 +585,10 @@ class _InventoryCard extends StatelessWidget {
                   icon: const Icon(Icons.edit, size: 16),
                   label: const Text('Adjust'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ],

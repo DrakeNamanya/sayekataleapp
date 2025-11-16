@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -22,26 +21,37 @@ class ImageStorageService {
   }) async {
     try {
       if (kDebugMode) {
-        debugPrint('📂 Starting upload: folder=$folder, userId=$userId, path=${imageFile.path}');
-        
+        debugPrint(
+          '📂 Starting upload: folder=$folder, userId=$userId, path=${imageFile.path}',
+        );
+
         // Run diagnostics to help debug permission issues
         await FirebaseStorageDiagnostic.runDiagnostics();
-        
+
         // Check if user can upload to this path
-        final canUpload = await FirebaseStorageDiagnostic.canUploadToPath(folder, userId);
+        final canUpload = await FirebaseStorageDiagnostic.canUploadToPath(
+          folder,
+          userId,
+        );
         if (!canUpload) {
-          throw Exception('Permission check failed. See debug logs for details.');
+          throw Exception(
+            'Permission check failed. See debug logs for details.',
+          );
         }
       }
-      
+
       // Verify user is authenticated
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        throw Exception('User must be logged in to upload images. Please login and try again.');
+        throw Exception(
+          'User must be logged in to upload images. Please login and try again.',
+        );
       }
-      
+
       if (currentUser.uid != userId) {
-        throw Exception('User ID mismatch. Cannot upload to another user\'s folder.');
+        throw Exception(
+          'User ID mismatch. Cannot upload to another user\'s folder.',
+        );
       }
 
       // Read bytes from XFile
@@ -110,7 +120,7 @@ class ImageStorageService {
   }
 
   /// Upload multiple images from XFiles
-  /// 
+  ///
   /// Returns list of download URLs in the same order as input files
   Future<List<String>> uploadMultipleImagesFromXFiles({
     required List<XFile> images,
@@ -127,7 +137,8 @@ class ImageStorageService {
           imageFile: images[i],
           folder: folder,
           userId: userId,
-          customName: '${userId}_${DateTime.now().millisecondsSinceEpoch}_$i$extension',
+          customName:
+              '${userId}_${DateTime.now().millisecondsSinceEpoch}_$i$extension',
           compress: compress,
         );
         downloadUrls.add(url);
@@ -147,11 +158,11 @@ class ImageStorageService {
   }
 
   /// Compress image bytes to reduce file size (cross-platform)
-  /// 
+  ///
   /// [bytes] - Original image bytes
   /// [quality] - JPEG quality (0-100, default: 85)
   /// [maxWidth] - Maximum width in pixels (default: 1200)
-  /// 
+  ///
   /// Returns compressed image bytes
   Future<Uint8List> compressImageBytes(
     Uint8List bytes, {
@@ -177,13 +188,18 @@ class ImageStorageService {
       }
 
       // Compress as JPEG
-      final compressedBytes = Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+      final compressedBytes = Uint8List.fromList(
+        img.encodeJpg(resized, quality: quality),
+      );
 
       if (kDebugMode) {
         final originalSize = bytes.length / 1024;
         final compressedSize = compressedBytes.length / 1024;
-        final reduction = ((1 - compressedSize / originalSize) * 100).toStringAsFixed(1);
-        debugPrint('✅ Image compressed: ${originalSize.toStringAsFixed(1)}KB → ${compressedSize.toStringAsFixed(1)}KB ($reduction% reduction)');
+        final reduction = ((1 - compressedSize / originalSize) * 100)
+            .toStringAsFixed(1);
+        debugPrint(
+          '✅ Image compressed: ${originalSize.toStringAsFixed(1)}KB → ${compressedSize.toStringAsFixed(1)}KB ($reduction% reduction)',
+        );
       }
 
       return compressedBytes;
@@ -197,11 +213,11 @@ class ImageStorageService {
   }
 
   /// Generate thumbnail from image bytes (cross-platform)
-  /// 
+  ///
   /// [bytes] - Original image bytes
   /// [width] - Thumbnail width (default: 200)
   /// [quality] - JPEG quality (default: 80)
-  /// 
+  ///
   /// Returns thumbnail bytes
   Future<Uint8List> generateThumbnailBytes(
     Uint8List bytes, {
@@ -224,7 +240,9 @@ class ImageStorageService {
       );
 
       // Compress as JPEG
-      final thumbnailBytes = Uint8List.fromList(img.encodeJpg(thumbnail, quality: quality));
+      final thumbnailBytes = Uint8List.fromList(
+        img.encodeJpg(thumbnail, quality: quality),
+      );
 
       if (kDebugMode) {
         debugPrint('✅ Thumbnail generated: ${thumbnailBytes.length / 1024}KB');
@@ -240,7 +258,7 @@ class ImageStorageService {
   }
 
   /// Delete image from Firebase Storage
-  /// 
+  ///
   /// [imageUrl] - Full download URL of the image
   Future<void> deleteImage(String imageUrl) async {
     try {
@@ -277,7 +295,7 @@ class ImageStorageService {
   }
 
   /// Get download URL from storage path
-  /// 
+  ///
   /// [storagePath] - Path in Firebase Storage (e.g., 'products/user123/image.jpg')
   Future<String> getDownloadUrl(String storagePath) async {
     try {
@@ -293,7 +311,7 @@ class ImageStorageService {
   }
 
   /// Upload image with both full size and thumbnail from XFile
-  /// 
+  ///
   /// Returns map with 'full' and 'thumb' URLs
   Future<Map<String, String>> uploadImageWithThumbnailFromXFile({
     required XFile imageFile,
@@ -317,7 +335,9 @@ class ImageStorageService {
 
       // Create storage refs
       final fullRef = _storage.ref().child('$folder/$userId/$filename');
-      final thumbRef = _storage.ref().child('$folder/thumbnails/$userId/thumb_$filename');
+      final thumbRef = _storage.ref().child(
+        '$folder/thumbnails/$userId/thumb_$filename',
+      );
 
       // Upload both
       final fullTask = await fullRef.putData(compressedBytes);
@@ -327,10 +347,7 @@ class ImageStorageService {
       final fullUrl = await fullTask.ref.getDownloadURL();
       final thumbUrl = await thumbTask.ref.getDownloadURL();
 
-      return {
-        'full': fullUrl,
-        'thumb': thumbUrl,
-      };
+      return {'full': fullUrl, 'thumb': thumbUrl};
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error uploading image with thumbnail: $e');

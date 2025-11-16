@@ -25,9 +25,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final userId = authProvider.currentUser?.id ?? '';
 
     if (userId.isEmpty) {
-      return const Center(
-        child: Text('Please log in to view your orders'),
-      );
+      return const Center(child: Text('Please log in to view your orders'));
     }
 
     return Scaffold(
@@ -55,7 +53,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey),
+                  Icon(
+                    Icons.shopping_bag_outlined,
+                    size: 80,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'No orders yet',
@@ -102,11 +104,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Farmer info
             Row(
               children: [
-                const Icon(Icons.person, size: 16, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.person,
+                  size: 16,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   'Farmer: ${order.farmerName}',
@@ -117,7 +123,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.phone, size: 16, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.phone,
+                  size: 16,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   order.farmerPhone ?? 'N/A',
@@ -125,7 +135,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
             Text(
               'Total: UGX ${order.totalAmount.toStringAsFixed(0)}',
@@ -143,7 +153,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 color: AppTheme.textSecondary,
               ),
             ),
-            
+
             if (order.deliveredAt != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -156,7 +166,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ),
                 ),
               ),
-            
+
             if (order.receivedAt != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -169,18 +179,21 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ),
                 ),
               ),
-            
+
             const SizedBox(height: 12),
             _buildOrderItems(order.items),
-            
+
             // Confirm Receipt Button
-            if (order.status == OrderStatus.delivered && !(order.isReceivedByBuyer ?? false))
+            if (order.status == OrderStatus.delivered &&
+                !(order.isReceivedByBuyer ?? false))
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isProcessing ? null : () => _confirmReceipt(order),
+                    onPressed: _isProcessing
+                        ? null
+                        : () => _confirmReceipt(order),
                     icon: const Icon(Icons.check_circle),
                     label: const Text('Confirm Receipt'),
                     style: ElevatedButton.styleFrom(
@@ -191,7 +204,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ),
                 ),
               ),
-            
+
             // View Receipt Button
             if (order.isReceivedByBuyer ?? false)
               Padding(
@@ -293,10 +306,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
-          ],
+          ...[Icon(icon, size: 14, color: color), const SizedBox(width: 4)],
           Text(
             label,
             style: TextStyle(
@@ -316,32 +326,31 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       children: [
         const Text(
           'Items:',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${item.productName} × ${item.quantity} ${item.unit}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${item.productName} × ${item.quantity} ${item.unit}',
+                    style: const TextStyle(fontSize: 13),
                   ),
-                  Text(
-                    'UGX ${(item.price * item.quantity).toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                ),
+                Text(
+                  'UGX ${(item.price * item.quantity).toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
-            )),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -455,10 +464,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         content: SingleChildScrollView(
           child: SelectableText(
             receipt,
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 12,
-            ),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
           ),
         ),
         actions: [
@@ -486,7 +492,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   String _generateReceipt(Order order) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    
+
     return '''
 ═══════════════════════════════════
    SAYEKATALE MARKETPLACE
@@ -507,19 +513,19 @@ BUYER DETAILS:
 ───────────────────────────────────
 Name: ${order.buyerName}
 Phone: ${order.buyerPhone}
-${order.deliveryAddress != null ? '\nAddress:\n${order.deliveryAddress}' : ''}
+${'\nAddress:\n${order.deliveryAddress}'}
 
 ═══════════════════════════════════
 ITEMS ORDERED:
 ═══════════════════════════════════
 ${order.items.map((item) {
-  final subtotal = item.price * item.quantity;
-  return '''
+      final subtotal = item.price * item.quantity;
+      return '''
 ${item.productName}
   ${item.quantity} ${item.unit} × UGX ${item.price.toStringAsFixed(0)}
   Subtotal: UGX ${subtotal.toStringAsFixed(0)}
 ''';
-}).join('\n')}
+    }).join('\n')}
 ───────────────────────────────────
 TOTAL AMOUNT: UGX ${order.totalAmount.toStringAsFixed(0)}
 ═══════════════════════════════════

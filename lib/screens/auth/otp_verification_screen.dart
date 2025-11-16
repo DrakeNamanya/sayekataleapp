@@ -162,7 +162,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         onAutoVerify: (credential) async {
           // Auto-verification successful
           if (mounted) {
-            final userCredential = await _authService.signInWithCredential(credential);
+            final userCredential = await _authService.signInWithCredential(
+              credential,
+            );
             widget.onVerificationSuccess(userCredential);
           }
         },
@@ -192,7 +194,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
-              
+
               // Icon
               Center(
                 child: Container(
@@ -209,21 +211,18 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Title
               const Text(
                 'Enter Verification Code',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Subtitle
               Text(
                 'We sent a 6-digit code to\n${widget.phoneNumber}',
@@ -233,9 +232,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // OTP Input Fields
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -287,9 +286,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   );
                 }),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Error Message
               if (_errorMessage != null)
                 Container(
@@ -311,9 +310,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ],
                   ),
                 ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Verify Button
               ElevatedButton(
                 onPressed: _isVerifying ? null : _verifyOTP,
@@ -323,14 +322,16 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text('Verify'),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Resend OTP
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -340,7 +341,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     style: TextStyle(color: AppTheme.textSecondary),
                   ),
                   TextButton(
-                    onPressed: (_resendCountdown == 0 && !_isResending) ? _resendOTP : null,
+                    onPressed: (_resendCountdown == 0 && !_isResending)
+                        ? _resendOTP
+                        : null,
                     child: _isResending
                         ? const SizedBox(
                             height: 16,

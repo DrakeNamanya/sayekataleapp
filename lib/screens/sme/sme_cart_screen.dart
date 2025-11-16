@@ -17,12 +17,12 @@ class SMECartScreen extends StatefulWidget {
 
 class _SMECartScreenState extends State<SMECartScreen> {
   PaymentMethod _selectedPaymentMethod = PaymentMethod.mtnMobileMoney;
-  
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cart'),
@@ -119,7 +119,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
                     },
                   ),
                 ),
-                
+
                 // Cart Summary and Checkout
                 Container(
                   decoration: BoxDecoration(
@@ -140,12 +140,14 @@ class _SMECartScreenState extends State<SMECartScreen> {
                         // Summary Rows
                         _SummaryRow(
                           label: 'Subtotal',
-                          value: 'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
+                          value:
+                              'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
                         ),
                         const Divider(height: 24),
                         _SummaryRow(
                           label: 'Total Amount',
-                          value: 'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
+                          value:
+                              'UGX ${cartProvider.subtotal.toStringAsFixed(0)}',
                           isBold: true,
                           valueColor: AppTheme.primaryColor,
                         ),
@@ -159,7 +161,11 @@ class _SMECartScreenState extends State<SMECartScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle, color: Colors.green.shade700, size: 16),
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green.shade700,
+                                size: 16,
+                              ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
@@ -175,7 +181,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Checkout Button
                         SizedBox(
                           width: double.infinity,
@@ -184,7 +190,8 @@ class _SMECartScreenState extends State<SMECartScreen> {
                               // Navigate to checkout screen
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => const SMECheckoutScreen(),
+                                  builder: (context) =>
+                                      const SMECheckoutScreen(),
                                 ),
                               );
                             },
@@ -212,7 +219,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
             ),
     );
   }
-  
+
   void _showCheckoutDialog(
     BuildContext context,
     CartProvider cartProvider,
@@ -234,23 +241,17 @@ class _SMECartScreenState extends State<SMECartScreen> {
               children: [
                 const Text(
                   'Checkout',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Payment Method Selection
                 const Text(
                   'Select Payment Method',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
-                
+
                 ...PaymentMethod.values.map((method) {
                   return RadioListTile<PaymentMethod>(
                     title: Text(method.displayName),
@@ -264,9 +265,9 @@ class _SMECartScreenState extends State<SMECartScreen> {
                     },
                   );
                 }),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Order Summary
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -313,9 +314,9 @@ class _SMECartScreenState extends State<SMECartScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Place Order Button
                 SizedBox(
                   width: double.infinity,
@@ -339,7 +340,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
       ),
     );
   }
-  
+
   String _getPaymentMethodDescription(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.mobileMoney:
@@ -354,7 +355,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
         return 'Pay via bank transfer';
     }
   }
-  
+
   void _placeOrder(
     BuildContext context,
     CartProvider cartProvider,
@@ -362,7 +363,7 @@ class _SMECartScreenState extends State<SMECartScreen> {
   ) {
     // Simulate order placement
     final user = authProvider.currentUser;
-    
+
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -372,13 +373,13 @@ class _SMECartScreenState extends State<SMECartScreen> {
       );
       return;
     }
-    
+
     // Group items by farm
     final itemsByFarm = cartProvider.groupByFarmer();
-    
+
     // Create orders (one per farm)
     Navigator.pop(context); // Close checkout dialog
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -393,13 +394,13 @@ class _SMECartScreenState extends State<SMECartScreen> {
         ),
       ),
     );
-    
+
     // Simulate API call
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pop(context); // Close loading dialog
-      
+
       cartProvider.clear();
-      
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -418,18 +419,12 @@ class _SMECartScreenState extends State<SMECartScreen> {
               const SizedBox(height: 8),
               Text(
                 'Payment Method: ${_selectedPaymentMethod.displayName}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 8),
               Text(
                 'Total: UGX ${cartProvider.total.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -460,7 +455,7 @@ class _CartItemCard extends StatefulWidget {
   final CartItem cartItem;
   final Function(int) onQuantityChanged;
   final VoidCallback onRemove;
-  
+
   const _CartItemCard({
     required this.cartItem,
     required this.onQuantityChanged,
@@ -478,13 +473,16 @@ class _CartItemCardState extends State<_CartItemCard> {
   @override
   void initState() {
     super.initState();
-    _quantityController = TextEditingController(text: widget.cartItem.quantity.toString());
+    _quantityController = TextEditingController(
+      text: widget.cartItem.quantity.toString(),
+    );
   }
 
   @override
   void didUpdateWidget(_CartItemCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isEditing && widget.cartItem.quantity != oldWidget.cartItem.quantity) {
+    if (!_isEditing &&
+        widget.cartItem.quantity != oldWidget.cartItem.quantity) {
       _quantityController.text = widget.cartItem.quantity.toString();
     }
   }
@@ -517,10 +515,9 @@ class _CartItemCardState extends State<_CartItemCard> {
       );
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -542,7 +539,7 @@ class _CartItemCardState extends State<_CartItemCard> {
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Product Details
             Expanded(
               child: Column(
@@ -565,7 +562,7 @@ class _CartItemCardState extends State<_CartItemCard> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Quantity Controls
                   Row(
                     children: [
@@ -581,7 +578,9 @@ class _CartItemCardState extends State<_CartItemCard> {
                               icon: const Icon(Icons.remove, size: 18),
                               onPressed: widget.cartItem.quantity > 1
                                   ? () {
-                                      widget.onQuantityChanged(widget.cartItem.quantity - 1);
+                                      widget.onQuantityChanged(
+                                        widget.cartItem.quantity - 1,
+                                      );
                                     }
                                   : null,
                               padding: const EdgeInsets.all(4),
@@ -599,7 +598,9 @@ class _CartItemCardState extends State<_CartItemCard> {
                               },
                               child: Container(
                                 width: 60,
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 child: _isEditing
                                     ? TextField(
                                         controller: _quantityController,
@@ -627,7 +628,8 @@ class _CartItemCardState extends State<_CartItemCard> {
                                       )
                                     : Row(
                                         mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             '${widget.cartItem.quantity}',
@@ -650,7 +652,9 @@ class _CartItemCardState extends State<_CartItemCard> {
                             IconButton(
                               icon: const Icon(Icons.add, size: 18),
                               onPressed: () {
-                                widget.onQuantityChanged(widget.cartItem.quantity + 1);
+                                widget.onQuantityChanged(
+                                  widget.cartItem.quantity + 1,
+                                );
                               },
                               padding: const EdgeInsets.all(4),
                               constraints: const BoxConstraints(
@@ -662,7 +666,7 @@ class _CartItemCardState extends State<_CartItemCard> {
                         ),
                       ),
                       const Spacer(),
-                      
+
                       // Item Total
                       Text(
                         'UGX ${widget.cartItem.totalPrice.toStringAsFixed(0)}',
@@ -676,7 +680,7 @@ class _CartItemCardState extends State<_CartItemCard> {
                 ],
               ),
             ),
-            
+
             // Remove Button
             IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -686,7 +690,9 @@ class _CartItemCardState extends State<_CartItemCard> {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Remove Item'),
-                    content: Text('Remove ${widget.cartItem.productName} from cart?'),
+                    content: Text(
+                      'Remove ${widget.cartItem.productName} from cart?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
@@ -719,14 +725,14 @@ class _SummaryRow extends StatelessWidget {
   final String value;
   final bool isBold;
   final Color? valueColor;
-  
+
   const _SummaryRow({
     required this.label,
     required this.value,
     this.isBold = false,
     this.valueColor,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Row(

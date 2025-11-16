@@ -70,7 +70,10 @@ class EscrowStatusWidget extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       _getStatusSubtitle(),
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),
@@ -172,7 +175,9 @@ class EscrowStatusWidget extends StatelessWidget {
         case app_order.OrderStatus.pending:
           return 'Cash on Delivery order placed';
         case app_order.OrderStatus.deliveryPending:
-          return isBuyer ? 'Seller is preparing your order' : 'Deliver items to buyer';
+          return isBuyer
+              ? 'Seller is preparing your order'
+              : 'Deliver items to buyer';
         case app_order.OrderStatus.deliveredPendingConfirmation:
           if (isBuyer) {
             return 'Confirm you received the items';
@@ -197,7 +202,9 @@ class EscrowStatusWidget extends StatelessWidget {
       case app_order.OrderStatus.paymentHeld:
         return 'Your payment is held safely in escrow';
       case app_order.OrderStatus.deliveryPending:
-        return isBuyer ? 'Seller will deliver your items soon' : 'Deliver items to buyer';
+        return isBuyer
+            ? 'Seller will deliver your items soon'
+            : 'Deliver items to buyer';
       case app_order.OrderStatus.deliveredPendingConfirmation:
         if (isBuyer) {
           return 'Confirm you received the items to release payment';
@@ -221,7 +228,8 @@ class EscrowStatusWidget extends StatelessWidget {
 
   Widget _buildProgressIndicator() {
     int currentStep = _getCurrentStep();
-    int totalSteps = order.paymentMethod == app_order.PaymentMethod.cashOnDelivery ? 3 : 4;
+    int totalSteps =
+        order.paymentMethod == app_order.PaymentMethod.cashOnDelivery ? 3 : 4;
 
     return Row(
       children: List.generate(
@@ -302,15 +310,22 @@ class EscrowStatusWidget extends StatelessWidget {
         children: [
           _buildDetailRow('app_order.Order ID', order.id),
           const Divider(height: 24),
-          _buildDetailRow('Total Amount', 'UGX ${order.totalAmount.toStringAsFixed(0)}'),
+          _buildDetailRow(
+            'Total Amount',
+            'UGX ${order.totalAmount.toStringAsFixed(0)}',
+          ),
           if (order.serviceFee > 0) ...[
             const Divider(height: 24),
-            _buildDetailRow('Service Fee', 'UGX ${order.serviceFee.toStringAsFixed(0)}'),
+            _buildDetailRow(
+              'Service Fee',
+              'UGX ${order.serviceFee.toStringAsFixed(0)}',
+            ),
           ],
           const Divider(height: 24),
           _buildDetailRow('Payment Method', order.paymentMethod.displayName),
           if (order.paymentMethod == app_order.PaymentMethod.cashOnDelivery &&
-              order.status == app_order.OrderStatus.deliveredPendingConfirmation) ...[
+              order.status ==
+                  app_order.OrderStatus.deliveredPendingConfirmation) ...[
             const Divider(height: 24),
             _buildCodDeadlineWarning(),
           ],
@@ -409,12 +424,14 @@ class EscrowStatusWidget extends StatelessWidget {
     String buttonText;
     VoidCallback? onPressed;
 
-    if (isBuyer && order.status == app_order.OrderStatus.deliveredPendingConfirmation) {
+    if (isBuyer &&
+        order.status == app_order.OrderStatus.deliveredPendingConfirmation) {
       buttonText = 'Confirm Receipt';
       onPressed = () {
         // TODO: Implement confirmation
       };
-    } else if (!isBuyer && order.status == app_order.OrderStatus.deliveryPending) {
+    } else if (!isBuyer &&
+        order.status == app_order.OrderStatus.deliveryPending) {
       buttonText = 'Mark as Delivered';
       onPressed = () {
         // TODO: Implement marking as delivered

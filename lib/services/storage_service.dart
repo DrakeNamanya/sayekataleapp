@@ -2,7 +2,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-
 /// Standardized Firebase Storage upload service
 /// Uses fixed path conventions matching security rules
 class StorageService {
@@ -23,15 +22,12 @@ class StorageService {
   /// Security: Owner-only write, public read
   Future<String> uploadProfilePicture(Uint8List imageBytes) async {
     final uid = _currentUserId;
-    
+
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('users/$uid/profile/profile.jpg');
-    
-    await ref.putData(
-      imageBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    
+
+    await ref.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+
     return await ref.getDownloadURL();
   }
 
@@ -43,15 +39,12 @@ class StorageService {
     String productId,
   ) async {
     final uid = _currentUserId;
-    
+
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('products/$uid/$productId.jpg');
-    
-    await ref.putData(
-      imageBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    
+
+    await ref.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+
     return await ref.getDownloadURL();
   }
 
@@ -63,15 +56,12 @@ class StorageService {
     String fileName,
   ) async {
     final uid = _currentUserId;
-    
+
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('users/$uid/verification/$fileName');
-    
-    await ref.putData(
-      imageBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    
+
+    await ref.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+
     return await ref.getDownloadURL();
   }
 
@@ -84,15 +74,12 @@ class StorageService {
     String fileName,
   ) async {
     _currentUserId; // Ensure authenticated
-    
+
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('orders/$orderId/$fileName');
-    
-    await ref.putData(
-      imageBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    
+
+    await ref.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+
     return await ref.getDownloadURL();
   }
 
@@ -105,15 +92,12 @@ class StorageService {
     String fileName,
   ) async {
     _currentUserId; // Ensure authenticated
-    
+
     // Standardized path matching Storage rules
     final ref = _storage.ref().child('groups/$groupId/$fileName');
-    
-    await ref.putData(
-      imageBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    
+
+    await ref.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+
     return await ref.getDownloadURL();
   }
 

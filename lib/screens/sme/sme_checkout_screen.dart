@@ -5,7 +5,6 @@ import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
 import '../../models/order.dart';
-import '../../models/order_extensions.dart';
 import '../../utils/app_theme.dart';
 
 class SMECheckoutScreen extends StatefulWidget {
@@ -157,10 +156,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'Your cart is empty',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -183,10 +179,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                   const SizedBox(height: 12),
                   Text(
                     '${itemsByFarmer.length} order(s) will be created (one per farmer)',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   const SizedBox(height: 16),
 
@@ -227,25 +220,29 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                               ],
                             ),
                             const Divider(height: 24),
-                            ...items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.productName} (${item.quantity} ${item.unit})',
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
+                            ...items.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${item.productName} (${item.quantity} ${item.unit})',
+                                        style: const TextStyle(fontSize: 14),
                                       ),
-                                      Text(
-                                        'UGX ${(item.price * item.quantity).toStringAsFixed(0)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    ),
+                                    Text(
+                                      'UGX ${(item.price * item.quantity).toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ],
-                                  ),
-                                )),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                             const Divider(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -290,7 +287,11 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                                 color: Colors.yellow.shade700,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.phone_android, color: Colors.black, size: 24),
+                              child: const Icon(
+                                Icons.phone_android,
+                                color: Colors.black,
+                                size: 24,
+                              ),
                             ),
                             value: PaymentMethod.mtnMobileMoney,
                             groupValue: _selectedPaymentMethod,
@@ -304,14 +305,20 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                           // Cash on Delivery
                           RadioListTile<PaymentMethod>(
                             title: const Text('Cash on Delivery (COD)'),
-                            subtitle: const Text('Pay with cash when order is delivered'),
+                            subtitle: const Text(
+                              'Pay with cash when order is delivered',
+                            ),
                             secondary: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Colors.green.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.money, color: Colors.green, size: 24),
+                              child: const Icon(
+                                Icons.money,
+                                color: Colors.green,
+                                size: 24,
+                              ),
                             ),
                             value: PaymentMethod.cashOnDelivery,
                             groupValue: _selectedPaymentMethod,
@@ -325,7 +332,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Payment Information Notice
                   const SizedBox(height: 12),
                   Container(
@@ -337,7 +344,11 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade700,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -452,10 +463,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
     );
   }
 }

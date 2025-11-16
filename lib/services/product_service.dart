@@ -9,7 +9,7 @@ class ProductService {
   // ============================================================================
   // HELPER METHODS
   // ============================================================================
-  
+
   /// Generate unique system ID for product (e.g., PROD-2025-123456)
   String _generateSystemId() {
     final now = DateTime.now();
@@ -36,7 +36,7 @@ class ProductService {
     required int stockQuantity,
     int unitSize = 1,
     String? imageUrl,
-    List<String>? imageUrls,  // Support multiple images
+    List<String>? imageUrls, // Support multiple images
     String? location,
   }) async {
     try {
@@ -51,31 +51,31 @@ class ProductService {
       } else if (imageUrl != null) {
         finalImages = [imageUrl];
       }
-      
+
       // Use first image as primary image_url (for backward compatibility)
       // ✅ No placeholder URLs - only real Firebase images
-      final primaryImageUrl = finalImages.isNotEmpty 
-          ? finalImages.first 
-          : '';
-      
+      final primaryImageUrl = finalImages.isNotEmpty ? finalImages.first : '';
+
       if (kDebugMode) {
         debugPrint('📸 Saving ${finalImages.length} images for product');
         for (int i = 0; i < finalImages.length; i++) {
-          debugPrint('   Image ${i + 1}: ${finalImages[i].substring(0, 60)}...');
+          debugPrint(
+            '   Image ${i + 1}: ${finalImages[i].substring(0, 60)}...',
+          );
         }
       }
-      
+
       // Generate unique system ID for product tracking
       final systemId = _generateSystemId();
-      
+
       if (kDebugMode) {
         debugPrint('🆔 Generated system_id: $systemId');
       }
-      
+
       final product = {
-        'system_id': systemId,  // ✅ CRITICAL: Unique system-generated ID
+        'system_id': systemId, // ✅ CRITICAL: Unique system-generated ID
         'farmer_id': farmerId,
-        'farm_id': farmerId,  // ✅ For backward compatibility
+        'farm_id': farmerId, // ✅ For backward compatibility
         'farmer_name': farmerName,
         'name': name,
         'description': description,
@@ -87,12 +87,14 @@ class ProductService {
         'unit_size': unitSize,
         'stock_quantity': stockQuantity,
         'low_stock_threshold': 10,
-        'image_url': primaryImageUrl,  // Primary image for backward compatibility
-        'images': finalImages,  // All images as list
+        'image_url':
+            primaryImageUrl, // Primary image for backward compatibility
+        'images': finalImages, // All images as list
         'location': location ?? '',
         'rating': 0.0,
         'total_reviews': 0,
-        'is_available': stockQuantity > 0,  // ✅ CRITICAL: Auto-set based on stock
+        'is_available':
+            stockQuantity > 0, // ✅ CRITICAL: Auto-set based on stock
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       };
@@ -128,7 +130,7 @@ class ProductService {
     String? unit,
     int? unitSize,
     int? stockQuantity,
-    List<String>? imageUrls,  // ✅ Changed from imageUrl to imageUrls
+    List<String>? imageUrls, // ✅ Changed from imageUrl to imageUrls
     bool? isAvailable,
   }) async {
     try {
@@ -142,7 +144,8 @@ class ProductService {
 
       if (name != null) updates['name'] = name;
       if (description != null) updates['description'] = description;
-      if (category != null) updates['category'] = category.toString().split('.').last;
+      if (category != null)
+        updates['category'] = category.toString().split('.').last;
       if (mainCategory != null) updates['main_category'] = mainCategory;
       if (subcategory != null) updates['subcategory'] = subcategory;
       if (price != null) updates['price'] = price;
@@ -150,7 +153,7 @@ class ProductService {
       if (unitSize != null) updates['unit_size'] = unitSize;
       if (stockQuantity != null) updates['stock_quantity'] = stockQuantity;
       if (imageUrls != null) {
-        updates['images'] = imageUrls;  // ✅ Store as 'images' array
+        updates['images'] = imageUrls; // ✅ Store as 'images' array
         // Also update legacy image_url field with first image for backward compatibility
         updates['image_url'] = imageUrls.isNotEmpty ? imageUrls.first : null;
       }
@@ -170,10 +173,15 @@ class ProductService {
   }
 
   /// Update product stock quantity
-  Future<void> updateProductStock(String productId, int newStockQuantity) async {
+  Future<void> updateProductStock(
+    String productId,
+    int newStockQuantity,
+  ) async {
     try {
       if (kDebugMode) {
-        debugPrint('📦 Updating stock for product: $productId to $newStockQuantity');
+        debugPrint(
+          '📦 Updating stock for product: $productId to $newStockQuantity',
+        );
       }
 
       await _firestore.collection('products').doc(productId).update({
@@ -253,11 +261,11 @@ class ProductService {
         .where('farmer_id', isEqualTo: farmerId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Product.fromFirestore(data, doc.id);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return Product.fromFirestore(data, doc.id);
+          }).toList();
+        });
   }
 
   /// Get all available products (for buyers)
@@ -300,16 +308,16 @@ class ProductService {
         .where('is_available', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
-      final products = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Product.fromFirestore(data, doc.id);
-      }).toList();
+          final products = snapshot.docs.map((doc) {
+            final data = doc.data();
+            return Product.fromFirestore(data, doc.id);
+          }).toList();
 
-      // Sort by created date (newest first)
-      products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Sort by created date (newest first)
+          products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return products;
-    });
+          return products;
+        });
   }
 
   /// Stream PSA products (farming inputs) for SHG buyers
@@ -345,15 +353,15 @@ class ProductService {
             .where('is_available', isEqualTo: true)
             .snapshots()
             .map((snapshot) {
-          final products = snapshot.docs.map((doc) {
-            return Product.fromFirestore(doc.data(), doc.id);
-          }).toList();
+              final products = snapshot.docs.map((doc) {
+                return Product.fromFirestore(doc.data(), doc.id);
+              }).toList();
 
-          // Sort by created date (newest first)
-          products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              // Sort by created date (newest first)
+              products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          return products;
-        });
+              return products;
+            });
       } else {
         // If more than 10 PSA users, batch the queries
         yield* _batchStreamPSAProducts(psaUserIds);
@@ -367,21 +375,26 @@ class ProductService {
   }
 
   /// Helper method to batch stream PSA products (for >10 PSA sellers)
-  Stream<List<Product>> _batchStreamPSAProducts(List<String> psaUserIds) async* {
+  Stream<List<Product>> _batchStreamPSAProducts(
+    List<String> psaUserIds,
+  ) async* {
     final batches = <List<String>>[];
     for (var i = 0; i < psaUserIds.length; i += 10) {
-      batches.add(psaUserIds.sublist(
-        i,
-        i + 10 > psaUserIds.length ? psaUserIds.length : i + 10,
-      ));
+      batches.add(
+        psaUserIds.sublist(
+          i,
+          i + 10 > psaUserIds.length ? psaUserIds.length : i + 10,
+        ),
+      );
     }
 
     // Stream first batch and merge with subsequent batches
-    await for (final firstBatch in _firestore
-        .collection('products')
-        .where('farmer_id', whereIn: batches[0])
-        .where('is_available', isEqualTo: true)
-        .snapshots()) {
+    await for (final firstBatch
+        in _firestore
+            .collection('products')
+            .where('farmer_id', whereIn: batches[0])
+            .where('is_available', isEqualTo: true)
+            .snapshots()) {
       final products = firstBatch.docs.map((doc) {
         return Product.fromFirestore(doc.data(), doc.id);
       }).toList();
@@ -394,9 +407,11 @@ class ProductService {
             .where('is_available', isEqualTo: true)
             .get();
 
-        products.addAll(batchSnapshot.docs.map((doc) {
-          return Product.fromFirestore(doc.data(), doc.id);
-        }));
+        products.addAll(
+          batchSnapshot.docs.map((doc) {
+            return Product.fromFirestore(doc.data(), doc.id);
+          }),
+        );
       }
 
       // Sort by created date (newest first)
@@ -515,18 +530,23 @@ class ProductService {
         debugPrint('📉 Reducing stock for product $productId by $quantity');
       }
 
-      final productDoc = await _firestore.collection('products').doc(productId).get();
-      
+      final productDoc = await _firestore
+          .collection('products')
+          .doc(productId)
+          .get();
+
       if (!productDoc.exists) {
         throw Exception('Product not found');
       }
 
       final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
-      final newStock = (currentStock - quantity).clamp(0, double.infinity).toInt();
+      final newStock = (currentStock - quantity)
+          .clamp(0, double.infinity)
+          .toInt();
 
       await _firestore.collection('products').doc(productId).update({
         'stock_quantity': newStock,
-        'is_available': newStock > 0,  // Mark as unavailable if stock reaches 0
+        'is_available': newStock > 0, // Mark as unavailable if stock reaches 0
         'updated_at': FieldValue.serverTimestamp(),
       });
 
@@ -545,9 +565,9 @@ class ProductService {
   Future<Product?> getProductWithStock(String productId) async {
     try {
       final doc = await _firestore.collection('products').doc(productId).get();
-      
+
       if (!doc.exists) return null;
-      
+
       return Product.fromFirestore(doc.data()!, doc.id);
     } catch (e) {
       if (kDebugMode) {

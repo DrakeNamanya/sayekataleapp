@@ -8,7 +8,7 @@ class ImagePickerService {
   final ImagePicker _picker = ImagePicker();
 
   /// Pick a single image from gallery
-  /// 
+  ///
   /// Returns XFile if image selected, null if cancelled
   Future<XFile?> pickImageFromGallery() async {
     try {
@@ -38,7 +38,7 @@ class ImagePickerService {
   }
 
   /// Take a photo with camera
-  /// 
+  ///
   /// Returns XFile if photo taken, null if cancelled
   Future<XFile?> takePhoto() async {
     try {
@@ -68,7 +68,7 @@ class ImagePickerService {
   }
 
   /// Show dialog to choose image source (camera or gallery)
-  /// 
+  ///
   /// Returns XFile if image selected, null if cancelled
   Future<XFile?> showImageSourceDialog(BuildContext context) async {
     return showDialog<XFile?>(
@@ -118,7 +118,7 @@ class ImagePickerService {
   }
 
   /// Show simple image source bottom sheet
-  /// 
+  ///
   /// Returns XFile if image selected, null if cancelled
   Future<XFile?> showImageSourceBottomSheet(BuildContext context) async {
     final result = await showModalBottomSheet<String>(
@@ -135,10 +135,7 @@ class ImagePickerService {
               children: [
                 const Text(
                   'Select Image Source',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 Row(

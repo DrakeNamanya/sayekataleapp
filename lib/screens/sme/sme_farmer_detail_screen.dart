@@ -9,7 +9,7 @@ import '../../utils/app_theme.dart';
 
 class SMEFarmerDetailScreen extends StatefulWidget {
   final Farmer farmer;
-  
+
   const SMEFarmerDetailScreen({super.key, required this.farmer});
 
   @override
@@ -19,19 +19,19 @@ class SMEFarmerDetailScreen extends StatefulWidget {
 class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
   bool _isFavorite = false; // Would come from favorites provider
   ProductCategory? _selectedCategory;
-  
+
   List<Product> get _filteredProducts {
     if (_selectedCategory == null) {
       return widget.farmer.products;
     }
     return widget.farmer.getProductsByCategory(_selectedCategory!);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final smeLocation = authProvider.currentUser?.location;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.farmer.name),
@@ -46,7 +46,9 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                 _isFavorite = !_isFavorite;
               });
               if (kDebugMode) {
-                debugPrint('Farmer ${_isFavorite ? 'added to' : 'removed from'} favorites');
+                debugPrint(
+                  'Farmer ${_isFavorite ? 'added to' : 'removed from'} favorites',
+                );
               }
             },
             tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
@@ -89,7 +91,10 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                 const SizedBox(height: 4),
                 if (widget.farmer.isVerified)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -116,7 +121,7 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                   children: [
                     _StatBadge(
                       icon: Icons.star,
-                      label: '${widget.farmer.rating.toStringAsFixed(1)}',
+                      label: widget.farmer.rating.toStringAsFixed(1),
                       sublabel: '${widget.farmer.totalReviews} reviews',
                     ),
                     const SizedBox(width: 16),
@@ -125,21 +130,21 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                       label: '${widget.farmer.totalOrders}',
                       sublabel: 'orders',
                     ),
-                    if (smeLocation != null && widget.farmer.location != null)
-                      ...[
-                        const SizedBox(width: 16),
-                        _StatBadge(
-                          icon: Icons.location_on,
-                          label: widget.farmer.getDistanceText(smeLocation),
-                          sublabel: 'away',
-                        ),
-                      ],
+                    if (smeLocation != null &&
+                        widget.farmer.location != null) ...[
+                      const SizedBox(width: 16),
+                      _StatBadge(
+                        icon: Icons.location_on,
+                        label: widget.farmer.getDistanceText(smeLocation),
+                        sublabel: 'away',
+                      ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
-          
+
           // Category Filter
           if (widget.farmer.products.isNotEmpty)
             Container(
@@ -160,9 +165,11 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                     },
                   ),
                   ...ProductCategoryExtension.mainCategories.map((category) {
-                    final productsInCategory = widget.farmer.getProductsByCategory(category);
-                    if (productsInCategory.isEmpty) return const SizedBox.shrink();
-                    
+                    final productsInCategory = widget.farmer
+                        .getProductsByCategory(category);
+                    if (productsInCategory.isEmpty)
+                      return const SizedBox.shrink();
+
                     return _CategoryChip(
                       label: category.displayName,
                       count: productsInCategory.length,
@@ -177,13 +184,11 @@ class _SMEFarmerDetailScreenState extends State<SMEFarmerDetailScreen> {
                 ],
               ),
             ),
-          
+
           // Products List
           Expanded(
             child: _filteredProducts.isEmpty
-                ? const Center(
-                    child: Text('No products in this category'),
-                  )
+                ? const Center(child: Text('No products in this category'))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _filteredProducts.length,
@@ -207,13 +212,13 @@ class _StatBadge extends StatelessWidget {
   final IconData icon;
   final String label;
   final String sublabel;
-  
+
   const _StatBadge({
     required this.icon,
     required this.label,
     required this.sublabel,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -236,10 +241,7 @@ class _StatBadge extends StatelessWidget {
           ),
           Text(
             sublabel,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
           ),
         ],
       ),
@@ -252,14 +254,14 @@ class _CategoryChip extends StatelessWidget {
   final int count;
   final bool isSelected;
   final VoidCallback onTap;
-  
+
   const _CategoryChip({
     required this.label,
     required this.count,
     required this.isSelected,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -283,18 +285,18 @@ class _ProductCard extends StatelessWidget {
   final Product product;
   final String farmerId;
   final String farmerName;
-  
+
   const _ProductCard({
     required this.product,
     required this.farmerId,
     required this.farmerName,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final quantityInCart = cartProvider.getItemQuantity(product.id);
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -316,7 +318,7 @@ class _ProductCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Product Details
             Expanded(
               child: Column(
@@ -367,15 +369,15 @@ class _ProductCard extends StatelessWidget {
                       color: product.stockQuantity > 10
                           ? AppTheme.successColor
                           : product.stockQuantity > 0
-                              ? AppTheme.warningColor
-                              : AppTheme.errorColor,
+                          ? AppTheme.warningColor
+                          : AppTheme.errorColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Add to Cart Button
             Column(
               children: [
@@ -399,7 +401,9 @@ class _ProductCard extends StatelessWidget {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Added 1 more ${product.name}'),
+                                    content: Text(
+                                      'Added 1 more ${product.name}',
+                                    ),
                                     duration: const Duration(seconds: 1),
                                   ),
                                 );
@@ -431,16 +435,25 @@ class _ProductCard extends StatelessWidget {
                         InkWell(
                           onTap: () async {
                             try {
-                              final currentQty = cartProvider.getItemQuantity(product.id);
+                              final currentQty = cartProvider.getItemQuantity(
+                                product.id,
+                              );
                               if (currentQty > 1) {
                                 // Find cart item ID
                                 final cartItem = cartProvider.cartItems
-                                    .firstWhere((item) => item.productId == product.id);
-                                await cartProvider.updateQuantity(cartItem.id, currentQty - 1);
+                                    .firstWhere(
+                                      (item) => item.productId == product.id,
+                                    );
+                                await cartProvider.updateQuantity(
+                                  cartItem.id,
+                                  currentQty - 1,
+                                );
                               } else {
                                 // Remove item completely
                                 final cartItem = cartProvider.cartItems
-                                    .firstWhere((item) => item.productId == product.id);
+                                    .firstWhere(
+                                      (item) => item.productId == product.id,
+                                    );
                                 await cartProvider.removeItem(cartItem.id);
                               }
                             } catch (e) {
@@ -465,7 +478,8 @@ class _ProductCard extends StatelessWidget {
                   )
                 else
                   ElevatedButton.icon(
-                    onPressed: product.stockQuantity > 0 && product.stockQuantity > 0
+                    onPressed:
+                        product.stockQuantity > 0 && product.stockQuantity > 0
                         ? () async {
                             try {
                               await cartProvider.addItem(
@@ -476,7 +490,9 @@ class _ProductCard extends StatelessWidget {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('${product.name} added to cart'),
+                                    content: Text(
+                                      '${product.name} added to cart',
+                                    ),
                                     duration: const Duration(seconds: 1),
                                     backgroundColor: Colors.green,
                                   ),

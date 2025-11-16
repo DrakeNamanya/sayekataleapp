@@ -8,7 +8,13 @@ class LocationPickerWidget extends StatefulWidget {
   final String? initialSubcounty;
   final String? initialParish;
   final String? initialVillage;
-  final Function(String? district, String? subcounty, String? parish, String? village) onLocationChanged;
+  final Function(
+    String? district,
+    String? subcounty,
+    String? parish,
+    String? village,
+  )
+  onLocationChanged;
 
   const LocationPickerWidget({
     super.key,
@@ -45,22 +51,26 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
     _districts = UgandaLocationData.getDistricts();
 
     // Set initial values if provided
-    if (widget.initialDistrict != null && 
+    if (widget.initialDistrict != null &&
         _districts.contains(widget.initialDistrict)) {
       _selectedDistrict = widget.initialDistrict;
       _loadSubcounties(_selectedDistrict!);
 
-      if (widget.initialSubcounty != null && 
+      if (widget.initialSubcounty != null &&
           _subcounties.contains(widget.initialSubcounty)) {
         _selectedSubcounty = widget.initialSubcounty;
         _loadParishes(_selectedDistrict!, _selectedSubcounty!);
 
-        if (widget.initialParish != null && 
+        if (widget.initialParish != null &&
             _parishes.contains(widget.initialParish)) {
           _selectedParish = widget.initialParish;
-          _loadVillages(_selectedDistrict!, _selectedSubcounty!, _selectedParish!);
+          _loadVillages(
+            _selectedDistrict!,
+            _selectedSubcounty!,
+            _selectedParish!,
+          );
 
-          if (widget.initialVillage != null && 
+          if (widget.initialVillage != null &&
               _villages.contains(widget.initialVillage)) {
             _selectedVillage = widget.initialVillage;
           }
@@ -159,7 +169,9 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
             setState(() {
               _selectedParish = value;
             });
-            if (value != null && _selectedDistrict != null && _selectedSubcounty != null) {
+            if (value != null &&
+                _selectedDistrict != null &&
+                _selectedSubcounty != null) {
               _loadVillages(_selectedDistrict!, _selectedSubcounty!, value);
             }
           },
@@ -197,10 +209,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Container(

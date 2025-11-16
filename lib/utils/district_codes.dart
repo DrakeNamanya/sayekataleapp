@@ -1,6 +1,6 @@
 // District Code Mapping for User ID Generation
 // Source: districtinformation.xlsx (official district data)
-// 
+//
 // This mapping ensures consistent 3-letter district codes for User IDs
 // Format: ROLE + DISTRICT_CODE + NUMBER
 // Example: SHGJIN025 (SHG user from JINJA, user #25)
@@ -60,7 +60,7 @@ class DistrictCodes {
     if (districtName == null || districtName.isEmpty) {
       return 'UGA'; // Default code
     }
-    
+
     final upperName = districtName.toUpperCase().trim();
     return districtToCode[upperName] ?? 'UGA';
   }

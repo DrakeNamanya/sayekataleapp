@@ -65,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
 
       _messageController.clear();
-      
+
       // Scroll to bottom after sending
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
@@ -128,10 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   const Text(
                     'Active',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ],
               ),
@@ -181,7 +178,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
@@ -193,7 +191,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           );
 
                           if (confirmed == true && context.mounted) {
-                            await _messageService.deleteConversation(widget.conversationId);
+                            await _messageService.deleteConversation(
+                              widget.conversationId,
+                            );
                             if (context.mounted) {
                               Navigator.pop(context);
                             }
@@ -214,7 +214,9 @@ class _ChatScreenState extends State<ChatScreen> {
             // Messages List
             Expanded(
               child: StreamBuilder<List<Message>>(
-                stream: _messageService.streamConversationMessages(widget.conversationId),
+                stream: _messageService.streamConversationMessages(
+                  widget.conversationId,
+                ),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -259,7 +261,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           Icon(
                             Icons.chat_bubble_outline,
                             size: 80,
-                            color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                            color: AppTheme.textSecondary.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -295,7 +299,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       final isMe = message.senderId == widget.currentUserId;
-                      final showDate = index == 0 ||
+                      final showDate =
+                          index == 0 ||
                           !_isSameDay(
                             messages[index - 1].createdAt,
                             message.createdAt,
@@ -304,10 +309,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       return Column(
                         children: [
                           if (showDate) _DateDivider(date: message.createdAt),
-                          _MessageBubble(
-                            message: message,
-                            isMe: isMe,
-                          ),
+                          _MessageBubble(message: message, isMe: isMe),
                         ],
                       );
                     },
@@ -321,9 +323,7 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade200),
-                ),
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
               ),
               child: Row(
                 children: [
@@ -410,9 +410,8 @@ class _DateDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final isToday = now.year == date.year &&
-        now.month == date.month &&
-        now.day == date.day;
+    final isToday =
+        now.year == date.year && now.month == date.month && now.day == date.day;
     final isYesterday = now.difference(date).inDays == 1;
 
     String dateText;
@@ -453,17 +452,16 @@ class _MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
 
-  const _MessageBubble({
-    required this.message,
-    required this.isMe,
-  });
+  const _MessageBubble({required this.message, required this.isMe});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe) ...[
@@ -493,9 +491,7 @@ class _MessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe
-                    ? AppTheme.primaryColor
-                    : Colors.grey.shade200,
+                color: isMe ? AppTheme.primaryColor : Colors.grey.shade200,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),

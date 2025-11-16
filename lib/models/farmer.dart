@@ -14,7 +14,7 @@ class Farmer {
   final List<Product> products;
   final bool isVerified;
   final DateTime joinedDate;
-  
+
   Farmer({
     required this.id,
     required this.name,
@@ -28,34 +28,36 @@ class Farmer {
     this.isVerified = false,
     required this.joinedDate,
   });
-  
+
   /// Get distance from another location (in kilometers)
   double? getDistanceFrom(Location? otherLocation) {
     if (location == null || otherLocation == null) return null;
     return location!.distanceTo(otherLocation);
   }
-  
+
   /// Get formatted distance string
   String getDistanceText(Location? otherLocation) {
     final distance = getDistanceFrom(otherLocation);
     if (distance == null) return 'Distance unknown';
-    
+
     if (distance < 1) {
       return '${(distance * 1000).toStringAsFixed(0)}m away';
     } else {
       return '${distance.toStringAsFixed(1)}km away';
     }
   }
-  
+
   /// Get products by category
   List<Product> getProductsByCategory(ProductCategory category) {
     if (category.isMainCategory) {
-      return products.where((p) => p.category.parentCategory == category).toList();
+      return products
+          .where((p) => p.category.parentCategory == category)
+          .toList();
     } else {
       return products.where((p) => p.category == category).toList();
     }
   }
-  
+
   factory Farmer.fromAppUser(AppUser user, List<Product> products) {
     return Farmer(
       id: user.id,
@@ -71,7 +73,7 @@ class Farmer {
       joinedDate: user.createdAt,
     );
   }
-  
+
   factory Farmer.fromMap(Map<String, dynamic> data, String id) {
     return Farmer(
       id: id,
@@ -84,7 +86,8 @@ class Farmer {
       rating: (data['rating'] ?? 0.0).toDouble(),
       totalReviews: data['total_reviews'] ?? 0,
       totalOrders: data['total_orders'] ?? 0,
-      products: (data['products'] as List<dynamic>?)
+      products:
+          (data['products'] as List<dynamic>?)
               ?.map((p) => Product.fromFirestore(p, p['id'] ?? ''))
               .toList() ??
           [],
@@ -94,7 +97,7 @@ class Farmer {
           : DateTime.now(),
     );
   }
-  
+
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -120,7 +123,7 @@ class FarmerReview {
   final double rating;
   final String? comment;
   final DateTime createdAt;
-  
+
   FarmerReview({
     required this.id,
     required this.farmerId,
@@ -130,7 +133,7 @@ class FarmerReview {
     this.comment,
     required this.createdAt,
   });
-  
+
   factory FarmerReview.fromMap(Map<String, dynamic> data, String id) {
     return FarmerReview(
       id: id,
@@ -142,7 +145,7 @@ class FarmerReview {
       createdAt: DateTime.parse(data['created_at']),
     );
   }
-  
+
   Map<String, dynamic> toMap() {
     return {
       'farmer_id': farmerId,

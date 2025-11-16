@@ -2,32 +2,33 @@ import 'dart:math' as math;
 
 /// Real-time delivery tracking model for SHG→SME and PSA→SHG deliveries
 class DeliveryTracking {
-  final String id;                    // Tracking ID
-  final String orderId;                // Associated order ID
-  final String deliveryType;           // 'SHG_TO_SME' or 'PSA_TO_SHG'
-  final String deliveryPersonId;       // SHG farmer ID or PSA supplier ID
-  final String deliveryPersonName;     // Name of person delivering
-  final String deliveryPersonPhone;    // Contact number
-  final String recipientId;            // SME buyer ID or SHG farmer ID
-  final String recipientName;          // Recipient name
-  final String recipientPhone;         // Recipient contact
-  
+  final String id; // Tracking ID
+  final String orderId; // Associated order ID
+  final String deliveryType; // 'SHG_TO_SME' or 'PSA_TO_SHG'
+  final String deliveryPersonId; // SHG farmer ID or PSA supplier ID
+  final String deliveryPersonName; // Name of person delivering
+  final String deliveryPersonPhone; // Contact number
+  final String recipientId; // SME buyer ID or SHG farmer ID
+  final String recipientName; // Recipient name
+  final String recipientPhone; // Recipient contact
+
   // GPS Coordinates
-  final LocationPoint originLocation;      // Starting point (farm/warehouse)
+  final LocationPoint originLocation; // Starting point (farm/warehouse)
   final LocationPoint destinationLocation; // End point (SME/SHG location)
-  final LocationPoint? currentLocation;    // Real-time location (nullable during pending)
-  
+  final LocationPoint?
+  currentLocation; // Real-time location (nullable during pending)
+
   // Tracking Status
   final DeliveryStatus status;
-  final DateTime? startedAt;           // When delivery started
-  final DateTime? completedAt;         // When delivery completed
+  final DateTime? startedAt; // When delivery started
+  final DateTime? completedAt; // When delivery completed
   final DateTime createdAt;
   final DateTime updatedAt;
-  
+
   // Additional Info
-  final double? estimatedDistance;     // in kilometers
-  final int? estimatedDuration;        // in minutes
-  final String? notes;                 // Special instructions
+  final double? estimatedDistance; // in kilometers
+  final int? estimatedDuration; // in minutes
+  final String? notes; // Special instructions
   final List<LocationHistory> locationHistory; // GPS breadcrumb trail
 
   DeliveryTracking({
@@ -71,7 +72,7 @@ class DeliveryTracking {
     if (totalDistance == 0) return 0.0; // Already at destination
 
     final remainingDistance = currentLocation!.distanceTo(destinationLocation);
-    
+
     // Return remaining distance as percentage (100% → 0%)
     return (remainingDistance / totalDistance * 100).clamp(0.0, 100.0);
   }
@@ -88,7 +89,7 @@ class DeliveryTracking {
 
     final remainingDistance = currentLocation!.distanceTo(destinationLocation);
     final traveledDistance = totalDistance - remainingDistance;
-    
+
     return (traveledDistance / totalDistance * 100).clamp(0.0, 100.0);
   }
 
@@ -128,7 +129,9 @@ class DeliveryTracking {
       recipientName: data['recipient_name'] ?? '',
       recipientPhone: data['recipient_phone'] ?? '',
       originLocation: LocationPoint.fromMap(data['origin_location'] ?? {}),
-      destinationLocation: LocationPoint.fromMap(data['destination_location'] ?? {}),
+      destinationLocation: LocationPoint.fromMap(
+        data['destination_location'] ?? {},
+      ),
       currentLocation: data['current_location'] != null
           ? LocationPoint.fromMap(data['current_location'])
           : null,
@@ -143,7 +146,8 @@ class DeliveryTracking {
       estimatedDistance: data['estimated_distance']?.toDouble(),
       estimatedDuration: data['estimated_duration'],
       notes: data['notes'],
-      locationHistory: (data['location_history'] as List<dynamic>?)
+      locationHistory:
+          (data['location_history'] as List<dynamic>?)
               ?.map((e) => LocationHistory.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -193,17 +197,19 @@ class LocationPoint {
   /// Calculate distance to another point (Haversine formula) in kilometers
   double distanceTo(LocationPoint other) {
     const double earthRadius = 6371.0;
-    
+
     final lat1Rad = latitude * (3.141592653589793 / 180.0);
     final lat2Rad = other.latitude * (3.141592653589793 / 180.0);
-    final deltaLatRad = (other.latitude - latitude) * (3.141592653589793 / 180.0);
-    final deltaLonRad = (other.longitude - longitude) * (3.141592653589793 / 180.0);
-    
-    final a = (deltaLatRad / 2) * (deltaLatRad / 2) +
-        lat1Rad.cos() * lat2Rad.cos() *
-        (deltaLonRad / 2) * (deltaLonRad / 2);
+    final deltaLatRad =
+        (other.latitude - latitude) * (3.141592653589793 / 180.0);
+    final deltaLonRad =
+        (other.longitude - longitude) * (3.141592653589793 / 180.0);
+
+    final a =
+        (deltaLatRad / 2) * (deltaLatRad / 2) +
+        lat1Rad.cos() * lat2Rad.cos() * (deltaLonRad / 2) * (deltaLonRad / 2);
     final c = 2 * a.sqrt().asin();
-    
+
     return earthRadius * c;
   }
 
@@ -276,12 +282,12 @@ class LocationHistory {
 
 /// Delivery status enum
 enum DeliveryStatus {
-  pending,      // Order created, delivery not started
-  confirmed,    // Delivery confirmed by delivery person
-  inProgress,   // Delivery in progress with live GPS
-  completed,    // Delivery completed successfully
-  cancelled,    // Delivery cancelled
-  failed,       // Delivery failed
+  pending, // Order created, delivery not started
+  confirmed, // Delivery confirmed by delivery person
+  inProgress, // Delivery in progress with live GPS
+  completed, // Delivery completed successfully
+  cancelled, // Delivery cancelled
+  failed, // Delivery failed
 }
 
 extension DeliveryStatusExtension on DeliveryStatus {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/subscription.dart';
 import '../../services/subscription_service.dart';
@@ -9,7 +8,8 @@ class PremiumSMEDirectoryScreen extends StatefulWidget {
   const PremiumSMEDirectoryScreen({super.key});
 
   @override
-  State<PremiumSMEDirectoryScreen> createState() => _PremiumSMEDirectoryScreenState();
+  State<PremiumSMEDirectoryScreen> createState() =>
+      _PremiumSMEDirectoryScreenState();
 }
 
 class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
@@ -28,7 +28,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
 
   // Available districts (will be populated from data)
   List<String> _districts = ['All'];
-  
+
   // Common product categories
   final List<String> _productCategories = [
     'All',
@@ -61,15 +61,16 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
 
     try {
       final contacts = await _subscriptionService.getAllSMEContacts();
-      
+
       // Extract unique districts
-      final districts = contacts
-          .map((c) => c.district)
-          .where((d) => d.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
-      
+      final districts =
+          contacts
+              .map((c) => c.district)
+              .where((d) => d.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
+
       setState(() {
         _allContacts = contacts;
         _filteredContacts = contacts;
@@ -85,7 +86,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
         _error = e.toString();
         _isLoading = false;
       });
-      
+
       if (kDebugMode) {
         debugPrint('❌ Error loading SME contacts: $e');
       }
@@ -102,13 +103,17 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
 
     // District filter
     if (_selectedDistrict != 'All') {
-      filtered = filtered.where((c) => c.district == _selectedDistrict).toList();
+      filtered = filtered
+          .where((c) => c.district == _selectedDistrict)
+          .toList();
     }
 
     // Product filter
     if (_selectedProduct != 'All') {
       filtered = filtered.where((c) {
-        return c.products.any((p) => p.toLowerCase().contains(_selectedProduct.toLowerCase()));
+        return c.products.any(
+          (p) => p.toLowerCase().contains(_selectedProduct.toLowerCase()),
+        );
       }).toList();
     }
 
@@ -122,9 +127,9 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
       final query = _searchController.text.toLowerCase();
       filtered = filtered.where((c) {
         return c.name.toLowerCase().contains(query) ||
-               c.phone.contains(query) ||
-               c.email.toLowerCase().contains(query) ||
-               c.district.toLowerCase().contains(query);
+            c.phone.contains(query) ||
+            c.email.toLowerCase().contains(query) ||
+            c.district.toLowerCase().contains(query);
       }).toList();
     }
 
@@ -172,20 +177,18 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
         children: [
           // Premium Badge
           _buildPremiumBanner(),
-          
+
           // Search Bar
           _buildSearchBar(),
-          
+
           // Filters
           _buildFilters(),
-          
+
           // Results Count
           _buildResultsCount(),
-          
+
           // Contacts List
-          Expanded(
-            child: _buildContactsList(),
-          ),
+          Expanded(child: _buildContactsList()),
         ],
       ),
     );
@@ -218,7 +221,11 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.workspace_premium, color: Colors.white, size: 32),
+            child: const Icon(
+              Icons.workspace_premium,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           const SizedBox(width: 16),
           const Expanded(
@@ -236,10 +243,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
                 SizedBox(height: 4),
                 Text(
                   'Full access to all SME contacts',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
@@ -317,13 +321,16 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // District Filter
           Row(
             children: [
               const Icon(Icons.location_on, size: 20, color: Colors.grey),
               const SizedBox(width: 8),
-              const Text('District:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'District:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: DropdownButton<String>(
@@ -346,13 +353,16 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Product Filter
           Row(
             children: [
               const Icon(Icons.category, size: 20, color: Colors.grey),
               const SizedBox(width: 8),
-              const Text('Product:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'Product:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: DropdownButton<String>(
@@ -375,7 +385,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Verified Only Filter
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
@@ -483,7 +493,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.blue[100],
-                  backgroundImage: contact.profileImage != null 
+                  backgroundImage: contact.profileImage != null
                       ? NetworkImage(contact.profileImage!)
                       : null,
                   child: contact.profileImage == null
@@ -517,10 +527,7 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
                       const SizedBox(height: 4),
                       Text(
                         'Member since ${contact.registeredAt.year}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -530,24 +537,38 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 12),
-            
+
             // Contact Information
-            _buildInfoRow(Icons.phone, 'Phone', contact.phone, onTap: () => _makeCall(contact.phone)),
+            _buildInfoRow(
+              Icons.phone,
+              'Phone',
+              contact.phone,
+              onTap: () => _makeCall(contact.phone),
+            ),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.email, 'Email', contact.email, onTap: () => _sendEmail(contact.email)),
+            _buildInfoRow(
+              Icons.email,
+              'Email',
+              contact.email,
+              onTap: () => _sendEmail(contact.email),
+            ),
             const SizedBox(height: 8),
             _buildInfoRow(Icons.location_on, 'District', contact.district),
-            
+
             if (contact.subCounty != null) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.location_city, 'Sub-County', contact.subCounty!),
+              _buildInfoRow(
+                Icons.location_city,
+                'Sub-County',
+                contact.subCounty!,
+              ),
             ],
-            
+
             if (contact.village != null) ...[
               const SizedBox(height: 8),
               _buildInfoRow(Icons.home, 'Village', contact.village!),
             ],
-            
+
             // Products interested in
             if (contact.products.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -582,7 +603,12 @@ class _PremiumSMEDirectoryScreenState extends State<PremiumSMEDirectoryScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, {VoidCallback? onTap}) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    VoidCallback? onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),

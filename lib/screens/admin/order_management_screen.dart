@@ -8,10 +8,7 @@ import '../../services/csv_export_service.dart';
 class OrderManagementScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const OrderManagementScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const OrderManagementScreen({super.key, required this.adminUser});
 
   @override
   State<OrderManagementScreen> createState() => _OrderManagementScreenState();
@@ -20,15 +17,15 @@ class OrderManagementScreen extends StatefulWidget {
 class _OrderManagementScreenState extends State<OrderManagementScreen> {
   final CsvExportService _csvExportService = CsvExportService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   bool _isExporting = false;
   bool _isLoading = true;
   List<Map<String, dynamic>> _orders = [];
   List<Map<String, dynamic>> _filteredOrders = [];
-  
+
   String _selectedStatus = 'all';
   final TextEditingController _searchController = TextEditingController();
-  
+
   // Statistics
   int _totalOrders = 0;
   int _deliveredOrders = 0;
@@ -56,7 +53,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
 
     try {
       final querySnapshot = await _firestore.collection('orders').get();
-      
+
       final orders = <Map<String, dynamic>>[];
       for (var doc in querySnapshot.docs) {
         final data = doc.data();
@@ -82,9 +79,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load orders: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load orders: $e')));
       }
     }
   }
@@ -98,13 +95,15 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
 
     for (var order in _orders) {
       final status = (order['status'] ?? '').toString().toLowerCase();
-      
+
       // Firebase statuses: delivered, completed, ready, confirmed, shipped, placed, pending
       if (status == 'delivered' || status == 'completed') {
         _deliveredOrders++;
       } else if (status == 'placed' || status == 'created' || status.isEmpty) {
         _pendingOrders++;
-      } else if (status == 'confirmed' || status == 'shipped' || status == 'ready') {
+      } else if (status == 'confirmed' ||
+          status == 'shipped' ||
+          status == 'ready') {
         _inTransitOrders++;
       }
 
@@ -121,16 +120,18 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
         // Filter by status
         if (_selectedStatus != 'all') {
           final status = (order['status'] ?? '').toString().toLowerCase();
-          if (_selectedStatus == 'delivered' && 
+          if (_selectedStatus == 'delivered' &&
               !(status == 'delivered' || status == 'completed')) {
             return false;
           }
-          if (_selectedStatus == 'pending' && 
+          if (_selectedStatus == 'pending' &&
               !(status == 'placed' || status == 'created' || status.isEmpty)) {
             return false;
           }
-          if (_selectedStatus == 'in_transit' && 
-              !(status == 'confirmed' || status == 'shipped' || status == 'ready')) {
+          if (_selectedStatus == 'in_transit' &&
+              !(status == 'confirmed' ||
+                  status == 'shipped' ||
+                  status == 'ready')) {
             return false;
           }
         }
@@ -138,21 +139,28 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
         // Filter by search query
         final query = _searchController.text.toLowerCase();
         if (query.isNotEmpty) {
-          final buyerName = (order['buyer_name'] ?? '').toString().toLowerCase();
-          final buyerId = (order['buyer_system_id'] ?? order['buyer_id'] ?? '').toString().toLowerCase();
+          final buyerName = (order['buyer_name'] ?? '')
+              .toString()
+              .toLowerCase();
+          final buyerId = (order['buyer_system_id'] ?? order['buyer_id'] ?? '')
+              .toString()
+              .toLowerCase();
           final orderId = (order['id'] ?? '').toString().toLowerCase();
-          
+
           // Search in items array for product names
           String productNames = '';
           if (order['items'] is List) {
             final items = order['items'] as List;
-            productNames = items.map((item) => (item['product_name'] ?? '').toString()).join(' ').toLowerCase();
+            productNames = items
+                .map((item) => (item['product_name'] ?? '').toString())
+                .join(' ')
+                .toLowerCase();
           }
-          
-          return buyerName.contains(query) || 
-                 buyerId.contains(query) || 
-                 productNames.contains(query) ||
-                 orderId.contains(query);
+
+          return buyerName.contains(query) ||
+              buyerId.contains(query) ||
+              productNames.contains(query) ||
+              orderId.contains(query);
         }
 
         return true;
@@ -206,7 +214,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
   String _formatDate(dynamic dateValue) {
     try {
       if (dateValue == null) return 'N/A';
-      
+
       DateTime dt;
       if (dateValue is Timestamp) {
         dt = dateValue.toDate();
@@ -215,7 +223,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
       } else {
         return 'Invalid date';
       }
-      
+
       return DateFormat('MMM dd, yyyy HH:mm').format(dt);
     } catch (e) {
       return 'Invalid date';
@@ -249,7 +257,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Order Details - ${order['order_number'] ?? order['id'] ?? 'N/A'}'),
+        title: Text(
+          'Order Details - ${order['order_number'] ?? order['id'] ?? 'N/A'}',
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -264,7 +274,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
-              _buildDetailRow('User ID', order['buyer_system_id'] ?? order['buyer_id'] ?? 'N/A'),
+              _buildDetailRow(
+                'User ID',
+                order['buyer_system_id'] ?? order['buyer_id'] ?? 'N/A',
+              ),
               _buildDetailRow('Name', order['buyer_name'] ?? 'N/A'),
               _buildDetailRow('Phone', order['buyer_phone'] ?? 'N/A'),
               const Divider(),
@@ -273,7 +286,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
-              _buildDetailRow('User ID', order['farmer_system_id'] ?? order['farmer_id'] ?? 'N/A'),
+              _buildDetailRow(
+                'User ID',
+                order['farmer_system_id'] ?? order['farmer_id'] ?? 'N/A',
+              ),
               _buildDetailRow('Name', order['farmer_name'] ?? 'N/A'),
               _buildDetailRow('Phone', order['farmer_phone'] ?? 'N/A'),
               const Divider(),
@@ -283,59 +299,88 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               ),
               const SizedBox(height: 8),
               if (items.isNotEmpty)
-                ...items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['product_name'] ?? 'Unknown Product',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text('Quantity: ${item['quantity']} ${item['unit'] ?? ''}'),
-                        Text('Price: UGX ${NumberFormat('#,###').format(item['price'] ?? 0)} each'),
-                        Text(
-                          'Subtotal: UGX ${NumberFormat('#,###').format(item['subtotal'] ?? 0)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                ...items.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['product_name'] ?? 'Unknown Product',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Quantity: ${item['quantity']} ${item['unit'] ?? ''}',
+                          ),
+                          Text(
+                            'Price: UGX ${NumberFormat('#,###').format(item['price'] ?? 0)} each',
+                          ),
+                          Text(
+                            'Subtotal: UGX ${NumberFormat('#,###').format(item['subtotal'] ?? 0)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )).toList()
+                )
               else
                 const Text('No items found'),
               const SizedBox(height: 8),
               _buildDetailRow('Total Items', totalQuantity.toString()),
-              _buildDetailRow('Total Amount', 'UGX ${NumberFormat('#,###').format(order['total_amount'] ?? 0)}'),
+              _buildDetailRow(
+                'Total Amount',
+                'UGX ${NumberFormat('#,###').format(order['total_amount'] ?? 0)}',
+              ),
               const Divider(),
               const Text(
                 'Delivery Information:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
-              _buildDetailRow('Status', _getStatusLabel(order['status'] ?? 'Unknown')),
-              _buildDetailRow('Payment Method', order['payment_method'] ?? 'N/A'),
-              if (order['delivery_address'] != null && order['delivery_address'].toString().isNotEmpty)
-                _buildDetailRow('Delivery Address', order['delivery_address'].toString()),
-              if (order['delivery_notes'] != null && order['delivery_notes'].toString().isNotEmpty)
+              _buildDetailRow(
+                'Status',
+                _getStatusLabel(order['status'] ?? 'Unknown'),
+              ),
+              _buildDetailRow(
+                'Payment Method',
+                order['payment_method'] ?? 'N/A',
+              ),
+              if (order['delivery_address'] != null &&
+                  order['delivery_address'].toString().isNotEmpty)
+                _buildDetailRow(
+                  'Delivery Address',
+                  order['delivery_address'].toString(),
+                ),
+              if (order['delivery_notes'] != null &&
+                  order['delivery_notes'].toString().isNotEmpty)
                 _buildDetailRow('Delivery Notes', order['delivery_notes']),
               const Divider(),
               _buildDetailRow('Order Date', _formatDate(order['created_at'])),
               if (order['confirmed_at'] != null)
-                _buildDetailRow('Confirmed', _formatDate(order['confirmed_at'])),
+                _buildDetailRow(
+                  'Confirmed',
+                  _formatDate(order['confirmed_at']),
+                ),
               if (order['shipped_at'] != null)
                 _buildDetailRow('Shipped', _formatDate(order['shipped_at'])),
               if (order['delivered_at'] != null)
-                _buildDetailRow('Delivered', _formatDate(order['delivered_at'])),
+                _buildDetailRow(
+                  'Delivered',
+                  _formatDate(order['delivered_at']),
+                ),
               if (order['received_at'] != null)
-                _buildDetailRow('Received by Buyer', _formatDate(order['received_at'])),
+                _buildDetailRow(
+                  'Received by Buyer',
+                  _formatDate(order['received_at']),
+                ),
               if (order['rating'] != null) ...[
                 const Divider(),
                 const Text(
@@ -347,7 +392,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 if (order['review'] != null)
                   _buildDetailRow('Comment', order['review']),
                 if (order['reviewed_at'] != null)
-                  _buildDetailRow('Reviewed', _formatDate(order['reviewed_at'])),
+                  _buildDetailRow(
+                    'Reviewed',
+                    _formatDate(order['reviewed_at']),
+                  ),
               ],
             ],
           ),
@@ -379,12 +427,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );
@@ -414,10 +457,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               onPressed: _isExporting ? null : _exportToCSV,
               tooltip: 'Export to CSV',
             ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadOrders,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadOrders),
         ],
       ),
       body: Column(
@@ -508,7 +548,8 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search by buyer name, ID, product, or order ID...',
+                    hintText:
+                        'Search by buyer name, ID, product, or order ID...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
@@ -527,7 +568,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedStatus,
+                  initialValue: _selectedStatus,
                   decoration: InputDecoration(
                     labelText: 'Filter by Status',
                     border: OutlineInputBorder(
@@ -540,9 +581,15 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'all', child: Text('All Orders')),
-                    DropdownMenuItem(value: 'delivered', child: Text('Delivered')),
+                    DropdownMenuItem(
+                      value: 'delivered',
+                      child: Text('Delivered'),
+                    ),
                     DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                    DropdownMenuItem(value: 'in_transit', child: Text('In Transit')),
+                    DropdownMenuItem(
+                      value: 'in_transit',
+                      child: Text('In Transit'),
+                    ),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -560,150 +607,241 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredOrders.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.shopping_cart_outlined,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No orders found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadOrders,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(
-                                  const Color(0xFF2E7D32).withValues(alpha: 0.1),
-                                ),
-                                border: TableBorder.all(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                                columns: const [
-                                  DataColumn(label: Text('Order ID', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('User ID', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('User Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Product', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Quantity', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Cost (UGX)', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
-                                ],
-                                rows: _filteredOrders.map((order) {
-                                  final status = order['status'] ?? 'Unknown';
-                                  final statusLabel = _getStatusLabel(status);
-                                  final statusColor = _getStatusColor(status);
-                                  
-                                  // Extract products from items array
-                                  String productNames = 'N/A';
-                                  int totalQuantity = 0;
-                                  if (order['items'] is List) {
-                                    final items = order['items'] as List;
-                                    if (items.isNotEmpty) {
-                                      productNames = items.map((item) => item['product_name'] ?? 'Unknown').join(', ');
-                                      for (var item in items) {
-                                        totalQuantity += (item['quantity'] ?? 0) as int;
-                                      }
-                                    }
-                                  }
-
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Text(
-                                          (order['order_number'] ?? order['id'] ?? 'N/A').toString().length > 15
-                                              ? (order['order_number'] ?? order['id']).toString().substring(0, 12) + '...'
-                                              : (order['order_number'] ?? order['id'] ?? 'N/A').toString(),
-                                          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-                                        ),
-                                      ),
-                                      DataCell(Text(order['buyer_system_id'] ?? order['buyer_id'] ?? 'N/A')),
-                                      DataCell(
-                                        Text(
-                                          order['buyer_name'] ?? 'Unknown',
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        SizedBox(
-                                          width: 200,
-                                          child: Text(
-                                            productNames,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 2,
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          totalQuantity.toString(),
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          NumberFormat('#,###').format(order['total_amount'] ?? 0),
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: statusColor.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: statusColor),
-                                          ),
-                                          child: Text(
-                                            statusLabel,
-                                            style: TextStyle(
-                                              color: statusColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(Text(_formatDate(order['created_at']))),
-                                      DataCell(
-                                        IconButton(
-                                          icon: const Icon(Icons.visibility, size: 20),
-                                          onPressed: () => _showOrderDetails(order),
-                                          tooltip: 'View Details',
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No orders found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadOrders,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: DataTable(
+                            headingRowColor: WidgetStateProperty.all(
+                              const Color(0xFF2E7D32).withValues(alpha: 0.1),
                             ),
+                            border: TableBorder.all(
+                              color: Colors.grey.shade300,
+                              width: 1,
+                            ),
+                            columns: const [
+                              DataColumn(
+                                label: Text(
+                                  'Order ID',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'User ID',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'User Name',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Product',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Quantity',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Cost (UGX)',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Status',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Date',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Actions',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                            rows: _filteredOrders.map((order) {
+                              final status = order['status'] ?? 'Unknown';
+                              final statusLabel = _getStatusLabel(status);
+                              final statusColor = _getStatusColor(status);
+
+                              // Extract products from items array
+                              String productNames = 'N/A';
+                              int totalQuantity = 0;
+                              if (order['items'] is List) {
+                                final items = order['items'] as List;
+                                if (items.isNotEmpty) {
+                                  productNames = items
+                                      .map(
+                                        (item) =>
+                                            item['product_name'] ?? 'Unknown',
+                                      )
+                                      .join(', ');
+                                  for (var item in items) {
+                                    totalQuantity +=
+                                        (item['quantity'] ?? 0) as int;
+                                  }
+                                }
+                              }
+
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(
+                                      (order['order_number'] ??
+                                                      order['id'] ??
+                                                      'N/A')
+                                                  .toString()
+                                                  .length >
+                                              15
+                                          ? '${(order['order_number'] ?? order['id']).toString().substring(0, 12)}...'
+                                          : (order['order_number'] ??
+                                                    order['id'] ??
+                                                    'N/A')
+                                                .toString(),
+                                      style: const TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      order['buyer_system_id'] ??
+                                          order['buyer_id'] ??
+                                          'N/A',
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      order['buyer_name'] ?? 'Unknown',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    SizedBox(
+                                      width: 200,
+                                      child: Text(
+                                        productNames,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      totalQuantity.toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      NumberFormat(
+                                        '#,###',
+                                      ).format(order['total_amount'] ?? 0),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: statusColor),
+                                      ),
+                                      child: Text(
+                                        statusLabel,
+                                        style: TextStyle(
+                                          color: statusColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(_formatDate(order['created_at'])),
+                                  ),
+                                  DataCell(
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.visibility,
+                                        size: 20,
+                                      ),
+                                      onPressed: () => _showOrderDetails(order),
+                                      tooltip: 'View Details',
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -725,10 +863,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
             textAlign: TextAlign.center,
           ),
         ],

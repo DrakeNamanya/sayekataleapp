@@ -28,11 +28,11 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
 
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
-      
+
       if (userId != null) {
         final products = await _productService.getFarmerProducts(userId);
         setState(() {
@@ -45,9 +45,9 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load products: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load products: $e')));
       }
     }
   }
@@ -63,12 +63,15 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
     }
   }
 
-  int get _lowStockCount => _products.where((p) => p.isLowStock && !p.isOutOfStock).length;
+  int get _lowStockCount =>
+      _products.where((p) => p.isLowStock && !p.isOutOfStock).length;
   int get _outOfStockCount => _products.where((p) => p.isOutOfStock).length;
 
   Future<void> _adjustStock(Product product) async {
-    final controller = TextEditingController(text: product.stockQuantity.toString());
-    
+    final controller = TextEditingController(
+      text: product.stockQuantity.toString(),
+    );
+
     final result = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
@@ -130,9 +133,9 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update stock: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to update stock: $e')));
         }
       }
     }
@@ -255,7 +258,8 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                           count: _lowStockCount,
                           isSelected: _filterType == 'low_stock',
                           color: AppTheme.warningColor,
-                          onTap: () => setState(() => _filterType = 'low_stock'),
+                          onTap: () =>
+                              setState(() => _filterType = 'low_stock'),
                         ),
                         const SizedBox(width: 8),
                         _FilterChip(
@@ -263,7 +267,8 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                           count: _outOfStockCount,
                           isSelected: _filterType == 'out_of_stock',
                           color: AppTheme.errorColor,
-                          onTap: () => setState(() => _filterType = 'out_of_stock'),
+                          onTap: () =>
+                              setState(() => _filterType = 'out_of_stock'),
                         ),
                       ],
                     ),
@@ -286,8 +291,8 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                                   _filterType == 'all'
                                       ? 'No products in inventory'
                                       : _filterType == 'low_stock'
-                                          ? 'No low stock items'
-                                          : 'No out of stock items',
+                                      ? 'No low stock items'
+                                      : 'No out of stock items',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey.shade600,
@@ -310,8 +315,10 @@ class _PSAInventoryScreenState extends State<PSAInventoryScreen> {
                             itemBuilder: (context, index) {
                               return _InventoryCard(
                                 product: _filteredProducts[index],
-                                onAdjust: () => _adjustStock(_filteredProducts[index]),
-                                onDelete: () => _deleteProduct(_filteredProducts[index]),
+                                onAdjust: () =>
+                                    _adjustStock(_filteredProducts[index]),
+                                onDelete: () =>
+                                    _deleteProduct(_filteredProducts[index]),
                               );
                             },
                           ),
@@ -367,10 +374,7 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -396,7 +400,7 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppTheme.primaryColor;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -425,7 +429,9 @@ class _FilterChip extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white.withValues(alpha: 0.3) : chipColor.withValues(alpha: 0.1),
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.3)
+                    : chipColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -468,8 +474,8 @@ class _InventoryCard extends StatelessWidget {
           color: isOutOfStock
               ? AppTheme.errorColor
               : isLowStock
-                  ? AppTheme.warningColor
-                  : Colors.grey.shade200,
+              ? AppTheme.warningColor
+              : Colors.grey.shade200,
           width: isOutOfStock || isLowStock ? 2 : 1,
         ),
       ),
@@ -492,7 +498,8 @@ class _InventoryCard extends StatelessWidget {
                           color: AppTheme.textPrimary,
                         ),
                       ),
-                      if (product.description != null && product.description!.isNotEmpty) ...[
+                      if (product.description != null &&
+                          product.description!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
                           product.description!,
@@ -509,7 +516,10 @@ class _InventoryCard extends StatelessWidget {
                 ),
                 if (isOutOfStock)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.errorColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -525,7 +535,10 @@ class _InventoryCard extends StatelessWidget {
                   )
                 else if (isLowStock)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.warningColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -564,8 +577,8 @@ class _InventoryCard extends StatelessWidget {
                           color: isOutOfStock
                               ? AppTheme.errorColor
                               : isLowStock
-                                  ? AppTheme.warningColor
-                                  : AppTheme.primaryColor,
+                              ? AppTheme.warningColor
+                              : AppTheme.primaryColor,
                         ),
                       ),
                     ],

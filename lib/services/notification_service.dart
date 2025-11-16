@@ -36,7 +36,9 @@ class NotificationService {
         'created_at': now,
       };
 
-      final docRef = await _firestore.collection('notifications').add(notification);
+      final docRef = await _firestore
+          .collection('notifications')
+          .add(notification);
 
       if (kDebugMode) {
         debugPrint('✅ Notification created with ID: ${docRef.id}');
@@ -63,19 +65,19 @@ class NotificationService {
         // Removed .orderBy() to avoid potential composite index requirement
         .snapshots()
         .map((snapshot) {
-      // Get notifications
-      final notifications = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return AppNotification.fromFirestore(data, doc.id);
-      }).toList();
-      
-      // Sort in memory by created_at (most recent first)
-      notifications.sort((a, b) {
-        return b.createdAt.compareTo(a.createdAt);
-      });
-      
-      return notifications;
-    });
+          // Get notifications
+          final notifications = snapshot.docs.map((doc) {
+            final data = doc.data();
+            return AppNotification.fromFirestore(data, doc.id);
+          }).toList();
+
+          // Sort in memory by created_at (most recent first)
+          notifications.sort((a, b) {
+            return b.createdAt.compareTo(a.createdAt);
+          });
+
+          return notifications;
+        });
   }
 
   /// Get unread notifications count
@@ -109,11 +111,11 @@ class NotificationService {
         // Removed second .where() to avoid composite index requirement
         .snapshots()
         .map((snapshot) {
-      // Filter unread in memory
-      return snapshot.docs
-          .where((doc) => doc.data()['is_read'] == false)
-          .length;
-    });
+          // Filter unread in memory
+          return snapshot.docs
+              .where((doc) => doc.data()['is_read'] == false)
+              .length;
+        });
   }
 
   // ============================================================================
@@ -146,7 +148,7 @@ class NotificationService {
           .collection('notifications')
           .where('user_id', isEqualTo: userId)
           .get();
-      
+
       // Filter unread in memory
       final unreadDocs = querySnapshot.docs
           .where((doc) => doc.data()['is_read'] == false)
@@ -232,7 +234,8 @@ class NotificationService {
         userId: sellerId,
         type: NotificationType.order,
         title: '🛒 New Order Received!',
-        message: 'You have a new order from $buyerName worth UGX ${totalAmount.toStringAsFixed(0)}',
+        message:
+            'You have a new order from $buyerName worth UGX ${totalAmount.toStringAsFixed(0)}',
         actionUrl: '/orders/$orderId',
         relatedId: orderId,
       );
@@ -254,7 +257,8 @@ class NotificationService {
         userId: buyerId,
         type: NotificationType.order,
         title: '✅ Order Confirmed!',
-        message: '$sellerName has confirmed your order and will start preparing it',
+        message:
+            '$sellerName has confirmed your order and will start preparing it',
         actionUrl: '/orders/$orderId',
         relatedId: orderId,
       );
@@ -295,7 +299,8 @@ class NotificationService {
           break;
         case 'delivered':
           title = '📦 Order Delivered';
-          message = 'Your order from $sellerName has been delivered. Please confirm receipt.';
+          message =
+              'Your order from $sellerName has been delivered. Please confirm receipt.';
           break;
         case 'completed':
           title = '🎉 Order Completed';
@@ -337,8 +342,8 @@ class NotificationService {
         userId: recipientId,
         type: NotificationType.message,
         title: '💬 New Message from $senderName',
-        message: messagePreview.length > 100 
-            ? '${messagePreview.substring(0, 100)}...' 
+        message: messagePreview.length > 100
+            ? '${messagePreview.substring(0, 100)}...'
             : messagePreview,
         actionUrl: '/messages/$conversationId',
         relatedId: conversationId,
@@ -362,7 +367,8 @@ class NotificationService {
         userId: userId,
         type: NotificationType.alert,
         title: '⚠️ Low Stock Alert',
-        message: 'Your product "$productName" is running low (only $currentStock left)',
+        message:
+            'Your product "$productName" is running low (only $currentStock left)',
         actionUrl: '/products/$productId',
         relatedId: productId,
       );
@@ -392,7 +398,9 @@ class NotificationService {
       }
 
       if (kDebugMode) {
-        debugPrint('✅ Sent promotional notification to ${userIds.length} users');
+        debugPrint(
+          '✅ Sent promotional notification to ${userIds.length} users',
+        );
       }
     } catch (e) {
       if (kDebugMode) {

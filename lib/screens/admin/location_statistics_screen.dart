@@ -30,7 +30,11 @@ class LocationStatisticsScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.location_on, color: AppTheme.primaryColor, size: 32),
+                      Icon(
+                        Icons.location_on,
+                        color: AppTheme.primaryColor,
+                        size: 32,
+                      ),
                       const SizedBox(width: 12),
                       const Text(
                         'Database Summary',
@@ -42,9 +46,17 @@ class LocationStatisticsScreen extends StatelessWidget {
                     ],
                   ),
                   const Divider(height: 32),
-                  _buildStatRow('Districts', stats['districts']!, Icons.location_city),
+                  _buildStatRow(
+                    'Districts',
+                    stats['districts']!,
+                    Icons.location_city,
+                  ),
                   const SizedBox(height: 16),
-                  _buildStatRow('Subcounties', stats['subcounties']!, Icons.account_balance),
+                  _buildStatRow(
+                    'Subcounties',
+                    stats['subcounties']!,
+                    Icons.account_balance,
+                  ),
                   const SizedBox(height: 16),
                   _buildStatRow('Parishes', stats['parishes']!, Icons.church),
                   const SizedBox(height: 16),
@@ -58,10 +70,7 @@ class LocationStatisticsScreen extends StatelessWidget {
           // Districts List
           const Text(
             'Available Districts',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Card(
@@ -70,20 +79,33 @@ class LocationStatisticsScreen extends StatelessWidget {
                 final subcounties = UgandaLocationData.getSubcounties(district);
                 int parishCount = 0;
                 int villageCount = 0;
-                
+
                 for (var subcounty in subcounties) {
-                  final parishes = UgandaLocationData.getParishes(district, subcounty);
+                  final parishes = UgandaLocationData.getParishes(
+                    district,
+                    subcounty,
+                  );
                   parishCount += parishes.length;
                   for (var parish in parishes) {
-                    final villages = UgandaLocationData.getVillages(district, subcounty, parish);
+                    final villages = UgandaLocationData.getVillages(
+                      district,
+                      subcounty,
+                      parish,
+                    );
                     villageCount += villages.length;
                   }
                 }
 
                 return ExpansionTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
-                    child: Icon(Icons.location_city, color: AppTheme.primaryColor, size: 20),
+                    backgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.2,
+                    ),
+                    child: Icon(
+                      Icons.location_city,
+                      color: AppTheme.primaryColor,
+                      size: 20,
+                    ),
                   ),
                   title: Text(
                     district,
@@ -94,17 +116,24 @@ class LocationStatisticsScreen extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${subcounties.length} Subcounties • $parishCount Parishes • $villageCount Villages',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                   children: subcounties.map((subcounty) {
-                    final parishes = UgandaLocationData.getParishes(district, subcounty);
+                    final parishes = UgandaLocationData.getParishes(
+                      district,
+                      subcounty,
+                    );
                     return ListTile(
                       dense: true,
-                      contentPadding: const EdgeInsets.only(left: 72, right: 16),
-                      leading: Icon(Icons.arrow_right, color: AppTheme.accentColor, size: 20),
+                      contentPadding: const EdgeInsets.only(
+                        left: 72,
+                        right: 16,
+                      ),
+                      leading: Icon(
+                        Icons.arrow_right,
+                        color: AppTheme.accentColor,
+                        size: 20,
+                      ),
                       title: Text(subcounty),
                       subtitle: Text('${parishes.length} parishes'),
                     );
@@ -144,18 +173,12 @@ class LocationStatisticsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text(
                     'Data Structure:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     'District → Subcounty/Town → Parish → Village',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
@@ -184,10 +207,7 @@ class LocationStatisticsScreen extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               Text(
                 value.toString(),

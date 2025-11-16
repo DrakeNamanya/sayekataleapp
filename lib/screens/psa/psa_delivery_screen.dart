@@ -7,9 +7,7 @@ class PSADeliveryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Delivery Management'),
-      ),
+      appBar: AppBar(title: const Text('Delivery Management')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,10 +32,7 @@ class PSADeliveryScreen extends StatelessWidget {
               child: Text(
                 'GPS tracking, delivery schedule management, and real-time delivery status updates',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
               ),
             ),
           ],

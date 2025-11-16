@@ -4,16 +4,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io' show Platform;
 
 /// Simple AdMob Banner Widget with Web compatibility
-/// 
+///
 /// On Web: Shows placeholder message (AdMob not supported on Web)
 /// On Android/iOS: Shows actual AdMob banner with test Ad Unit IDs
 class AdMobBannerWidget extends StatefulWidget {
   final Color? backgroundColor;
-  
-  const AdMobBannerWidget({
-    super.key,
-    this.backgroundColor,
-  });
+
+  const AdMobBannerWidget({super.key, this.backgroundColor});
 
   @override
   State<AdMobBannerWidget> createState() => _AdMobBannerWidgetState();
@@ -68,7 +65,7 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
             });
           }
         },
-        
+
         // Ad failed to load
         onAdFailedToLoad: (ad, error) {
           if (kDebugMode) {
@@ -84,28 +81,28 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
             });
           }
         },
-        
+
         // Ad opened (user clicked)
         onAdOpened: (ad) {
           if (kDebugMode) {
             debugPrint('📱 AdMob Banner opened - User clicked ad');
           }
         },
-        
+
         // Ad closed
         onAdClosed: (ad) {
           if (kDebugMode) {
             debugPrint('📱 AdMob Banner closed - User returned to app');
           }
         },
-        
+
         // Ad impression logged
         onAdImpression: (ad) {
           if (kDebugMode) {
             debugPrint('👁️ AdMob Banner impression recorded');
           }
         },
-        
+
         // Ad clicked
         onAdClicked: (ad) {
           if (kDebugMode) {
@@ -117,7 +114,7 @@ class _AdMobBannerWidgetState extends State<AdMobBannerWidget> {
 
     // Load the ad
     _bannerAd?.load();
-    
+
     if (kDebugMode) {
       debugPrint('🔄 Loading AdMob Banner...');
       debugPrint('   Ad Unit ID: $_adUnitId');

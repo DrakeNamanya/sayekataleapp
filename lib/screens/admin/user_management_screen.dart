@@ -7,10 +7,7 @@ import '../../services/csv_export_service.dart';
 class UserManagementScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const UserManagementScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const UserManagementScreen({super.key, required this.adminUser});
 
   @override
   State<UserManagementScreen> createState() => _UserManagementScreenState();
@@ -58,9 +55,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load users: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
       }
     }
   }
@@ -84,7 +81,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           final name = (user['name'] ?? '').toString().toLowerCase();
           final email = (user['email'] ?? '').toString().toLowerCase();
           final id = (user['id'] ?? '').toString().toLowerCase();
-          return name.contains(query) || email.contains(query) || id.contains(query);
+          return name.contains(query) ||
+              email.contains(query) ||
+              id.contains(query);
         }
 
         return true;
@@ -116,10 +115,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Previous suspension reason:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Text(
                   user['suspension_reason'],
@@ -191,7 +187,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+                  Icon(
+                    Icons.warning_amber,
+                    color: Colors.orange.shade700,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -213,7 +213,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             onPressed: () {
               if (reasonController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a suspension reason')),
+                  const SnackBar(
+                    content: Text('Please enter a suspension reason'),
+                  ),
                 );
                 return;
               }
@@ -248,9 +250,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to suspend user: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to suspend user: $e')));
       }
     }
   }
@@ -269,9 +271,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to unsuspend user: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to unsuspend user: $e')));
       }
     }
   }
@@ -297,9 +299,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               _buildDetailRow(
                 'Status',
                 (user['is_suspended'] ?? false) ? 'SUSPENDED' : 'Active',
-                valueColor: (user['is_suspended'] ?? false) ? Colors.red : Colors.green,
+                valueColor: (user['is_suspended'] ?? false)
+                    ? Colors.red
+                    : Colors.green,
               ),
-              if (user['is_suspended'] == true && user['suspension_reason'] != null) ...[
+              if (user['is_suspended'] == true &&
+                  user['suspension_reason'] != null) ...[
                 const Divider(),
                 const Text(
                   'Suspension Details:',
@@ -308,7 +313,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 const SizedBox(height: 8),
                 _buildDetailRow('Reason', user['suspension_reason']),
                 if (user['suspended_at'] != null)
-                  _buildDetailRow('Suspended At', _formatDate(user['suspended_at'])),
+                  _buildDetailRow(
+                    'Suspended At',
+                    _formatDate(user['suspended_at']),
+                  ),
               ],
             ],
           ),
@@ -407,7 +415,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final suspendedCount = _users.where((u) => u['is_suspended'] == true).length;
+    final suspendedCount = _users
+        .where((u) => u['is_suspended'] == true)
+        .length;
     final activeCount = _users.length - suspendedCount;
 
     return Scaffold(
@@ -432,10 +442,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               onPressed: _isExporting ? null : _exportToCSV,
               tooltip: 'Export to CSV',
             ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadUsers,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadUsers),
         ],
       ),
       body: Column(
@@ -507,7 +514,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedRole,
+                        initialValue: _selectedRole,
                         decoration: InputDecoration(
                           labelText: 'Role',
                           border: OutlineInputBorder(
@@ -519,10 +526,22 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           ),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'All', child: Text('All Roles')),
-                          DropdownMenuItem(value: 'shg', child: Text('SHG (Farmers)')),
-                          DropdownMenuItem(value: 'psa', child: Text('PSA (Suppliers)')),
-                          DropdownMenuItem(value: 'sme', child: Text('SME (Buyers)')),
+                          DropdownMenuItem(
+                            value: 'All',
+                            child: Text('All Roles'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'shg',
+                            child: Text('SHG (Farmers)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'psa',
+                            child: Text('PSA (Suppliers)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'sme',
+                            child: Text('SME (Buyers)'),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -535,7 +554,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         decoration: InputDecoration(
                           labelText: 'Status',
                           border: OutlineInputBorder(
@@ -547,9 +566,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           ),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'All', child: Text('All Status')),
-                          DropdownMenuItem(value: 'Active', child: Text('Active')),
-                          DropdownMenuItem(value: 'Suspended', child: Text('Suspended')),
+                          DropdownMenuItem(
+                            value: 'All',
+                            child: Text('All Status'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Active',
+                            child: Text('Active'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Suspended',
+                            child: Text('Suspended'),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() {
@@ -570,41 +598,49 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredUsers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No users found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Colors.grey.shade400,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadUsers,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = _filteredUsers[index];
-                            return _buildUserCard(user);
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No users found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadUsers,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _filteredUsers[index];
+                        return _buildUserCard(user);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatChip(String label, String value, Color color, IconData icon) {
+  Widget _buildStatChip(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -626,10 +662,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
           ),
         ],
       ),
@@ -754,7 +787,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            (user['role'] ?? 'unknown').toString().toUpperCase(),
+                            (user['role'] ?? 'unknown')
+                                .toString()
+                                .toUpperCase(),
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.blue.shade700,
@@ -762,7 +797,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             ),
                           ),
                         ),
-                        if (isSuspended && user['suspension_reason'] != null) ...[
+                        if (isSuspended &&
+                            user['suspension_reason'] != null) ...[
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -784,7 +820,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               ),
 
               // Action Button
-              if (widget.adminUser.hasPermission(AdminPermissions.suspendAccounts))
+              if (widget.adminUser.hasPermission(
+                AdminPermissions.suspendAccounts,
+              ))
                 IconButton(
                   icon: Icon(
                     isSuspended ? Icons.check_circle : Icons.block,

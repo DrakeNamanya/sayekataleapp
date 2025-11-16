@@ -7,7 +7,7 @@ class PhotoUploadWidget extends StatefulWidget {
   final Function(List<XFile>) onPhotosSelected;
   final int maxPhotos;
   final List<XFile> initialPhotos;
-  
+
   const PhotoUploadWidget({
     super.key,
     required this.onPhotosSelected,
@@ -47,9 +47,9 @@ class _PhotoUploadWidgetState extends State<PhotoUploadWidget> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking images: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking images: $e')));
       }
     }
   }
@@ -72,9 +72,9 @@ class _PhotoUploadWidgetState extends State<PhotoUploadWidget> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error taking picture: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error taking picture: $e')));
       }
     }
   }
@@ -122,24 +122,22 @@ class _PhotoUploadWidgetState extends State<PhotoUploadWidget> {
         // Header
         Row(
           children: [
-            const Icon(Icons.photo_camera, size: 20, color: AppTheme.primaryColor),
+            const Icon(
+              Icons.photo_camera,
+              size: 20,
+              color: AppTheme.primaryColor,
+            ),
             const SizedBox(width: 8),
             Text(
               'Add Photos (${_selectedPhotos.length}/${widget.maxPhotos})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
         const SizedBox(height: 8),
         Text(
           'Add photos to help others make better decisions',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
 
@@ -197,11 +195,7 @@ class _PhotoUploadWidgetState extends State<PhotoUploadWidget> {
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                size: 16,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
         ),
@@ -231,10 +225,7 @@ class _PhotoUploadWidgetState extends State<PhotoUploadWidget> {
             const SizedBox(height: 4),
             Text(
               'Add Photo',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),

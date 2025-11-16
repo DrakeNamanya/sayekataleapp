@@ -7,9 +7,7 @@ class PSACustomersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Customers'),
-      ),
+      appBar: AppBar(title: const Text('Customers')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -34,10 +32,7 @@ class PSACustomersScreen extends StatelessWidget {
               child: Text(
                 'CRM for farmer relationships, purchase history, and customer insights',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
               ),
             ),
           ],

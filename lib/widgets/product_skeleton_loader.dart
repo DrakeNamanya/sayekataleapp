@@ -4,11 +4,8 @@ import 'package:shimmer/shimmer.dart';
 /// Skeleton loader for product cards
 class ProductSkeletonLoader extends StatelessWidget {
   final bool isListView;
-  
-  const ProductSkeletonLoader({
-    super.key,
-    this.isListView = false,
-  });
+
+  const ProductSkeletonLoader({super.key, this.isListView = false});
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +52,12 @@ class ProductSkeletonLoader extends StatelessWidget {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
@@ -74,7 +73,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  
+
                   // Subtitle placeholder
                   Container(
                     height: 12,
@@ -85,7 +84,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  
+
                   // Rating placeholder
                   Container(
                     height: 10,
@@ -96,7 +95,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Price placeholder
                   Container(
                     height: 16,
@@ -107,7 +106,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Button placeholder
                   Container(
                     height: 32,
@@ -149,7 +148,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Details placeholder
               Expanded(
                 child: Column(
@@ -165,7 +164,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Subtitle
                     Container(
                       height: 13,
@@ -176,7 +175,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Rating
                     Container(
                       height: 12,
@@ -187,7 +186,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Distance
                     Container(
                       height: 12,
@@ -198,7 +197,7 @@ class ProductSkeletonLoader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Price and button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -15,12 +15,12 @@ class ValidationTestScreen extends StatefulWidget {
 
 class _ValidationTestScreenState extends State<ValidationTestScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _ninController = TextEditingController();
   final _tinController = TextEditingController();
   final _businessRegController = TextEditingController();
-  
+
   // Validation results
   String? _ninResult;
   String? _ninType;
@@ -28,7 +28,7 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
   String? _tinEntityType;
   String? _businessRegResult;
   Sex? _selectedSex;
-  
+
   // Test results
   final List<TestResult> _testResults = [];
 
@@ -58,7 +58,9 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
       final error = UgandaBusinessValidators.validateTIN(_tinController.text);
       if (error == null) {
         _tinResult = '✅ Valid TIN';
-        _tinEntityType = UgandaBusinessValidators.getTINEntityType(_tinController.text);
+        _tinEntityType = UgandaBusinessValidators.getTINEntityType(
+          _tinController.text,
+        );
       } else {
         _tinResult = '❌ $error';
         _tinEntityType = null;
@@ -68,7 +70,9 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
 
   void _validateBusinessReg() {
     setState(() {
-      final error = UgandaBusinessValidators.validateBusinessReg(_businessRegController.text);
+      final error = UgandaBusinessValidators.validateBusinessReg(
+        _businessRegController.text,
+      );
       if (error == null) {
         _businessRegResult = '✅ Valid Business Registration';
       } else {
@@ -79,47 +83,129 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
 
   void _runAllTests() {
     _testResults.clear();
-    
+
     // Test 1: NIN with alphanumeric characters
-    _testResults.add(_testNIN('CM12AB34CD56EF78', shouldPass: true, description: 'Alphanumeric NIN (Citizen)'));
-    _testResults.add(_testNIN('AF98XY76ZW54QR32', shouldPass: true, description: 'Alphanumeric NIN (Foreign Resident)'));
-    _testResults.add(_testNIN('CM9010000000123', shouldPass: true, description: 'Numeric NIN (backward compatible)'));
-    _testResults.add(_testNIN('XM1234567890123', shouldPass: false, description: 'Invalid first letter'));
-    _testResults.add(_testNIN('CM12AB34CD', shouldPass: false, description: 'Too short'));
-    
+    _testResults.add(
+      _testNIN(
+        'CM12AB34CD56EF78',
+        shouldPass: true,
+        description: 'Alphanumeric NIN (Citizen)',
+      ),
+    );
+    _testResults.add(
+      _testNIN(
+        'AF98XY76ZW54QR32',
+        shouldPass: true,
+        description: 'Alphanumeric NIN (Foreign Resident)',
+      ),
+    );
+    _testResults.add(
+      _testNIN(
+        'CM9010000000123',
+        shouldPass: true,
+        description: 'Numeric NIN (backward compatible)',
+      ),
+    );
+    _testResults.add(
+      _testNIN(
+        'XM1234567890123',
+        shouldPass: false,
+        description: 'Invalid first letter',
+      ),
+    );
+    _testResults.add(
+      _testNIN('CM12AB34CD', shouldPass: false, description: 'Too short'),
+    );
+
     // Test 2: TIN validation
-    _testResults.add(_testTIN('1000123456', shouldPass: true, expectedType: 'Business/Company'));
-    _testResults.add(_testTIN('2000123456', shouldPass: true, expectedType: 'Individual Taxpayer'));
-    _testResults.add(_testTIN('3000123456', shouldPass: true, expectedType: 'Government Entity'));
-    _testResults.add(_testTIN('0000123456', shouldPass: false, description: 'Invalid first digit'));
-    _testResults.add(_testTIN('100012345', shouldPass: false, description: 'Too short'));
-    _testResults.add(_testTIN('100012345A', shouldPass: false, description: 'Contains letters'));
-    
+    _testResults.add(
+      _testTIN(
+        '1000123456',
+        shouldPass: true,
+        expectedType: 'Business/Company',
+      ),
+    );
+    _testResults.add(
+      _testTIN(
+        '2000123456',
+        shouldPass: true,
+        expectedType: 'Individual Taxpayer',
+      ),
+    );
+    _testResults.add(
+      _testTIN(
+        '3000123456',
+        shouldPass: true,
+        expectedType: 'Government Entity',
+      ),
+    );
+    _testResults.add(
+      _testTIN(
+        '0000123456',
+        shouldPass: false,
+        description: 'Invalid first digit',
+      ),
+    );
+    _testResults.add(
+      _testTIN('100012345', shouldPass: false, description: 'Too short'),
+    );
+    _testResults.add(
+      _testTIN(
+        '100012345A',
+        shouldPass: false,
+        description: 'Contains letters',
+      ),
+    );
+
     // Test 3: Business Registration
-    _testResults.add(_testBusinessReg('80034730481569', shouldPass: true, description: 'From URSB certificate'));
-    _testResults.add(_testBusinessReg('8003473048156', shouldPass: false, description: 'Too short (13 digits)'));
-    _testResults.add(_testBusinessReg('8003473048156A', shouldPass: false, description: 'Contains letters'));
-    
+    _testResults.add(
+      _testBusinessReg(
+        '80034730481569',
+        shouldPass: true,
+        description: 'From URSB certificate',
+      ),
+    );
+    _testResults.add(
+      _testBusinessReg(
+        '8003473048156',
+        shouldPass: false,
+        description: 'Too short (13 digits)',
+      ),
+    );
+    _testResults.add(
+      _testBusinessReg(
+        '8003473048156A',
+        shouldPass: false,
+        description: 'Contains letters',
+      ),
+    );
+
     setState(() {});
-    
+
     // Show summary
     final passed = _testResults.where((r) => r.passed).length;
     final total = _testResults.length;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Test Results: $passed/$total passed'),
-        backgroundColor: passed == total ? AppTheme.successColor : AppTheme.warningColor,
+        backgroundColor: passed == total
+            ? AppTheme.successColor
+            : AppTheme.warningColor,
         duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  TestResult _testNIN(String value, {required bool shouldPass, String? description}) {
+  TestResult _testNIN(
+    String value, {
+    required bool shouldPass,
+    String? description,
+  }) {
     final error = NINValidator.validateNIN(value);
     final actuallyPassed = error == null;
     final type = actuallyPassed ? NINValidator.getNINType(value) : null;
-    
+
     return TestResult(
       name: 'NIN: $value',
       description: description ?? '',
@@ -130,30 +216,43 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
     );
   }
 
-  TestResult _testTIN(String value, {required bool shouldPass, String? expectedType, String? description}) {
+  TestResult _testTIN(
+    String value, {
+    required bool shouldPass,
+    String? expectedType,
+    String? description,
+  }) {
     final error = UgandaBusinessValidators.validateTIN(value);
     final actuallyPassed = error == null;
-    final type = actuallyPassed ? UgandaBusinessValidators.getTINEntityType(value) : null;
-    
+    final type = actuallyPassed
+        ? UgandaBusinessValidators.getTINEntityType(value)
+        : null;
+
     bool correctType = true;
     if (expectedType != null && type != null) {
       correctType = type == expectedType;
     }
-    
+
     return TestResult(
       name: 'TIN: $value',
       description: description ?? (expectedType ?? ''),
       expectedPass: shouldPass,
       actualPass: actuallyPassed,
       passed: actuallyPassed == shouldPass && correctType,
-      details: actuallyPassed ? 'Type: $type${correctType ? '' : ' (Expected: $expectedType)'}' : 'Error: $error',
+      details: actuallyPassed
+          ? 'Type: $type${correctType ? '' : ' (Expected: $expectedType)'}'
+          : 'Error: $error',
     );
   }
 
-  TestResult _testBusinessReg(String value, {required bool shouldPass, String? description}) {
+  TestResult _testBusinessReg(
+    String value, {
+    required bool shouldPass,
+    String? description,
+  }) {
     final error = UgandaBusinessValidators.validateBusinessReg(value);
     final actuallyPassed = error == null;
-    
+
     return TestResult(
       name: 'Business Reg: $value',
       description: description ?? '',
@@ -191,7 +290,11 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Icon(Icons.verified_user, size: 48, color: AppTheme.primaryColor),
+                      const Icon(
+                        Icons.verified_user,
+                        size: 48,
+                        color: AppTheme.primaryColor,
+                      ),
                       const SizedBox(height: 8),
                       const Text(
                         'Validation Updates Test',
@@ -237,14 +340,25 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
               Wrap(
                 spacing: 8,
                 children: [
-                  _buildTestButton('CM12AB34CD56EF78', _ninController, _validateNIN),
-                  _buildTestButton('CM9010000000123', _ninController, _validateNIN),
+                  _buildTestButton(
+                    'CM12AB34CD56EF78',
+                    _ninController,
+                    _validateNIN,
+                  ),
+                  _buildTestButton(
+                    'CM9010000000123',
+                    _ninController,
+                    _validateNIN,
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
 
               // TIN Test Section
-              _buildSectionHeader('2. Tax Identification Number (TIN)', Icons.assignment),
+              _buildSectionHeader(
+                '2. Tax Identification Number (TIN)',
+                Icons.assignment,
+              ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _tinController,
@@ -276,7 +390,10 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
               const SizedBox(height: 24),
 
               // Business Registration Test Section
-              _buildSectionHeader('3. Business Registration Number', Icons.business_center),
+              _buildSectionHeader(
+                '3. Business Registration Number',
+                Icons.business_center,
+              ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _businessRegController,
@@ -298,14 +415,18 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
                 _buildResultCard(_businessRegResult!, null),
               ],
               const SizedBox(height: 8),
-              _buildTestButton('80034730481569', _businessRegController, _validateBusinessReg),
+              _buildTestButton(
+                '80034730481569',
+                _businessRegController,
+                _validateBusinessReg,
+              ),
               const SizedBox(height: 24),
 
               // Sex Selection Test
               _buildSectionHeader('4. Sex/Gender Selection', Icons.person),
               const SizedBox(height: 12),
               DropdownButtonFormField<Sex>(
-                value: _selectedSex,
+                initialValue: _selectedSex,
                 decoration: const InputDecoration(
                   labelText: 'Sex',
                   prefixIcon: Icon(Icons.person),
@@ -384,7 +505,9 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
   Widget _buildResultCard(String result, String? additionalInfo) {
     final isValid = result.startsWith('✅');
     return Card(
-      color: isValid ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+      color: isValid
+          ? Colors.green.withOpacity(0.1)
+          : Colors.red.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -399,10 +522,7 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
             ),
             if (additionalInfo != null) ...[
               const SizedBox(height: 4),
-              Text(
-                additionalInfo,
-                style: const TextStyle(fontSize: 13),
-              ),
+              Text(additionalInfo, style: const TextStyle(fontSize: 13)),
             ],
           ],
         ),
@@ -410,7 +530,11 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
     );
   }
 
-  Widget _buildTestButton(String value, TextEditingController controller, VoidCallback onPressed) {
+  Widget _buildTestButton(
+    String value,
+    TextEditingController controller,
+    VoidCallback onPressed,
+  ) {
     return ElevatedButton(
       onPressed: () {
         controller.text = value;
@@ -427,8 +551,8 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
   Widget _buildTestResultCard(TestResult result) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: result.passed 
-          ? Colors.green.withOpacity(0.1) 
+      color: result.passed
+          ? Colors.green.withOpacity(0.1)
           : Colors.red.withOpacity(0.1),
       child: ListTile(
         leading: Icon(
@@ -463,9 +587,11 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
     final total = _testResults.length;
     final percentage = (passed / total * 100).toStringAsFixed(0);
     final allPassed = passed == total;
-    
+
     return Card(
-      color: allPassed ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+      color: allPassed
+          ? Colors.green.withOpacity(0.2)
+          : Colors.orange.withOpacity(0.2),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -478,17 +604,11 @@ class _ValidationTestScreenState extends State<ValidationTestScreen> {
             const SizedBox(height: 8),
             Text(
               '$passed / $total Tests Passed',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Text(
               '$percentage% Success Rate',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
             ),
           ],
         ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/product.dart';
-import '../../models/product_category_hierarchy.dart';
 import '../../services/product_service.dart';
 import '../../widgets/featured_product_carousel.dart';
 import '../../widgets/product_card_compact.dart';
@@ -17,12 +16,12 @@ class BrowseProductsScreen extends StatefulWidget {
 class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
   final ProductService _productService = ProductService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   String _selectedCategory = 'All';
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
   List<Product> _featuredProducts = [];
-  Map<String, String> _farmerNames = {};
+  final Map<String, String> _farmerNames = {};
   bool _isLoading = true;
 
   final List<String> _categories = ['All', 'Crops', 'Vegetables', 'Onions'];
@@ -41,7 +40,7 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
     try {
       // Load all products
       final products = await _productService.getAllAvailableProducts();
-      
+
       // Load farmer names
       final farmerIds = products.map((p) => p.farmId).toSet().toList();
       for (final farmId in farmerIds) {
@@ -57,9 +56,9 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
       });
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load products: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load products: $e')));
       }
       setState(() {
         _isLoading = false;
@@ -99,7 +98,7 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
             return product.category == ProductCategory.crop;
           } else if (category == 'Vegetables') {
             return product.category == ProductCategory.tomatoes ||
-                   product.category == ProductCategory.onions;
+                product.category == ProductCategory.onions;
           } else if (category == 'Onions') {
             return product.category == ProductCategory.onions;
           }
@@ -218,10 +217,7 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
                           SizedBox(height: 16),
                           Text(
                             'No products found',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -229,36 +225,33 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
                   )
                 else
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final product = _filteredProducts[index];
-                        final farmerName = _farmerNames[product.farmId];
-                        return ProductCardCompact(
-                          product: product,
-                          farmerName: farmerName,
-                          distanceKm: 0.0, // TODO: Calculate actual distance
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ProductDetailScreen(product: product),
-                              ),
-                            );
-                          },
-                          onAddToCart: () {
-                            // TODO: Implement add to cart
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${product.name} added to cart'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      childCount: _filteredProducts.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final product = _filteredProducts[index];
+                      final farmerName = _farmerNames[product.farmId];
+                      return ProductCardCompact(
+                        product: product,
+                        farmerName: farmerName,
+                        distanceKm: 0.0, // TODO: Calculate actual distance
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProductDetailScreen(product: product),
+                            ),
+                          );
+                        },
+                        onAddToCart: () {
+                          // TODO: Implement add to cart
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${product.name} added to cart'),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      );
+                    }, childCount: _filteredProducts.length),
                   ),
               ],
             ),

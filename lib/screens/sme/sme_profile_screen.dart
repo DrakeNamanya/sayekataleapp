@@ -25,13 +25,15 @@ class SMEProfileScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const SizedBox(height: 24),
-                  
+
                   // Profile Picture
                   Stack(
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primaryColor.withValues(
+                          alpha: 0.1,
+                        ),
                         child: user.profileImage != null
                             ? null
                             : Icon(
@@ -42,9 +44,9 @@ class SMEProfileScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // User Info
                   Text(
                     user.name,
@@ -53,9 +55,9 @@ class SMEProfileScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // User ID and Status Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -85,10 +87,11 @@ class SMEProfileScreen extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: (user.isProfileComplete
-                                  ? AppTheme.successColor
-                                  : AppTheme.warningColor)
-                              .withValues(alpha: 0.2),
+                          color:
+                              (user.isProfileComplete
+                                      ? AppTheme.successColor
+                                      : AppTheme.warningColor)
+                                  .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -105,7 +108,9 @@ class SMEProfileScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              user.isProfileComplete ? 'Complete' : 'Incomplete',
+                              user.isProfileComplete
+                                  ? 'Complete'
+                                  : 'Incomplete',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: user.isProfileComplete
@@ -119,9 +124,9 @@ class SMEProfileScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Profile Completion Warning
                   if (!user.isProfileComplete)
                     Container(
@@ -154,9 +159,9 @@ class SMEProfileScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Profile Options
                   _ProfileOption(
                     icon: Icons.edit,
@@ -171,14 +176,14 @@ class SMEProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  
+
                   _ProfileOption(
                     icon: Icons.phone,
                     title: 'Phone Number',
                     subtitle: user.phone,
                     showTrailing: false,
                   ),
-                  
+
                   if (user.nationalId != null)
                     _ProfileOption(
                       icon: Icons.badge,
@@ -186,7 +191,7 @@ class SMEProfileScreen extends StatelessWidget {
                       subtitle: user.nationalId!,
                       showTrailing: false,
                     ),
-                  
+
                   if (user.sex != null)
                     _ProfileOption(
                       icon: Icons.person_outline,
@@ -194,14 +199,14 @@ class SMEProfileScreen extends StatelessWidget {
                       subtitle: user.sex!.displayName,
                       showTrailing: false,
                     ),
-                  
+
                   _ProfileOption(
                     icon: Icons.accessible,
                     title: 'Disability Status',
                     subtitle: user.disabilityStatus.displayName,
                     showTrailing: false,
                   ),
-                  
+
                   if (user.location != null)
                     _ProfileOption(
                       icon: Icons.location_on,
@@ -209,11 +214,11 @@ class SMEProfileScreen extends StatelessWidget {
                       subtitle: user.location!.fullAddress,
                       showTrailing: false,
                     ),
-                  
+
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  
+
                   // App Options
                   _ProfileOption(
                     icon: Icons.help_outline,
@@ -228,7 +233,7 @@ class SMEProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  
+
                   _ProfileOption(
                     icon: Icons.info_outline,
                     title: 'About',
@@ -237,11 +242,11 @@ class SMEProfileScreen extends StatelessWidget {
                       // Show about dialog
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  
+
                   // Logout Button
                   _ProfileOption(
                     icon: Icons.logout,
@@ -253,7 +258,9 @@ class SMEProfileScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content: const Text(
+                            'Are you sure you want to logout?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -269,16 +276,19 @@ class SMEProfileScreen extends StatelessWidget {
                           ],
                         ),
                       );
-                      
+
                       if (confirmed == true && context.mounted) {
                         await authProvider.logout();
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/onboarding');
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/onboarding',
+                          );
                         }
                       }
                     },
                   ),
-                  
+
                   const SizedBox(height: 32),
                 ],
               ),
@@ -307,7 +317,7 @@ class _ProfileOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isDestructive ? AppTheme.errorColor : AppTheme.primaryColor;
-    
+
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -326,10 +336,7 @@ class _ProfileOption extends StatelessWidget {
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(
-          fontSize: 13,
-          color: AppTheme.textSecondary,
-        ),
+        style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
       ),
       trailing: showTrailing && onTap != null
           ? Icon(Icons.chevron_right, color: AppTheme.textSecondary)

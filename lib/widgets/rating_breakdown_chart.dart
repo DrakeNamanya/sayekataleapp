@@ -5,11 +5,8 @@ import '../utils/app_theme.dart';
 /// Widget to display rating breakdown with horizontal bars
 class RatingBreakdownChart extends StatelessWidget {
   final FarmerRating rating;
-  
-  const RatingBreakdownChart({
-    super.key,
-    required this.rating,
-  });
+
+  const RatingBreakdownChart({super.key, required this.rating});
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +15,10 @@ class RatingBreakdownChart extends StatelessWidget {
       children: [
         const Text(
           'Rating Breakdown',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        
+
         // Overall rating summary
         Row(
           children: [
@@ -45,8 +39,8 @@ class RatingBreakdownChart extends StatelessWidget {
                       index < rating.averageRating.floor()
                           ? Icons.star
                           : (index < rating.averageRating
-                              ? Icons.star_half
-                              : Icons.star_border),
+                                ? Icons.star_half
+                                : Icons.star_border),
                       color: Colors.amber,
                       size: 24,
                     );
@@ -55,21 +49,18 @@ class RatingBreakdownChart extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${rating.totalRatings} reviews',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
             ),
           ],
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Rating bars (5-star to 1-star)
         ...List.generate(5, (index) {
-          final starCount = 5 - index;  // Start from 5-star
+          final starCount = 5 - index; // Start from 5-star
           return _buildRatingBar(
             context,
             starCount,
@@ -88,7 +79,7 @@ class RatingBreakdownChart extends StatelessWidget {
     int total,
   ) {
     final percentage = total > 0 ? (count / total) * 100 : 0.0;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -110,7 +101,7 @@ class RatingBreakdownChart extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Progress bar
           Expanded(
             child: Stack(
@@ -137,16 +128,13 @@ class RatingBreakdownChart extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Count and percentage
           SizedBox(
             width: 60,
             child: Text(
               '${percentage.toStringAsFixed(0)}% ($count)',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               textAlign: TextAlign.end,
             ),
           ),

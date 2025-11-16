@@ -32,19 +32,21 @@ class SHGBuyInputsScreen extends StatefulWidget {
 
 class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
   final ProductService _productService = ProductService();
-  final ProductWithFarmerService _productWithFarmerService = ProductWithFarmerService();
+  final ProductWithFarmerService _productWithFarmerService =
+      ProductWithFarmerService();
   final RatingService _ratingService = RatingService();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  
+
   ProductCategory? _selectedCategory;
   String _searchQuery = '';
-  bool _sortByDistance = true;
-  String _sortBy = 'distance'; // 'distance', 'rating', 'price_low', 'price_high'
+  final bool _sortByDistance = true;
+  String _sortBy =
+      'distance'; // 'distance', 'rating', 'price_low', 'price_high'
   bool _isSearching = false;
   BrowseFilter _activeFilter = const BrowseFilter();
   ViewMode _viewMode = ViewMode.grid;
-  
+
   @override
   void initState() {
     super.initState();
@@ -79,12 +81,18 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
         });
         break;
       case 'price_low':
-        products.sort((a, b) => 
-          a.productWithFarmer.product.price.compareTo(b.productWithFarmer.product.price));
+        products.sort(
+          (a, b) => a.productWithFarmer.product.price.compareTo(
+            b.productWithFarmer.product.price,
+          ),
+        );
         break;
       case 'price_high':
-        products.sort((a, b) => 
-          b.productWithFarmer.product.price.compareTo(a.productWithFarmer.product.price));
+        products.sort(
+          (a, b) => b.productWithFarmer.product.price.compareTo(
+            a.productWithFarmer.product.price,
+          ),
+        );
         break;
       case 'distance':
       default:
@@ -100,7 +108,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching ? _buildSearchField() : const Text('Buy Farming Inputs'),
+        title: _isSearching
+            ? _buildSearchField()
+            : const Text('Buy Farming Inputs'),
         centerTitle: !_isSearching,
         elevation: 0,
         leading: _isSearching
@@ -131,12 +141,20 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   value: 'distance',
                   child: Row(
                     children: [
-                      Icon(Icons.location_on, size: 18, 
-                        color: _sortBy == 'distance' ? AppTheme.primaryColor : Colors.grey),
+                      Icon(
+                        Icons.location_on,
+                        size: 18,
+                        color: _sortBy == 'distance'
+                            ? AppTheme.primaryColor
+                            : Colors.grey,
+                      ),
                       const SizedBox(width: 8),
-                      Text('Distance', 
+                      Text(
+                        'Distance',
                         style: TextStyle(
-                          fontWeight: _sortBy == 'distance' ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: _sortBy == 'distance'
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -146,12 +164,20 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   value: 'rating',
                   child: Row(
                     children: [
-                      Icon(Icons.star, size: 18, 
-                        color: _sortBy == 'rating' ? AppTheme.primaryColor : Colors.grey),
+                      Icon(
+                        Icons.star,
+                        size: 18,
+                        color: _sortBy == 'rating'
+                            ? AppTheme.primaryColor
+                            : Colors.grey,
+                      ),
                       const SizedBox(width: 8),
-                      Text('Rating', 
+                      Text(
+                        'Rating',
                         style: TextStyle(
-                          fontWeight: _sortBy == 'rating' ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: _sortBy == 'rating'
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -161,12 +187,20 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   value: 'price_low',
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_upward, size: 18, 
-                        color: _sortBy == 'price_low' ? AppTheme.primaryColor : Colors.grey),
+                      Icon(
+                        Icons.arrow_upward,
+                        size: 18,
+                        color: _sortBy == 'price_low'
+                            ? AppTheme.primaryColor
+                            : Colors.grey,
+                      ),
                       const SizedBox(width: 8),
-                      Text('Price: Low to High', 
+                      Text(
+                        'Price: Low to High',
                         style: TextStyle(
-                          fontWeight: _sortBy == 'price_low' ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: _sortBy == 'price_low'
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -176,12 +210,20 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   value: 'price_high',
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_downward, size: 18, 
-                        color: _sortBy == 'price_high' ? AppTheme.primaryColor : Colors.grey),
+                      Icon(
+                        Icons.arrow_downward,
+                        size: 18,
+                        color: _sortBy == 'price_high'
+                            ? AppTheme.primaryColor
+                            : Colors.grey,
+                      ),
                       const SizedBox(width: 8),
-                      Text('Price: High to Low', 
+                      Text(
+                        'Price: High to Low',
                         style: TextStyle(
-                          fontWeight: _sortBy == 'price_high' ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: _sortBy == 'price_high'
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -234,8 +276,12 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
             ),
           if (!_isSearching)
             IconButton(
-              icon: Icon(_viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view),
-              tooltip: _viewMode == ViewMode.grid ? 'Switch to list view' : 'Switch to grid view',
+              icon: Icon(
+                _viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view,
+              ),
+              tooltip: _viewMode == ViewMode.grid
+                  ? 'Switch to list view'
+                  : 'Switch to grid view',
               onPressed: _toggleViewMode,
             ),
           if (_isSearching && _searchQuery.isNotEmpty)
@@ -300,7 +346,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
               stream: _productService.streamPSAProducts(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
+                  return ProductSkeletonLoader(
+                    isListView: _viewMode == ViewMode.list,
+                  );
                 }
 
                 if (snapshot.hasError) {
@@ -308,7 +356,11 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
                         Text('Error loading products: ${snapshot.error}'),
                         const SizedBox(height: 16),
@@ -325,34 +377,53 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
                 // Apply category filter
                 if (_selectedCategory != null) {
-                  products = products.where((p) => p.category == _selectedCategory).toList();
+                  products = products
+                      .where((p) => p.category == _selectedCategory)
+                      .toList();
                 }
 
                 // Apply search filter (product name, description, business name)
                 if (_searchQuery.isNotEmpty) {
                   final query = _searchQuery.toLowerCase();
-                  products = products.where((p) =>
-                      p.name.toLowerCase().contains(query) ||
-                      (p.description?.toLowerCase().contains(query) ?? false) ||
-                      (p.businessName?.toLowerCase().contains(query) ?? false)
-                  ).toList();
+                  products = products
+                      .where(
+                        (p) =>
+                            p.name.toLowerCase().contains(query) ||
+                            (p.description?.toLowerCase().contains(query) ??
+                                false) ||
+                            (p.businessName?.toLowerCase().contains(query) ??
+                                false),
+                      )
+                      .toList();
                 }
 
-                if (products.isEmpty && _searchQuery.isEmpty && _selectedCategory == null) {
+                if (products.isEmpty &&
+                    _searchQuery.isEmpty &&
+                    _selectedCategory == null) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_basket_outlined, size: 80, color: Colors.grey[400]),
+                        Icon(
+                          Icons.shopping_basket_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No PSA products available yet',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'PSA suppliers will add products soon',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
                         ),
                       ],
                     ),
@@ -360,17 +431,24 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                 }
 
                 // Load products with farmer details, distance, and ratings
-                final authProvider = Provider.of<app_auth.AuthProvider>(context, listen: false);
+                final authProvider = Provider.of<app_auth.AuthProvider>(
+                  context,
+                  listen: false,
+                );
                 final buyerLocation = authProvider.currentUser?.location;
 
                 return FutureBuilder<List<ProductWithFarmer>>(
-                  future: _productWithFarmerService.getProductsWithFarmersAndDistance(
-                    products: products,
-                    buyerLocation: _sortByDistance ? buyerLocation : null,
-                  ),
+                  future: _productWithFarmerService
+                      .getProductsWithFarmersAndDistance(
+                        products: products,
+                        buyerLocation: _sortByDistance ? buyerLocation : null,
+                      ),
                   builder: (context, farmerSnapshot) {
-                    if (farmerSnapshot.connectionState == ConnectionState.waiting) {
-                      return ProductSkeletonLoader(isListView: _viewMode == ViewMode.list);
+                    if (farmerSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return ProductSkeletonLoader(
+                        isListView: _viewMode == ViewMode.list,
+                      );
                     }
 
                     var productsWithFarmers = farmerSnapshot.data ?? [];
@@ -379,12 +457,27 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     if (_searchQuery.isNotEmpty) {
                       final query = _searchQuery.toLowerCase();
                       productsWithFarmers = productsWithFarmers.where((pwf) {
-                        final farmerNameMatch = pwf.farmer.name.toLowerCase().contains(query);
-                        final businessNameMatch = pwf.product.businessName?.toLowerCase().contains(query) ?? false;
-                        final productNameMatch = pwf.product.name.toLowerCase().contains(query);
-                        final descriptionMatch = pwf.product.description?.toLowerCase().contains(query) ?? false;
-                        
-                        return farmerNameMatch || businessNameMatch || productNameMatch || descriptionMatch;
+                        final farmerNameMatch = pwf.farmer.name
+                            .toLowerCase()
+                            .contains(query);
+                        final businessNameMatch =
+                            pwf.product.businessName?.toLowerCase().contains(
+                              query,
+                            ) ??
+                            false;
+                        final productNameMatch = pwf.product.name
+                            .toLowerCase()
+                            .contains(query);
+                        final descriptionMatch =
+                            pwf.product.description?.toLowerCase().contains(
+                              query,
+                            ) ??
+                            false;
+
+                        return farmerNameMatch ||
+                            businessNameMatch ||
+                            productNameMatch ||
+                            descriptionMatch;
                       }).toList();
                     }
 
@@ -394,7 +487,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _searchQuery.isNotEmpty ? Icons.search_off : Icons.inventory_2_outlined,
+                              _searchQuery.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.inventory_2_outlined,
                               size: 80,
                               color: Colors.grey[400],
                             ),
@@ -403,14 +498,20 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                               _searchQuery.isNotEmpty
                                   ? 'No results found for "$_searchQuery"'
                                   : 'No products match your filters',
-                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             if (_searchQuery.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Text(
                                 'Try different keywords or check spelling',
-                                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
@@ -440,27 +541,37 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
                         // Combine products with ratings
                         var productsWithRatings = productsWithFarmers
-                            .map((pwf) => ProductWithRating(
-                                  productWithFarmer: pwf,
-                                  farmerRating: ratingsMap[pwf.product.farmId],
-                                ))
+                            .map(
+                              (pwf) => ProductWithRating(
+                                productWithFarmer: pwf,
+                                farmerRating: ratingsMap[pwf.product.farmId],
+                              ),
+                            )
                             .toList();
 
                         // Apply active filters
-                        productsWithRatings = _applyFilters(productsWithRatings);
+                        productsWithRatings = _applyFilters(
+                          productsWithRatings,
+                        );
 
                         // Sort products based on selected sort option
                         _sortProducts(productsWithRatings);
 
                         // Get featured products (top 5 highly rated with sufficient reviews)
-                        final featuredProducts = _getFeaturedProducts(productsWithRatings);
+                        final featuredProducts = _getFeaturedProducts(
+                          productsWithRatings,
+                        );
 
                         if (productsWithRatings.isEmpty) {
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.filter_list_off, size: 80, color: Colors.grey[400]),
+                                Icon(
+                                  Icons.filter_list_off,
+                                  size: 80,
+                                  color: Colors.grey[400],
+                                ),
                                 const SizedBox(height: 16),
                                 const Text(
                                   'No products match your filters',
@@ -486,25 +597,31 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                         return CustomScrollView(
                           slivers: [
                             // Hero Carousel
-                            if (featuredProducts.isNotEmpty && _searchQuery.isEmpty)
+                            if (featuredProducts.isNotEmpty &&
+                                _searchQuery.isEmpty)
                               SliverToBoxAdapter(
-                                child: HeroCarousel(featuredProducts: featuredProducts),
+                                child: HeroCarousel(
+                                  featuredProducts: featuredProducts,
+                                ),
                               ),
-                            
+
                             // Product Grid or List
                             _viewMode == ViewMode.grid
                                 ? SliverPadding(
                                     padding: const EdgeInsets.all(16),
                                     sliver: SliverGrid(
-                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 0.60,
-                                        crossAxisSpacing: 12,
-                                        mainAxisSpacing: 12,
-                                      ),
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            childAspectRatio: 0.60,
+                                            crossAxisSpacing: 12,
+                                            mainAxisSpacing: 12,
+                                          ),
                                       delegate: SliverChildBuilderDelegate(
                                         (context, index) {
-                                          return _buildGridProductCard(productsWithRatings[index]);
+                                          return _buildGridProductCard(
+                                            productsWithRatings[index],
+                                          );
                                         },
                                         childCount: productsWithRatings.length,
                                       ),
@@ -515,7 +632,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                                     sliver: SliverList(
                                       delegate: SliverChildBuilderDelegate(
                                         (context, index) {
-                                          return _buildListProductCard(productsWithRatings[index]);
+                                          return _buildListProductCard(
+                                            productsWithRatings[index],
+                                          );
                                         },
                                         childCount: productsWithRatings.length,
                                       ),
@@ -540,10 +659,26 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
     if (_isSearching) return const SizedBox.shrink();
 
     final categories = [
-      {'icon': Icons.agriculture_outlined, 'label': 'Crop', 'value': ProductCategory.crop},
-      {'icon': Icons.pets_outlined, 'label': 'Poultry', 'value': ProductCategory.poultry},
-      {'icon': Icons.pets_outlined, 'label': 'Goats', 'value': ProductCategory.goats},
-      {'icon': Icons.agriculture_outlined, 'label': 'Cows', 'value': ProductCategory.cows},
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Crop',
+        'value': ProductCategory.crop,
+      },
+      {
+        'icon': Icons.pets_outlined,
+        'label': 'Poultry',
+        'value': ProductCategory.poultry,
+      },
+      {
+        'icon': Icons.pets_outlined,
+        'label': 'Goats',
+        'value': ProductCategory.goats,
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Cows',
+        'value': ProductCategory.cows,
+      },
     ];
 
     return Container(
@@ -566,7 +701,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                 },
                 selectedColor: AppTheme.primaryColor,
                 labelStyle: TextStyle(
-                  color: _selectedCategory == null ? Colors.white : AppTheme.textPrimary,
+                  color: _selectedCategory == null
+                      ? Colors.white
+                      : AppTheme.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
                 checkmarkColor: Colors.white,
@@ -586,7 +723,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   selected: isSelected,
                   onSelected: (selected) {
                     setState(() {
-                      _selectedCategory = selected ? cat['value'] as ProductCategory : null;
+                      _selectedCategory = selected
+                          ? cat['value'] as ProductCategory
+                          : null;
                     });
                   },
                   selectedColor: AppTheme.primaryColor,
@@ -629,9 +768,13 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      final newCategories = Set<String>.from(_activeFilter.selectedCategories);
+                      final newCategories = Set<String>.from(
+                        _activeFilter.selectedCategories,
+                      );
                       newCategories.remove(categoryName);
-                      _activeFilter = _activeFilter.copyWith(selectedCategories: newCategories);
+                      _activeFilter = _activeFilter.copyWith(
+                        selectedCategories: newCategories,
+                      );
                     });
                   },
                   backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -641,16 +784,18 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
             }),
 
             // Price chip
-            if (_activeFilter.minPrice != null || _activeFilter.maxPrice != null)
+            if (_activeFilter.minPrice != null ||
+                _activeFilter.maxPrice != null)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
                   label: Text(
-                    _activeFilter.minPrice != null && _activeFilter.maxPrice != null
+                    _activeFilter.minPrice != null &&
+                            _activeFilter.maxPrice != null
                         ? 'UGX ${_activeFilter.minPrice!.toInt()}K-${_activeFilter.maxPrice!.toInt()}K'
                         : _activeFilter.minPrice != null
-                            ? '≥ UGX ${_activeFilter.minPrice!.toInt()}K'
-                            : '≤ UGX ${_activeFilter.maxPrice!.toInt()}K',
+                        ? '≥ UGX ${_activeFilter.minPrice!.toInt()}K'
+                        : '≤ UGX ${_activeFilter.maxPrice!.toInt()}K',
                     style: const TextStyle(fontSize: 12),
                   ),
                   deleteIcon: const Icon(Icons.close, size: 16),
@@ -671,11 +816,16 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('≤ ${_activeFilter.maxDistance!.toInt()} km', style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    '≤ ${_activeFilter.maxDistance!.toInt()} km',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(clearMaxDistance: true);
+                      _activeFilter = _activeFilter.copyWith(
+                        clearMaxDistance: true,
+                      );
                     });
                   },
                   backgroundColor: Colors.blue.withValues(alpha: 0.1),
@@ -687,11 +837,16 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('≥ ${_activeFilter.minRating!.toStringAsFixed(1)}★', style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    '≥ ${_activeFilter.minRating!.toStringAsFixed(1)}★',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(clearMinRating: true);
+                      _activeFilter = _activeFilter.copyWith(
+                        clearMinRating: true,
+                      );
                     });
                   },
                   backgroundColor: Colors.amber.withValues(alpha: 0.2),
@@ -707,7 +862,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                   deleteIcon: const Icon(Icons.close, size: 16),
                   onDeleted: () {
                     setState(() {
-                      _activeFilter = _activeFilter.copyWith(inStockOnly: false);
+                      _activeFilter = _activeFilter.copyWith(
+                        inStockOnly: false,
+                      );
                     });
                   },
                   backgroundColor: Colors.orange.withValues(alpha: 0.1),
@@ -745,10 +902,8 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
           if (product.images.isNotEmpty) {
             showDialog(
               context: context,
-              builder: (context) => ImageZoomDialog(
-                imageUrls: product.images,
-                initialIndex: 0,
-              ),
+              builder: (context) =>
+                  ImageZoomDialog(imageUrls: product.images, initialIndex: 0),
             );
           }
         },
@@ -761,13 +916,17 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
               ),
               child: Stack(
                 children: [
                   if (product.images.isNotEmpty)
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                       child: Image.network(
                         product.images.first,
                         width: double.infinity,
@@ -792,14 +951,17 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                         color: Colors.grey,
                       ),
                     ),
-                  
+
                   // PSA Badge
                   if (supplier.role == UserRole.psa)
                     Positioned(
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.purple,
                           borderRadius: BorderRadius.circular(8),
@@ -821,14 +983,17 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                         ),
                       ),
                     ),
-                  
+
                   // Stock Badge
                   if (product.isOutOfStock)
                     Positioned(
                       bottom: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(6),
@@ -865,25 +1030,30 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Supplier Name with PSA indicator
                     Row(
                       children: [
                         Icon(
-                          supplier.role == UserRole.psa ? Icons.business : Icons.person,
+                          supplier.role == UserRole.psa
+                              ? Icons.business
+                              : Icons.person,
                           size: 12,
                           color: Colors.grey[600],
                         ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            supplier.role == UserRole.psa && product.businessName != null
+                            supplier.role == UserRole.psa &&
+                                    product.businessName != null
                                 ? product.businessName!
                                 : supplier.name,
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[600],
-                              fontWeight: supplier.role == UserRole.psa ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: supplier.role == UserRole.psa
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -892,7 +1062,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Rating and Distance
                     Row(
                       children: [
@@ -901,26 +1071,42 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           const SizedBox(width: 2),
                           Text(
                             rating.averageRating.toStringAsFixed(1),
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           Text(
                             ' (${rating.totalRatings})',
-                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
                           ),
                         ],
                         if (distance != null) ...[
                           if (rating != null && rating.averageRating > 0)
-                            Text(' • ', style: TextStyle(color: Colors.grey[400])),
-                          Icon(Icons.location_on, size: 11, color: Colors.grey[600]),
+                            Text(
+                              ' • ',
+                              style: TextStyle(color: Colors.grey[400]),
+                            ),
+                          Icon(
+                            Icons.location_on,
+                            size: 11,
+                            color: Colors.grey[600],
+                          ),
                           Text(
                             '${distance.toStringAsFixed(1)}km',
-                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
                           ),
                         ],
                       ],
                     ),
                     const Spacer(),
-                    
+
                     // Price
                     Text(
                       'UGX ${NumberFormat('#,###').format(product.price)}',
@@ -932,13 +1118,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     ),
                     Text(
                       'per ${product.unit}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 6),
-                    
+
                     // Add to Cart Button
                     SizedBox(
                       width: double.infinity,
@@ -1065,25 +1248,30 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Supplier name with PSA badge
                   Row(
                     children: [
                       Icon(
-                        supplier.role == UserRole.psa ? Icons.business : Icons.person,
+                        supplier.role == UserRole.psa
+                            ? Icons.business
+                            : Icons.person,
                         size: 14,
                         color: Colors.grey,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          supplier.role == UserRole.psa && product.businessName != null
+                          supplier.role == UserRole.psa &&
+                                  product.businessName != null
                               ? product.businessName!
                               : supplier.name,
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[700],
-                            fontWeight: supplier.role == UserRole.psa ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: supplier.role == UserRole.psa
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1092,7 +1280,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       if (supplier.role == UserRole.psa) ...[
                         const SizedBox(width: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.purple,
                             borderRadius: BorderRadius.circular(8),
@@ -1100,7 +1291,11 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.verified, size: 10, color: Colors.white),
+                              Icon(
+                                Icons.verified,
+                                size: 10,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 3),
                               Text(
                                 'PSA',
@@ -1117,7 +1312,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Rating and Distance
                   Row(
                     children: [
@@ -1126,28 +1321,42 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                         const SizedBox(width: 3),
                         Text(
                           rating.averageRating.toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Text(
                           ' (${rating.totalRatings})',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (distance != null) ...[
-                        Icon(Icons.location_on, size: 13, color: Colors.grey[600]),
+                        Icon(
+                          Icons.location_on,
+                          size: 13,
+                          color: Colors.grey[600],
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           '${distance.toStringAsFixed(1)} km',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ],
                   ),
                   const SizedBox(height: 6),
-                  
+
                   // Description
-                  if (product.description != null && product.description!.isNotEmpty)
+                  if (product.description != null &&
+                      product.description!.isNotEmpty)
                     Text(
                       product.description!,
                       style: const TextStyle(
@@ -1158,7 +1367,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 8),
-                  
+
                   // Price and Actions
                   Row(
                     children: [
@@ -1186,7 +1395,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                       ),
                       // Stock badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: product.isOutOfStock
                               ? Colors.red.withValues(alpha: 0.1)
@@ -1197,15 +1409,23 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              product.isOutOfStock ? Icons.cancel : Icons.check_circle,
+                              product.isOutOfStock
+                                  ? Icons.cancel
+                                  : Icons.check_circle,
                               size: 12,
-                              color: product.isOutOfStock ? Colors.red : AppTheme.successColor,
+                              color: product.isOutOfStock
+                                  ? Colors.red
+                                  : AppTheme.successColor,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              product.isOutOfStock ? 'Out of Stock' : 'In Stock',
+                              product.isOutOfStock
+                                  ? 'Out of Stock'
+                                  : 'In Stock',
                               style: TextStyle(
-                                color: product.isOutOfStock ? Colors.red : AppTheme.successColor,
+                                color: product.isOutOfStock
+                                    ? Colors.red
+                                    : AppTheme.successColor,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1216,7 +1436,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  
+
                   // Action buttons
                   Row(
                     children: [
@@ -1225,7 +1445,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                         child: OutlinedButton.icon(
                           onPressed: () => _callSupplier(supplier.phone),
                           icon: const Icon(Icons.phone, size: 14),
-                          label: const Text('Call', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Call',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
@@ -1240,7 +1463,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
                               ? null
                               : () => _addToCart(product),
                           icon: const Icon(Icons.shopping_cart, size: 14),
-                          label: const Text('Add to Cart', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Add to Cart',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                           ),
@@ -1280,9 +1506,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot call $phone')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot call $phone')));
       }
     }
   }
@@ -1296,9 +1522,7 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text('${product.name} added to cart'),
-            ),
+            Expanded(child: Text('${product.name} added to cart')),
           ],
         ),
         backgroundColor: AppTheme.successColor,
@@ -1343,7 +1567,8 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
   Future<void> _loadViewPreference() async {
     final prefs = await SharedPreferences.getInstance();
-    final viewModeString = prefs.getString('shg_buy_inputs_view_mode') ?? 'grid';
+    final viewModeString =
+        prefs.getString('shg_buy_inputs_view_mode') ?? 'grid';
     setState(() {
       _viewMode = viewModeString == 'list' ? ViewMode.list : ViewMode.grid;
     });
@@ -1351,7 +1576,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
 
   Future<void> _saveViewPreference() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('shg_buy_inputs_view_mode', _viewMode == ViewMode.grid ? 'grid' : 'list');
+    await prefs.setString(
+      'shg_buy_inputs_view_mode',
+      _viewMode == ViewMode.grid ? 'grid' : 'list',
+    );
   }
 
   List<ProductWithRating> _applyFilters(List<ProductWithRating> products) {
@@ -1360,7 +1588,9 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
     // Category filter
     if (_activeFilter.selectedCategories.isNotEmpty) {
       filtered = filtered.where((p) {
-        return _activeFilter.selectedCategories.contains(p.productWithFarmer.product.category.name);
+        return _activeFilter.selectedCategories.contains(
+          p.productWithFarmer.product.category.name,
+        );
       }).toList();
     }
 
@@ -1405,13 +1635,15 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
     return filtered;
   }
 
-  List<ProductWithRating> _getFeaturedProducts(List<ProductWithRating> products) {
+  List<ProductWithRating> _getFeaturedProducts(
+    List<ProductWithRating> products,
+  ) {
     final featured = products.where((p) {
       final rating = p.farmerRating;
-      return rating != null && 
-             rating.isHighlyRated && 
-             rating.hasSufficientRatings &&
-             !p.productWithFarmer.product.isOutOfStock;
+      return rating != null &&
+          rating.isHighlyRated &&
+          rating.hasSufficientRatings &&
+          !p.productWithFarmer.product.isOutOfStock;
     }).toList();
 
     featured.sort((a, b) {
@@ -1419,10 +1651,10 @@ class _SHGBuyInputsScreenState extends State<SHGBuyInputsScreen> {
       final ratingB = b.farmerRating?.averageRating ?? 0;
       final countA = a.farmerRating?.totalRatings ?? 0;
       final countB = b.farmerRating?.totalRatings ?? 0;
-      
+
       final ratingComparison = ratingB.compareTo(ratingA);
       if (ratingComparison != 0) return ratingComparison;
-      
+
       return countB.compareTo(countA);
     });
 

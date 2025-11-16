@@ -13,8 +13,10 @@ class ImageZoomDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final PageController pageController = PageController(initialPage: initialIndex);
-    
+    final PageController pageController = PageController(
+      initialPage: initialIndex,
+    );
+
     return Dialog(
       backgroundColor: Colors.black,
       insetPadding: EdgeInsets.zero,
@@ -37,7 +39,11 @@ class ImageZoomDialog extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.broken_image, size: 64, color: Colors.white54),
+                            Icon(
+                              Icons.broken_image,
+                              size: 64,
+                              color: Colors.white54,
+                            ),
                             SizedBox(height: 16),
                             Text(
                               'Failed to load image',
@@ -53,7 +59,7 @@ class ImageZoomDialog extends StatelessWidget {
                         child: CircularProgressIndicator(
                           value: loadingProgress.expectedTotalBytes != null
                               ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
+                                    loadingProgress.expectedTotalBytes!
                               : null,
                           color: Colors.white,
                         ),
@@ -64,7 +70,7 @@ class ImageZoomDialog extends StatelessWidget {
               );
             },
           ),
-          
+
           // Close button
           Positioned(
             top: 40,
@@ -74,7 +80,7 @@ class ImageZoomDialog extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-          
+
           // Image counter (if multiple images)
           if (imageUrls.length > 1)
             Positioned(
@@ -83,7 +89,10 @@ class ImageZoomDialog extends StatelessWidget {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(20),

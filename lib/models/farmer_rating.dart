@@ -1,14 +1,15 @@
 /// Model for tracking farmer/seller ratings and statistics
 class FarmerRating {
-  final String farmerId;              // Farmer's user ID
-  final String farmerName;            // Farmer's name
-  final double averageRating;         // Average rating (1-5)
-  final int totalRatings;             // Total number of ratings received
-  final int totalOrders;              // Total completed orders
-  final int totalDeliveries;          // Total successful deliveries
-  final List<int> ratingDistribution; // [1-star count, 2-star, 3-star, 4-star, 5-star]
-  final DateTime? lastRatedAt;        // When last rating was received
-  final DateTime updatedAt;           // Last update time
+  final String farmerId; // Farmer's user ID
+  final String farmerName; // Farmer's name
+  final double averageRating; // Average rating (1-5)
+  final int totalRatings; // Total number of ratings received
+  final int totalOrders; // Total completed orders
+  final int totalDeliveries; // Total successful deliveries
+  final List<int>
+  ratingDistribution; // [1-star count, 2-star, 3-star, 4-star, 5-star]
+  final DateTime? lastRatedAt; // When last rating was received
+  final DateTime updatedAt; // Last update time
 
   FarmerRating({
     required this.farmerId,
@@ -41,7 +42,8 @@ class FarmerRating {
       totalRatings: data['total_ratings'] ?? 0,
       totalOrders: data['total_orders'] ?? 0,
       totalDeliveries: data['total_deliveries'] ?? 0,
-      ratingDistribution: (data['rating_distribution'] as List<dynamic>?)
+      ratingDistribution:
+          (data['rating_distribution'] as List<dynamic>?)
               ?.map((e) => e as int)
               .toList() ??
           [0, 0, 0, 0, 0],

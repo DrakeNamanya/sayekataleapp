@@ -11,13 +11,13 @@ class CsvExportServiceImpl {
   /// Download CSV file in browser
   void downloadFile(String filename, List<int> bytes) {
     final blob = html.Blob([bytes]);
-    
+
     // Create download link
     final url = html.Url.createObjectUrlFromBlob(blob);
     final anchor = html.AnchorElement(href: url)
       ..setAttribute('download', filename)
       ..click();
-    
+
     html.Url.revokeObjectUrl(url);
   }
 
@@ -26,7 +26,7 @@ class CsvExportServiceImpl {
     try {
       // Fetch all users from Firestore
       final querySnapshot = await _firestore.collection('users').get();
-      
+
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No users found to export');
       }
@@ -55,23 +55,27 @@ class CsvExportServiceImpl {
           data['phone'] ?? '',
           data['role'] ?? '',
           data['verification_status'] ?? '',
-          data['created_at'] != null 
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['created_at'] as Timestamp).toDate())
+          data['created_at'] != null
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['created_at'] as Timestamp).toDate())
               : '',
           data['updated_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['updated_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['updated_at'] as Timestamp).toDate())
               : '',
         ]);
       }
 
       // Convert to CSV
       String csv = const ListToCsvConverter().convert(rows);
-      
+
       // Download file
       final bytes = utf8.encode(csv);
-      final filename = 'users_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+      final filename =
+          'users_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       downloadFile(filename, bytes);
-      
     } catch (e) {
       throw Exception('Failed to export users: $e');
     }
@@ -81,7 +85,7 @@ class CsvExportServiceImpl {
   Future<void> exportProducts() async {
     try {
       final querySnapshot = await _firestore.collection('products').get();
-      
+
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No products found to export');
       }
@@ -114,16 +118,18 @@ class CsvExportServiceImpl {
           data['farmer_id'] ?? '',
           data['status'] ?? '',
           data['created_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['created_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['created_at'] as Timestamp).toDate())
               : '',
         ]);
       }
 
       String csv = const ListToCsvConverter().convert(rows);
       final bytes = utf8.encode(csv);
-      final filename = 'products_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+      final filename =
+          'products_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       downloadFile(filename, bytes);
-      
     } catch (e) {
       throw Exception('Failed to export products: $e');
     }
@@ -133,7 +139,7 @@ class CsvExportServiceImpl {
   Future<void> exportOrders() async {
     try {
       final querySnapshot = await _firestore.collection('orders').get();
-      
+
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No orders found to export');
       }
@@ -161,19 +167,23 @@ class CsvExportServiceImpl {
           data['status'] ?? '',
           data['order_type'] ?? '',
           data['created_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['created_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['created_at'] as Timestamp).toDate())
               : '',
           data['updated_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['updated_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['updated_at'] as Timestamp).toDate())
               : '',
         ]);
       }
 
       String csv = const ListToCsvConverter().convert(rows);
       final bytes = utf8.encode(csv);
-      final filename = 'orders_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+      final filename =
+          'orders_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       downloadFile(filename, bytes);
-      
     } catch (e) {
       throw Exception('Failed to export orders: $e');
     }
@@ -183,7 +193,7 @@ class CsvExportServiceImpl {
   Future<void> exportComplaints() async {
     try {
       final querySnapshot = await _firestore.collection('complaints').get();
-      
+
       if (querySnapshot.docs.isEmpty) {
         throw Exception('No complaints found to export');
       }
@@ -213,19 +223,23 @@ class CsvExportServiceImpl {
           data['status'] ?? '',
           data['priority'] ?? '',
           data['created_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['created_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['created_at'] as Timestamp).toDate())
               : '',
           data['resolved_at'] != null
-              ? DateFormat('yyyy-MM-dd HH:mm').format((data['resolved_at'] as Timestamp).toDate())
+              ? DateFormat(
+                  'yyyy-MM-dd HH:mm',
+                ).format((data['resolved_at'] as Timestamp).toDate())
               : '',
         ]);
       }
 
       String csv = const ListToCsvConverter().convert(rows);
       final bytes = utf8.encode(csv);
-      final filename = 'complaints_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+      final filename =
+          'complaints_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       downloadFile(filename, bytes);
-      
     } catch (e) {
       throw Exception('Failed to export complaints: $e');
     }

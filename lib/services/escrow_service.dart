@@ -15,10 +15,10 @@ class EscrowService {
   // ============================================================================
 
   /// Initiate escrow payment for an order
-  /// 
+  ///
   /// [order] - app_order.Order details
   /// [payerPhone] - Payer's phone number for MTN MoMo
-  /// 
+  ///
   /// Returns transaction ID
   Future<String> initiateEscrowPayment({
     required app_order.Order order,
@@ -44,11 +44,12 @@ class EscrowService {
         serviceFee: order.serviceFee,
         sellerReceives: order.subtotal - order.type.sellerFee,
         status: app_transaction.TransactionStatus.initiated,
-        paymentMethod: order.paymentMethod == app_order.PaymentMethod.mtnMobileMoney
+        paymentMethod:
+            order.paymentMethod == app_order.PaymentMethod.mtnMobileMoney
             ? app_transaction.PaymentMethod.mtnMobileMoney
             : order.paymentMethod == app_order.PaymentMethod.airtelMoney
-                ? app_transaction.PaymentMethod.airtelMoney
-                : app_transaction.PaymentMethod.cashOnDelivery,
+            ? app_transaction.PaymentMethod.airtelMoney
+            : app_transaction.PaymentMethod.cashOnDelivery,
         createdAt: DateTime.now(),
         metadata: {
           'orderType': order.type.toString(),
@@ -64,10 +65,9 @@ class EscrowService {
           .set(transaction.toFirestore());
 
       // Update order with transaction ID
-      await _firestore
-          .collection('orders')
-          .doc(order.id)
-          .update({'transactionId': transaction.id});
+      await _firestore.collection('orders').doc(order.id).update({
+        'transactionId': transaction.id,
+      });
 
       if (kDebugMode) {
         debugPrint('✅ app_transaction.Transaction created: ${transaction.id}');
@@ -79,9 +79,12 @@ class EscrowService {
           transaction.id,
           app_transaction.TransactionStatus.confirmed,
         );
-        
+
         await _firestore.collection('orders').doc(order.id).update({
-          'status': app_order.OrderStatus.deliveryPending.toString().split('.').last,
+          'status': app_order.OrderStatus.deliveryPending
+              .toString()
+              .split('.')
+              .last,
         });
 
         return transaction.id;
@@ -99,7 +102,10 @@ class EscrowService {
         // Update transaction with payment reference
         await _firestore.collection('transactions').doc(transaction.id).update({
           'paymentReference': paymentRef,
-          'status': app_transaction.TransactionStatus.paymentPending.toString().split('.').last,
+          'status': app_transaction.TransactionStatus.paymentPending
+              .toString()
+              .split('.')
+              .last,
         });
 
         if (kDebugMode) {
@@ -129,19 +135,25 @@ class EscrowService {
   // ============================================================================
 
   /// Check and confirm payment collection
-  /// 
+  ///
   /// [transactionId] - app_transaction.Transaction ID
-  /// 
+  ///
   /// Returns true if payment confirmed
   Future<bool> confirmPaymentCollection(String transactionId) async {
     try {
-      final doc = await _firestore.collection('transactions').doc(transactionId).get();
-      
+      final doc = await _firestore
+          .collection('transactions')
+          .doc(transactionId)
+          .get();
+
       if (!doc.exists) {
         throw Exception('Transaction not found');
       }
 
-      final transaction = app_transaction.Transaction.fromFirestore(doc.data()!, doc.id);
+      final transaction = app_transaction.Transaction.fromFirestore(
+        doc.data()!,
+        doc.id,
+      );
 
       // Skip if COD
       if (transaction.paymentMethod == app_order.PaymentMethod.cashOnDelivery) {
@@ -153,7 +165,9 @@ class EscrowService {
         throw Exception('Payment reference not found');
       }
 
-      final status = await _momoService.checkPaymentStatus(transaction.paymentReference!);
+      final status = await _momoService.checkPaymentStatus(
+        transaction.paymentReference!,
+      );
 
       if (status.isSuccessful) {
         // Update transaction to payment held
@@ -164,9 +178,15 @@ class EscrowService {
 
         // Update order status
         if (transaction.orderId != null) {
-          await _firestore.collection('orders').doc(transaction.orderId).update({
-            'status': app_order.OrderStatus.deliveryPending.toString().split('.').last,
-          });
+          await _firestore
+              .collection('orders')
+              .doc(transaction.orderId)
+              .update({
+                'status': app_order.OrderStatus.deliveryPending
+                    .toString()
+                    .split('.')
+                    .last,
+              });
         }
 
         if (kDebugMode) {
@@ -199,21 +219,27 @@ class EscrowService {
   // ============================================================================
 
   /// Mark order as delivered (by seller)
-  /// 
+  ///
   /// [orderId] - app_order.Order ID
   Future<void> markDelivered(String orderId) async {
     try {
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
-      
+
       if (!orderDoc.exists) {
         throw Exception('Order not found');
       }
 
-      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
+      final order = app_order.Order.fromFirestore(
+        orderDoc.data()!,
+        orderDoc.id,
+      );
 
       // Update order status
       await _firestore.collection('orders').doc(orderId).update({
-        'status': app_order.OrderStatus.deliveredPendingConfirmation.toString().split('.').last,
+        'status': app_order.OrderStatus.deliveredPendingConfirmation
+            .toString()
+            .split('.')
+            .last,
         'deliveredAt': FieldValue.serverTimestamp(),
       });
 
@@ -241,7 +267,7 @@ class EscrowService {
   // ============================================================================
 
   /// Confirm delivery and release payment to seller
-  /// 
+  ///
   /// [orderId] - app_order.Order ID
   /// [sellerPhone] - Seller's phone number for disbursement
   Future<void> confirmDeliveryAndRelease({
@@ -254,12 +280,15 @@ class EscrowService {
       }
 
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
-      
+
       if (!orderDoc.exists) {
         throw Exception('Order not found');
       }
 
-      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
+      final order = app_order.Order.fromFirestore(
+        orderDoc.data()!,
+        orderDoc.id,
+      );
 
       if (order.transactionId == null) {
         throw Exception('app_transaction.Transaction ID not found');
@@ -274,7 +303,10 @@ class EscrowService {
         throw Exception('Transaction not found');
       }
 
-      final transaction = app_transaction.Transaction.fromFirestore(txnDoc.data()!, txnDoc.id);
+      final transaction = app_transaction.Transaction.fromFirestore(
+        txnDoc.data()!,
+        txnDoc.id,
+      );
 
       // Update order status
       await _firestore.collection('orders').doc(orderId).update({
@@ -308,9 +340,12 @@ class EscrowService {
             .collection('transactions')
             .doc(order.transactionId)
             .update({
-          'disbursementReference': disbursementRef,
-          'status': app_transaction.TransactionStatus.disbursementPending.toString().split('.').last,
-        });
+              'disbursementReference': disbursementRef,
+              'status': app_transaction.TransactionStatus.disbursementPending
+                  .toString()
+                  .split('.')
+                  .last,
+            });
 
         if (kDebugMode) {
           debugPrint('✅ Disbursement initiated: $disbursementRef');
@@ -339,17 +374,23 @@ class EscrowService {
   // ============================================================================
 
   /// Check disbursement status and complete transaction
-  /// 
+  ///
   /// [transactionId] - app_transaction.Transaction ID
   Future<bool> completeDisbursement(String transactionId) async {
     try {
-      final doc = await _firestore.collection('transactions').doc(transactionId).get();
-      
+      final doc = await _firestore
+          .collection('transactions')
+          .doc(transactionId)
+          .get();
+
       if (!doc.exists) {
         throw Exception('Transaction not found');
       }
 
-      final transaction = app_transaction.Transaction.fromFirestore(doc.data()!, doc.id);
+      final transaction = app_transaction.Transaction.fromFirestore(
+        doc.data()!,
+        doc.id,
+      );
 
       if (transaction.disbursementReference == null) {
         throw Exception('Disbursement reference not found');
@@ -362,7 +403,7 @@ class EscrowService {
 
       if (status.isSuccessful) {
         await _completeTransaction(transactionId);
-        
+
         if (kDebugMode) {
           debugPrint('✅ app_transaction.Transaction completed: $transactionId');
         }
@@ -410,19 +451,31 @@ class EscrowService {
       updateData['completedAt'] = FieldValue.serverTimestamp();
     }
 
-    await _firestore.collection('transactions').doc(transactionId).update(updateData);
+    await _firestore
+        .collection('transactions')
+        .doc(transactionId)
+        .update(updateData);
   }
 
   /// Complete transaction
   Future<void> _completeTransaction(String transactionId) async {
     await _firestore.collection('transactions').doc(transactionId).update({
-      'status': app_transaction.TransactionStatus.completed.toString().split('.').last,
+      'status': app_transaction.TransactionStatus.completed
+          .toString()
+          .split('.')
+          .last,
       'completedAt': FieldValue.serverTimestamp(),
     });
 
     // Update associated order
-    final txnDoc = await _firestore.collection('transactions').doc(transactionId).get();
-    final transaction = app_transaction.Transaction.fromFirestore(txnDoc.data()!, txnDoc.id);
+    final txnDoc = await _firestore
+        .collection('transactions')
+        .doc(transactionId)
+        .get();
+    final transaction = app_transaction.Transaction.fromFirestore(
+      txnDoc.data()!,
+      txnDoc.id,
+    );
 
     if (transaction.orderId != null) {
       await _firestore.collection('orders').doc(transaction.orderId).update({
@@ -435,9 +488,11 @@ class EscrowService {
   }
 
   /// Update revenue tracking
-  Future<void> _updateRevenueTracking(app_transaction.Transaction transaction) async {
+  Future<void> _updateRevenueTracking(
+    app_transaction.Transaction transaction,
+  ) async {
     final month = DateTime.now().toIso8601String().substring(0, 7); // YYYY-MM
-    
+
     await _firestore.collection('revenue_tracking').doc(month).set({
       'month': month,
       'totalRevenue': FieldValue.increment(transaction.serviceFee),
@@ -451,7 +506,7 @@ class EscrowService {
   // ============================================================================
 
   /// Cancel order and initiate refund
-  /// 
+  ///
   /// [orderId] - Order ID
   /// [reason] - Cancellation reason
   Future<void> cancelOrderAndRefund({
@@ -464,12 +519,15 @@ class EscrowService {
       }
 
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
-      
+
       if (!orderDoc.exists) {
         throw Exception('Order not found');
       }
 
-      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
+      final order = app_order.Order.fromFirestore(
+        orderDoc.data()!,
+        orderDoc.id,
+      );
 
       // Update order status
       await _firestore.collection('orders').doc(orderId).update({
@@ -491,7 +549,9 @@ class EscrowService {
       // For now, mark as refunded in database
 
       if (kDebugMode) {
-        debugPrint('✅ app_order.Order cancelled and refund initiated: $orderId');
+        debugPrint(
+          '✅ app_order.Order cancelled and refund initiated: $orderId',
+        );
       }
     } catch (e) {
       if (kDebugMode) {

@@ -26,7 +26,8 @@ class Wallet {
       balance: (data['balance'] ?? 0.0).toDouble(),
       pendingBalance: (data['pending_balance'] ?? 0.0).toDouble(),
       currency: data['currency'] ?? 'UGX',
-      recentTransactions: (data['recent_transactions'] as List<dynamic>?)
+      recentTransactions:
+          (data['recent_transactions'] as List<dynamic>?)
               ?.map((item) => Transaction.fromMap(item))
               .toList() ??
           [],
@@ -41,8 +42,9 @@ class Wallet {
       'balance': balance,
       'pending_balance': pendingBalance,
       'currency': currency,
-      'recent_transactions':
-          recentTransactions.map((item) => item.toMap()).toList(),
+      'recent_transactions': recentTransactions
+          .map((item) => item.toMap())
+          .toList(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -111,22 +113,9 @@ class Transaction {
   }
 }
 
-enum TransactionType {
-  payment,
-  refund,
-  withdrawal,
-  deposit,
-  earning,
-  purchase,
-}
+enum TransactionType { payment, refund, withdrawal, deposit, earning, purchase }
 
-enum TransactionStatus {
-  pending,
-  processing,
-  completed,
-  failed,
-  cancelled,
-}
+enum TransactionStatus { pending, processing, completed, failed, cancelled }
 
 extension TransactionTypeExtension on TransactionType {
   String get displayName {

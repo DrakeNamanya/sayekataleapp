@@ -59,7 +59,11 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
                         Text('Error loading products: ${snapshot.error}'),
                         const SizedBox(height: 16),
@@ -76,7 +80,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
 
                 // Filter by selected category
                 if (_selectedCategory != ProductCategory.crop) {
-                  products = products.where((p) => p.category == _selectedCategory).toList();
+                  products = products
+                      .where((p) => p.category == _selectedCategory)
+                      .toList();
                 }
 
                 if (products.isEmpty) {
@@ -84,16 +90,26 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No products yet',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Tap + to add your first product',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
@@ -185,7 +201,11 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                           width: 80,
                           height: 80,
                           color: Colors.grey[200],
-                          child: Icon(Icons.image_not_supported, size: 32, color: Colors.grey[400]),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 32,
+                            color: Colors.grey[400],
+                          ),
                         );
                       },
                     )
@@ -193,11 +213,15 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                       width: 80,
                       height: 80,
                       color: Colors.grey[200],
-                      child: Icon(Icons.inventory_2, size: 32, color: Colors.grey[400]),
+                      child: Icon(
+                        Icons.inventory_2,
+                        size: 32,
+                        color: Colors.grey[400],
+                      ),
                     ),
             ),
             const SizedBox(width: 12),
-            
+
             // Product Info
             Expanded(
               child: Column(
@@ -214,10 +238,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                   if (product.description != null)
                     Text(
                       product.description!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -234,7 +255,10 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                       ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: product.isLowStock
                               ? Colors.orange[100]
@@ -245,7 +269,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                           'Stock: ${product.stockQuantity}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: product.isLowStock ? Colors.orange[800] : Colors.green[800],
+                            color: product.isLowStock
+                                ? Colors.orange[800]
+                                : Colors.green[800],
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -255,7 +281,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 ],
               ),
             ),
-            
+
             // Actions
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -302,7 +328,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: selectedMainCategory,
+                  initialValue: selectedMainCategory,
                   decoration: const InputDecoration(
                     labelText: 'Main Category *',
                     hintText: 'Select main category',
@@ -329,24 +355,25 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 const SizedBox(height: 12),
                 if (selectedMainCategory != null)
                   DropdownButtonFormField<String>(
-                    value: selectedSubcategory,
+                    initialValue: selectedSubcategory,
                     decoration: const InputDecoration(
                       labelText: 'Subcategory *',
                       hintText: 'Select subcategory',
                     ),
-                    items: ProductCategoryHierarchy.categoryMap[selectedMainCategory]!
+                    items: ProductCategoryHierarchy
+                        .categoryMap[selectedMainCategory]!
                         .map((subcat) {
-                      return DropdownMenuItem(
-                        value: subcat.value,
-                        child: Text(subcat.displayName),
-                      );
-                    }).toList(),
+                          return DropdownMenuItem(
+                            value: subcat.value,
+                            child: Text(subcat.displayName),
+                          );
+                        })
+                        .toList(),
                     onChanged: (value) {
                       setDialogState(() => selectedSubcategory = value);
                     },
                   ),
-                if (selectedMainCategory != null)
-                  const SizedBox(height: 12),
+                if (selectedMainCategory != null) const SizedBox(height: 12),
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
@@ -379,13 +406,15 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: selectedUnit,
+                        initialValue: selectedUnit,
                         decoration: const InputDecoration(labelText: 'Unit *'),
                         items: ProductCategoryHierarchy.unitOptions
-                            .map((unit) => DropdownMenuItem(
-                                  value: unit,
-                                  child: Text(unit),
-                                ))
+                            .map(
+                              (unit) => DropdownMenuItem(
+                                value: unit,
+                                child: Text(unit),
+                              ),
+                            )
                             .toList(),
                         onChanged: (value) {
                           if (value != null) {
@@ -409,10 +438,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 // Product Photos Section
                 const Text(
                   'Product Photos (Up to 3)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -481,7 +507,8 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                       if (selectedImages.length < 3)
                         InkWell(
                           onTap: () async {
-                            final image = await imagePickerService.showImageSourceBottomSheet(context);
+                            final image = await imagePickerService
+                                .showImageSourceBottomSheet(context);
                             if (image != null) {
                               setDialogState(() {
                                 selectedImages.add(image);
@@ -495,7 +522,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                                color: AppTheme.primaryColor.withValues(
+                                  alpha: 0.5,
+                                ),
                                 width: 2,
                                 style: BorderStyle.solid,
                               ),
@@ -548,32 +577,45 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 }
 
                 try {
-                  final authProvider = Provider.of<app_auth.AuthProvider>(context, listen: false);
+                  final authProvider = Provider.of<app_auth.AuthProvider>(
+                    context,
+                    listen: false,
+                  );
                   final user = authProvider.currentUser!;
 
                   // Upload product images to Firebase Storage
                   List<String>? imageUrls;
                   if (selectedImages.isNotEmpty) {
                     if (kDebugMode) {
-                      debugPrint('📤 Uploading ${selectedImages.length} product images...');
+                      debugPrint(
+                        '📤 Uploading ${selectedImages.length} product images...',
+                      );
                     }
-                    
+
                     final imageStorageService = ImageStorageService();
-                    final firebaseUid = firebase_auth.FirebaseAuth.instance.currentUser!.uid;
-                    imageUrls = await imageStorageService.uploadMultipleImagesFromXFiles(
-                      images: selectedImages,
-                      folder: 'products',
-                      userId: firebaseUid, // Use Firebase Auth UID, not user.id
-                      compress: true,
-                    ).timeout(
-                      const Duration(seconds: 60),
-                      onTimeout: () {
-                        throw Exception('Image upload timeout - please check your internet connection');
-                      },
-                    );
-                    
+                    final firebaseUid =
+                        firebase_auth.FirebaseAuth.instance.currentUser!.uid;
+                    imageUrls = await imageStorageService
+                        .uploadMultipleImagesFromXFiles(
+                          images: selectedImages,
+                          folder: 'products',
+                          userId:
+                              firebaseUid, // Use Firebase Auth UID, not user.id
+                          compress: true,
+                        )
+                        .timeout(
+                          const Duration(seconds: 60),
+                          onTimeout: () {
+                            throw Exception(
+                              'Image upload timeout - please check your internet connection',
+                            );
+                          },
+                        );
+
                     if (kDebugMode) {
-                      debugPrint('✅ Uploaded ${imageUrls?.length ?? 0} product images');
+                      debugPrint(
+                        '✅ Uploaded ${imageUrls.length ?? 0} product images',
+                      );
                     }
                   }
 
@@ -589,7 +631,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     price: double.parse(priceController.text.trim()),
                     unit: selectedUnit,
                     stockQuantity: int.parse(stockController.text.trim()),
-                    imageUrls: imageUrls,  // Pass all images
+                    imageUrls: imageUrls, // Pass all images
                   );
 
                   if (mounted) {
@@ -625,9 +667,15 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
 
   void _showEditProductDialog(Product product) {
     final nameController = TextEditingController(text: product.name);
-    final descController = TextEditingController(text: product.description ?? '');
-    final priceController = TextEditingController(text: product.price.toString());
-    final stockController = TextEditingController(text: product.stockQuantity.toString());
+    final descController = TextEditingController(
+      text: product.description ?? '',
+    );
+    final priceController = TextEditingController(
+      text: product.price.toString(),
+    );
+    final stockController = TextEditingController(
+      text: product.stockQuantity.toString(),
+    );
     ProductCategory selectedCategory = product.category;
     String? selectedMainCategory = product.mainCategory;
     String? selectedSubcategory = product.subcategory;
@@ -643,7 +691,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: selectedMainCategory,
+                  initialValue: selectedMainCategory,
                   decoration: const InputDecoration(
                     labelText: 'Main Category *',
                     hintText: 'Select main category',
@@ -663,34 +711,38 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                   onChanged: (value) {
                     setDialogState(() {
                       selectedMainCategory = value;
-                      selectedSubcategory = null; // Reset subcategory when main category changes
+                      selectedSubcategory =
+                          null; // Reset subcategory when main category changes
                     });
                   },
                 ),
                 const SizedBox(height: 12),
                 if (selectedMainCategory != null)
                   DropdownButtonFormField<String>(
-                    value: selectedSubcategory,
+                    initialValue: selectedSubcategory,
                     decoration: const InputDecoration(
                       labelText: 'Subcategory *',
                       hintText: 'Select subcategory',
                     ),
-                    items: ProductCategoryHierarchy.categoryMap[selectedMainCategory]!
+                    items: ProductCategoryHierarchy
+                        .categoryMap[selectedMainCategory]!
                         .map((subcat) {
-                      return DropdownMenuItem(
-                        value: subcat.value,
-                        child: Text(subcat.displayName),
-                      );
-                    }).toList(),
+                          return DropdownMenuItem(
+                            value: subcat.value,
+                            child: Text(subcat.displayName),
+                          );
+                        })
+                        .toList(),
                     onChanged: (value) {
                       setDialogState(() => selectedSubcategory = value);
                     },
                   ),
-                if (selectedMainCategory != null)
-                  const SizedBox(height: 12),
+                if (selectedMainCategory != null) const SizedBox(height: 12),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Product Name *'),
+                  decoration: const InputDecoration(
+                    labelText: 'Product Name *',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -704,20 +756,24 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                     Expanded(
                       child: TextField(
                         controller: priceController,
-                        decoration: const InputDecoration(labelText: 'Price (UGX)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Price (UGX)',
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: selectedUnit,
+                        initialValue: selectedUnit,
                         decoration: const InputDecoration(labelText: 'Unit *'),
                         items: ProductCategoryHierarchy.unitOptions
-                            .map((unit) => DropdownMenuItem(
-                                  value: unit,
-                                  child: Text(unit),
-                                ))
+                            .map(
+                              (unit) => DropdownMenuItem(
+                                value: unit,
+                                child: Text(unit),
+                              ),
+                            )
                             .toList(),
                         onChanged: (value) {
                           if (value != null) {
@@ -731,7 +787,9 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: stockController,
-                  decoration: const InputDecoration(labelText: 'Stock Quantity'),
+                  decoration: const InputDecoration(
+                    labelText: 'Stock Quantity',
+                  ),
                   keyboardType: TextInputType.number,
                 ),
               ],

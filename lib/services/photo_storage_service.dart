@@ -16,12 +16,12 @@ class PhotoStorageService {
         maxHeight: 1920,
         imageQuality: 85,
       );
-      
+
       // Limit to maxImages
       if (images.length > maxImages) {
         return images.sublist(0, maxImages);
       }
-      
+
       return images;
     } catch (e) {
       if (kDebugMode) {
@@ -40,7 +40,7 @@ class PhotoStorageService {
         maxHeight: 1920,
         imageQuality: 85,
       );
-      
+
       return image;
     } catch (e) {
       if (kDebugMode) {
@@ -58,13 +58,14 @@ class PhotoStorageService {
     Function(int uploaded, int total)? onProgress,
   }) async {
     final List<String> downloadUrls = [];
-    
+
     try {
       for (int i = 0; i < photos.length; i++) {
         final photo = photos[i];
-        final fileName = 'review_${reviewId}_photo_${i}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final fileName =
+            'review_${reviewId}_photo_${i}_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final ref = _storage.ref().child('reviews/$reviewId/$fileName');
-        
+
         // Upload file
         UploadTask uploadTask;
         if (kIsWeb) {
@@ -81,20 +82,20 @@ class PhotoStorageService {
             SettableMetadata(contentType: 'image/jpeg'),
           );
         }
-        
+
         // Wait for upload to complete
         final snapshot = await uploadTask;
-        
+
         // Get download URL
         final downloadUrl = await snapshot.ref.getDownloadURL();
         downloadUrls.add(downloadUrl);
-        
+
         // Report progress
         if (onProgress != null) {
           onProgress(i + 1, photos.length);
         }
       }
-      
+
       return downloadUrls;
     } catch (e) {
       if (kDebugMode) {

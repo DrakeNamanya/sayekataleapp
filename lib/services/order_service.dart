@@ -29,28 +29,35 @@ class OrderService {
   // ============================================================================
 
   /// Validate stock availability for cart items
-  Future<Map<String, dynamic>> validateCartStock(List<CartItem> cartItems) async {
+  Future<Map<String, dynamic>> validateCartStock(
+    List<CartItem> cartItems,
+  ) async {
     final List<String> outOfStockItems = [];
     final List<String> insufficientStockItems = [];
-    
+
     for (final item in cartItems) {
       try {
         // Fetch current product stock from Firebase
-        final productDoc = await _firestore.collection('products').doc(item.productId).get();
-        
+        final productDoc = await _firestore
+            .collection('products')
+            .doc(item.productId)
+            .get();
+
         if (!productDoc.exists) {
           outOfStockItems.add(item.productName);
           continue;
         }
-        
+
         final productData = productDoc.data()!;
         final currentStock = productData['stock_quantity'] ?? 0;
         final isAvailable = productData['is_available'] ?? false;
-        
+
         if (!isAvailable || currentStock == 0) {
           outOfStockItems.add(item.productName);
         } else if (currentStock < item.quantity) {
-          insufficientStockItems.add('${item.productName} (Available: $currentStock ${item.unit}, Requested: ${item.quantity} ${item.unit})');
+          insufficientStockItems.add(
+            '${item.productName} (Available: $currentStock ${item.unit}, Requested: ${item.quantity} ${item.unit})',
+          );
         }
       } catch (e) {
         if (kDebugMode) {
@@ -59,7 +66,7 @@ class OrderService {
         outOfStockItems.add(item.productName);
       }
     }
-    
+
     return {
       'isValid': outOfStockItems.isEmpty && insufficientStockItems.isEmpty,
       'outOfStockItems': outOfStockItems,
@@ -87,24 +94,27 @@ class OrderService {
       if (kDebugMode) {
         debugPrint('🔍 Validating stock availability...');
       }
-      
+
       final stockValidation = await validateCartStock(cartItems);
-      
+
       if (!stockValidation['isValid']) {
         final outOfStock = stockValidation['outOfStockItems'] as List<String>;
-        final insufficient = stockValidation['insufficientStockItems'] as List<String>;
-        
+        final insufficient =
+            stockValidation['insufficientStockItems'] as List<String>;
+
         String errorMessage = '❌ Cannot place order:\n';
         if (outOfStock.isNotEmpty) {
-          errorMessage += '\nOut of stock:\n${outOfStock.map((item) => '  • $item').join('\n')}';
+          errorMessage +=
+              '\nOut of stock:\n${outOfStock.map((item) => '  • $item').join('\n')}';
         }
         if (insufficient.isNotEmpty) {
-          errorMessage += '\n\nInsufficient stock:\n${insufficient.map((item) => '  • $item').join('\n')}';
+          errorMessage +=
+              '\n\nInsufficient stock:\n${insufficient.map((item) => '  • $item').join('\n')}';
         }
-        
+
         throw Exception(errorMessage);
       }
-      
+
       if (kDebugMode) {
         debugPrint('✅ Stock validation passed');
       }
@@ -119,7 +129,9 @@ class OrderService {
       }
 
       if (kDebugMode) {
-        debugPrint('📊 Creating ${itemsByFarmer.length} orders (one per farmer)');
+        debugPrint(
+          '📊 Creating ${itemsByFarmer.length} orders (one per farmer)',
+        );
       }
 
       // Create one order per farmer
@@ -134,14 +146,20 @@ class OrderService {
         String? buyerSystemId;
         String? farmerSystemId;
         String farmerPhone = '';
-        
+
         try {
-          final buyerDoc = await _firestore.collection('users').doc(buyerId).get();
+          final buyerDoc = await _firestore
+              .collection('users')
+              .doc(buyerId)
+              .get();
           if (buyerDoc.exists) {
             buyerSystemId = buyerDoc.data()?['national_id'];
           }
-          
-          final farmerDoc = await _firestore.collection('users').doc(farmerId).get();
+
+          final farmerDoc = await _firestore
+              .collection('users')
+              .doc(farmerId)
+              .get();
           if (farmerDoc.exists) {
             farmerSystemId = farmerDoc.data()?['national_id'];
             farmerPhone = farmerDoc.data()?['phone'] ?? '';
@@ -159,7 +177,9 @@ class OrderService {
         );
 
         // Convert cart items to order items
-        final List<app_order.OrderItem> orderItems = farmerItems.map((cartItem) {
+        final List<app_order.OrderItem> orderItems = farmerItems.map((
+          cartItem,
+        ) {
           return app_order.OrderItem(
             productId: cartItem.productId,
             productName: cartItem.productName,
@@ -173,19 +193,29 @@ class OrderService {
 
         // Determine order type based on buyer and seller roles
         app_order.OrderType orderType;
-        
+
         try {
           // Fetch buyer and seller roles to determine order type
-          final buyerDoc = await _firestore.collection('users').doc(buyerId).get();
-          final sellerDoc = await _firestore.collection('users').doc(farmerId).get();
-          
-          final buyerRole = buyerDoc.exists ? (buyerDoc.data()?['role'] as String?) : null;
-          final sellerRole = sellerDoc.exists ? (sellerDoc.data()?['role'] as String?) : null;
-          
+          final buyerDoc = await _firestore
+              .collection('users')
+              .doc(buyerId)
+              .get();
+          final sellerDoc = await _firestore
+              .collection('users')
+              .doc(farmerId)
+              .get();
+
+          final buyerRole = buyerDoc.exists
+              ? (buyerDoc.data()?['role'] as String?)
+              : null;
+          final sellerRole = sellerDoc.exists
+              ? (sellerDoc.data()?['role'] as String?)
+              : null;
+
           if (kDebugMode) {
             debugPrint('📊 Order roles: Buyer=$buyerRole, Seller=$sellerRole');
           }
-          
+
           // Determine order type based on roles
           if (buyerRole == 'shg' && sellerRole == 'psa') {
             // SHG buying inputs from PSA
@@ -202,11 +232,13 @@ class OrderService {
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('⚠️ Error determining order type: $e, defaulting to SME → SHG');
+            debugPrint(
+              '⚠️ Error determining order type: $e, defaulting to SME → SHG',
+            );
           }
           orderType = app_order.OrderType.smeToShgProductPurchase;
         }
-        
+
         // Create order (no service fees)
         final order = app_order.Order(
           id: '', // Will be set by Firestore
@@ -234,10 +266,14 @@ class OrderService {
         );
 
         // Save to Firestore
-        final docRef = await _firestore.collection('orders').add(order.toFirestore());
+        final docRef = await _firestore
+            .collection('orders')
+            .add(order.toFirestore());
 
         if (kDebugMode) {
-          debugPrint('✅ app_order.Order created: ${docRef.id} for farmer $farmerName (UGX ${total.toStringAsFixed(0)})');
+          debugPrint(
+            '✅ app_order.Order created: ${docRef.id} for farmer $farmerName (UGX ${total.toStringAsFixed(0)})',
+          );
         }
 
         final createdOrder = order.copyWith(id: docRef.id);
@@ -313,11 +349,11 @@ class OrderService {
 
       // Merge results and remove duplicates
       final Map<String, app_order.Order> ordersMap = {};
-      
+
       for (var doc in farmerQuery.docs) {
         ordersMap[doc.id] = app_order.Order.fromFirestore(doc.data(), doc.id);
       }
-      
+
       for (var doc in sellerQuery.docs) {
         // Only add if not already in map (avoid duplicates)
         if (!ordersMap.containsKey(doc.id)) {
@@ -363,15 +399,15 @@ class OrderService {
         .where('farmer_id', isEqualTo: farmerId)
         .snapshots()
         .map((snapshot) {
-      final orders = snapshot.docs
-          .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
-          .toList();
+          final orders = snapshot.docs
+              .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
+              .toList();
 
-      // Sort by created date (newest first)
-      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Sort by created date (newest first)
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return orders;
-    });
+          return orders;
+        });
   }
 
   /// Stream of orders for real-time updates (for buyers)
@@ -381,15 +417,15 @@ class OrderService {
         .where('buyer_id', isEqualTo: buyerId)
         .snapshots()
         .map((snapshot) {
-      final orders = snapshot.docs
-          .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
-          .toList();
+          final orders = snapshot.docs
+              .map((doc) => app_order.Order.fromFirestore(doc.data(), doc.id))
+              .toList();
 
-      // Sort by created date (newest first)
-      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Sort by created date (newest first)
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return orders;
-    });
+          return orders;
+        });
   }
 
   // ============================================================================
@@ -401,38 +437,50 @@ class OrderService {
     try {
       // Validate orderId is not empty or invalid
       if (orderId.isEmpty || orderId == 'orders' || orderId.contains('/')) {
-        throw Exception('Invalid order ID: "$orderId". Order ID must be a valid document ID.');
+        throw Exception(
+          'Invalid order ID: "$orderId". Order ID must be a valid document ID.',
+        );
       }
-      
+
       if (kDebugMode) {
         debugPrint('🔍 Confirming order with ID: "$orderId"');
       }
-      
+
       // ✅ STEP 1: Get order details to reduce stock
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
       if (!orderDoc.exists) {
         throw Exception('Order not found');
       }
-      
-      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
-      
+
+      final order = app_order.Order.fromFirestore(
+        orderDoc.data()!,
+        orderDoc.id,
+      );
+
       if (kDebugMode) {
-        debugPrint('📦 Confirming order $orderId with ${order.items.length} items');
+        debugPrint(
+          '📦 Confirming order $orderId with ${order.items.length} items',
+        );
       }
-      
+
       // ✅ STEP 2: Reduce stock for each product in the order
       for (final item in order.items) {
         try {
-          final productDoc = await _firestore.collection('products').doc(item.productId).get();
-          
+          final productDoc = await _firestore
+              .collection('products')
+              .doc(item.productId)
+              .get();
+
           if (productDoc.exists) {
             final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
             final newStock = currentStock - item.quantity;
-            
+
             if (kDebugMode) {
-              debugPrint('   📉 ${item.productName}: $currentStock → $newStock ${item.unit}');
+              debugPrint(
+                '   📉 ${item.productName}: $currentStock → $newStock ${item.unit}',
+              );
             }
-            
+
             // Update product stock
             await _firestore.collection('products').doc(item.productId).update({
               'stock_quantity': newStock < 0 ? 0 : newStock,
@@ -441,17 +489,21 @@ class OrderService {
             });
           } else {
             if (kDebugMode) {
-              debugPrint('   ⚠️ Product ${item.productId} not found, skipping stock reduction');
+              debugPrint(
+                '   ⚠️ Product ${item.productId} not found, skipping stock reduction',
+              );
             }
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('   ⚠️ Error reducing stock for ${item.productName}: $e');
+            debugPrint(
+              '   ⚠️ Error reducing stock for ${item.productName}: $e',
+            );
           }
           // Continue with other items even if one fails
         }
       }
-      
+
       // ✅ STEP 3: Update order status to confirmed
       await _firestore.collection('orders').doc(orderId).update({
         'status': app_order.OrderStatus.confirmed.toString().split('.').last,
@@ -462,7 +514,7 @@ class OrderService {
       if (kDebugMode) {
         debugPrint('✅ Order $orderId confirmed and stock reduced');
       }
-      
+
       // ✅ STEP 4: Send notification to buyer about confirmation
       try {
         await _notificationService.sendOrderConfirmationNotification(
@@ -502,10 +554,16 @@ class OrderService {
         throw Exception('Order not found');
       }
 
-      final order = app_order.Order.fromFirestore(orderDoc.data()!, orderDoc.id);
+      final order = app_order.Order.fromFirestore(
+        orderDoc.data()!,
+        orderDoc.id,
+      );
 
       // Get seller (delivery person) info
-      final sellerDoc = await _firestore.collection('users').doc(order.farmerId).get();
+      final sellerDoc = await _firestore
+          .collection('users')
+          .doc(order.farmerId)
+          .get();
       if (!sellerDoc.exists) {
         throw Exception('Seller not found');
       }
@@ -515,7 +573,10 @@ class OrderService {
       final sellerLocation = sellerData['location'] as Map<String, dynamic>?;
 
       // Get buyer (recipient) info
-      final buyerDoc = await _firestore.collection('users').doc(order.buyerId).get();
+      final buyerDoc = await _firestore
+          .collection('users')
+          .doc(order.buyerId)
+          .get();
       if (!buyerDoc.exists) {
         throw Exception('Buyer not found');
       }
@@ -528,12 +589,16 @@ class OrderService {
       if (sellerLocation == null || buyerLocation == null) {
         if (kDebugMode) {
           debugPrint('⚠️ Missing GPS coordinates for order $orderId');
-          debugPrint('   Seller location: ${sellerLocation != null ? "Present" : "MISSING"}');
-          debugPrint('   Buyer location: ${buyerLocation != null ? "Present" : "MISSING"}');
+          debugPrint(
+            '   Seller location: ${sellerLocation != null ? "Present" : "MISSING"}',
+          );
+          debugPrint(
+            '   Buyer location: ${buyerLocation != null ? "Present" : "MISSING"}',
+          );
         }
         throw Exception(
           'GPS_MISSING: Cannot create delivery tracking. '
-          '${sellerLocation == null ? "Seller" : "Buyer"} needs to add GPS coordinates in profile settings.'
+          '${sellerLocation == null ? "Seller" : "Buyer"} needs to add GPS coordinates in profile settings.',
         );
       }
 
@@ -544,13 +609,16 @@ class OrderService {
       final destLng = buyerLocation['longitude']?.toDouble() ?? 0.0;
 
       // Validate coordinates are not zero (invalid)
-      if (originLat == 0.0 || originLng == 0.0 || destLat == 0.0 || destLng == 0.0) {
+      if (originLat == 0.0 ||
+          originLng == 0.0 ||
+          destLat == 0.0 ||
+          destLng == 0.0) {
         if (kDebugMode) {
           debugPrint('⚠️ Invalid GPS coordinates (0,0) for order $orderId');
         }
         throw Exception(
           'GPS_INVALID: Cannot create delivery tracking. '
-          'Please update your GPS coordinates in profile settings.'
+          'Please update your GPS coordinates in profile settings.',
         );
       }
 
@@ -601,11 +669,17 @@ class OrderService {
         updatedAt: DateTime.now(),
       );
 
-      final trackingId = await _trackingService.createDeliveryTracking(tracking);
+      final trackingId = await _trackingService.createDeliveryTracking(
+        tracking,
+      );
 
       if (kDebugMode) {
-        debugPrint('✅ Delivery tracking created: $trackingId for order $orderId');
-        debugPrint('   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min');
+        debugPrint(
+          '✅ Delivery tracking created: $trackingId for order $orderId',
+        );
+        debugPrint(
+          '   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -681,10 +755,10 @@ class OrderService {
           .limit(1)
           .snapshots()
           .map((snapshot) {
-        if (snapshot.docs.isEmpty) return null;
-        final doc = snapshot.docs.first;
-        return DeliveryTracking.fromFirestore(doc.data(), doc.id);
-      });
+            if (snapshot.docs.isEmpty) return null;
+            final doc = snapshot.docs.first;
+            return DeliveryTracking.fromFirestore(doc.data(), doc.id);
+          });
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error streaming order delivery tracking: $e');
@@ -715,7 +789,10 @@ class OrderService {
   }
 
   /// Update order status (general)
-  Future<void> updateOrderStatus(String orderId, app_order.OrderStatus newStatus) async {
+  Future<void> updateOrderStatus(
+    String orderId,
+    app_order.OrderStatus newStatus,
+  ) async {
     try {
       // Get order details first for notification
       final orderDoc = await _firestore.collection('orders').doc(orderId).get();
@@ -737,7 +814,9 @@ class OrderService {
       await _firestore.collection('orders').doc(orderId).update(updateData);
 
       if (kDebugMode) {
-        debugPrint('✅ app_order.Order $orderId status updated to ${newStatus.displayName}');
+        debugPrint(
+          '✅ app_order.Order $orderId status updated to ${newStatus.displayName}',
+        );
       }
 
       // Send notification to buyer about status update
@@ -767,7 +846,9 @@ class OrderService {
   // ============================================================================
 
   /// Get order counts by status for farmer
-  Future<Map<app_order.OrderStatus, int>> getFarmerOrderStats(String farmerId) async {
+  Future<Map<app_order.OrderStatus, int>> getFarmerOrderStats(
+    String farmerId,
+  ) async {
     try {
       final orders = await getFarmerOrders(farmerId);
 
@@ -797,7 +878,10 @@ class OrderService {
             order.status == app_order.OrderStatus.delivered,
       );
 
-      return completedOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
+      return completedOrders.fold<double>(
+        0.0,
+        (sum, order) => sum + order.totalAmount,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error calculating farmer revenue: $e');
@@ -820,7 +904,10 @@ class OrderService {
                 order.status == app_order.OrderStatus.delivered);
       });
 
-      return recentOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
+      return recentOrders.fold<double>(
+        0.0,
+        (sum, order) => sum + order.totalAmount,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error calculating farmer today earnings: $e');
@@ -843,7 +930,10 @@ class OrderService {
                 order.status == app_order.OrderStatus.delivered);
       });
 
-      return weeklyOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
+      return weeklyOrders.fold<double>(
+        0.0,
+        (sum, order) => sum + order.totalAmount,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error calculating farmer weekly earnings: $e');
@@ -857,7 +947,7 @@ class OrderService {
     try {
       final stats = await getFarmerOrderStats(farmerId);
       int activeCount = 0;
-      
+
       // Active orders include: confirmed, preparing, ready, in_transit
       activeCount += stats[app_order.OrderStatus.confirmed] ?? 0;
       activeCount += stats[app_order.OrderStatus.preparing] ?? 0;
@@ -948,11 +1038,16 @@ class OrderService {
       for (final item in order.items) {
         try {
           // Get current product stock
-          final productDoc = await _firestore.collection('products').doc(item.productId).get();
-          
+          final productDoc = await _firestore
+              .collection('products')
+              .doc(item.productId)
+              .get();
+
           if (productDoc.exists) {
             final currentStock = productDoc.data()?['stock_quantity'] ?? 0;
-            final newStock = (currentStock - item.quantity).clamp(0, double.infinity).toInt();
+            final newStock = (currentStock - item.quantity)
+                .clamp(0, double.infinity)
+                .toInt();
 
             await _firestore.collection('products').doc(item.productId).update({
               'stock_quantity': newStock,
@@ -961,12 +1056,16 @@ class OrderService {
             });
 
             if (kDebugMode) {
-              debugPrint('📉 Stock reduced for ${item.productName}: $currentStock → $newStock');
+              debugPrint(
+                '📉 Stock reduced for ${item.productName}: $currentStock → $newStock',
+              );
             }
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('⚠️ Error reducing stock for product ${item.productId}: $e');
+            debugPrint(
+              '⚠️ Error reducing stock for product ${item.productId}: $e',
+            );
           }
           // Continue with other products even if one fails
         }
@@ -981,7 +1080,7 @@ class OrderService {
           rating: rating,
           feedback: feedback,
         );
-        
+
         if (kDebugMode) {
           debugPrint('🧾 Receipt generated: ${receipt.id}');
         }
@@ -1027,18 +1126,21 @@ class OrderService {
     try {
       final now = DateTime.now();
       final firstDayOfMonth = DateTime(now.year, now.month, 1);
-      
+
       final orders = await getBuyerOrders(buyerId);
-      
+
       // Filter orders from current month that are completed or delivered
       final monthlyOrders = orders.where((order) {
         return order.createdAt.isAfter(firstDayOfMonth) &&
-               (order.status == app_order.OrderStatus.completed ||
+            (order.status == app_order.OrderStatus.completed ||
                 order.status == app_order.OrderStatus.delivered ||
                 (order.isReceivedByBuyer ?? false));
       });
 
-      return monthlyOrders.fold<double>(0.0, (sum, order) => sum + order.totalAmount);
+      return monthlyOrders.fold<double>(
+        0.0,
+        (sum, order) => sum + order.totalAmount,
+      );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error calculating monthly spending: $e');
@@ -1052,10 +1154,13 @@ class OrderService {
     try {
       final orders = await getBuyerOrders(buyerId);
       // Only count orders that are BOTH delivered AND received by buyer
-      return orders.where((order) => 
-        order.status == app_order.OrderStatus.delivered &&
-        (order.isReceivedByBuyer ?? false)
-      ).length;
+      return orders
+          .where(
+            (order) =>
+                order.status == app_order.OrderStatus.delivered &&
+                (order.isReceivedByBuyer ?? false),
+          )
+          .length;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error getting completed orders count: $e');
@@ -1069,13 +1174,16 @@ class OrderService {
     try {
       final orders = await getBuyerOrders(buyerId);
       // Only count truly active orders - not delivered, completed, cancelled, or rejected
-      return orders.where((order) => 
-        order.status == app_order.OrderStatus.pending ||
-        order.status == app_order.OrderStatus.confirmed ||
-        order.status == app_order.OrderStatus.preparing ||
-        order.status == app_order.OrderStatus.ready ||
-        order.status == app_order.OrderStatus.inTransit
-      ).length;
+      return orders
+          .where(
+            (order) =>
+                order.status == app_order.OrderStatus.pending ||
+                order.status == app_order.OrderStatus.confirmed ||
+                order.status == app_order.OrderStatus.preparing ||
+                order.status == app_order.OrderStatus.ready ||
+                order.status == app_order.OrderStatus.inTransit,
+          )
+          .length;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error getting active orders count: $e');
@@ -1089,11 +1197,11 @@ class OrderService {
     try {
       final orders = await getBuyerOrders(buyerId);
       final yesterday = DateTime.now().subtract(const Duration(hours: 24));
-      
+
       // Show all orders created in last 24 hours, regardless of status
-      return orders.where((order) => 
-        order.createdAt.isAfter(yesterday)
-      ).toList();
+      return orders
+          .where((order) => order.createdAt.isAfter(yesterday))
+          .toList();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error getting recent orders: $e');
@@ -1116,7 +1224,9 @@ class OrderService {
   }) async {
     try {
       if (kDebugMode) {
-        debugPrint('📝 Submitting review for order: $orderId (Rating: $rating stars)');
+        debugPrint(
+          '📝 Submitting review for order: $orderId (Rating: $rating stars)',
+        );
       }
 
       // Validate rating
@@ -1130,7 +1240,8 @@ class OrderService {
       String? reviewPhotoUrl;
       if (reviewPhotoPath != null) {
         // reviewPhotoUrl = await _uploadReviewPhoto(reviewPhotoPath);
-        reviewPhotoUrl = reviewPhotoPath; // Placeholder until storage is implemented
+        reviewPhotoUrl =
+            reviewPhotoPath; // Placeholder until storage is implemented
       }
 
       // Update order with review
@@ -1179,7 +1290,11 @@ class OrderService {
   }
 
   /// Update farmer's rating statistics
-  Future<void> _updateFarmerRating(String farmerId, String farmerName, int rating) async {
+  Future<void> _updateFarmerRating(
+    String farmerId,
+    String farmerName,
+    int rating,
+  ) async {
     try {
       final ratingDoc = _firestore.collection('farmer_ratings').doc(farmerId);
       final ratingSnapshot = await ratingDoc.get();
@@ -1189,14 +1304,16 @@ class OrderService {
         final data = ratingSnapshot.data()!;
         final currentAverage = (data['average_rating'] ?? 0.0).toDouble();
         final currentTotal = data['total_ratings'] ?? 0;
-        final currentDistribution = (data['rating_distribution'] as List<dynamic>?)
+        final currentDistribution =
+            (data['rating_distribution'] as List<dynamic>?)
                 ?.map((e) => e as int)
                 .toList() ??
             [0, 0, 0, 0, 0];
 
         // Calculate new average
         final newTotal = currentTotal + 1;
-        final newAverage = ((currentAverage * currentTotal) + rating) / newTotal;
+        final newAverage =
+            ((currentAverage * currentTotal) + rating) / newTotal;
 
         // Update distribution
         currentDistribution[rating - 1]++;
@@ -1239,7 +1356,10 @@ class OrderService {
   /// Get farmer's rating information
   Future<Map<String, dynamic>?> getFarmerRating(String farmerId) async {
     try {
-      final ratingDoc = await _firestore.collection('farmer_ratings').doc(farmerId).get();
+      final ratingDoc = await _firestore
+          .collection('farmer_ratings')
+          .doc(farmerId)
+          .get();
       if (ratingDoc.exists) {
         return ratingDoc.data();
       }

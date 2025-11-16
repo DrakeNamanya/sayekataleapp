@@ -42,13 +42,15 @@ class ComplaintService {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      final docRef = await _firestore.collection('user_complaints').add(complaint);
-      
+      final docRef = await _firestore
+          .collection('user_complaints')
+          .add(complaint);
+
       if (kDebugMode) {
         debugPrint('✅ COMPLAINT SERVICE - Complaint submitted successfully');
         debugPrint('   - Document ID: ${docRef.id}');
       }
-      
+
       return docRef.id;
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -101,7 +103,7 @@ class ComplaintService {
       final complaints = snapshot.docs
           .map((doc) => {'id': doc.id, ...doc.data()})
           .toList();
-      
+
       // Sort in memory to avoid composite index requirement
       complaints.sort((a, b) {
         final aTime = a['created_at']?.toString() ?? '';
@@ -110,7 +112,9 @@ class ComplaintService {
       });
 
       if (kDebugMode) {
-        debugPrint('✅ COMPLAINT SERVICE - Returning ${complaints.length} complaints');
+        debugPrint(
+          '✅ COMPLAINT SERVICE - Returning ${complaints.length} complaints',
+        );
       }
 
       return complaints;

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -50,21 +49,25 @@ class AuthProvider with ChangeNotifier {
   Future<void> _loadUserFromFirestore(String uid) async {
     try {
       if (kDebugMode) {
-        debugPrint('🔄 AUTH PROVIDER - Loading user from Firestore for UID: $uid');
+        debugPrint(
+          '🔄 AUTH PROVIDER - Loading user from Firestore for UID: $uid',
+        );
       }
-      
+
       final user = await _authService.getUserProfile(uid);
-      
+
       if (user != null) {
         _currentUser = user;
         _isAuthenticated = true;
-        
+
         if (kDebugMode) {
           debugPrint('✅ AUTH PROVIDER - User loaded successfully:');
           debugPrint('   - User ID: ${user.id}');
           debugPrint('   - User Name: ${user.name}');
           debugPrint('   - Profile Image URL: ${user.profileImage ?? "NULL"}');
-          debugPrint('   - National ID Photo URL: ${user.nationalIdPhoto ?? "NULL"}');
+          debugPrint(
+            '   - National ID Photo URL: ${user.nationalIdPhoto ?? "NULL"}',
+          );
           debugPrint('   - Profile Complete: ${user.isProfileComplete}');
         }
       } else {
@@ -93,10 +96,10 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     try {
       await _auth.signOut();
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       _currentUser = null;
       _isAuthenticated = false;
       notifyListeners();
@@ -131,14 +134,20 @@ class AuthProvider with ChangeNotifier {
       if (kDebugMode) {
         debugPrint('🔄 Starting profile update for user: $userId');
         debugPrint('📥 Received parameters:');
-        debugPrint('   - profileImageFile: ${profileImageFile?.path ?? "null"}');
+        debugPrint(
+          '   - profileImageFile: ${profileImageFile?.path ?? "null"}',
+        );
         debugPrint('   - profileImageUrl: ${profileImageUrl ?? "null"}');
-        debugPrint('   - nationalIdPhotoFile: ${nationalIdPhotoFile?.path ?? "null"}');
+        debugPrint(
+          '   - nationalIdPhotoFile: ${nationalIdPhotoFile?.path ?? "null"}',
+        );
         debugPrint('   - nationalIdPhotoUrl: ${nationalIdPhotoUrl ?? "null"}');
         debugPrint('   - nationalId: ${nationalId ?? "null"}');
         debugPrint('   - nameOnIdPhoto: ${nameOnIdPhoto ?? "null"}');
         debugPrint('   - sex: ${sex ?? "null"}');
-        debugPrint('   - location: ${location != null ? "${location.district}, ${location.subcounty}" : "null"}');
+        debugPrint(
+          '   - location: ${location != null ? "${location.district}, ${location.subcounty}" : "null"}',
+        );
       }
 
       // Upload profile image if XFile is provided
@@ -146,22 +155,29 @@ class AuthProvider with ChangeNotifier {
       if (profileImageFile != null) {
         try {
           if (kDebugMode) {
-            debugPrint('📤 Uploading profile image from XFile: ${profileImageFile.path}');
+            debugPrint(
+              '📤 Uploading profile image from XFile: ${profileImageFile.path}',
+            );
           }
-          
-          finalProfileImageUrl = await _imageStorage.uploadImageFromXFile(
-            imageFile: profileImageFile,
-            folder: 'profiles',
-            userId: userId,
-            customName: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            compress: true,
-          ).timeout(
-            const Duration(seconds: 45),
-            onTimeout: () {
-              throw Exception('Profile image upload timeout - please check your internet connection');
-            },
-          );
-          
+
+          finalProfileImageUrl = await _imageStorage
+              .uploadImageFromXFile(
+                imageFile: profileImageFile,
+                folder: 'profiles',
+                userId: userId,
+                customName:
+                    'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                compress: true,
+              )
+              .timeout(
+                const Duration(seconds: 45),
+                onTimeout: () {
+                  throw Exception(
+                    'Profile image upload timeout - please check your internet connection',
+                  );
+                },
+              );
+
           if (kDebugMode) {
             debugPrint('✅ Profile image uploaded: $finalProfileImageUrl');
           }
@@ -184,60 +200,82 @@ class AuthProvider with ChangeNotifier {
       if (nationalIdPhotoFile != null) {
         try {
           if (kDebugMode) {
-            debugPrint('📤 Uploading national ID photo from XFile: ${nationalIdPhotoFile.path}');
+            debugPrint(
+              '📤 Uploading national ID photo from XFile: ${nationalIdPhotoFile.path}',
+            );
           }
-          
-          finalNationalIdPhotoUrl = await _imageStorage.uploadImageFromXFile(
-            imageFile: nationalIdPhotoFile,
-            folder: 'national_ids',
-            userId: userId,
-            customName: 'national_id_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            compress: false, // Don't compress ID photos (need clarity)
-          ).timeout(
-            const Duration(seconds: 45),
-            onTimeout: () {
-              throw Exception('National ID photo upload timeout - please check your internet connection');
-            },
-          );
-          
+
+          finalNationalIdPhotoUrl = await _imageStorage
+              .uploadImageFromXFile(
+                imageFile: nationalIdPhotoFile,
+                folder: 'national_ids',
+                userId: userId,
+                customName:
+                    'national_id_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                compress: false, // Don't compress ID photos (need clarity)
+              )
+              .timeout(
+                const Duration(seconds: 45),
+                onTimeout: () {
+                  throw Exception(
+                    'National ID photo upload timeout - please check your internet connection',
+                  );
+                },
+              );
+
           if (kDebugMode) {
-            debugPrint('✅ National ID photo uploaded: $finalNationalIdPhotoUrl');
+            debugPrint(
+              '✅ National ID photo uploaded: $finalNationalIdPhotoUrl',
+            );
           }
         } catch (e) {
           if (kDebugMode) {
             debugPrint('❌ Error uploading national ID photo: $e');
           }
           // Rethrow to show error to user
-          throw Exception('Failed to upload national ID photo: ${e.toString()}');
+          throw Exception(
+            'Failed to upload national ID photo: ${e.toString()}',
+          );
         }
       } else if (nationalIdPhotoUrl != null) {
         // Already a URL, use as-is
         if (kDebugMode) {
-          debugPrint('ℹ️ Using existing national ID photo URL: $nationalIdPhotoUrl');
+          debugPrint(
+            'ℹ️ Using existing national ID photo URL: $nationalIdPhotoUrl',
+          );
         }
       }
 
       if (kDebugMode) {
         debugPrint('📊 Final URLs after upload:');
-        debugPrint('   - finalProfileImageUrl: ${finalProfileImageUrl ?? "null"}');
-        debugPrint('   - finalNationalIdPhotoUrl: ${finalNationalIdPhotoUrl ?? "null"}');
+        debugPrint(
+          '   - finalProfileImageUrl: ${finalProfileImageUrl ?? "null"}',
+        );
+        debugPrint(
+          '   - finalNationalIdPhotoUrl: ${finalNationalIdPhotoUrl ?? "null"}',
+        );
       }
 
       // Check if profile is now complete
-      final isComplete = nationalId != null &&
-                        finalNationalIdPhotoUrl != null &&
-                        nameOnIdPhoto != null &&
-                        sex != null &&
-                        location != null;
-      
+      final isComplete =
+          nationalId != null &&
+          finalNationalIdPhotoUrl != null &&
+          nameOnIdPhoto != null &&
+          sex != null &&
+          location != null;
+
       if (kDebugMode) {
         debugPrint('✓ Profile completion check:');
         debugPrint('   - nationalId: ${nationalId != null ? "✅" : "❌"}');
-        debugPrint('   - finalNationalIdPhotoUrl: ${finalNationalIdPhotoUrl != null ? "✅" : "❌"}');
+        debugPrint(
+          '   - finalNationalIdPhotoUrl: ${finalNationalIdPhotoUrl != null ? "✅" : "❌"}',
+        );
         debugPrint('   - nameOnIdPhoto: ${nameOnIdPhoto != null ? "✅" : "❌"}');
         debugPrint('   - sex: ${sex != null ? "✅" : "❌"}');
         debugPrint('   - location: ${location != null ? "✅" : "❌"}');
-        debugPrint('   - RESULT: ${isComplete ? "✅ COMPLETE" : "❌ INCOMPLETE"}');
+        debugPrint(
+          '   - RESULT: ${isComplete ? "✅ COMPLETE" : "❌ INCOMPLETE"}',
+        );
       }
 
       // Update Firestore
@@ -246,13 +284,19 @@ class AuthProvider with ChangeNotifier {
         'is_profile_complete': isComplete,
       };
 
-      if (finalProfileImageUrl != null) updates['profile_image'] = finalProfileImageUrl;
+      if (finalProfileImageUrl != null)
+        updates['profile_image'] = finalProfileImageUrl;
       if (nationalId != null) updates['national_id'] = nationalId;
-      if (finalNationalIdPhotoUrl != null) updates['national_id_photo'] = finalNationalIdPhotoUrl;
+      if (finalNationalIdPhotoUrl != null)
+        updates['national_id_photo'] = finalNationalIdPhotoUrl;
       if (nameOnIdPhoto != null) updates['name_on_id_photo'] = nameOnIdPhoto;
-      if (sex != null) updates['sex'] = sex.toString().split('.').last.toUpperCase();
+      if (sex != null)
+        updates['sex'] = sex.toString().split('.').last.toUpperCase();
       if (disabilityStatus != null) {
-        updates['disability_status'] = disabilityStatus.toString().split('.').last;
+        updates['disability_status'] = disabilityStatus
+            .toString()
+            .split('.')
+            .last;
       }
       if (location != null) {
         updates['location'] = {
@@ -273,28 +317,36 @@ class AuthProvider with ChangeNotifier {
         debugPrint('   - Updates: $updates');
         debugPrint('   - Profile complete: $isComplete');
       }
-      
+
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)
           .update(updates);
-      
+
       if (kDebugMode) {
         debugPrint('✅ Profile saved to Firestore successfully');
-        
+
         // Verify what was actually saved by reading it back
         final savedDoc = await _firestore
             .collection('users')
             .doc(_auth.currentUser!.uid)
             .get();
-        
+
         if (savedDoc.exists) {
           final savedData = savedDoc.data();
           debugPrint('🔍 VERIFICATION - Reading back from Firestore:');
-          debugPrint('   - profile_image: ${savedData?['profile_image'] ?? "NOT SAVED"}');
-          debugPrint('   - national_id_photo: ${savedData?['national_id_photo'] ?? "NOT SAVED"}');
-          debugPrint('   - national_id: ${savedData?['national_id'] ?? "NOT SAVED"}');
-          debugPrint('   - is_profile_complete: ${savedData?['is_profile_complete'] ?? "NOT SAVED"}');
+          debugPrint(
+            '   - profile_image: ${savedData?['profile_image'] ?? "NOT SAVED"}',
+          );
+          debugPrint(
+            '   - national_id_photo: ${savedData?['national_id_photo'] ?? "NOT SAVED"}',
+          );
+          debugPrint(
+            '   - national_id: ${savedData?['national_id'] ?? "NOT SAVED"}',
+          );
+          debugPrint(
+            '   - is_profile_complete: ${savedData?['is_profile_complete'] ?? "NOT SAVED"}',
+          );
         }
       }
 
@@ -307,7 +359,8 @@ class AuthProvider with ChangeNotifier {
         role: _currentUser!.role,
         profileImage: finalProfileImageUrl ?? _currentUser!.profileImage,
         nationalId: nationalId ?? _currentUser!.nationalId,
-        nationalIdPhoto: finalNationalIdPhotoUrl ?? _currentUser!.nationalIdPhoto,
+        nationalIdPhoto:
+            finalNationalIdPhotoUrl ?? _currentUser!.nationalIdPhoto,
         nameOnIdPhoto: nameOnIdPhoto ?? _currentUser!.nameOnIdPhoto,
         sex: sex ?? _currentUser!.sex,
         disabilityStatus: disabilityStatus ?? _currentUser!.disabilityStatus,
@@ -322,7 +375,7 @@ class AuthProvider with ChangeNotifier {
       // Update local storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_profile_complete', isComplete);
-      
+
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {

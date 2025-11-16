@@ -65,7 +65,7 @@ class ProductSubcategory {
   final String name;
 
   const ProductSubcategory(this.id, this.name);
-  
+
   String get value => id;
   String get displayName => name;
 }

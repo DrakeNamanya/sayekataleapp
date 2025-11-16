@@ -8,7 +8,6 @@ import '../../services/product_service.dart';
 import '../../services/subscription_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart';
-import '../../models/product.dart';
 import '../../models/subscription.dart';
 import '../../widgets/notification_badge.dart';
 import '../../widgets/features_guide_dialog.dart';
@@ -40,11 +39,13 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
   void initState() {
     super.initState();
     _screens = [
-      _DashboardHome(onNavigateToProfile: () {
-        setState(() {
-          _selectedIndex = 4; // Profile tab
-        });
-      }),
+      _DashboardHome(
+        onNavigateToProfile: () {
+          setState(() {
+            _selectedIndex = 4; // Profile tab
+          });
+        },
+      ),
       const SHGProductsScreen(),
       const SHGOrdersScreen(),
       const SHGWalletScreen(),
@@ -118,7 +119,7 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
 
 class _DashboardHome extends StatefulWidget {
   final VoidCallback onNavigateToProfile;
-  
+
   const _DashboardHome({required this.onNavigateToProfile});
 
   @override
@@ -249,7 +250,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           color: AppTheme.errorColor,
                           shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
                         child: Text(
                           unreadCount > 99 ? '99+' : unreadCount.toString(),
                           style: const TextStyle(
@@ -292,7 +296,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           color: AppTheme.primaryColor,
                           shape: BoxShape.circle,
                         ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
                         child: Text(
                           unreadCount > 99 ? '99+' : unreadCount.toString(),
                           style: const TextStyle(
@@ -337,10 +344,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     children: [
                       const Text(
                         'Today\'s Earnings',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -357,7 +361,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           Expanded(
                             child: _MiniStatCard(
                               label: 'This Week',
-                              value: 'UGX ${(weeklyEarnings / 1000).toStringAsFixed(0)}K',
+                              value:
+                                  'UGX ${(weeklyEarnings / 1000).toStringAsFixed(0)}K',
                               icon: Icons.trending_up,
                             ),
                           ),
@@ -374,7 +379,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     ],
                   ),
                 ),
-                
+
                 // New Orders Alert
                 if (pendingOrders > 0)
                   Container(
@@ -401,7 +406,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
                           // Navigate to Orders tab
-                          DefaultTabController.of(context)?.animateTo(2);
+                          DefaultTabController.of(context).animateTo(2);
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -455,7 +460,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ),
                     ),
                   ),
-                
+
                 // Profile Completion Warning
                 if (!user!.isProfileComplete)
                   Container(
@@ -474,7 +479,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.warning_amber, color: AppTheme.warningColor, size: 28),
+                            Icon(
+                              Icons.warning_amber,
+                              color: AppTheme.warningColor,
+                              size: 28,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -504,7 +513,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         if (user.timeRemainingToCompleteProfile != null) ...[
                           const SizedBox(height: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.errorColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -512,7 +524,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.timer, size: 16, color: AppTheme.errorColor),
+                                Icon(
+                                  Icons.timer,
+                                  size: 16,
+                                  color: AppTheme.errorColor,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Time remaining: ${_formatDuration(user.timeRemainingToCompleteProfile!)}',
@@ -541,7 +557,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       ],
                     ),
                   ),
-                
+
                 const SizedBox(height: 20),
                 // Quick Actions
                 Padding(
@@ -568,7 +584,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGProductsScreen(openAddDialog: true),
+                                    builder: (context) =>
+                                        const SHGProductsScreen(
+                                          openAddDialog: true,
+                                        ),
                                   ),
                                 );
                               },
@@ -584,7 +603,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGBuyInputsScreen(),
+                                    builder: (context) =>
+                                        const SHGBuyInputsScreen(),
                                   ),
                                 );
                               },
@@ -604,7 +624,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGOrdersScreen(),
+                                    builder: (context) =>
+                                        const SHGOrdersScreen(),
                                   ),
                                 );
                               },
@@ -620,7 +641,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGMyPurchasesScreen(),
+                                    builder: (context) =>
+                                        const SHGMyPurchasesScreen(),
                                   ),
                                 );
                               },
@@ -640,7 +662,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const DeliveryControlScreen(),
+                                    builder: (context) =>
+                                        const DeliveryControlScreen(),
                                   ),
                                 );
                               },
@@ -656,7 +679,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SHGWalletScreen(),
+                                    builder: (context) =>
+                                        const SHGWalletScreen(),
                                   ),
                                 );
                               },
@@ -667,11 +691,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
                 // Premium Subscription Section
                 _buildPremiumSubscriptionCard(context),
-                
+
                 const SizedBox(height: 24),
                 // Alerts Section
                 if (pendingOrders > 0 || lowStockProducts > 0)
@@ -692,7 +716,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           _AlertCard(
                             icon: Icons.pending_actions,
                             title: 'Pending Orders',
-                            message: 'You have $pendingOrders pending orders to review',
+                            message:
+                                'You have $pendingOrders pending orders to review',
                             color: AppTheme.warningColor,
                             onTap: () {
                               Navigator.push(
@@ -708,13 +733,15 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           _AlertCard(
                             icon: Icons.inventory_2_outlined,
                             title: 'Low Stock Alert',
-                            message: '$lowStockProducts products are running low on stock',
+                            message:
+                                '$lowStockProducts products are running low on stock',
                             color: AppTheme.errorColor,
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SHGProductsScreen(),
+                                  builder: (context) =>
+                                      const SHGProductsScreen(),
                                 ),
                               );
                             },
@@ -761,7 +788,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
       ),
     );
   }
-  
+
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -771,7 +798,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
   Widget _buildPremiumSubscriptionCard(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final farmerId = authProvider.currentUser?.id;
-    
+
     if (farmerId == null) return const SizedBox.shrink();
 
     final subscriptionService = SubscriptionService();
@@ -822,7 +849,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SubscriptionPurchaseScreen(),
+                        builder: (context) =>
+                            const SubscriptionPurchaseScreen(),
                       ),
                     );
                   }
@@ -933,10 +961,7 @@ class _MiniStatCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1103,7 +1128,11 @@ class _RecentOrdersList extends StatelessWidget {
             child: const Center(
               child: Column(
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'No recent orders in the last 24 hours',
@@ -1139,7 +1168,9 @@ class _RecentOrdersList extends StatelessWidget {
                   'Order #${order.id.substring(0, 8)}',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: Text('${order.buyerName} • ${order.items.length} items'),
+                subtitle: Text(
+                  '${order.buyerName} • ${order.items.length} items',
+                ),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -1153,7 +1184,10 @@ class _RecentOrdersList extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),

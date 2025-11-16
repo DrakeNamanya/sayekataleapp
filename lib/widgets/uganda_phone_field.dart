@@ -47,7 +47,8 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController(text: widget.initialValue);
+    _controller =
+        widget.controller ?? TextEditingController(text: widget.initialValue);
     _controller.addListener(_onPhoneChanged);
     _onPhoneChanged(); // Initial validation
   }
@@ -70,7 +71,7 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
         _operatorName = null;
       }
     });
-    
+
     if (widget.onChanged != null) {
       widget.onChanged!(phone);
     }
@@ -78,7 +79,7 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
 
   IconData _getOperatorIcon() {
     if (_operatorName == null) return Icons.phone;
-    
+
     if (_operatorName!.contains('MTN')) {
       return Icons.phone_android;
     } else if (_operatorName!.contains('Airtel')) {
@@ -91,9 +92,9 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
 
   Color _getOperatorColor() {
     if (!_isValid) return AppTheme.textSecondary;
-    
+
     if (_operatorName == null) return AppTheme.primaryColor;
-    
+
     if (_operatorName!.contains('MTN')) {
       return Colors.yellow.shade700; // MTN yellow
     } else if (_operatorName!.contains('Airtel')) {
@@ -112,36 +113,41 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
         TextFormField(
           controller: _controller,
           enabled: widget.enabled,
-          decoration: widget.decoration ?? InputDecoration(
-            labelText: widget.labelText ?? 'Phone Number${widget.required ? ' *' : ''}',
-            hintText: widget.hintText ?? '+256 712 345 678 or 0712 345 678',
-            prefixIcon: Icon(
-              widget.showOperatorIcon ? _getOperatorIcon() : Icons.phone,
-              color: widget.showOperatorIcon ? _getOperatorColor() : null,
-            ),
-            suffixIcon: _controller.text.isNotEmpty
-                ? _isValid
-                    ? Tooltip(
-                        message: _operatorName ?? 'Valid Uganda number',
-                        child: Icon(
-                          Icons.check_circle,
-                          color: AppTheme.successColor,
-                        ),
-                      )
-                    : Tooltip(
-                        message: 'Invalid Uganda phone number',
-                        child: Icon(
-                          Icons.error_outline,
-                          color: AppTheme.errorColor,
-                        ),
-                      )
-                : null,
-            helperText: widget.helperText ?? 
-                (widget.showFormatHelper
-                    ? 'Format: +256 7XX XXX XXX or 07XX XXX XXX'
-                    : null),
-            helperMaxLines: 2,
-          ),
+          decoration:
+              widget.decoration ??
+              InputDecoration(
+                labelText:
+                    widget.labelText ??
+                    'Phone Number${widget.required ? ' *' : ''}',
+                hintText: widget.hintText ?? '+256 712 345 678 or 0712 345 678',
+                prefixIcon: Icon(
+                  widget.showOperatorIcon ? _getOperatorIcon() : Icons.phone,
+                  color: widget.showOperatorIcon ? _getOperatorColor() : null,
+                ),
+                suffixIcon: _controller.text.isNotEmpty
+                    ? _isValid
+                          ? Tooltip(
+                              message: _operatorName ?? 'Valid Uganda number',
+                              child: Icon(
+                                Icons.check_circle,
+                                color: AppTheme.successColor,
+                              ),
+                            )
+                          : Tooltip(
+                              message: 'Invalid Uganda phone number',
+                              child: Icon(
+                                Icons.error_outline,
+                                color: AppTheme.errorColor,
+                              ),
+                            )
+                    : null,
+                helperText:
+                    widget.helperText ??
+                    (widget.showFormatHelper
+                        ? 'Format: +256 7XX XXX XXX or 07XX XXX XXX'
+                        : null),
+                helperMaxLines: 2,
+              ),
           keyboardType: TextInputType.phone,
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-\(\)]')),
@@ -172,18 +178,14 @@ class _UgandaPhoneFieldState extends State<UgandaPhoneField> {
             return null;
           },
         ),
-        
+
         // Show operator name if valid
         if (_isValid && _operatorName != null && widget.showOperatorIcon)
           Padding(
             padding: const EdgeInsets.only(left: 12, top: 4),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 12,
-                  color: _getOperatorColor(),
-                ),
+                Icon(Icons.info_outline, size: 12, color: _getOperatorColor()),
                 const SizedBox(width: 4),
                 Text(
                   _operatorName!,
@@ -222,20 +224,14 @@ class UgandaPhoneFormatHelpDialog extends StatelessWidget {
           children: [
             const Text(
               'Valid Formats:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 8),
             ..._buildFormatExamples(),
             const SizedBox(height: 16),
             const Text(
               'Mobile Operators:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 8),
             ..._buildOperatorList(),
@@ -268,10 +264,7 @@ class UgandaPhoneFormatHelpDialog extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               example,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 13,
-              ),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
             ),
           ],
         ),
@@ -281,10 +274,26 @@ class UgandaPhoneFormatHelpDialog extends StatelessWidget {
 
   List<Widget> _buildOperatorList() {
     final operators = [
-      {'name': 'MTN Uganda', 'prefixes': '76, 77, 78, 79', 'color': Colors.yellow.shade700},
-      {'name': 'Airtel Uganda', 'prefixes': '70, 74, 75', 'color': Colors.red.shade700},
-      {'name': 'Africell Uganda', 'prefixes': '73', 'color': Colors.purple.shade700},
-      {'name': 'Uganda Telecom', 'prefixes': '71', 'color': Colors.blue.shade700},
+      {
+        'name': 'MTN Uganda',
+        'prefixes': '76, 77, 78, 79',
+        'color': Colors.yellow.shade700,
+      },
+      {
+        'name': 'Airtel Uganda',
+        'prefixes': '70, 74, 75',
+        'color': Colors.red.shade700,
+      },
+      {
+        'name': 'Africell Uganda',
+        'prefixes': '73',
+        'color': Colors.purple.shade700,
+      },
+      {
+        'name': 'Uganda Telecom',
+        'prefixes': '71',
+        'color': Colors.blue.shade700,
+      },
       {'name': 'Lycamobile', 'prefixes': '72', 'color': Colors.green.shade700},
     ];
 

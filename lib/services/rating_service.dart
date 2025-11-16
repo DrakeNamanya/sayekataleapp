@@ -5,7 +5,7 @@ import '../models/user.dart';
 import '../models/farmer_rating.dart';
 
 /// Service for calculating and updating user system ratings
-/// 
+///
 /// Rating calculation is based on:
 /// 1. Total Completed Orders (quantity metric)
 /// 2. Average Customer Rating (quality metric from reviews)
@@ -15,7 +15,7 @@ class RatingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Calculate and update system rating for a user
-  /// 
+  ///
   /// This method:
   /// - Fetches all orders where user is seller
   /// - Calculates performance metrics
@@ -53,8 +53,12 @@ class RatingService {
       if (kDebugMode) {
         debugPrint('✅ Rating updated for $userId: $systemRating/5.0');
         debugPrint('   Completed Orders: ${metrics.totalCompletedOrders}');
-        debugPrint('   Avg Customer Rating: ${metrics.averageCustomerRating.toStringAsFixed(2)}/5.0');
-        debugPrint('   Fulfillment Rate: ${metrics.orderFulfillmentRate.toStringAsFixed(1)}%');
+        debugPrint(
+          '   Avg Customer Rating: ${metrics.averageCustomerRating.toStringAsFixed(2)}/5.0',
+        );
+        debugPrint(
+          '   Fulfillment Rate: ${metrics.orderFulfillmentRate.toStringAsFixed(1)}%',
+        );
       }
 
       return UserRatingMetrics(
@@ -76,7 +80,10 @@ class RatingService {
   }
 
   /// Calculate user performance metrics from order history
-  Future<_MetricsData> _calculateUserMetrics(String userId, UserRole role) async {
+  Future<_MetricsData> _calculateUserMetrics(
+    String userId,
+    UserRole role,
+  ) async {
     // Query orders based on user role
     Query<Map<String, dynamic>> ordersQuery;
 
@@ -156,7 +163,7 @@ class RatingService {
   }
 
   /// Calculate weighted system rating from metrics
-  /// 
+  ///
   /// Rating Formula:
   /// - Base Rating (40%): Scaled from completed orders count (0-50 orders = 0-5 stars)
   /// - Customer Rating (40%): Average customer ratings (0-5 stars)
@@ -176,7 +183,8 @@ class RatingService {
     double fulfillmentWeight = 0.20;
 
     // Calculate weighted average
-    double systemRating = (baseRating * baseWeight) +
+    double systemRating =
+        (baseRating * baseWeight) +
         (customerRating * customerWeight) +
         (fulfillmentRating * fulfillmentWeight);
 
@@ -185,7 +193,7 @@ class RatingService {
   }
 
   /// Calculate ratings for all users in the system
-  /// 
+  ///
   /// This can be run periodically (e.g., daily) to update all user ratings
   Future<List<UserRatingMetrics>> calculateAllUserRatings() async {
     try {
@@ -209,7 +217,9 @@ class RatingService {
       }
 
       if (kDebugMode) {
-        debugPrint('✅ Batch rating calculation complete: ${results.length} users updated');
+        debugPrint(
+          '✅ Batch rating calculation complete: ${results.length} users updated',
+        );
       }
 
       return results;
@@ -245,7 +255,9 @@ class RatingService {
 
   /// Get multiple farmer ratings by their IDs
   /// Used for displaying ratings in product listings
-  Future<Map<String, FarmerRating>> getFarmerRatings(List<String> farmerIds) async {
+  Future<Map<String, FarmerRating>> getFarmerRatings(
+    List<String> farmerIds,
+  ) async {
     try {
       if (farmerIds.isEmpty) {
         return {};
@@ -267,7 +279,10 @@ class RatingService {
 
           if (ratingDoc.exists && ratingDoc.data() != null) {
             // Parse FarmerRating from Firestore data
-            final farmerRating = FarmerRating.fromFirestore(ratingDoc.data()!, farmerId);
+            final farmerRating = FarmerRating.fromFirestore(
+              ratingDoc.data()!,
+              farmerId,
+            );
             ratingsMap[farmerId] = farmerRating;
           }
         } catch (e) {
@@ -323,7 +338,10 @@ class RatingService {
       });
 
       // Get farmer name from order
-      final orderDoc = await _firestore.collection('orders').doc(review.orderId).get();
+      final orderDoc = await _firestore
+          .collection('orders')
+          .doc(review.orderId)
+          .get();
       if (orderDoc.exists) {
         final orderData = orderDoc.data()!;
         final farmerId = orderData['farmer_id'];
@@ -358,7 +376,11 @@ class RatingService {
   }
 
   /// Update farmer's rating statistics
-  Future<void> _updateFarmerRating(String farmerId, String farmerName, int rating) async {
+  Future<void> _updateFarmerRating(
+    String farmerId,
+    String farmerName,
+    int rating,
+  ) async {
     try {
       final ratingDoc = _firestore.collection('farmer_ratings').doc(farmerId);
       final ratingSnapshot = await ratingDoc.get();
@@ -368,14 +390,16 @@ class RatingService {
         final data = ratingSnapshot.data()!;
         final currentAverage = (data['average_rating'] ?? 0.0).toDouble();
         final currentTotal = data['total_ratings'] ?? 0;
-        final currentDistribution = (data['rating_distribution'] as List<dynamic>?)
+        final currentDistribution =
+            (data['rating_distribution'] as List<dynamic>?)
                 ?.map((e) => e as int)
                 .toList() ??
             [0, 0, 0, 0, 0];
 
         // Calculate new average
         final newTotal = currentTotal + 1;
-        final newAverage = ((currentAverage * currentTotal) + rating) / newTotal;
+        final newAverage =
+            ((currentAverage * currentTotal) + rating) / newTotal;
 
         // Update distribution
         currentDistribution[rating - 1]++;

@@ -17,7 +17,7 @@ class PSAEditProfileScreen extends StatefulWidget {
 
 class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Business Information Controllers
   final _businessNameController = TextEditingController();
   final _legalNameController = TextEditingController();
@@ -26,19 +26,19 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   final _businessRegistrationController = TextEditingController();
   final _unbsRegistrationController = TextEditingController();
   final _mobileMoneyController = TextEditingController();
-  
+
   // Business Start Date
   DateTime? _businessStartDate;
-  
+
   // Photo paths and XFiles
   String? _profileImagePath;
   String? _signpostPhotoPath;
   String? _registrationCertPhotoPath;
   final List<String> _storePhotos = [];
-  
+
   // XFile objects for upload
   XFile? _profileImageFile;
-  
+
   // Location
   String? _selectedDistrict;
   String? _selectedSubcounty;
@@ -46,7 +46,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   String? _selectedVillage;
   double? _latitude;
   double? _longitude;
-  
+
   bool _isLoading = false;
 
   @override
@@ -58,23 +58,31 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   Future<void> _loadCurrentBusinessData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.currentUser;
-    
+
     if (user != null) {
       setState(() {
         _businessNameController.text = user.name;
         _phoneController.text = user.phone;
         _profileImagePath = user.profileImage;
-        
+
         if (user.location != null) {
           // Treat empty strings as null for proper validation
-          _selectedDistrict = user.location!.district?.isNotEmpty == true ? user.location!.district : null;
-          _selectedSubcounty = user.location!.subcounty?.isNotEmpty == true ? user.location!.subcounty : null;
-          _selectedParish = user.location!.parish?.isNotEmpty == true ? user.location!.parish : null;
-          _selectedVillage = user.location!.village?.isNotEmpty == true ? user.location!.village : null;
+          _selectedDistrict = user.location!.district?.isNotEmpty == true
+              ? user.location!.district
+              : null;
+          _selectedSubcounty = user.location!.subcounty?.isNotEmpty == true
+              ? user.location!.subcounty
+              : null;
+          _selectedParish = user.location!.parish?.isNotEmpty == true
+              ? user.location!.parish
+              : null;
+          _selectedVillage = user.location!.village?.isNotEmpty == true
+              ? user.location!.village
+              : null;
           _latitude = user.location!.latitude;
           _longitude = user.location!.longitude;
         }
-        
+
         // TODO: Load additional business fields from user model when available
         // _legalNameController.text = user.businessLegalName ?? '';
         // _tinNumberController.text = user.tinNumber ?? '';
@@ -97,7 +105,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   Future<void> _pickImage(String imageType) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (pickedFile != null) {
       setState(() {
         switch (imageType) {
@@ -112,7 +120,8 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
             _registrationCertPhotoPath = pickedFile.path;
             break;
           case 'store':
-            if (_storePhotos.length < 5) { // Limit to 5 store photos
+            if (_storePhotos.length < 5) {
+              // Limit to 5 store photos
               _storePhotos.add(pickedFile.path);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +144,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    
+
     if (date != null) {
       setState(() {
         _businessStartDate = date;
@@ -149,16 +158,27 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
     }
 
     // Location validation: Either GPS coordinates OR complete administrative divisions required
-    final hasGPS = _latitude != null && _longitude != null && _latitude != 0.0 && _longitude != 0.0;
-    final hasAdminDivisions = _selectedDistrict != null && _selectedDistrict!.isNotEmpty &&
-                              _selectedSubcounty != null && _selectedSubcounty!.isNotEmpty &&
-                              _selectedParish != null && _selectedParish!.isNotEmpty &&
-                              _selectedVillage != null && _selectedVillage!.isNotEmpty;
-    
+    final hasGPS =
+        _latitude != null &&
+        _longitude != null &&
+        _latitude != 0.0 &&
+        _longitude != 0.0;
+    final hasAdminDivisions =
+        _selectedDistrict != null &&
+        _selectedDistrict!.isNotEmpty &&
+        _selectedSubcounty != null &&
+        _selectedSubcounty!.isNotEmpty &&
+        _selectedParish != null &&
+        _selectedParish!.isNotEmpty &&
+        _selectedVillage != null &&
+        _selectedVillage!.isNotEmpty;
+
     if (!hasGPS && !hasAdminDivisions) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please provide either GPS coordinates OR select District/Subcounty/Parish/Village'),
+          content: Text(
+            'Please provide either GPS coordinates OR select District/Subcounty/Parish/Village',
+          ),
           backgroundColor: AppTheme.errorColor,
           duration: Duration(seconds: 4),
         ),
@@ -172,7 +192,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       // Create location with either GPS-only or complete administrative divisions
       final location = Location(
         latitude: _latitude ?? 0.0,
@@ -187,7 +207,9 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
       // TODO: Update this when business fields are added to user model
       await authProvider.updateProfile(
         profileImageFile: _profileImageFile,
-        profileImageUrl: _profileImageFile == null ? _profileImagePath : null,  // Only pass URL if no file
+        profileImageUrl: _profileImageFile == null
+            ? _profileImagePath
+            : null, // Only pass URL if no file
         location: location,
       );
 
@@ -219,9 +241,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Business Profile'),
-      ),
+      appBar: AppBar(title: const Text('Edit Business Profile')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -257,11 +277,19 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                             _profileImagePath!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.add_a_photo, size: 48, color: AppTheme.primaryColor);
+                              return const Icon(
+                                Icons.add_a_photo,
+                                size: 48,
+                                color: AppTheme.primaryColor,
+                              );
                             },
                           ),
                         )
-                      : const Icon(Icons.add_a_photo, size: 48, color: AppTheme.primaryColor),
+                      : const Icon(
+                          Icons.add_a_photo,
+                          size: 48,
+                          color: AppTheme.primaryColor,
+                        ),
                 ),
               ),
             ),
@@ -316,8 +344,8 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                       ? '${_businessStartDate!.day}/${_businessStartDate!.month}/${_businessStartDate!.year}'
                       : 'Select date',
                   style: TextStyle(
-                    color: _businessStartDate != null 
-                        ? AppTheme.textPrimary 
+                    color: _businessStartDate != null
+                        ? AppTheme.textPrimary
                         : AppTheme.textSecondary,
                   ),
                 ),
@@ -342,7 +370,9 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
               onChanged: (value) {
                 // Show TIN entity type when valid TIN is entered
                 if (value.length == 10) {
-                  final entityType = UgandaBusinessValidators.getTINEntityType(value);
+                  final entityType = UgandaBusinessValidators.getTINEntityType(
+                    value,
+                  );
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -364,7 +394,8 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                 labelText: 'Business Registration Number *',
                 prefixIcon: Icon(Icons.business_center_outlined),
                 hintText: 'Enter 14-digit registration number',
-                helperText: 'From URSB Certificate of Incorporation - 14 digits',
+                helperText:
+                    'From URSB Certificate of Incorporation - 14 digits',
               ),
               keyboardType: TextInputType.number,
               maxLength: 14,
@@ -374,7 +405,9 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
               onChanged: (value) {
                 // Auto-format Business Reg as user types
                 if (value.length == 14) {
-                  final formatted = UgandaBusinessValidators.formatBusinessReg(value);
+                  final formatted = UgandaBusinessValidators.formatBusinessReg(
+                    value,
+                  );
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -457,9 +490,16 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_a_photo, size: 48, color: Colors.grey.shade600),
+                                Icon(
+                                  Icons.add_a_photo,
+                                  size: 48,
+                                  color: Colors.grey.shade600,
+                                ),
                                 const SizedBox(height: 8),
-                                Text('Tap to upload signpost photo', style: TextStyle(color: Colors.grey.shade600)),
+                                Text(
+                                  'Tap to upload signpost photo',
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
                               ],
                             );
                           },
@@ -468,9 +508,16 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_a_photo, size: 48, color: Colors.grey.shade600),
+                          Icon(
+                            Icons.add_a_photo,
+                            size: 48,
+                            color: Colors.grey.shade600,
+                          ),
                           const SizedBox(height: 8),
-                          Text('Tap to upload signpost photo', style: TextStyle(color: Colors.grey.shade600)),
+                          Text(
+                            'Tap to upload signpost photo',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
                         ],
                       ),
               ),
@@ -506,9 +553,16 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_a_photo, size: 48, color: Colors.grey.shade600),
+                                Icon(
+                                  Icons.add_a_photo,
+                                  size: 48,
+                                  color: Colors.grey.shade600,
+                                ),
                                 const SizedBox(height: 8),
-                                Text('Tap to upload certificate', style: TextStyle(color: Colors.grey.shade600)),
+                                Text(
+                                  'Tap to upload certificate',
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
                               ],
                             );
                           },
@@ -517,9 +571,16 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_a_photo, size: 48, color: Colors.grey.shade600),
+                          Icon(
+                            Icons.add_a_photo,
+                            size: 48,
+                            color: Colors.grey.shade600,
+                          ),
                           const SizedBox(height: 8),
-                          Text('Tap to upload certificate', style: TextStyle(color: Colors.grey.shade600)),
+                          Text(
+                            'Tap to upload certificate',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
                         ],
                       ),
               ),
@@ -540,10 +601,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                 ),
                 Text(
                   '${_storePhotos.length}/5',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -570,7 +628,13 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                         children: [
                           Icon(Icons.add_a_photo, color: Colors.grey.shade600),
                           const SizedBox(height: 4),
-                          Text('Add Photo', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                          Text(
+                            'Add Photo',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -615,13 +679,17 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
                                 color: AppTheme.errorColor,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.close, size: 16, color: Colors.white),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

@@ -1,9 +1,11 @@
 class Product {
   final String id;
-  final String? systemId; // Unique system-generated ID for product tracking (e.g., PROD-2024-001)
+  final String?
+  systemId; // Unique system-generated ID for product tracking (e.g., PROD-2024-001)
   final String farmId;
   final String name;
-  final String? businessName; // Legal business name for PSA products (for searchability)
+  final String?
+  businessName; // Legal business name for PSA products (for searchability)
   final String? description;
   final ProductCategory category;
   final String? mainCategory; // crop, oilSeeds, poultry, goats, cows
@@ -45,7 +47,7 @@ class Product {
 
   bool get isLowStock => stockQuantity <= lowStockThreshold;
   bool get isOutOfStock => stockQuantity == 0;
-  
+
   /// Calculate if product qualifies for "Top" badge
   /// Criteria: totalSales >= 10 AND averageRating >= 4.0
   bool get isTop => totalSales >= 10 && averageRating >= 4.0;
@@ -66,7 +68,10 @@ class Product {
     return Product(
       id: id,
       systemId: data['system_id'],
-      farmId: data['farmer_id'] ?? data['farm_id'] ?? '', // Support both field names
+      farmId:
+          data['farmer_id'] ??
+          data['farm_id'] ??
+          '', // Support both field names
       name: data['name'] ?? '',
       businessName: data['business_name'],
       description: data['description'],
@@ -81,9 +86,9 @@ class Product {
       price: (data['price'] ?? 0.0).toDouble(),
       stockQuantity: data['stock_quantity'] ?? 0,
       lowStockThreshold: data['low_stock_threshold'] ?? 10,
-      images: data['image_url'] != null 
-        ? [data['image_url']] 
-        : (data['images'] != null ? List<String>.from(data['images']) : []),
+      images: data['image_url'] != null
+          ? [data['image_url']]
+          : (data['images'] != null ? List<String>.from(data['images']) : []),
       createdAt: parseDateTime(data['created_at']),
       updatedAt: parseDateTime(data['updated_at']),
       isFeatured: data['is_featured'] ?? false,
@@ -94,7 +99,8 @@ class Product {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'system_id': systemId ?? _generateSystemId(), // Auto-generate if not provided
+      'system_id':
+          systemId ?? _generateSystemId(), // Auto-generate if not provided
       'farm_id': farmId,
       'farmer_id': farmId, // Backward compatibility
       'name': name,
@@ -107,10 +113,13 @@ class Product {
       'unit_size': unitSize,
       'price': price,
       'stock_quantity': stockQuantity,
-      'is_available': stockQuantity > 0, // CRITICAL: Required for SME product queries
+      'is_available':
+          stockQuantity > 0, // CRITICAL: Required for SME product queries
       'low_stock_threshold': lowStockThreshold,
       'images': images,
-      'image_url': images.isNotEmpty ? images.first : null, // Backward compatibility
+      'image_url': images.isNotEmpty
+          ? images.first
+          : null, // Backward compatibility
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'is_featured': isFeatured,
@@ -118,7 +127,7 @@ class Product {
       'average_rating': averageRating,
     };
   }
-  
+
   /// Generate unique system ID for product (e.g., PROD-2024-123456)
   static String _generateSystemId() {
     final now = DateTime.now();
@@ -134,7 +143,7 @@ enum ProductCategory {
   poultry,
   goats,
   cows,
-  
+
   // Crop products
   onions,
   watermelon,
@@ -142,7 +151,7 @@ enum ProductCategory {
   groundNuts,
   soya,
   passionFruits,
-  
+
   // Poultry products
   broilers,
   sasso,
@@ -152,25 +161,25 @@ enum ProductCategory {
   incubationServices,
   organicManure,
   offLayers,
-  
+
   // Goat products
   maleGoats,
   femaleGoats,
   goatManure,
-  
+
   // Cow products
   milk,
   bulls,
   cowsFemale,
   cowManure,
-  
+
   // PSA products (inputs)
   dayOldChicks,
   hoes,
   chemicals,
   fertilizers,
   feeds,
-  
+
   other,
 }
 
@@ -186,7 +195,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Goats';
       case ProductCategory.cows:
         return 'Cows';
-      
+
       // Crop products
       case ProductCategory.onions:
         return 'Onions';
@@ -200,7 +209,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Soya';
       case ProductCategory.passionFruits:
         return 'Passion Fruits';
-      
+
       // Poultry products
       case ProductCategory.broilers:
         return 'Broilers';
@@ -218,7 +227,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Organic Manure';
       case ProductCategory.offLayers:
         return 'Off-Layers';
-      
+
       // Goat products
       case ProductCategory.maleGoats:
         return 'Male Goats';
@@ -226,7 +235,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Female Goats';
       case ProductCategory.goatManure:
         return 'Goat Manure';
-      
+
       // Cow products
       case ProductCategory.milk:
         return 'Milk';
@@ -236,7 +245,7 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Cows';
       case ProductCategory.cowManure:
         return 'Cow Manure';
-      
+
       // PSA products
       case ProductCategory.dayOldChicks:
         return 'Day-Old Chicks';
@@ -248,12 +257,12 @@ extension ProductCategoryExtension on ProductCategory {
         return 'Fertilizers';
       case ProductCategory.feeds:
         return 'Feeds';
-      
+
       case ProductCategory.other:
         return 'Other Products';
     }
   }
-  
+
   // Get parent category for subcategories
   ProductCategory get parentCategory {
     switch (this) {
@@ -264,7 +273,7 @@ extension ProductCategoryExtension on ProductCategory {
       case ProductCategory.soya:
       case ProductCategory.passionFruits:
         return ProductCategory.crop;
-      
+
       case ProductCategory.broilers:
       case ProductCategory.sasso:
       case ProductCategory.eggs:
@@ -274,31 +283,31 @@ extension ProductCategoryExtension on ProductCategory {
       case ProductCategory.organicManure:
       case ProductCategory.offLayers:
         return ProductCategory.poultry;
-      
+
       case ProductCategory.maleGoats:
       case ProductCategory.femaleGoats:
       case ProductCategory.goatManure:
         return ProductCategory.goats;
-      
+
       case ProductCategory.milk:
       case ProductCategory.bulls:
       case ProductCategory.cowsFemale:
       case ProductCategory.cowManure:
         return ProductCategory.cows;
-      
+
       default:
         return this;
     }
   }
-  
+
   // Check if this is a main category
   bool get isMainCategory {
     return this == ProductCategory.crop ||
-           this == ProductCategory.poultry ||
-           this == ProductCategory.goats ||
-           this == ProductCategory.cows;
+        this == ProductCategory.poultry ||
+        this == ProductCategory.goats ||
+        this == ProductCategory.cows;
   }
-  
+
   // Get all subcategories for a main category
   static List<ProductCategory> getSubcategories(ProductCategory mainCategory) {
     switch (mainCategory) {
@@ -339,7 +348,7 @@ extension ProductCategoryExtension on ProductCategory {
         return [];
     }
   }
-  
+
   // Get all main categories
   static List<ProductCategory> get mainCategories => [
     ProductCategory.crop,

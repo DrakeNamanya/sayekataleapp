@@ -123,8 +123,14 @@ class _SMEMessagesScreenState extends State<SMEMessagesScreen> {
                 itemCount: conversations.length,
                 itemBuilder: (context, index) {
                   final conversation = conversations[index];
-                  final otherUserId = _messageService.getOtherParticipantId(conversation, userId);
-                  final otherUserName = _messageService.getOtherParticipantName(conversation, userId);
+                  final otherUserId = _messageService.getOtherParticipantId(
+                    conversation,
+                    userId,
+                  );
+                  final otherUserName = _messageService.getOtherParticipantName(
+                    conversation,
+                    userId,
+                  );
                   final unreadCount = conversation.unreadCount[userId] ?? 0;
                   final hasUnread = unreadCount > 0;
 
@@ -219,7 +225,7 @@ class _ConversationCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    otherUserName.isNotEmpty 
+                    otherUserName.isNotEmpty
                         ? otherUserName[0].toUpperCase()
                         : '?',
                     style: TextStyle(
@@ -276,10 +282,12 @@ class _ConversationCard extends StatelessWidget {
                       conversation.lastMessage ?? 'No messages yet',
                       style: TextStyle(
                         fontSize: 14,
-                        color: hasUnread 
+                        color: hasUnread
                             ? AppTheme.textPrimary
                             : AppTheme.textSecondary,
-                        fontWeight: hasUnread ? FontWeight.w500 : FontWeight.normal,
+                        fontWeight: hasUnread
+                            ? FontWeight.w500
+                            : FontWeight.normal,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

@@ -19,7 +19,9 @@ class MessageService {
   }) async {
     try {
       if (kDebugMode) {
-        debugPrint('💬 Getting/Creating conversation between $user1Name and $user2Name');
+        debugPrint(
+          '💬 Getting/Creating conversation between $user1Name and $user2Name',
+        );
       }
 
       // Check if conversation already exists
@@ -44,21 +46,17 @@ class MessageService {
       final now = DateTime.now().toIso8601String();
       final conversationData = {
         'participant_ids': [user1Id, user2Id],
-        'participant_names': {
-          user1Id: user1Name,
-          user2Id: user2Name,
-        },
+        'participant_names': {user1Id: user1Name, user2Id: user2Name},
         'last_message': null,
         'last_message_time': null,
-        'unread_count': {
-          user1Id: 0,
-          user2Id: 0,
-        },
+        'unread_count': {user1Id: 0, user2Id: 0},
         'created_at': now,
         'updated_at': now,
       };
 
-      final docRef = await _firestore.collection('conversations').add(conversationData);
+      final docRef = await _firestore
+          .collection('conversations')
+          .add(conversationData);
 
       if (kDebugMode) {
         debugPrint('✅ Created new conversation: ${docRef.id}');
@@ -83,25 +81,28 @@ class MessageService {
         // Removed .orderBy() to avoid composite index requirement
         .snapshots()
         .map((snapshot) {
-      // Get conversations
-      final conversations = snapshot.docs.map((doc) {
-        return Conversation.fromFirestore(doc.data(), doc.id);
-      }).toList();
-      
-      // Sort in memory by updated_at (most recent first)
-      conversations.sort((a, b) {
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
-      
-      return conversations;
-    });
+          // Get conversations
+          final conversations = snapshot.docs.map((doc) {
+            return Conversation.fromFirestore(doc.data(), doc.id);
+          }).toList();
+
+          // Sort in memory by updated_at (most recent first)
+          conversations.sort((a, b) {
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
+
+          return conversations;
+        });
   }
 
   /// Get conversation by ID
   Future<Conversation?> getConversation(String conversationId) async {
     try {
-      final doc = await _firestore.collection('conversations').doc(conversationId).get();
-      
+      final doc = await _firestore
+          .collection('conversations')
+          .doc(conversationId)
+          .get();
+
       if (doc.exists) {
         return Conversation.fromFirestore(doc.data()!, doc.id);
       }
@@ -157,12 +158,17 @@ class MessageService {
         final newUnreadCount = Map<String, int>.from(conversation.unreadCount);
         newUnreadCount[otherUserId] = (newUnreadCount[otherUserId] ?? 0) + 1;
 
-        await _firestore.collection('conversations').doc(conversationId).update({
-          'last_message': content.length > 100 ? '${content.substring(0, 100)}...' : content,
-          'last_message_time': now,
-          'unread_count': newUnreadCount,
-          'updated_at': now,
-        });
+        await _firestore
+            .collection('conversations')
+            .doc(conversationId)
+            .update({
+              'last_message': content.length > 100
+                  ? '${content.substring(0, 100)}...'
+                  : content,
+              'last_message_time': now,
+              'unread_count': newUnreadCount,
+              'updated_at': now,
+            });
       }
 
       if (kDebugMode) {
@@ -186,18 +192,18 @@ class MessageService {
         // Removed .orderBy() to avoid composite index requirement
         .snapshots()
         .map((snapshot) {
-      // Get messages
-      final messages = snapshot.docs.map((doc) {
-        return Message.fromFirestore(doc.data(), doc.id);
-      }).toList();
-      
-      // Sort in memory by created_at (oldest first for chat display)
-      messages.sort((a, b) {
-        return a.createdAt.compareTo(b.createdAt);
-      });
-      
-      return messages;
-    });
+          // Get messages
+          final messages = snapshot.docs.map((doc) {
+            return Message.fromFirestore(doc.data(), doc.id);
+          }).toList();
+
+          // Sort in memory by created_at (oldest first for chat display)
+          messages.sort((a, b) {
+            return a.createdAt.compareTo(b.createdAt);
+          });
+
+          return messages;
+        });
   }
 
   /// Mark messages as read for a user in a conversation
@@ -278,14 +284,16 @@ class MessageService {
         .where('participant_ids', arrayContains: userId)
         .snapshots()
         .map((snapshot) {
-      int totalUnread = 0;
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final unreadCount = Map<String, int>.from(data['unread_count'] ?? {});
-        totalUnread += unreadCount[userId] ?? 0;
-      }
-      return totalUnread;
-    });
+          int totalUnread = 0;
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final unreadCount = Map<String, int>.from(
+              data['unread_count'] ?? {},
+            );
+            totalUnread += unreadCount[userId] ?? 0;
+          }
+          return totalUnread;
+        });
   }
 
   // ============================================================================
@@ -328,7 +336,9 @@ class MessageService {
       await batch.commit();
 
       if (kDebugMode) {
-        debugPrint('✅ Conversation $conversationId and ${messagesSnapshot.docs.length} messages deleted');
+        debugPrint(
+          '✅ Conversation $conversationId and ${messagesSnapshot.docs.length} messages deleted',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -343,7 +353,10 @@ class MessageService {
   // ============================================================================
 
   /// Get the other participant in a conversation
-  String getOtherParticipantId(Conversation conversation, String currentUserId) {
+  String getOtherParticipantId(
+    Conversation conversation,
+    String currentUserId,
+  ) {
     return conversation.participantIds.firstWhere(
       (id) => id != currentUserId,
       orElse: () => '',
@@ -351,7 +364,10 @@ class MessageService {
   }
 
   /// Get the other participant's name
-  String getOtherParticipantName(Conversation conversation, String currentUserId) {
+  String getOtherParticipantName(
+    Conversation conversation,
+    String currentUserId,
+  ) {
     final otherId = getOtherParticipantId(conversation, currentUserId);
     return conversation.participantNames[otherId] ?? 'Unknown';
   }

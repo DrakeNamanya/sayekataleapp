@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 /// User complaint/issue model
 class UserComplaint {
   final String id;
@@ -103,28 +101,11 @@ class UserComplaint {
   }
 }
 
-enum ComplaintCategory {
-  payment,
-  delivery,
-  product,
-  account,
-  technical,
-  other,
-}
+enum ComplaintCategory { payment, delivery, product, account, technical, other }
 
-enum ComplaintStatus {
-  pending,
-  inProgress,
-  resolved,
-  closed,
-}
+enum ComplaintStatus { pending, inProgress, resolved, closed }
 
-enum ComplaintPriority {
-  low,
-  medium,
-  high,
-  urgent,
-}
+enum ComplaintPriority { low, medium, high, urgent }
 
 extension ComplaintCategoryExtension on ComplaintCategory {
   String get displayName {

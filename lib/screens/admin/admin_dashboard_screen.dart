@@ -13,10 +13,7 @@ import 'team_management_screen.dart';
 class AdminDashboardScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const AdminDashboardScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const AdminDashboardScreen({super.key, required this.adminUser});
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
@@ -67,9 +64,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Logout failed: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
         }
       }
     }
@@ -91,9 +88,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load stats: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load stats: $e')));
       }
     }
   }
@@ -127,10 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _loadDashboardStats,
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _handleLogout),
         ],
       ),
       body: _isLoading
@@ -151,8 +145,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Text(
                       'Overview',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildMetricsGrid(),
@@ -162,8 +156,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Text(
                       'Quick Actions',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildQuickActions(),
@@ -173,8 +167,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Text(
                       'Recent Activities',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildRecentActivities(),
@@ -252,8 +246,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.notification_important,
-                      color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.notification_important,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '${_stats!['pending_psa']} PSA verification(s) pending review',
@@ -317,7 +314,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         // Secondary Metrics (3 columns)
         Row(
           children: [
@@ -407,18 +404,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               if (subtitle != null)
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
                 ),
             ],
           ),
@@ -454,10 +445,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -718,11 +706,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _recentActivities.length > 5 ? 5 : _recentActivities.length,
-              separatorBuilder: (context, index) => Divider(
-                color: Colors.grey.shade200,
-                height: 1,
-              ),
+              itemCount: _recentActivities.length > 5
+                  ? 5
+                  : _recentActivities.length,
+              separatorBuilder: (context, index) =>
+                  Divider(color: Colors.grey.shade200, height: 1),
               itemBuilder: (context, index) {
                 final activity = _recentActivities[index];
                 return _buildActivityItem(activity);
@@ -751,10 +739,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final type = activity['type'] ?? 'unknown';
     final action = activity['action'] ?? 'Unknown action';
     final timestamp = activity['timestamp']?.toString() ?? '';
-    
+
     IconData icon;
     Color iconColor;
-    
+
     switch (type) {
       case 'order':
         icon = Icons.shopping_cart;
@@ -806,18 +794,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 if (activity['productName'] != null) ...[
                   Text(
                     activity['productName'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
                 Text(
                   timeAgo,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
               ],
             ),

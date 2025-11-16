@@ -20,7 +20,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   final AdminService _adminService = AdminService();
   final TextEditingController _responseController = TextEditingController();
   final TextEditingController _resolutionController = TextEditingController();
-  
+
   Map<String, dynamic>? _complaint;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -48,12 +48,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
       setState(() {
         _complaint = complaint;
         _isLoading = false;
-        
+
         // Pre-fill response if already exists
         if (complaint?['response'] != null) {
           _responseController.text = complaint!['response'];
         }
-        
+
         // Pre-fill resolution if already exists
         if (complaint?['resolution'] != null) {
           _resolutionController.text = complaint!['resolution'];
@@ -64,9 +64,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load complaint: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load complaint: $e')));
       }
     }
   }
@@ -82,14 +82,18 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
       await _loadComplaint();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Status updated to ${_getStatusDisplayName(newStatus)}')),
+          SnackBar(
+            content: Text(
+              '✅ Status updated to ${_getStatusDisplayName(newStatus)}',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update status: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
       }
     } finally {
       setState(() => _isSaving = false);
@@ -123,9 +127,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
   Future<void> _addResponse() async {
     if (_responseController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a response')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a response')));
       return;
     }
 
@@ -144,9 +148,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add response: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add response: $e')));
       }
     } finally {
       setState(() => _isSaving = false);
@@ -165,7 +169,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Close Complaint'),
-        content: const Text('Are you sure you want to close this complaint? This action marks it as resolved.'),
+        content: const Text(
+          'Are you sure you want to close this complaint? This action marks it as resolved.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -323,50 +329,54 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _complaint == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      const Text('Complaint not found'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Go Back'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('Complaint not found'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Go Back'),
                   ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status and Priority Header
-                      _buildHeaderCard(),
-                      const SizedBox(height: 16),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status and Priority Header
+                  _buildHeaderCard(),
+                  const SizedBox(height: 16),
 
-                      // Complaint Details
-                      _buildDetailsCard(),
-                      const SizedBox(height: 16),
+                  // Complaint Details
+                  _buildDetailsCard(),
+                  const SizedBox(height: 16),
 
-                      // User Information
-                      _buildUserInfoCard(),
-                      const SizedBox(height: 16),
+                  // User Information
+                  _buildUserInfoCard(),
+                  const SizedBox(height: 16),
 
-                      // Response Section
-                      if (widget.adminUser.hasPermission(AdminPermissions.handleComplaints))
-                        _buildResponseSection(),
-                      const SizedBox(height: 16),
+                  // Response Section
+                  if (widget.adminUser.hasPermission(
+                    AdminPermissions.handleComplaints,
+                  ))
+                    _buildResponseSection(),
+                  const SizedBox(height: 16),
 
-                      // Close Complaint Section
-                      if (_complaint!['status'] != 'closed' &&
-                          widget.adminUser.hasPermission(AdminPermissions.handleComplaints))
-                        _buildCloseComplaintSection(),
-                    ],
-                  ),
-                ),
+                  // Close Complaint Section
+                  if (_complaint!['status'] != 'closed' &&
+                      widget.adminUser.hasPermission(
+                        AdminPermissions.handleComplaints,
+                      ))
+                    _buildCloseComplaintSection(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -378,9 +388,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -411,10 +419,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(16),
@@ -438,9 +443,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   Widget _buildDetailsCard() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -448,17 +451,22 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
           children: [
             const Text(
               'Complaint Details',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const Divider(),
             _buildDetailRow('Subject', _complaint!['subject'] ?? 'N/A'),
-            _buildDetailRow('Category', _complaint!['category']?.toString().toUpperCase() ?? 'N/A'),
-            _buildDetailRow('Description', _complaint!['description'] ?? 'N/A', isMultiline: true),
+            _buildDetailRow(
+              'Category',
+              _complaint!['category']?.toString().toUpperCase() ?? 'N/A',
+            ),
+            _buildDetailRow(
+              'Description',
+              _complaint!['description'] ?? 'N/A',
+              isMultiline: true,
+            ),
             // Display attachments if any
-            if (_complaint!['attachments'] != null && (_complaint!['attachments'] as List).isNotEmpty) ...[
+            if (_complaint!['attachments'] != null &&
+                (_complaint!['attachments'] as List).isNotEmpty) ...[
               const SizedBox(height: 12),
               const Text(
                 'Attachments:',
@@ -472,7 +480,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children: (_complaint!['attachments'] as List).map<Widget>((attachmentUrl) {
+                children: (_complaint!['attachments'] as List).map<Widget>((
+                  attachmentUrl,
+                ) {
                   return GestureDetector(
                     onTap: () {
                       // Show fullscreen image
@@ -518,21 +528,30 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               fit: BoxFit.cover,
                               width: 120,
                               height: 120,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                  ),
-                                );
-                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value:
+                                            loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    );
+                                  },
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey.shade200,
-                                  child: const Icon(Icons.broken_image, size: 40),
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    size: 40,
+                                  ),
                                 );
                               },
                             ),
@@ -561,11 +580,21 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               ),
               const SizedBox(height: 12),
             ],
-            _buildDetailRow('Created At', _formatDateTime(_complaint!['created_at'])),
+            _buildDetailRow(
+              'Created At',
+              _formatDateTime(_complaint!['created_at']),
+            ),
             if (_complaint!['assigned_to'] != null)
-              _buildDetailRow('Assigned To', _complaint!['assigned_to'], valueColor: Colors.blue),
+              _buildDetailRow(
+                'Assigned To',
+                _complaint!['assigned_to'],
+                valueColor: Colors.blue,
+              ),
             if (_complaint!['assigned_at'] != null)
-              _buildDetailRow('Assigned At', _formatDateTime(_complaint!['assigned_at'])),
+              _buildDetailRow(
+                'Assigned At',
+                _formatDateTime(_complaint!['assigned_at']),
+              ),
           ],
         ),
       ),
@@ -575,9 +604,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   Widget _buildUserInfoCard() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -585,10 +612,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
           children: [
             const Text(
               'User Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const Divider(),
             _buildDetailRow('User Name', _complaint!['user_name'] ?? 'N/A'),
@@ -608,9 +632,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -620,10 +642,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               children: [
                 const Text(
                   'Admin Response',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 if (hasResponse) ...[
                   const Spacer(),
@@ -674,7 +693,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send),
-                  label: Text(hasResponse ? 'Update Response' : 'Send Response'),
+                  label: Text(
+                    hasResponse ? 'Update Response' : 'Send Response',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
                     foregroundColor: Colors.white,
@@ -692,9 +713,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   Widget _buildCloseComplaintSection() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -702,10 +721,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
           children: [
             const Text(
               'Close Complaint',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const Divider(),
             const Text(
@@ -747,8 +763,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value,
-      {Color? valueColor, bool isMultiline = false}) {
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? valueColor,
+    bool isMultiline = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: isMultiline

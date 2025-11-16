@@ -11,10 +11,7 @@ import 'package:intl/intl.dart';
 class LiveTrackingScreen extends StatefulWidget {
   final String trackingId;
 
-  const LiveTrackingScreen({
-    super.key,
-    required this.trackingId,
-  });
+  const LiveTrackingScreen({super.key, required this.trackingId});
 
   @override
   State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
@@ -24,7 +21,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   final DeliveryTrackingService _trackingService = DeliveryTrackingService();
   GoogleMapController? _mapController;
   StreamSubscription<DeliveryTracking?>? _trackingSubscription;
-  
+
   DeliveryTracking? _currentTracking;
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
@@ -48,18 +45,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     _trackingSubscription = _trackingService
         .streamDeliveryTracking(widget.trackingId)
         .listen((tracking) {
-      if (tracking != null && mounted) {
-        setState(() {
-          _currentTracking = tracking;
-          _updateMapElements(tracking);
-        });
+          if (tracking != null && mounted) {
+            setState(() {
+              _currentTracking = tracking;
+              _updateMapElements(tracking);
+            });
 
-        // Auto-center map on first update
-        if (_isMapReady && _mapController != null) {
-          _fitMapToRoute(tracking);
-        }
-      }
-    });
+            // Auto-center map on first update
+            if (_isMapReady && _mapController != null) {
+              _fitMapToRoute(tracking);
+            }
+          }
+        });
   }
 
   /// Update markers and polylines based on current tracking data
@@ -68,75 +65,84 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     _polylines.clear();
 
     // Origin marker (green pin)
-    _markers.add(Marker(
-      markerId: const MarkerId('origin'),
-      position: LatLng(
-        tracking.originLocation.latitude,
-        tracking.originLocation.longitude,
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('origin'),
+        position: LatLng(
+          tracking.originLocation.latitude,
+          tracking.originLocation.longitude,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: InfoWindow(
+          title: 'Starting Point',
+          snippet: tracking.originLocation.address ?? 'Origin',
+        ),
       ),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      infoWindow: InfoWindow(
-        title: 'Starting Point',
-        snippet: tracking.originLocation.address ?? 'Origin',
-      ),
-    ));
+    );
 
     // Destination marker (red pin)
-    _markers.add(Marker(
-      markerId: const MarkerId('destination'),
-      position: LatLng(
-        tracking.destinationLocation.latitude,
-        tracking.destinationLocation.longitude,
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('destination'),
+        position: LatLng(
+          tracking.destinationLocation.latitude,
+          tracking.destinationLocation.longitude,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: InfoWindow(
+          title: 'Destination',
+          snippet: tracking.destinationLocation.address ?? 'Destination',
+        ),
       ),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      infoWindow: InfoWindow(
-        title: 'Destination',
-        snippet: tracking.destinationLocation.address ?? 'Destination',
-      ),
-    ));
+    );
 
     // Current location marker (blue pin) - only if delivery is in progress
     if (tracking.currentLocation != null && tracking.isInProgress) {
-      _markers.add(Marker(
-        markerId: const MarkerId('current'),
-        position: LatLng(
-          tracking.currentLocation!.latitude,
-          tracking.currentLocation!.longitude,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: InfoWindow(
-          title: '${tracking.deliveryPersonName} (Delivery Person)',
-          snippet: 'Current location',
-        ),
-        rotation: 0.0,
-      ));
-
-      // Draw polyline route
-      _polylines.add(Polyline(
-        polylineId: const PolylineId('route'),
-        points: [
-          LatLng(
-            tracking.originLocation.latitude,
-            tracking.originLocation.longitude,
-          ),
-          if (tracking.locationHistory.isNotEmpty)
-            ...tracking.locationHistory.map((loc) => LatLng(loc.latitude, loc.longitude)),
-          LatLng(
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('current'),
+          position: LatLng(
             tracking.currentLocation!.latitude,
             tracking.currentLocation!.longitude,
           ),
-          LatLng(
-            tracking.destinationLocation.latitude,
-            tracking.destinationLocation.longitude,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
           ),
-        ],
-        color: Colors.blue,
-        width: 4,
-        patterns: [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ],
-      ));
+          infoWindow: InfoWindow(
+            title: '${tracking.deliveryPersonName} (Delivery Person)',
+            snippet: 'Current location',
+          ),
+          rotation: 0.0,
+        ),
+      );
+
+      // Draw polyline route
+      _polylines.add(
+        Polyline(
+          polylineId: const PolylineId('route'),
+          points: [
+            LatLng(
+              tracking.originLocation.latitude,
+              tracking.originLocation.longitude,
+            ),
+            if (tracking.locationHistory.isNotEmpty)
+              ...tracking.locationHistory.map(
+                (loc) => LatLng(loc.latitude, loc.longitude),
+              ),
+            LatLng(
+              tracking.currentLocation!.latitude,
+              tracking.currentLocation!.longitude,
+            ),
+            LatLng(
+              tracking.destinationLocation.latitude,
+              tracking.destinationLocation.longitude,
+            ),
+          ],
+          color: Colors.blue,
+          width: 4,
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+        ),
+      );
     }
   }
 
@@ -145,9 +151,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     if (_mapController == null) return;
 
     final bounds = _calculateBounds(tracking);
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 100),
-    );
+    _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
   }
 
   /// Calculate bounds to fit all markers
@@ -164,9 +168,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       if (lng > maxLng) maxLng = lng;
     }
 
-    updateBounds(tracking.destinationLocation.latitude, tracking.destinationLocation.longitude);
+    updateBounds(
+      tracking.destinationLocation.latitude,
+      tracking.destinationLocation.longitude,
+    );
     if (tracking.currentLocation != null) {
-      updateBounds(tracking.currentLocation!.latitude, tracking.currentLocation!.longitude);
+      updateBounds(
+        tracking.currentLocation!.latitude,
+        tracking.currentLocation!.longitude,
+      );
     }
 
     return LatLngBounds(
@@ -178,10 +188,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   /// Launch phone call to delivery person
   Future<void> _callDeliveryPerson() async {
     if (_currentTracking == null) return;
-    
+
     final phone = _currentTracking!.deliveryPersonPhone;
     final uri = Uri.parse('tel:$phone');
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
@@ -196,17 +206,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   /// Launch SMS to delivery person
   Future<void> _messageDeliveryPerson() async {
     if (_currentTracking == null) return;
-    
+
     final phone = _currentTracking!.deliveryPersonPhone;
     final uri = Uri.parse('sms:$phone');
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to send SMS')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Unable to send SMS')));
       }
     }
   }
@@ -230,12 +240,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   Widget build(BuildContext context) {
     if (_currentTracking == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Live Tracking'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: const Text('Live Tracking')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -372,10 +378,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           Expanded(
             child: Text(
               statusText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           if (tracking.isInProgress)
@@ -392,10 +395,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   const SizedBox(width: 4),
                   const Text(
                     'Live',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -408,7 +408,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   /// Progress card with distance and ETA
   Widget _buildProgressCard(DeliveryTracking tracking) {
     final remainingProgress = tracking.progressPercentage; // 100% → 0%
-    final traveledProgress = tracking.traveledPercentage;   // 0% → 100%
+    final traveledProgress = tracking.traveledPercentage; // 0% → 100%
     final remainingKm = tracking.remainingDistanceKm;
     final eta = tracking.estimatedArrival;
 
@@ -423,10 +423,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               children: [
                 const Text(
                   'Distance Remaining',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '${remainingProgress.toStringAsFixed(0)}%',
@@ -441,10 +438,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             const SizedBox(height: 4),
             Text(
               'Completed: ${traveledProgress.toStringAsFixed(0)}%',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
@@ -490,10 +484,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           children: [
             const Text(
               'Delivery Person',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
@@ -575,26 +566,25 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           children: [
             const Text(
               'Locations',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _buildLocationRow(
               icon: Icons.location_on,
               color: Colors.green,
               label: 'From',
-              address: tracking.originLocation.address ?? 
-                       '${tracking.originLocation.latitude.toStringAsFixed(6)}, ${tracking.originLocation.longitude.toStringAsFixed(6)}',
+              address:
+                  tracking.originLocation.address ??
+                  '${tracking.originLocation.latitude.toStringAsFixed(6)}, ${tracking.originLocation.longitude.toStringAsFixed(6)}',
             ),
             const Divider(height: 24),
             _buildLocationRow(
               icon: Icons.flag,
               color: Colors.red,
               label: 'To',
-              address: tracking.destinationLocation.address ?? 
-                       '${tracking.destinationLocation.latitude.toStringAsFixed(6)}, ${tracking.destinationLocation.longitude.toStringAsFixed(6)}',
+              address:
+                  tracking.destinationLocation.address ??
+                  '${tracking.destinationLocation.latitude.toStringAsFixed(6)}, ${tracking.destinationLocation.longitude.toStringAsFixed(6)}',
             ),
             if (tracking.notes != null && tracking.notes!.isNotEmpty) ...[
               const Divider(height: 24),
@@ -642,30 +632,33 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           children: [
             const Text(
               'Status Timeline',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildTimelineItem(
               icon: Icons.check_circle,
               title: 'Order Created',
-              time: DateFormat('MMM dd, yyyy • hh:mm a').format(tracking.createdAt),
+              time: DateFormat(
+                'MMM dd, yyyy • hh:mm a',
+              ).format(tracking.createdAt),
               isCompleted: true,
             ),
             if (tracking.startedAt != null)
               _buildTimelineItem(
                 icon: Icons.local_shipping,
                 title: 'Delivery Started',
-                time: DateFormat('MMM dd, yyyy • hh:mm a').format(tracking.startedAt!),
+                time: DateFormat(
+                  'MMM dd, yyyy • hh:mm a',
+                ).format(tracking.startedAt!),
                 isCompleted: true,
               ),
             if (tracking.completedAt != null)
               _buildTimelineItem(
                 icon: Icons.done_all,
                 title: 'Delivery Completed',
-                time: DateFormat('MMM dd, yyyy • hh:mm a').format(tracking.completedAt!),
+                time: DateFormat(
+                  'MMM dd, yyyy • hh:mm a',
+                ).format(tracking.completedAt!),
                 isCompleted: true,
                 isLast: true,
               )
@@ -707,10 +700,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                address,
-                style: const TextStyle(fontSize: 14),
-              ),
+              Text(address, style: const TextStyle(fontSize: 14)),
             ],
           ),
         ),
@@ -736,11 +726,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 color: isCompleted ? Colors.blue : Colors.grey.shade300,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 16,
-                color: Colors.white,
-              ),
+              child: Icon(icon, size: 16, color: Colors.white),
             ),
             if (!isLast)
               Container(
@@ -769,10 +755,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 const SizedBox(height: 2),
                 Text(
                   time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -782,10 +765,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     );
   }
 
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildInfoChip({required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(

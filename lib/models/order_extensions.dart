@@ -90,14 +90,12 @@ extension OrderStatusExtensions on OrderStatus {
 
   /// Check if order is completed
   bool get isCompleted {
-    return this == OrderStatus.completed ||
-        this == OrderStatus.confirmed;
+    return this == OrderStatus.completed || this == OrderStatus.confirmed;
   }
 
   /// Check if order is cancelled or rejected
   bool get isCancelled {
-    return this == OrderStatus.cancelled ||
-        this == OrderStatus.rejected;
+    return this == OrderStatus.cancelled || this == OrderStatus.rejected;
   }
 }
 
@@ -171,8 +169,7 @@ extension PaymentMethodExtensions on PaymentMethod {
 
   /// Check if method is cash-based
   bool get isCashBased {
-    return this == PaymentMethod.cash ||
-        this == PaymentMethod.cashOnDelivery;
+    return this == PaymentMethod.cash || this == PaymentMethod.cashOnDelivery;
   }
 
   /// Get display name for payment method
@@ -250,7 +247,7 @@ extension PaymentMethodExtensions on PaymentMethod {
   /// Check if payment method is digital/online payment
   bool get isDigitalPayment {
     return this == PaymentMethod.mtnMobileMoney ||
-           this == PaymentMethod.airtelMoney ||
-           this == PaymentMethod.mobileMoney;
+        this == PaymentMethod.airtelMoney ||
+        this == PaymentMethod.mobileMoney;
   }
 }

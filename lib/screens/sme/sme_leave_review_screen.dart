@@ -13,7 +13,7 @@ import '../../models/review.dart';
 class SMELeaveReviewScreen extends StatefulWidget {
   final Order order;
   final String farmerName;
-  
+
   const SMELeaveReviewScreen({
     super.key,
     required this.order,
@@ -29,13 +29,13 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
   final TextEditingController _commentController = TextEditingController();
   final PhotoStorageService _photoService = PhotoStorageService();
   final RatingService _ratingService = RatingService();
-  
+
   // Review criteria with individual ratings
   double _productQualityRating = 5.0;
   double _communicationRating = 5.0;
   double _deliveryRating = 5.0;
   double _packagingRating = 5.0;
-  
+
   // Photos
   List<XFile> _selectedPhotos = [];
   bool _isSubmitting = false;
@@ -72,7 +72,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
 
       // Create review ID
       final reviewId = DateTime.now().millisecondsSinceEpoch.toString();
-      
+
       // Upload photos if any
       List<String> photoUrls = [];
       if (_selectedPhotos.isNotEmpty) {
@@ -120,7 +120,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
 
       // Submit review to Firestore
       await _ratingService.submitReview(review);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,14 +151,14 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
             duration: const Duration(seconds: 3),
           ),
         );
-        
+
         Navigator.pop(context, true);
       }
     } catch (e) {
       setState(() {
         _isSubmitting = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -174,13 +174,15 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
   @override
   Widget build(BuildContext context) {
     // Calculate overall rating from criteria
-    _rating = (_productQualityRating + _communicationRating + _deliveryRating + _packagingRating) / 4;
-    
+    _rating =
+        (_productQualityRating +
+            _communicationRating +
+            _deliveryRating +
+            _packagingRating) /
+        4;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Leave a Review'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Leave a Review'), centerTitle: true),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -221,17 +223,14 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Order #${widget.order.id}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Overall Rating Display
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -239,10 +238,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 children: [
                   const Text(
                     'Overall Rating',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -257,11 +253,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(
-                        Icons.star,
-                        size: 48,
-                        color: Colors.amber,
-                      ),
+                      const Icon(Icons.star, size: 48, color: Colors.amber),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -278,9 +270,9 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Rating Criteria
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -289,10 +281,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 children: [
                   const Text(
                     'Rate Your Experience',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   _buildCriteriaRating(
@@ -329,9 +318,9 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Comment Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -340,10 +329,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 children: [
                   const Text(
                     'Your Experience',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -359,7 +345,8 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                     maxLines: 5,
                     maxLength: 500,
                     decoration: InputDecoration(
-                      hintText: 'Share details about the products, service, and your overall experience...',
+                      hintText:
+                          'Share details about the products, service, and your overall experience...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -375,9 +362,9 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Photo Upload Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -391,9 +378,9 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Submit Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -415,7 +402,9 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -437,14 +426,14 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
                       ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildCriteriaRating(
     String title,
     String subtitle,
@@ -466,11 +455,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  color: AppTheme.primaryColor,
-                  size: 24,
-                ),
+                Icon(icon, color: AppTheme.primaryColor, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -523,7 +508,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
       ),
     );
   }
-  
+
   Widget _buildStarRating(double rating, {double size = 24}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -537,7 +522,7 @@ class _SMELeaveReviewScreenState extends State<SMELeaveReviewScreen> {
       }),
     );
   }
-  
+
   String _getRatingText(double rating) {
     if (rating >= 4.5) return 'Excellent!';
     if (rating >= 4.0) return 'Very Good';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../models/product.dart';
 import '../../utils/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -17,38 +16,53 @@ class PSAProductsScreen extends StatefulWidget {
 class _PSAProductsScreenState extends State<PSAProductsScreen> {
   final ProductService _productService = ProductService();
   ProductCategory _selectedCategory = ProductCategory.crop;
-  
-  List<Product> _filterProductsByCategory(List<Product> products, ProductCategory category) {
+
+  List<Product> _filterProductsByCategory(
+    List<Product> products,
+    ProductCategory category,
+  ) {
     // Filter products by main category
     switch (category) {
       case ProductCategory.crop:
-        return products.where((p) =>
-            p.category == ProductCategory.fertilizers ||
-            p.category == ProductCategory.chemicals ||
-            p.category == ProductCategory.hoes ||
-            p.category == ProductCategory.crop
-        ).toList();
+        return products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.fertilizers ||
+                  p.category == ProductCategory.chemicals ||
+                  p.category == ProductCategory.hoes ||
+                  p.category == ProductCategory.crop,
+            )
+            .toList();
       case ProductCategory.poultry:
-        return products.where((p) =>
-            p.category == ProductCategory.dayOldChicks ||
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.poultry
-        ).toList();
+        return products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.dayOldChicks ||
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.poultry,
+            )
+            .toList();
       case ProductCategory.goats:
-        return products.where((p) =>
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.goats
-        ).toList();
+        return products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.goats,
+            )
+            .toList();
       case ProductCategory.cows:
-        return products.where((p) =>
-            p.category == ProductCategory.feeds ||
-            p.category == ProductCategory.cows
-        ).toList();
+        return products
+            .where(
+              (p) =>
+                  p.category == ProductCategory.feeds ||
+                  p.category == ProductCategory.cows,
+            )
+            .toList();
       default:
         return products;
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -100,12 +114,18 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
           }
 
           final allProducts = snapshot.data ?? [];
-          final filteredProducts = _filterProductsByCategory(allProducts, _selectedCategory);
+          final filteredProducts = _filterProductsByCategory(
+            allProducts,
+            _selectedCategory,
+          );
 
           // Count products by category for tabs
           final categoryCounts = <ProductCategory, int>{};
           for (final category in ProductCategoryExtension.mainCategories) {
-            categoryCounts[category] = _filterProductsByCategory(allProducts, category).length;
+            categoryCounts[category] = _filterProductsByCategory(
+              allProducts,
+              category,
+            ).length;
           }
 
           return Column(
@@ -116,10 +136,12 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.all(16),
-                  children: ProductCategoryExtension.mainCategories.map((category) {
+                  children: ProductCategoryExtension.mainCategories.map((
+                    category,
+                  ) {
                     final isSelected = _selectedCategory == category;
                     final count = categoryCounts[category] ?? 0;
-                    
+
                     return _CategoryTab(
                       category: category,
                       count: count,
@@ -133,7 +155,7 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
                   }).toList(),
                 ),
               ),
-              
+
               // Products List
               Expanded(
                 child: filteredProducts.isEmpty
@@ -177,8 +199,10 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
                           final product = filteredProducts[index];
                           return _ProductCard(
                             product: product,
-                            onEdit: () => _showEditProductDialog(context, product),
-                            onDelete: () => _showDeleteConfirmation(context, product),
+                            onEdit: () =>
+                                _showEditProductDialog(context, product),
+                            onDelete: () =>
+                                _showDeleteConfirmation(context, product),
                           );
                         },
                       ),
@@ -194,13 +218,11 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
       ),
     );
   }
-  
+
   void _showAddProductDialog(BuildContext context) async {
     final result = await Navigator.push<dynamic>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PSAAddEditProductScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const PSAAddEditProductScreen()),
     );
 
     if (result == true && mounted) {
@@ -210,7 +232,7 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
       });
     }
   }
-  
+
   void _showEditProductDialog(BuildContext context, Product product) async {
     final result = await Navigator.push<dynamic>(
       context,
@@ -237,7 +259,7 @@ class _PSAProductsScreenState extends State<PSAProductsScreen> {
       );
     }
   }
-  
+
   void _showDeleteConfirmation(BuildContext context, Product product) {
     showDialog(
       context: context,
@@ -289,14 +311,14 @@ class _CategoryTab extends StatelessWidget {
   final int count;
   final bool isSelected;
   final VoidCallback onTap;
-  
+
   const _CategoryTab({
     required this.category,
     required this.count,
     required this.isSelected,
     required this.onTap,
   });
-  
+
   IconData get _icon {
     switch (category) {
       case ProductCategory.crop:
@@ -311,7 +333,7 @@ class _CategoryTab extends StatelessWidget {
         return Icons.category;
     }
   }
-  
+
   Color get _color {
     switch (category) {
       case ProductCategory.crop:
@@ -326,7 +348,7 @@ class _CategoryTab extends StatelessWidget {
         return AppTheme.textSecondary;
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -396,25 +418,26 @@ class _ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  
+
   const _ProductCard({
     required this.product,
     required this.onEdit,
     required this.onDelete,
   });
-  
+
   Color get _stockColor {
     if (product.stockQuantity == 0) return AppTheme.errorColor;
-    if (product.stockQuantity <= product.lowStockThreshold) return AppTheme.warningColor;
+    if (product.stockQuantity <= product.lowStockThreshold)
+      return AppTheme.warningColor;
     return AppTheme.successColor;
   }
-  
+
   String get _stockStatus {
     if (product.stockQuantity == 0) return 'Out of Stock';
     if (product.stockQuantity <= product.lowStockThreshold) return 'Low Stock';
     return 'In Stock';
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -465,7 +488,10 @@ class _ProductCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _stockColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),

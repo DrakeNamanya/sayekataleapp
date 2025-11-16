@@ -1,5 +1,3 @@
-
-
 /// PSA (Private Service Aggregator) verification request model
 class PsaVerification {
   final String id;
@@ -10,7 +8,7 @@ class PsaVerification {
   final String phoneNumber;
   final String businessAddress;
   final String businessType; // e.g., "Input Supplier", "Equipment Rental"
-  
+
   // Business location details (hierarchical)
   final String? businessDistrict;
   final String? businessSubcounty;
@@ -18,35 +16,36 @@ class PsaVerification {
   final String? businessVillage;
   final double? businessLatitude;
   final double? businessLongitude;
-  
+
   // Tax information
   final String? taxId; // Tax Identification Number (TIN)
-  
+
   // Bank account details
   final String? bankAccountHolderName;
   final String? bankAccountNumber;
   final String? bankName;
   final String? bankBranch;
-  
+
   // Payment methods
-  final List<String> paymentMethods; // e.g., ["Mobile Money", "Bank Transfer", "Cash"]
-  
+  final List<String>
+  paymentMethods; // e.g., ["Mobile Money", "Bank Transfer", "Cash"]
+
   // Business registration documents
   final String? businessLicenseUrl;
   final String? taxIdDocumentUrl;
   final String? nationalIdUrl;
   final String? tradeLicenseUrl;
-  
+
   // Additional verification documents
   final List<String> additionalDocuments;
-  
+
   // Verification details
   final PsaVerificationStatus status;
   final String? rejectionReason;
   final String? reviewNotes;
   final String? reviewedBy; // Admin ID
   final DateTime? reviewedAt;
-  
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -194,7 +193,7 @@ class PsaVerification {
     if (tradeLicenseUrl == null) missing.add('Trade License');
     return missing;
   }
-  
+
   /// Check if all mandatory profile information is complete
   bool get hasAllMandatoryFields {
     return businessName.isNotEmpty &&
@@ -215,7 +214,7 @@ class PsaVerification {
         bankName!.isNotEmpty &&
         paymentMethods.isNotEmpty;
   }
-  
+
   /// Get list of missing mandatory fields
   List<String> get missingMandatoryFields {
     final missing = <String>[];
@@ -225,20 +224,23 @@ class PsaVerification {
     if (phoneNumber.isEmpty) missing.add('Phone Number');
     if (businessAddress.isEmpty) missing.add('Business Address');
     if (businessType.isEmpty) missing.add('Business Type');
-    if (businessDistrict == null || businessDistrict!.isEmpty) missing.add('Business District');
+    if (businessDistrict == null || businessDistrict!.isEmpty)
+      missing.add('Business District');
     if (taxId == null || taxId!.isEmpty) missing.add('Tax ID');
-    if (bankAccountHolderName == null || bankAccountHolderName!.isEmpty) missing.add('Bank Account Holder');
-    if (bankAccountNumber == null || bankAccountNumber!.isEmpty) missing.add('Bank Account Number');
+    if (bankAccountHolderName == null || bankAccountHolderName!.isEmpty)
+      missing.add('Bank Account Holder');
+    if (bankAccountNumber == null || bankAccountNumber!.isEmpty)
+      missing.add('Bank Account Number');
     if (bankName == null || bankName!.isEmpty) missing.add('Bank Name');
     if (paymentMethods.isEmpty) missing.add('Payment Methods');
     return missing;
   }
-  
+
   /// Calculate profile completion percentage (0-100)
   int get profileCompletionPercentage {
     int total = 12; // Total mandatory fields
     int completed = 0;
-    
+
     if (businessName.isNotEmpty) completed++;
     if (contactPerson.isNotEmpty) completed++;
     if (email.isNotEmpty) completed++;
@@ -247,11 +249,12 @@ class PsaVerification {
     if (businessType.isNotEmpty) completed++;
     if (businessDistrict != null && businessDistrict!.isNotEmpty) completed++;
     if (taxId != null && taxId!.isNotEmpty) completed++;
-    if (bankAccountHolderName != null && bankAccountHolderName!.isNotEmpty) completed++;
+    if (bankAccountHolderName != null && bankAccountHolderName!.isNotEmpty)
+      completed++;
     if (bankAccountNumber != null && bankAccountNumber!.isNotEmpty) completed++;
     if (bankName != null && bankName!.isNotEmpty) completed++;
     if (paymentMethods.isNotEmpty) completed++;
-    
+
     return ((completed / total) * 100).round();
   }
 }

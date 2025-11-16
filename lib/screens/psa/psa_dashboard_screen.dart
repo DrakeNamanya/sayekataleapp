@@ -7,14 +7,12 @@ import '../../services/order_service.dart';
 import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
-import '../../models/product.dart';
 import '../../widgets/admob_banner_widget.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
 import 'psa_inventory_screen.dart';
 import 'psa_delivery_screen.dart';
-import 'psa_financial_screen.dart';
 import 'psa_messages_screen.dart';
 import 'psa_profile_screen.dart';
 import 'psa_notifications_screen.dart';
@@ -29,8 +27,8 @@ class PSADashboardScreen extends StatefulWidget {
 
 class _PSADashboardScreenState extends State<PSADashboardScreen> {
   int _selectedIndex = 0;
-  int _unreadNotifications = 7;
-  int _unreadMessages = 4;
+  final int _unreadNotifications = 7;
+  final int _unreadMessages = 4;
 
   late final List<Widget> _screens;
 
@@ -159,7 +157,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
         orderService.getFarmerActiveOrdersCount(supplierId),
         productService.getFarmerProductsCount(supplierId),
         productService.getFarmerLowStockCount(supplierId),
-        orderService.getFarmerActiveOrdersCount(supplierId), // Using active as pending delivery
+        orderService.getFarmerActiveOrdersCount(
+          supplierId,
+        ), // Using active as pending delivery
       ]);
 
       if (mounted) {
@@ -211,10 +211,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppTheme.primaryColor,
-                      AppTheme.accentColor,
-                    ],
+                    colors: [AppTheme.primaryColor, AppTheme.accentColor],
                   ),
                 ),
                 child: SafeArea(
@@ -250,17 +247,25 @@ class _DashboardHomeState extends State<_DashboardHome> {
                             Row(
                               children: [
                                 StreamBuilder<int>(
-                                  stream: notificationService.streamUnreadCount(userId),
+                                  stream: notificationService.streamUnreadCount(
+                                    userId,
+                                  ),
                                   builder: (context, snapshot) {
                                     final unreadCount = snapshot.data ?? 0;
                                     return Stack(
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                                          icon: const Icon(
+                                            Icons.notifications_outlined,
+                                            color: Colors.white,
+                                          ),
                                           onPressed: () {
                                             Navigator.push(
                                               context,
-                                              MaterialPageRoute(builder: (context) => const PSANotificationsScreen()),
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const PSANotificationsScreen(),
+                                              ),
                                             );
                                           },
                                         ),
@@ -275,7 +280,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Text(
-                                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                unreadCount > 99
+                                                    ? '99+'
+                                                    : unreadCount.toString(),
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 10,
@@ -289,17 +296,25 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                   },
                                 ),
                                 StreamBuilder<int>(
-                                  stream: messageService.streamTotalUnreadCount(userId),
+                                  stream: messageService.streamTotalUnreadCount(
+                                    userId,
+                                  ),
                                   builder: (context, snapshot) {
                                     final unreadCount = snapshot.data ?? 0;
                                     return Stack(
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.message_outlined, color: Colors.white),
+                                          icon: const Icon(
+                                            Icons.message_outlined,
+                                            color: Colors.white,
+                                          ),
                                           onPressed: () {
                                             Navigator.push(
                                               context,
-                                              MaterialPageRoute(builder: (context) => const PSAMessagesScreen()),
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const PSAMessagesScreen(),
+                                              ),
                                             );
                                           },
                                         ),
@@ -314,7 +329,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Text(
-                                                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                unreadCount > 99
+                                                    ? '99+'
+                                                    : unreadCount.toString(),
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 10,
@@ -334,10 +351,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         const Spacer(),
                         const Text(
                           'Today\'s Revenue',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -354,7 +368,8 @@ class _DashboardHomeState extends State<_DashboardHome> {
                             Expanded(
                               child: _MiniStatCard(
                                 label: 'Monthly',
-                                value: 'UGX ${(monthlyRevenue / 1000000).toStringAsFixed(1)}M',
+                                value:
+                                    'UGX ${(monthlyRevenue / 1000000).toStringAsFixed(1)}M',
                                 icon: Icons.trending_up,
                               ),
                             ),
@@ -450,7 +465,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PSAProductsScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const PSAProductsScreen(),
+                              ),
                             );
                           },
                         ),
@@ -464,7 +481,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PSAInventoryScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PSAInventoryScreen(),
+                              ),
                             );
                           },
                         ),
@@ -482,7 +502,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PSACustomersScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PSACustomersScreen(),
+                              ),
                             );
                           },
                         ),
@@ -496,7 +519,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const DeliveryControlScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const DeliveryControlScreen(),
+                              ),
                             );
                           },
                         ),
@@ -526,7 +552,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const PSAInventoryScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const PSAInventoryScreen(),
+                            ),
                           );
                         },
                       ),
@@ -539,7 +567,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const PSADeliveryScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const PSADeliveryScreen(),
+                            ),
                           );
                         },
                       ),
@@ -562,7 +592,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const PSAOrdersScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const PSAOrdersScreen(),
+                            ),
                           );
                         },
                         child: const Text('View All'),
@@ -585,7 +617,9 @@ class _DashboardHomeState extends State<_DashboardHome> {
                       if (snapshot.hasError) {
                         return Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text('Error loading recent orders: ${snapshot.error}'),
+                          child: Text(
+                            'Error loading recent orders: ${snapshot.error}',
+                          ),
                         );
                       }
 
@@ -598,7 +632,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           child: const Center(
                             child: Column(
                               children: [
-                                Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey),
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
                                 SizedBox(height: 16),
                                 Text(
                                   'No recent orders in the last 24 hours',
@@ -615,7 +653,10 @@ class _DashboardHomeState extends State<_DashboardHome> {
                           return _OrderCard(
                             orderId: '#${order.id.substring(0, 8)}',
                             customerName: order.buyerName,
-                            products: order.items.map((item) => item.productName).take(2).join(', '),
+                            products: order.items
+                                .map((item) => item.productName)
+                                .take(2)
+                                .join(', '),
                             amount: order.totalAmount,
                             status: order.status.toString().split('.').last,
                             statusColor: _getStatusColor(order.status),
@@ -690,10 +731,7 @@ class _MiniStatCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
                 ),
                 Text(
                   value,
@@ -756,10 +794,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(
@@ -893,7 +928,11 @@ class _AlertCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.textSecondary),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppTheme.textSecondary,
+              ),
             ],
           ),
         ),
@@ -940,7 +979,10 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -959,7 +1001,11 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.person, size: 16, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.person,
+                  size: 16,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   customerName,
@@ -973,7 +1019,11 @@ class _OrderCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.inventory_2, size: 16, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.inventory_2,
+                  size: 16,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -992,10 +1042,7 @@ class _OrderCard extends StatelessWidget {
               children: [
                 const Text(
                   'Order Amount',
-                  style: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                 ),
                 Text(
                   'UGX ${amount.toStringAsFixed(0)}',
@@ -1007,18 +1054,14 @@ class _OrderCard extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // AdMob Banner
             const SliverToBoxAdapter(
-              child: AdMobBannerWidget(
-                backgroundColor: Colors.white,
-              ),
+              child: AdMobBannerWidget(backgroundColor: Colors.white),
             ),
-            
+
             // Bottom padding
-            const SliverPadding(
-              padding: EdgeInsets.only(bottom: 24),
-            ),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
           ],
         ),
       ),

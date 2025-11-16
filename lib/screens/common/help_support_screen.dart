@@ -21,13 +21,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   late final TabController _tabController;
-  
+
   ComplaintCategory _selectedCategory = ComplaintCategory.other;
   ComplaintPriority _selectedPriority = ComplaintPriority.medium;
   bool _isSubmitting = false;
   List<Map<String, dynamic>> _myComplaints = [];
   bool _isLoadingComplaints = true;
-  
+
   // Image attachment state
   final ImagePicker _imagePicker = ImagePicker();
   final ImageStorageService _imageStorage = ImageStorageService();
@@ -60,7 +60,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
 
     if (kDebugMode) {
       debugPrint('👤 HELP SUPPORT SCREEN - Current User Info:');
-      debugPrint('   - User object: ${currentUser != null ? "EXISTS" : "NULL"}');
+      debugPrint(
+        '   - User object: ${currentUser != null ? "EXISTS" : "NULL"}',
+      );
       debugPrint('   - User ID: ${userId ?? "NULL"}');
       if (userId != null) {
         debugPrint('   - User ID type: ${userId.runtimeType}');
@@ -82,13 +84,17 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
 
     try {
       if (kDebugMode) {
-        debugPrint('📞 HELP SUPPORT SCREEN - Calling ComplaintService.getUserComplaints...');
+        debugPrint(
+          '📞 HELP SUPPORT SCREEN - Calling ComplaintService.getUserComplaints...',
+        );
       }
 
       final complaints = await _complaintService.getUserComplaints(userId);
-      
+
       if (kDebugMode) {
-        debugPrint('✅ HELP SUPPORT SCREEN - Received ${complaints.length} complaints');
+        debugPrint(
+          '✅ HELP SUPPORT SCREEN - Received ${complaints.length} complaints',
+        );
         if (complaints.isNotEmpty) {
           debugPrint('📋 HELP SUPPORT SCREEN - Complaint details:');
           for (var i = 0; i < complaints.length && i < 3; i++) {
@@ -106,7 +112,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
         _myComplaints = complaints;
         _isLoadingComplaints = false;
       });
-      
+
       if (kDebugMode) {
         debugPrint('✅ HELP SUPPORT SCREEN - State updated, UI should refresh');
       }
@@ -139,12 +145,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
         maxHeight: 1080,
         imageQuality: 85,
       );
-      
+
       if (image != null && _selectedImages.length < 3) {
         setState(() {
           _selectedImages.add(image);
         });
-        
+
         if (kDebugMode) {
           debugPrint('✅ Image added: ${image.name}');
         }
@@ -160,11 +166,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
       if (kDebugMode) {
         debugPrint('❌ Error picking image: $e');
       }
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -210,7 +216,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
         if (kDebugMode) {
           debugPrint('📤 Uploading ${_selectedImages.length} images...');
         }
-        
+
         for (int i = 0; i < _selectedImages.length; i++) {
           final imageFile = _selectedImages[i];
           try {
@@ -218,11 +224,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
               imageFile: imageFile,
               folder: 'complaints',
               userId: user.id,
-              customName: 'complaint_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+              customName:
+                  'complaint_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
               compress: true,
             );
             attachmentUrls.add(url);
-            
+
             if (kDebugMode) {
               debugPrint('✅ Image ${i + 1}/${_selectedImages.length} uploaded');
             }
@@ -233,7 +240,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
           }
         }
       }
-      
+
       setState(() {
         _isUploadingImages = false;
       });
@@ -249,7 +256,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
         priority: _selectedPriority,
         attachmentUrls: attachmentUrls,
       );
-      
+
       if (kDebugMode) {
         debugPrint('✅ HELP SUPPORT SCREEN - Complaint submitted: $complaintId');
       }
@@ -257,7 +264,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Complaint submitted successfully! Our team will review it soon.'),
+            content: Text(
+              '✅ Complaint submitted successfully! Our team will review it soon.',
+            ),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
           ),
@@ -312,10 +321,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildSubmitComplaintTab(),
-          _buildMyComplaintsTab(),
-        ],
+        children: [_buildSubmitComplaintTab(), _buildMyComplaintsTab()],
       ),
     );
   }
@@ -338,7 +344,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Color(0xFF2E7D32), size: 32),
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF2E7D32),
+                      size: 32,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
@@ -358,10 +368,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             // Category Selection
             const Text(
               'Category',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildCategorySelector(),
@@ -370,10 +377,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             // Priority Selection
             const Text(
               'Priority',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildPrioritySelector(),
@@ -382,10 +386,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             // Subject
             const Text(
               'Subject',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -413,10 +414,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             // Description
             const Text(
               'Description',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -466,7 +464,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                       ),
                       const Spacer(),
                       TextButton.icon(
-                        onPressed: _selectedImages.length < 3 ? _pickImage : null,
+                        onPressed: _selectedImages.length < 3
+                            ? _pickImage
+                            : null,
                         icon: const Icon(Icons.add_photo_alternate, size: 20),
                         label: const Text('Add Image'),
                         style: TextButton.styleFrom(
@@ -478,10 +478,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                   const SizedBox(height: 8),
                   Text(
                     'Add screenshots or photos to help us understand your issue better (Max 3 images)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   if (_selectedImages.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -583,7 +580,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text(
@@ -639,9 +638,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: FilterChip(
-              label: Center(
-                child: Text(_getPriorityDisplayName(priority)),
-              ),
+              label: Center(child: Text(_getPriorityDisplayName(priority))),
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
@@ -678,7 +675,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.support_agent, size: 64, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.support_agent,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No complaints yet',
@@ -691,16 +692,15 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                   const SizedBox(height: 8),
                   Text(
                     'Your submitted complaints will appear here',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
                       if (kDebugMode) {
-                        debugPrint('\n🔄 MANUAL REFRESH - User tapped refresh button');
+                        debugPrint(
+                          '\n🔄 MANUAL REFRESH - User tapped refresh button',
+                        );
                       }
                       setState(() {
                         _isLoadingComplaints = true;
@@ -712,7 +712,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2E7D32),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -751,9 +754,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -826,10 +827,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
             const SizedBox(height: 12),
             Text(
               complaint['description'] ?? 'No description',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -847,7 +845,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen>
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.support_agent, size: 16, color: Colors.green.shade700),
+                        Icon(
+                          Icons.support_agent,
+                          size: 16,
+                          color: Colors.green.shade700,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Admin Response:',

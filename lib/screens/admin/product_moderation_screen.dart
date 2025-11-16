@@ -8,10 +8,7 @@ import '../../services/csv_export_service.dart';
 class ProductModerationScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const ProductModerationScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const ProductModerationScreen({super.key, required this.adminUser});
 
   @override
   State<ProductModerationScreen> createState() =>
@@ -139,7 +136,9 @@ class _ProductModerationScreenState extends State<ProductModerationScreen> {
                             icon: const Icon(Icons.check, color: Colors.green),
                             onPressed: () async {
                               await _adminService.approveProduct(
-                                  product.id, widget.adminUser.id);
+                                product.id,
+                                widget.adminUser.id,
+                              );
                               _loadProducts();
                             },
                           ),

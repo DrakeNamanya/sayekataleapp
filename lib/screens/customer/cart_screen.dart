@@ -88,7 +88,9 @@ class CartScreen extends StatelessWidget {
                                 width: 60,
                                 height: 60,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                  color: AppTheme.primaryColor.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
@@ -124,7 +126,9 @@ class CartScreen extends StatelessWidget {
                                   Row(
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.remove_circle_outline),
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                        ),
                                         onPressed: () {
                                           cartProvider.updateQuantity(
                                             item.productId,
@@ -135,10 +139,18 @@ class CartScreen extends StatelessWidget {
                                         color: AppTheme.primaryColor,
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
-                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: AppTheme.primaryColor
+                                                .withValues(alpha: 0.3),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           '${item.quantity}',
@@ -149,7 +161,9 @@ class CartScreen extends StatelessWidget {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.add_circle_outline),
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                        ),
                                         onPressed: () {
                                           cartProvider.updateQuantity(
                                             item.productId,

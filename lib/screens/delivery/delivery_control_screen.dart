@@ -19,7 +19,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     with SingleTickerProviderStateMixin {
   final DeliveryTrackingService _trackingService = DeliveryTrackingService();
   late TabController _tabController;
-  
+
   List<DeliveryTracking> _activeDeliveries = [];
   List<DeliveryTracking> _completedDeliveries = [];
   bool _isLoading = true;
@@ -51,29 +51,37 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     }
 
     try {
-      final allDeliveries = await _trackingService.getActiveDeliveriesForPerson(userId);
-      
+      final allDeliveries = await _trackingService.getActiveDeliveriesForPerson(
+        userId,
+      );
+
       setState(() {
-        _activeDeliveries = allDeliveries.where((d) => 
-          d.status == DeliveryStatus.pending ||
-          d.status == DeliveryStatus.confirmed ||
-          d.status == DeliveryStatus.inProgress
-        ).toList();
-        
-        _completedDeliveries = allDeliveries.where((d) => 
-          d.status == DeliveryStatus.completed ||
-          d.status == DeliveryStatus.cancelled ||
-          d.status == DeliveryStatus.failed
-        ).toList();
-        
+        _activeDeliveries = allDeliveries
+            .where(
+              (d) =>
+                  d.status == DeliveryStatus.pending ||
+                  d.status == DeliveryStatus.confirmed ||
+                  d.status == DeliveryStatus.inProgress,
+            )
+            .toList();
+
+        _completedDeliveries = allDeliveries
+            .where(
+              (d) =>
+                  d.status == DeliveryStatus.completed ||
+                  d.status == DeliveryStatus.cancelled ||
+                  d.status == DeliveryStatus.failed,
+            )
+            .toList();
+
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading deliveries: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading deliveries: $e')));
       }
     }
   }
@@ -110,9 +118,8 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
@@ -150,7 +157,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     } catch (e) {
       // Close loading dialog if open
       if (mounted) Navigator.pop(context);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -224,7 +231,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     try {
       // Show reason input dialog
       final TextEditingController reasonController = TextEditingController();
-      
+
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -269,7 +276,9 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
       if (reason.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please provide a cancellation reason')),
+            const SnackBar(
+              content: Text('Please provide a cancellation reason'),
+            ),
           );
         }
         return;
@@ -434,10 +443,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
             const SizedBox(height: 8),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
           ],
@@ -446,7 +452,10 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     );
   }
 
-  Widget _buildDeliveryCard(DeliveryTracking tracking, {required bool isActive}) {
+  Widget _buildDeliveryCard(
+    DeliveryTracking tracking, {
+    required bool isActive,
+  }) {
     Color statusColor;
     IconData statusIcon;
 
@@ -582,7 +591,8 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
                   if (tracking.estimatedDistance != null)
                     _buildInfoItem(
                       icon: Icons.route,
-                      label: '${tracking.estimatedDistance!.toStringAsFixed(1)} km',
+                      label:
+                          '${tracking.estimatedDistance!.toStringAsFixed(1)} km',
                     ),
                   if (tracking.estimatedDuration != null) ...[
                     const SizedBox(width: 16),
@@ -599,14 +609,17 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
               // Date
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 6),
                   Text(
-                    DateFormat('MMM dd, yyyy • hh:mm a').format(tracking.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    DateFormat(
+                      'MMM dd, yyyy • hh:mm a',
+                    ).format(tracking.createdAt),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -674,10 +687,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     );
   }
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildInfoItem({required IconData icon, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -685,10 +695,7 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade700,
-          ),
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
         ),
       ],
     );

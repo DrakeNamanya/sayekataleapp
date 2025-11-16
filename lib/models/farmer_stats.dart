@@ -7,14 +7,14 @@ class FarmerStats {
   final int completedOrders;
   final int totalReviews;
   final double averageRating;
-  final double fulfillmentRate;  // Percentage of orders fulfilled
-  final double responseTime;     // Average response time in hours
+  final double fulfillmentRate; // Percentage of orders fulfilled
+  final double responseTime; // Average response time in hours
   final DateTime memberSince;
   final String? bio;
   final List<String> specialties;
   final bool isVerified;
   final bool isTopSeller;
-  final Map<String, int> categoryCounts;  // Product count by category
+  final Map<String, int> categoryCounts; // Product count by category
 
   FarmerStats({
     required this.farmerId,
@@ -62,39 +62,39 @@ class FarmerStats {
   /// Get seller badges
   List<SellerBadge> get badges {
     final List<SellerBadge> result = [];
-    
+
     if (isVerified) {
-      result.add(SellerBadge(
-        title: 'Verified Seller',
-        icon: 'verified',
-        color: '0xFF4CAF50',
-      ));
+      result.add(
+        SellerBadge(
+          title: 'Verified Seller',
+          icon: 'verified',
+          color: '0xFF4CAF50',
+        ),
+      );
     }
-    
+
     if (isTopSeller) {
-      result.add(SellerBadge(
-        title: 'Top Seller',
-        icon: 'star',
-        color: '0xFFFFC107',
-      ));
+      result.add(
+        SellerBadge(title: 'Top Seller', icon: 'star', color: '0xFFFFC107'),
+      );
     }
-    
+
     if (respondsQuickly) {
-      result.add(SellerBadge(
-        title: 'Fast Response',
-        icon: 'bolt',
-        color: '0xFF2196F3',
-      ));
+      result.add(
+        SellerBadge(title: 'Fast Response', icon: 'bolt', color: '0xFF2196F3'),
+      );
     }
-    
+
     if (isReliable) {
-      result.add(SellerBadge(
-        title: 'Reliable',
-        icon: 'check_circle',
-        color: '0xFF4CAF50',
-      ));
+      result.add(
+        SellerBadge(
+          title: 'Reliable',
+          icon: 'check_circle',
+          color: '0xFF4CAF50',
+        ),
+      );
     }
-    
+
     return result;
   }
 
@@ -109,7 +109,9 @@ class FarmerStats {
       averageRating: (data['average_rating'] ?? 0.0).toDouble(),
       fulfillmentRate: (data['fulfillment_rate'] ?? 0.0).toDouble(),
       responseTime: (data['response_time'] ?? 0.0).toDouble(),
-      memberSince: DateTime.parse(data['member_since'] ?? DateTime.now().toIso8601String()),
+      memberSince: DateTime.parse(
+        data['member_since'] ?? DateTime.now().toIso8601String(),
+      ),
       bio: data['bio'],
       specialties: List<String>.from(data['specialties'] ?? []),
       isVerified: data['is_verified'] ?? false,
@@ -142,11 +144,7 @@ class FarmerStats {
 class SellerBadge {
   final String title;
   final String icon;
-  final String color;  // Hex color string
+  final String color; // Hex color string
 
-  SellerBadge({
-    required this.title,
-    required this.icon,
-    required this.color,
-  });
+  SellerBadge({required this.title, required this.icon, required this.color});
 }

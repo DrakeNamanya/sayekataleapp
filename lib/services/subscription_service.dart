@@ -27,8 +27,8 @@ class SubscriptionService {
       );
 
       // Check if it's SME directory subscription and is active
-      return subscription.type == SubscriptionType.smeDirectory && 
-             subscription.isActive;
+      return subscription.type == SubscriptionType.smeDirectory &&
+          subscription.isActive;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error checking subscription: $e');
@@ -39,7 +39,10 @@ class SubscriptionService {
 
   /// Get user's current active subscription
   /// Uses userId as document ID for direct lookup
-  Future<Subscription?> getActiveSubscription(String userId, SubscriptionType type) async {
+  Future<Subscription?> getActiveSubscription(
+    String userId,
+    SubscriptionType type,
+  ) async {
     try {
       // Direct document lookup using userId
       final docSnapshot = await _firestore
@@ -56,7 +59,7 @@ class SubscriptionService {
 
       // Verify it's the correct type and is active
       if (subscription.type != type) return null;
-      
+
       return subscription.isActive ? subscription : null;
     } catch (e) {
       if (kDebugMode) {
@@ -150,7 +153,10 @@ class SubscriptionService {
   }
 
   /// Activate pending subscription (after payment confirmation)
-  Future<void> activateSubscription(String subscriptionId, String paymentReference) async {
+  Future<void> activateSubscription(
+    String subscriptionId,
+    String paymentReference,
+  ) async {
     try {
       await _firestore.collection('subscriptions').doc(subscriptionId).update({
         'status': 'active',
@@ -204,7 +210,9 @@ class SubscriptionService {
       await _populateSMEProducts(contacts);
 
       // Sort by name in memory
-      contacts.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      contacts.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
 
       if (kDebugMode) {
         debugPrint('✅ Fetched ${contacts.length} SME contacts with products');
@@ -262,7 +270,9 @@ class SubscriptionService {
         );
 
         if (kDebugMode) {
-          debugPrint('  • ${contact.name}: ${productSet.length} unique products');
+          debugPrint(
+            '  • ${contact.name}: ${productSet.length} unique products',
+          );
         }
       } catch (e) {
         if (kDebugMode) {
@@ -298,7 +308,12 @@ class SubscriptionService {
       final querySnapshot = await query.get();
 
       var contacts = querySnapshot.docs
-          .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map(
+            (doc) => SMEContact.fromFirestore(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ),
+          )
           .toList();
 
       // Apply search query filter (in-memory)
@@ -306,16 +321,18 @@ class SubscriptionService {
         contacts = contacts.where((contact) {
           final query = searchQuery.toLowerCase();
           return contact.name.toLowerCase().contains(query) ||
-                 contact.phone.contains(query) ||
-                 contact.email.toLowerCase().contains(query) ||
-                 contact.district.toLowerCase().contains(query);
+              contact.phone.contains(query) ||
+              contact.email.toLowerCase().contains(query) ||
+              contact.district.toLowerCase().contains(query);
         }).toList();
       }
 
       // Apply product filter (in-memory)
       if (product != null && product.isNotEmpty && product != 'All') {
         contacts = contacts.where((contact) {
-          return contact.products.any((p) => p.toLowerCase().contains(product.toLowerCase()));
+          return contact.products.any(
+            (p) => p.toLowerCase().contains(product.toLowerCase()),
+          );
         }).toList();
       }
 
@@ -340,10 +357,10 @@ class SubscriptionService {
         .orderBy('created_at', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Subscription.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => Subscription.fromFirestore(doc.data(), doc.id))
+              .toList();
+        });
   }
 
   /// Check and update expired subscriptions
@@ -361,7 +378,9 @@ class SubscriptionService {
       }
 
       if (kDebugMode) {
-        debugPrint('✅ Updated ${querySnapshot.docs.length} expired subscriptions');
+        debugPrint(
+          '✅ Updated ${querySnapshot.docs.length} expired subscriptions',
+        );
       }
     } catch (e) {
       if (kDebugMode) {

@@ -43,8 +43,8 @@ class Subscription {
 
   /// Check if subscription is currently active
   bool get isActive {
-    return status == SubscriptionStatus.active && 
-           DateTime.now().isBefore(endDate);
+    return status == SubscriptionStatus.active &&
+        DateTime.now().isBefore(endDate);
   }
 
   /// Days remaining in subscription
@@ -72,8 +72,8 @@ class Subscription {
       paymentMethod: data['payment_method'] ?? '',
       paymentReference: data['payment_reference'],
       createdAt: (data['created_at'] as Timestamp).toDate(),
-      cancelledAt: data['cancelled_at'] != null 
-          ? (data['cancelled_at'] as Timestamp).toDate() 
+      cancelledAt: data['cancelled_at'] != null
+          ? (data['cancelled_at'] as Timestamp).toDate()
           : null,
     );
   }
@@ -90,8 +90,8 @@ class Subscription {
       'payment_method': paymentMethod,
       'payment_reference': paymentReference,
       'created_at': Timestamp.fromDate(createdAt),
-      'cancelled_at': cancelledAt != null 
-          ? Timestamp.fromDate(cancelledAt!) 
+      'cancelled_at': cancelledAt != null
+          ? Timestamp.fromDate(cancelledAt!)
           : null,
     };
   }
@@ -155,8 +155,9 @@ class SMEContact {
       subCounty: subCountyValue,
       village: villageValue,
       // Products will be populated separately from order history
-      products: [], 
-      registeredAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      products: [],
+      registeredAt:
+          (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isVerified: data['is_verified'] ?? false,
       profileImage: data['profile_image'],
     );

@@ -5,10 +5,7 @@ import '../../services/admin_service.dart';
 class AnalyticsScreen extends StatefulWidget {
   final AdminUser adminUser;
 
-  const AnalyticsScreen({
-    super.key,
-    required this.adminUser,
-  });
+  const AnalyticsScreen({super.key, required this.adminUser});
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -66,12 +63,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatCard('Total Users', _stats!['total_users'],
-                        Icons.people, Colors.blue),
-                    _buildStatCard('Total Products', _stats!['total_products'],
-                        Icons.inventory, Colors.green),
-                    _buildStatCard('Total Orders', _stats!['total_orders'],
-                        Icons.shopping_cart, Colors.orange),
+                    _buildStatCard(
+                      'Total Users',
+                      _stats!['total_users'],
+                      Icons.people,
+                      Colors.blue,
+                    ),
+                    _buildStatCard(
+                      'Total Products',
+                      _stats!['total_products'],
+                      Icons.inventory,
+                      Colors.green,
+                    ),
+                    _buildStatCard(
+                      'Total Orders',
+                      _stats!['total_orders'],
+                      Icons.shopping_cart,
+                      Colors.orange,
+                    ),
                     _buildStatCard(
                       'Total Revenue',
                       'UGX ${_stats!['total_revenue']?.toStringAsFixed(0) ?? '0'}',
@@ -81,16 +90,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(height: 24),
                     const Text(
                       'User Breakdown',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    _buildStatCard('SHG Members', _stats!['shg_count'],
-                        Icons.groups, Colors.teal),
-                    _buildStatCard('PSA Partners', _stats!['psa_count'],
-                        Icons.store, Colors.indigo),
-                    _buildStatCard('Customers', _stats!['customer_count'],
-                        Icons.person, Colors.cyan),
+                    _buildStatCard(
+                      'SHG Members',
+                      _stats!['shg_count'],
+                      Icons.groups,
+                      Colors.teal,
+                    ),
+                    _buildStatCard(
+                      'PSA Partners',
+                      _stats!['psa_count'],
+                      Icons.store,
+                      Colors.indigo,
+                    ),
+                    _buildStatCard(
+                      'Customers',
+                      _stats!['customer_count'],
+                      Icons.person,
+                      Colors.cyan,
+                    ),
                   ],
                 ),
               ),
@@ -99,7 +122,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildStatCard(
-      String title, dynamic value, IconData icon, Color color) {
+    String title,
+    dynamic value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -110,10 +137,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         title: Text(title),
         trailing: Text(
           value.toString(),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
     );
