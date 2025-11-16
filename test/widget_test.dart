@@ -1,30 +1,25 @@
-// This is a basic Flutter widget test.
+// Basic smoke test for SayeKatale app
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// This test verifies that the app initializes without crashing.
+// More comprehensive tests should be added as the app evolves.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:poultry_link/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App initialization smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
+    // This verifies the app can initialize without crashing
     await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    
+    // Verify the app widget tree is built successfully
+    // We don't check for specific text since the initial screen
+    // depends on authentication state and may vary
+    expect(find.byType(MyApp), findsOneWidget);
+    
+    // Note: We don't use pumpAndSettle() because Firebase and other
+    // async services create continuous timers that prevent settling.
+    // This basic test confirms the app can initialize its widget tree.
   });
 }
