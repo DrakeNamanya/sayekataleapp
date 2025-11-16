@@ -141,7 +141,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
           color: isDisabled
               ? Colors.grey.shade100
               : isSelected
-                  ? color.withOpacity(0.1)
+                  ? color.withValues(alpha: 0.1)
                   : Colors.white,
           border: Border.all(
             color: isDisabled
@@ -163,7 +163,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                     ? Colors.grey.shade300
                     : isSelected
                         ? color
-                        : color.withOpacity(0.2),
+                        : color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
