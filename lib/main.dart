@@ -9,6 +9,7 @@ import 'config/environment.dart';
 import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/app_loader_screen.dart';
 // Temporarily commented out - has cart issues to fix later
 // import 'screens/customer/customer_home_screen.dart';
 // import 'screens/farmer/farmer_dashboard_screen.dart';
@@ -153,6 +154,7 @@ class MyApp extends StatelessWidget {
             .light, // Default to light mode, user can change in settings
         home: const SplashScreen(),
         routes: {
+          '/app-loader': (context) => const AppLoaderScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/shg-dashboard': (context) =>
               const SHGDashboardScreen(), // Farmer (SHG)

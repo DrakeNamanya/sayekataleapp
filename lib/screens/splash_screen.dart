@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
@@ -142,28 +143,34 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateToNextScreen() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    if (authProvider.isAuthenticated && authProvider.currentUser != null) {
-      // Navigate based on user role
-      String route;
-      switch (authProvider.currentUser!.role) {
-        case UserRole.shg:
-          route = '/shg-dashboard';
-          break;
-        case UserRole.sme:
-          route = '/sme-dashboard';
-          break;
-        case UserRole.psa:
-          route = '/psa-dashboard';
-          break;
-        default:
-          route = '/shg-dashboard';
+      if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+        // Navigate based on user role
+        String route;
+        switch (authProvider.currentUser!.role) {
+          case UserRole.shg:
+            route = '/shg-dashboard';
+            break;
+          case UserRole.sme:
+            route = '/sme-dashboard';
+            break;
+          case UserRole.psa:
+            route = '/psa-dashboard';
+            break;
+          default:
+            route = '/shg-dashboard';
+        }
+        Navigator.of(context).pushReplacementNamed(route);
+      } else {
+        // Navigate to app loader which will verify Firebase and show onboarding
+        Navigator.of(context).pushReplacementNamed('/app-loader');
       }
-      Navigator.of(context).pushReplacementNamed(route);
-    } else {
-      // Navigate to onboarding
-      Navigator.of(context).pushReplacementNamed('/onboarding');
+    } catch (e) {
+      // If anything fails, go to app loader with error handling
+      debugPrint('❌ Navigation error: $e');
+      Navigator.of(context).pushReplacementNamed('/app-loader');
     }
   }
 
@@ -413,9 +420,7 @@ class _SplashScreenState extends State<SplashScreen>
                         // Continue Button
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(
-                              context,
-                            ).pushReplacementNamed('/onboarding');
+                            _navigateToNextScreen();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primary,
