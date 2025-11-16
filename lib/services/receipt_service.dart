@@ -44,7 +44,7 @@ class ReceiptService {
         buyerId: order.buyerId,
         buyerName: order.buyerName,
         sellerId: order.sellerId,
-        sellerName: order.sellerName ?? order.farmerName ?? 'Seller',
+        sellerName: order.sellerName,
         items: receiptItems,
         totalAmount: order.totalAmount,
         paymentMethod: order.paymentMethod.toString().split('.').last,
