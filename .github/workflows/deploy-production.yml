@@ -1,344 +1,243 @@
-```yaml
-name: Deploy to Production
+name: Build and Deploy Production
 
 on:
   push:
     branches: [ production, main ]
     tags:
-      - 'v*.*.*'
+      - 'v*'
   workflow_dispatch:
 
 env:
   FLUTTER_VERSION: '3.35.4'
+  JAVA_VERSION: '17'
 
 jobs:
+  # ========================================
+  # Test Job - Run tests before building
+  # ========================================
   test:
     name: Run Tests
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-      
-      - name: Install dependencies
-        run: flutter pub get
-      
-      - name: Analyze code
-        run: flutter analyze
-      
-      - name: Run tests
-        run: flutter test
-
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: ${{ env.JAVA_VERSION }}
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Run analyzer
+      run: flutter analyze
+    
+    - name: Run tests
+      run: flutter test
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test-results/
+  
+  # ========================================
+  # Build APK Job - Production release
+  # ========================================
   build-apk:
-    name: Build APK (Universal)
+    name: Build Production APK
     needs: test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production' || startsWith(github.ref, 'refs/tags/v')
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-      
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      
-      - name: Install dependencies
-        run: flutter pub get
-      
-      - name: Decode Android keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-key.jks
-      
-      - name: Create key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=release-key.jks
-          EOF
-      
-      - name: Copy google-services.json
-        run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
-      
-      - name: Build APK (Universal)
-        run: |
-          flutter build apk --release \
-            --dart-define=PRODUCTION=true \
-            --dart-define=PAWAPAY_API_TOKEN=${{ secrets.PAWAPAY_API_TOKEN }} \
-            --dart-define=PAWAPAY_DEPOSIT_CALLBACK=${{ secrets.PAWAPAY_DEPOSIT_CALLBACK }} \
-            --dart-define=PAWAPAY_WITHDRAWAL_CALLBACK=${{ secrets.PAWAPAY_WITHDRAWAL_CALLBACK }} \
-            --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }} \
-            --dart-define=FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }} \
-            --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-      
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: ${{ env.JAVA_VERSION }}
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Decode Android keystore
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > android/release-key.jks
+        echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > android/key.properties
+        echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=release" >> android/key.properties
+        echo "storeFile=../release-key.jks" >> android/key.properties
+    
+    - name: Decode google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+    
+    - name: Build APK (Universal)
+      run: |
+        flutter build apk --release \
+          --dart-define=PRODUCTION=true \
+          --dart-define=PAWAPAY_API_TOKEN=${{ secrets.PAWAPAY_API_TOKEN }} \
+          --dart-define=PAWAPAY_DEPOSIT_CALLBACK=${{ secrets.PAWAPAY_DEPOSIT_CALLBACK }} \
+          --dart-define=PAWAPAY_WITHDRAWAL_CALLBACK=${{ secrets.PAWAPAY_WITHDRAWAL_CALLBACK }} \
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
+    
+    - name: Build APK (Split per ABI)
+      run: |
+        flutter build apk --release --split-per-abi \
+          --dart-define=PRODUCTION=true \
+          --dart-define=PAWAPAY_API_TOKEN=${{ secrets.PAWAPAY_API_TOKEN }} \
+          --dart-define=PAWAPAY_DEPOSIT_CALLBACK=${{ secrets.PAWAPAY_DEPOSIT_CALLBACK }} \
+          --dart-define=PAWAPAY_WITHDRAWAL_CALLBACK=${{ secrets.PAWAPAY_WITHDRAWAL_CALLBACK }} \
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
+    
+    - name: Get version from pubspec
+      id: version
+      run: |
+        VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "App version: $VERSION"
+    
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk-release-${{ steps.version.outputs.VERSION }}
+        path: |
+          build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          build/app/outputs/flutter-apk/app-x86_64-release.apk
+    
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          build/app/outputs/flutter-apk/app-x86_64-release.apk
+        name: Release ${{ steps.version.outputs.VERSION }}
+        body: |
+          ## SayeKatale v${{ steps.version.outputs.VERSION }}
+          
+          ### What's New
+          - See [CHANGELOG.md](CHANGELOG.md) for details
+          
+          ### Downloads
+          - **Universal APK**: Works on all devices (larger file)
+          - **ARM64**: For modern Android devices (64-bit)
+          - **ARMv7**: For older Android devices (32-bit)
+          - **x86_64**: For Intel-based devices
+          
+          ### Installation
+          1. Download the appropriate APK for your device
+          2. Enable "Install from Unknown Sources" in Settings
+          3. Install the APK
+          4. Grant necessary permissions
+          
+          ### Requirements
+          - Android 5.0 (Lollipop) or higher
+          - Internet connection
+          - Mobile money account (for payments)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  # ========================================
+  # Build AAB Job - For Play Store
+  # ========================================
   build-aab:
     name: Build App Bundle (AAB)
     needs: test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production' || startsWith(github.ref, 'refs/tags/v')
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-      
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      
-      - name: Install dependencies
-        run: flutter pub get
-      
-      - name: Decode Android keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-key.jks
-      
-      - name: Create key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=release-key.jks
-          EOF
-      
-      - name: Copy google-services.json
-        run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
-      
-      - name: Build App Bundle
-        run: |
-          flutter build appbundle --release \
-            --dart-define=PRODUCTION=true \
-            --dart-define=PAWAPAY_API_TOKEN=${{ secrets.PAWAPAY_API_TOKEN }} \
-            --dart-define=PAWAPAY_DEPOSIT_CALLBACK=${{ secrets.PAWAPAY_DEPOSIT_CALLBACK }} \
-            --dart-define=PAWAPAY_WITHDRAWAL_CALLBACK=${{ secrets.PAWAPAY_WITHDRAWAL_CALLBACK }} \
-            --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }} \
-            --dart-define=FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }} \
-            --dart-define=FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-      
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: ${{ env.JAVA_VERSION }}
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Decode Android keystore
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > android/release-key.jks
+        echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > android/key.properties
+        echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+        echo "keyAlias=release" >> android/key.properties
+        echo "storeFile=../release-key.jks" >> android/key.properties
+    
+    - name: Decode google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+    
+    - name: Build App Bundle
+      run: |
+        flutter build appbundle --release \
+          --dart-define=PRODUCTION=true \
+          --dart-define=PAWAPAY_API_TOKEN=${{ secrets.PAWAPAY_API_TOKEN }} \
+          --dart-define=PAWAPAY_DEPOSIT_CALLBACK=${{ secrets.PAWAPAY_DEPOSIT_CALLBACK }} \
+          --dart-define=PAWAPAY_WITHDRAWAL_CALLBACK=${{ secrets.PAWAPAY_WITHDRAWAL_CALLBACK }} \
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
+    
+    - name: Upload AAB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: aab-release
+        path: build/app/outputs/bundle/release/app-release.aab
 
-  release:
-    name: Create GitHub Release
+  # ========================================
+  # Notify Job - Send notifications
+  # ========================================
+  notify:
+    name: Send Notifications
     needs: [build-apk, build-aab]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: always() && (github.ref == 'refs/heads/production' || startsWith(github.ref, 'refs/tags/v'))
     
     steps:
-      - name: Download APK artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: app-release-apk
-      
-      - name: Download AAB artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: app-release-aab
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            app-release.apk
-            app-release.aab
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-#### Step 4: Commit the Workflow
-1. Scroll to bottom of page
-2. Add commit message: "Add CI/CD production deployment workflow"
-3. Click **"Commit new file"**
-
----
-
-### Method 2: Via Git Command Line (Alternative)
-
-If you have a GitHub Personal Access Token with `workflow` scope:
-
-```bash
-# Navigate to your local repository
-cd /path/to/sayekataleapp
-
-# Pull the latest changes
-git pull origin main
-
-# Add the workflow file
-mkdir -p .github/workflows
-cat > .github/workflows/deploy-production.yml << 'EOF'
-# [Paste the workflow YAML content here]
-EOF
-
-# Commit and push with token
-git add .github/workflows/deploy-production.yml
-git commit -m "Add CI/CD production deployment workflow"
-
-# Push with token (replace YOUR_TOKEN)
-git push https://YOUR_TOKEN@github.com/DrakeNamanya/sayekataleapp.git main
-```
-
----
-
-### Method 3: Copy from Sandbox File
-
-The complete workflow file is available at:
-```
-/home/user/flutter_app/.github/workflows/deploy-production.yml
-```
-
-You can:
-1. Download this file from the sandbox
-2. Upload it to your repository via GitHub UI
-3. Or copy its contents to create the workflow
-
----
-
-## Required GitHub Secrets
-
-Before the workflow can run successfully, you need to add these secrets to your repository:
-
-### Navigate to Secrets:
-1. Go to: https://github.com/DrakeNamanya/sayekataleapp/settings/secrets/actions
-2. Click **"New repository secret"** for each:
-
-### Required Secrets (12 total):
-
-#### PawaPay Configuration
-- `PAWAPAY_API_TOKEN` - Production PawaPay API token
-- `PAWAPAY_DEPOSIT_CALLBACK` - Production deposit webhook URL
-- `PAWAPAY_WITHDRAWAL_CALLBACK` - Production withdrawal webhook URL
-
-#### API Configuration
-- `API_BASE_URL` - Production API base URL (e.g., https://api.sayekatale.com)
-
-#### Firebase Configuration
-- `FIREBASE_API_KEY` - Firebase API key
-- `FIREBASE_MESSAGING_SENDER_ID` - Firebase Cloud Messaging sender ID
-- `GOOGLE_SERVICES_JSON` - Content of google-services.json file
-
-#### Android Signing
-- `ANDROID_KEYSTORE_BASE64` - Base64-encoded keystore file
-  ```bash
-  # Generate with:
-  base64 -i android/app/release-key.jks | tr -d '\n'
-  ```
-- `KEYSTORE_PASSWORD` - Keystore password
-- `KEY_PASSWORD` - Key password
-- `KEY_ALIAS` - Key alias
-- `STORE_FILE` - Value: `release-key.jks`
-
----
-
-## Testing the Workflow
-
-### Automatic Trigger
-The workflow will automatically run when you:
-- Push to `main` or `production` branch
-- Create a tag like `v1.0.0`
-
-### Manual Trigger
-1. Go to: https://github.com/DrakeNamanya/sayekataleapp/actions
-2. Click on **"Deploy to Production"** workflow
-3. Click **"Run workflow"**
-4. Select branch and click **"Run workflow"**
-
----
-
-## Workflow File Location
-
-The workflow file should be added at:
-```
-.github/workflows/deploy-production.yml
-```
-
-The file is already prepared in your sandbox at:
-```
-/home/user/flutter_app/.github/workflows/deploy-production.yml
-```
-
----
-
-## What the Workflow Does
-
-### Job 1: Test
-- Runs `flutter analyze`
-- Runs `flutter test`
-- Ensures code quality before building
-
-### Job 2: Build APK
-- Builds universal APK for distribution
-- Injects production environment variables
-- Uses signed keystore
-- Uploads APK as artifact
-
-### Job 3: Build AAB
-- Builds App Bundle for Play Store
-- Optimized for store distribution
-- Uses signed keystore
-- Uploads AAB as artifact
-
-### Job 4: Release (on tags)
-- Creates GitHub release
-- Attaches APK and AAB files
-- Triggered by version tags (v1.0.0)
-
----
-
-## Next Steps After Adding Workflow
-
-1. ✅ Add the workflow file to repository
-2. ⏳ Add all 12 required GitHub Secrets
-3. ⏳ Test the workflow with manual trigger
-4. ⏳ Create a version tag to test release: `git tag v1.0.1 && git push origin v1.0.1`
-
----
-
-## Support
-
-If you encounter issues:
-- Check workflow runs in Actions tab
-- Review error messages in job logs
-- Verify all secrets are correctly set
-- Ensure keystore file is valid
-
----
-
-**Status**: Workflow file ready to be added  
-**Repository**: https://github.com/DrakeNamanya/sayekataleapp  
-**File Path**: `.github/workflows/deploy-production.yml`  
-**Source File**: `/home/user/flutter_app/.github/workflows/deploy-production.yml`
+    - name: Build Success Notification
+      if: needs.build-apk.result == 'success' && needs.build-aab.result == 'success'
+      run: |
+        echo "✅ Production build completed successfully!"
+        echo "APK and AAB files are ready for deployment."
+    
+    - name: Build Failure Notification
+      if: needs.build-apk.result == 'failure' || needs.build-aab.result == 'failure'
+      run: |
+        echo "❌ Production build failed!"
+        echo "Check the logs for details."
+        exit 1
