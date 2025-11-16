@@ -74,9 +74,9 @@ class DebugLogger {
       if (title != null) {
         debugPrint('\n${'=' * 60}');
         debugPrint('  $title');
-        debugPrint('${'=' * 60}');
+        debugPrint('=' * 60);
       } else {
-        debugPrint('${'─' * 60}');
+        debugPrint('─' * 60);
       }
     }
   }
