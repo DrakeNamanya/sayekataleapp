@@ -20,8 +20,8 @@ BUILD_TYPE="apk"  # Options: apk, appbundle (aab)
 API_BASE_URL="https://pawapay-webhook-713040690605.us-central1.run.app"
 PAWAPAY_CALLBACK="https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook"
 
-# PawaPay API Token (Sandbox - Replace with production token later)
-PAWAPAY_API_TOKEN="eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4NTA5MjM2LCJpYXQiOjE3NjI5NzY0MzYsInBtIjoiREFGLFBBRiIsImp0aSI6ImE0NjQyZjUyLWYwODYtNGJjNy1hMGY3LTQ2MmJiNDgyYzM1MSJ9.zyFdgBTQ-dj_NiR15ChPjLM6kYjH3ZB4J9G8ye4TKiOjPgdXsJ53U08-WspwZ8JtjXua8FGuIf4VhQVcmVRjHQ"
+# PawaPay API Token (Updated November 16, 2024)
+PAWAPAY_API_TOKEN="eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4ODY1ODk1LCJpYXQiOjE3NjMzMzMwOTUsInBtIjoiREFGLFBBRiIsImp0aSI6IjI3OWJlNGZlLTk1ZTgtNGYwMy1iNmU3LWNhZGQ0N2MwODQ0NCJ9.gEZrCzNiIsln3stFyfe6CGAcbdKCKBsbiA07yAalylNmRSupCdxek6DQWO_mOQGxAnP4CO7G-Rxzg-QkOdUb6Q"
 
 # AdMob Credentials (from Phase 2)
 ADMOB_APP_ID="ca-app-pub-6557386913540479~2174503706"

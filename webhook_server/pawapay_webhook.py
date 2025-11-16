@@ -47,7 +47,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # PawaPay API token for signature verification (optional but recommended)
-PAWAPAY_API_TOKEN = os.getenv('PAWAPAY_API_TOKEN', 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4NTA5MjM2LCJpYXQiOjE3NjI5NzY0MzYsInBtIjoiREFGLFBBRiIsImp0aSI6ImE0NjQyZjUyLWYwODYtNGJjNy1hMGY3LTQ2MmJiNDgyYzM1MSJ9.zyFdgBTQ-dj_NiR15ChPjLM6kYjH3ZB4J9G8ye4TKiOjPgdXsJ53U08-WspwZ8JtjXua8FGuIf4VhQVcmVRjHQ')
+PAWAPAY_API_TOKEN = os.getenv('PAWAPAY_API_TOKEN', 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc4ODY1ODk1LCJpYXQiOjE3NjMzMzMwOTUsInBtIjoiREFGLFBBRiIsImp0aSI6IjI3OWJlNGZlLTk1ZTgtNGYwMy1iNmU3LWNhZGQ0N2MwODQ0NCJ9.gEZrCzNiIsln3stFyfe6CGAcbdKCKBsbiA07yAalylNmRSupCdxek6DQWO_mOQGxAnP4CO7G-Rxzg-QkOdUb6Q')
 
 
 def verify_signature(payload, signature, token):
