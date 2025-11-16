@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'firebase_options.dart';
+import 'config/environment.dart';
 import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -25,7 +26,41 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     
-    // Initialize Firebase with timeout protection
+    // ========================================
+    // PHASE 1: Environment Validation
+    // ========================================
+    if (kDebugMode) {
+      debugPrint('========================================');
+      debugPrint('🔧 SayeKatale App Initialization');
+      debugPrint('========================================');
+    }
+    
+    // Validate environment configuration
+    try {
+      Environment.validateEnvironment();
+      if (kDebugMode) {
+        Environment.printConfig();
+        debugPrint('✅ Environment validation passed');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Environment validation failed: $e');
+        debugPrint('⚠️ App may not function correctly without proper configuration');
+      }
+      // In development, continue despite validation failure
+      // In production, this would throw and prevent app startup
+      if (Environment.isProduction) {
+        rethrow;
+      }
+    }
+    
+    // ========================================
+    // PHASE 2: Firebase Initialization
+    // ========================================
+    if (kDebugMode) {
+      debugPrint('🔄 Initializing Firebase...');
+    }
+    
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     ).timeout(
@@ -38,16 +73,31 @@ void main() async {
       },
     );
     
+    if (kDebugMode) {
+      debugPrint('✅ Firebase initialized successfully');
+    }
+    
     // Test Firebase connection (only in debug mode)
     if (kDebugMode) {
       await FirebaseTest.runAllTests();
     }
     
-    // Initialize Hive for local storage
+    // ========================================
+    // PHASE 3: Local Storage Initialization
+    // ========================================
+    if (kDebugMode) {
+      debugPrint('🔄 Initializing Hive local storage...');
+    }
+    
     await Hive.initFlutter();
     
-    // Initialize Google Mobile Ads SDK (Android platform only)
-    // Web platform: AdMob not supported, gracefully skipped
+    if (kDebugMode) {
+      debugPrint('✅ Hive initialized successfully');
+    }
+    
+    // ========================================
+    // PHASE 4: AdMob Initialization (Android only)
+    // ========================================
     if (!kIsWeb) {
       if (kDebugMode) {
         debugPrint('🔄 Initializing Google Mobile Ads SDK...');
@@ -62,6 +112,12 @@ void main() async {
       if (kDebugMode) {
         debugPrint('ℹ️ Skipping AdMob initialization on Web platform (not supported)');
       }
+    }
+    
+    if (kDebugMode) {
+      debugPrint('========================================');
+      debugPrint('🚀 App initialization complete!');
+      debugPrint('========================================');
     }
     
   } catch (e) {

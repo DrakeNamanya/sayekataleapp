@@ -1,0 +1,261 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // Helper Functions
+    // ========================================
+    
+    /// Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /// Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    /// Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    /// Check if user is the order buyer
+    function isOrderBuyer(orderId) {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/orders/$(orderId)).data.buyerId == request.auth.uid;
+    }
+    
+    /// Check if user is the order seller
+    function isOrderSeller(orderId) {
+      return isAuthenticated() &&
+             (get(/databases/$(database)/documents/orders/$(orderId)).data.farmerId == request.auth.uid ||
+              get(/databases/$(database)/documents/orders/$(orderId)).data.seller_id == request.auth.uid);
+    }
+    
+    // ========================================
+    // Users Collection
+    // ========================================
+    
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles (for marketplace)
+      allow read: if isAuthenticated();
+      
+      // Users can only update their own profile
+      // Cannot change role or critical fields
+      allow update: if isOwner(userId) &&
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.uid == resource.data.uid;
+      
+      // Only admins can create/delete users
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Products Collection
+    // ========================================
+    
+    match /products/{productId} {
+      // Anyone authenticated can read products
+      allow read: if isAuthenticated();
+      
+      // Only product owner or admin can update
+      allow update: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+      
+      // Authenticated users can create products
+      // Must set themselves as farmer
+      allow create: if isAuthenticated() && 
+                       request.resource.data.farmerId == request.auth.uid;
+      
+      // Only owner or admin can delete
+      allow delete: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+    }
+    
+    // ========================================
+    // Orders Collection
+    // ========================================
+    
+    match /orders/{orderId} {
+      // Users can read orders they're part of (buyer or seller)
+      allow read: if isAuthenticated() && 
+                     (resource.data.buyerId == request.auth.uid || 
+                      resource.data.farmerId == request.auth.uid ||
+                      resource.data.seller_id == request.auth.uid ||
+                      isAdmin());
+      
+      // Buyers can create orders
+      // Must set themselves as buyer
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyerId == request.auth.uid;
+      
+      // Buyers and sellers can update order status
+      allow update: if isAuthenticated() && 
+                       (resource.data.buyerId == request.auth.uid || 
+                        resource.data.farmerId == request.auth.uid ||
+                        resource.data.seller_id == request.auth.uid ||
+                        isAdmin());
+      
+      // Only admin can delete orders
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Receipts Collection
+    // ========================================
+    
+    match /receipts/{receiptId} {
+      // Users can read their own receipts (buyer or seller)
+      allow read: if isAuthenticated() && 
+                     (resource.data.buyerId == request.auth.uid || 
+                      resource.data.sellerId == request.auth.uid ||
+                      isAdmin());
+      
+      // Receipts are system-generated only
+      // Created by backend when order is confirmed
+      allow create: if false;
+      allow update: if false;
+      
+      // Only admin can delete receipts
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Wallets Collection
+    // ========================================
+    
+    match /wallets/{walletId} {
+      // Users can only read their own wallet
+      allow read: if isOwner(walletId) || isAdmin();
+      
+      // Wallet operations only through backend webhooks
+      // Direct client access is blocked for security
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Transactions Collection
+    // ========================================
+    
+    match /transactions/{transactionId} {
+      // Users can read their own transactions
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Transactions are system-generated only
+      // Created by backend webhooks
+      allow create: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Messages Collection
+    // ========================================
+    
+    match /messages/{messageId} {
+      // Users can read messages they're part of
+      allow read: if isAuthenticated() && 
+                     (resource.data.senderId == request.auth.uid || 
+                      resource.data.receiverId == request.auth.uid ||
+                      isAdmin());
+      
+      // Users can create messages
+      // Must set themselves as sender
+      allow create: if isAuthenticated() && 
+                       request.resource.data.senderId == request.auth.uid;
+      
+      // No updates or deletes (messages are immutable)
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Subscriptions Collection
+    // ========================================
+    
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscriptions
+      allow read: if isOwner(subscriptionId) || isAdmin();
+      
+      // Subscriptions are system-managed only
+      // Created/updated through payment processing
+      allow create: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Reviews Collection
+    // ========================================
+    
+    match /reviews/{reviewId} {
+      // Anyone authenticated can read reviews
+      allow read: if isAuthenticated();
+      
+      // Users can create reviews for orders they were part of
+      // Must set themselves as reviewer
+      allow create: if isAuthenticated() &&
+                       request.resource.data.reviewerId == request.auth.uid;
+      
+      // Users can update their own reviews (within limits)
+      // Cannot change reviewer, orderId, or revieweeId
+      allow update: if isAuthenticated() && 
+                       resource.data.reviewerId == request.auth.uid &&
+                       request.resource.data.reviewerId == resource.data.reviewerId &&
+                       request.resource.data.orderId == resource.data.orderId &&
+                       request.resource.data.revieweeId == resource.data.revieweeId;
+      
+      // Only admin can delete reviews
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Cart Items Collection
+    // ========================================
+    
+    match /cart_items/{cartItemId} {
+      // Users can read their own cart items
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Users can manage their own cart
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid;
+      
+      allow update: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+      
+      allow delete: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // ========================================
+    // Admin-Only Collections
+    // ========================================
+    
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /system_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // Default Deny All
+    // ========================================
+    
+    // Block access to any collection not explicitly defined above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

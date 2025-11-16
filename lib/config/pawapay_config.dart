@@ -1,15 +1,18 @@
+import 'environment.dart';
+
 /// PawaPay Mobile Money Configuration
 /// Contains API credentials and provider settings
+/// 
+/// SECURITY: Tokens and sensitive URLs are now loaded from environment variables.
+/// Build with: flutter build apk --dart-define=PAWAPAY_API_TOKEN=your_token
 class PawaPayConfig {
-  // API Token from PawaPay Dashboard
-  static const String apiToken = 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjEyNTcwIiwibWF2IjoiMSIsImV4cCI6MjA3ODY2MDUwMywiaWF0IjoxNzYzMTI3NzAzLCJwbSI6IkRBRixQQUYiLCJqdGkiOiIwZjI2ZTM3OC1mMGI4LTQ0NzYtOGM3Yi00NmI5NzQwYjZiNmUifQ.KIFo0EE6VrDEdLA3RaMb3B8v77Qk_96qQGzMz3mO89GVd67dxmkVL1XOejl4syfbxvA04kN3cpviwmIP-wtK5A';
+  // API Token from Environment Variables (SECURE)
+  static String get apiToken => Environment.pawaPayToken;
   
-  // Webhook URLs (configured and running)
-  static const String depositCallbackUrl = 
-      'https://8080-i25ra390rl3tp6c83ufw7-c81df28e.sandbox.novita.ai/api/pawapay/deposit/callback';
+  // Webhook URLs from Environment Variables
+  static String get depositCallbackUrl => Environment.pawaPayDepositCallback;
   
-  static const String payoutCallbackUrl = 
-      'https://8080-i25ra390rl3tp6c83ufw7-c81df28e.sandbox.novita.ai/api/pawapay/withdrawal/callback';
+  static String get payoutCallbackUrl => Environment.pawaPayWithdrawalCallback;
   
   // Mobile Money Providers (Correspondent IDs)
   static const String mtnUganda = 'MTN_MOMO_UGA';

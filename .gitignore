@@ -43,3 +43,40 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ========================================
+# Security - Environment Variables
+# ========================================
+# CRITICAL: Never commit these files!
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+*.env
+
+# Firebase private keys (should be in GitHub Secrets, not in repo)
+firebase-adminsdk-*.json
+google-services-production.json
+GoogleService-Info-production.plist
+
+# Android signing keys (should be in GitHub Secrets)
+*.jks
+*.keystore
+key.properties
+keystore.properties
+
+# iOS signing certificates (should be in GitHub Secrets)
+*.p12
+*.cer
+*.mobileprovision
+
+# API keys and secrets (if accidentally created)
+api_keys.dart
+secrets.dart
+config/secrets.dart
+
+# Temporary files from secret management
+*.tmp
+*.temp
+.secrets/

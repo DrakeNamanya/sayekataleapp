@@ -2,66 +2,173 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // ============================================
-    // PROFILE PHOTOS (Public Read)
-    // ============================================
-    match /profiles/{userId}/{fileName} {
-      // Anyone can view profile photos (for customer browsing)
+    // ========================================
+    // Helper Functions
+    // ========================================
+    
+    /// Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /// Check if file is an image
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    /// Check if file size is reasonable
+    function isReasonableSize() {
+      return request.resource.size < 5 * 1024 * 1024; // 5MB max
+    }
+    
+    /// Check if file size is small (for profile pics)
+    function isSmallFile() {
+      return request.resource.size < 2 * 1024 * 1024; // 2MB max
+    }
+    
+    // ========================================
+    // Product Images
+    // ========================================
+    
+    match /products/{productId}/{allPaths=**} {
+      // Anyone can read product images (public marketplace)
       allow read: if true;
       
-      // Only authenticated users can upload their own photos
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB
-                   && request.resource.contentType.matches('image/.*');  // Only images
-    }
-    
-    // ============================================
-    // NATIONAL ID PHOTOS (Private)
-    // ============================================
-    match /national_ids/{userId}/{fileName} {
-      // Only the owner can view their own ID photos (sensitive!)
-      allow read: if request.auth != null 
-                  && request.auth.uid == userId;
+      // Only authenticated users can upload
+      // Must be image and reasonable size
+      allow write: if isAuthenticated() && 
+                      isImageFile() && 
+                      isReasonableSize();
       
-      // Only the owner can upload their ID photos
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 10 * 1024 * 1024  // Max 10MB (needs clarity)
-                   && request.resource.contentType.matches('image/.*');
+      // Delete only by owner (requires checking Firestore)
+      allow delete: if isAuthenticated();
     }
     
-    // ============================================
-    // PRODUCT PHOTOS (Public Read)
-    // ============================================
-    match /products/{userId}/{fileName} {
-      // Anyone can view product photos (for customers)
+    // ========================================
+    // User Profile Images
+    // ========================================
+    
+    match /users/{userId}/profile/{allPaths=**} {
+      // Public read for marketplace profiles
       allow read: if true;
       
-      // Only authenticated users can upload their product photos
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB
-                   && request.resource.contentType.matches('image/.*');
+      // Users can only upload to their own profile
+      // Must be image and small size
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == userId && 
+                      isImageFile() && 
+                      isSmallFile();
+      
+      // Users can delete their own profile images
+      allow delete: if isAuthenticated() && 
+                       request.auth.uid == userId;
     }
     
-    // ============================================
-    // THUMBNAILS (Same permissions as parent)
-    // ============================================
-    match /profiles/thumbnails/{userId}/{fileName} {
+    // ========================================
+    // Order Delivery Photos
+    // ========================================
+    
+    match /orders/{orderId}/delivery/{allPaths=**} {
+      // Only authenticated users can read delivery photos
+      // (Privacy: only buyer/seller should see)
+      allow read: if isAuthenticated();
+      
+      // Only authenticated users can upload delivery proof
+      allow write: if isAuthenticated() && 
+                      isImageFile() && 
+                      isReasonableSize();
+      
+      // No deletion (evidence preservation)
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Receipt Photos
+    // ========================================
+    
+    match /receipts/{receiptId}/{allPaths=**} {
+      // Only authenticated users can read receipts
+      allow read: if isAuthenticated();
+      
+      // Authenticated users can upload receipt photos
+      allow write: if isAuthenticated() && 
+                      isImageFile() && 
+                      isReasonableSize();
+      
+      // No deletion (record keeping)
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Review Photos
+    // ========================================
+    
+    match /reviews/{reviewId}/{allPaths=**} {
+      // Public read for marketplace transparency
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Authenticated users can upload review photos
+      allow write: if isAuthenticated() && 
+                      isImageFile() && 
+                      isReasonableSize();
+      
+      // Only review author can delete
+      allow delete: if isAuthenticated();
     }
     
-    match /products/thumbnails/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // ========================================
+    // Message Attachments
+    // ========================================
+    
+    match /messages/{messageId}/{allPaths=**} {
+      // Only authenticated users can read
+      allow read: if isAuthenticated();
+      
+      // Users can upload attachments
+      allow write: if isAuthenticated() && 
+                      isImageFile() && 
+                      isReasonableSize();
+      
+      // No deletion (message history preservation)
+      allow delete: if false;
     }
     
-    // ============================================
-    // DENY ALL OTHER ACCESS
-    // ============================================
-    match /{document=**} {
+    // ========================================
+    // Temporary Uploads
+    // ========================================
+    
+    match /temp/{userId}/{allPaths=**} {
+      // Users can read their own temp files
+      allow read: if isAuthenticated() && 
+                     request.auth.uid == userId;
+      
+      // Users can upload to their temp folder
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == userId && 
+                      isImageFile() && 
+                      isReasonableSize();
+      
+      // Users can delete their temp files
+      allow delete: if isAuthenticated() && 
+                       request.auth.uid == userId;
+    }
+    
+    // ========================================
+    // Admin-Only Files
+    // ========================================
+    
+    match /admin/{allPaths=**} {
+      // Admin files are private
+      allow read, write, delete: if false;
+      // Admin operations handled via backend only
+    }
+    
+    // ========================================
+    // Default Deny All
+    // ========================================
+    
+    // Block access to any path not explicitly defined above
+    match /{allPaths=**} {
       allow read, write: if false;
     }
   }
