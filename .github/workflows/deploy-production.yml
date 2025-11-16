@@ -41,7 +41,10 @@ jobs:
     
     - name: Run analyzer
       run: flutter analyze --no-fatal-infos
-    
+
+    - name: Clean build cache
+      run: flutter clean
+
     - name: Run tests
       run: flutter test
     
