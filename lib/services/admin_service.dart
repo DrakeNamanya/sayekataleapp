@@ -403,7 +403,7 @@ class AdminService {
           )
           .fold(
             0.0,
-            (sum, o) => sum + ((o.data()['total_amount'] ?? 0.0).toDouble()),
+            (acc, o) => acc + ((o.data()['total_amount'] ?? 0.0).toDouble()),
           );
 
       // Complaints stats

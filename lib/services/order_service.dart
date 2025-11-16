@@ -173,7 +173,7 @@ class OrderService {
         // Calculate total for this farmer's items
         final double total = farmerItems.fold(
           0,
-          (sum, item) => sum + (item.price * item.quantity),
+          (acc, item) => acc + (item.price * item.quantity),
         );
 
         // Convert cart items to order items
@@ -880,7 +880,7 @@ class OrderService {
 
       return completedOrders.fold<double>(
         0.0,
-        (sum, order) => sum + order.totalAmount,
+        (acc, order) => acc + order.totalAmount,
       );
     } catch (e) {
       if (kDebugMode) {
@@ -906,7 +906,7 @@ class OrderService {
 
       return recentOrders.fold<double>(
         0.0,
-        (sum, order) => sum + order.totalAmount,
+        (acc, order) => acc + order.totalAmount,
       );
     } catch (e) {
       if (kDebugMode) {
@@ -932,7 +932,7 @@ class OrderService {
 
       return weeklyOrders.fold<double>(
         0.0,
-        (sum, order) => sum + order.totalAmount,
+        (acc, order) => acc + order.totalAmount,
       );
     } catch (e) {
       if (kDebugMode) {
@@ -1139,7 +1139,7 @@ class OrderService {
 
       return monthlyOrders.fold<double>(
         0.0,
-        (sum, order) => sum + order.totalAmount,
+        (acc, order) => acc + order.totalAmount,
       );
     } catch (e) {
       if (kDebugMode) {

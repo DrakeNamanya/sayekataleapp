@@ -26,11 +26,11 @@ class CartProvider with ChangeNotifier {
 
   /// Get total quantity of all items
   int get totalQuantity =>
-      _cartItems.fold(0, (sum, item) => sum + item.quantity);
+      _cartItems.fold(0, (acc, item) => acc + item.quantity);
 
   /// Calculate subtotal (sum of all item prices)
   double get subtotal =>
-      _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+      _cartItems.fold(0.0, (acc, item) => acc + item.totalPrice);
 
   /// Calculate total price (same as subtotal, no additional fees)
   double get total => subtotal;
@@ -299,6 +299,6 @@ class CartProvider with ChangeNotifier {
   double getSubtotalForFarmer(String farmerId) {
     return _cartItems
         .where((item) => item.farmerId == farmerId)
-        .fold(0.0, (sum, item) => sum + item.totalPrice);
+        .fold(0.0, (acc, item) => acc + item.totalPrice);
   }
 }
