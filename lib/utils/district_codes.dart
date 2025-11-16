@@ -1,9 +1,9 @@
-/// District Code Mapping for User ID Generation
-/// Source: districtinformation.xlsx (official district data)
-/// 
-/// This mapping ensures consistent 3-letter district codes for User IDs
-/// Format: ROLE + DISTRICT_CODE + NUMBER
-/// Example: SHGJIN025 (SHG user from JINJA, user #25)
+// District Code Mapping for User ID Generation
+// Source: districtinformation.xlsx (official district data)
+// 
+// This mapping ensures consistent 3-letter district codes for User IDs
+// Format: ROLE + DISTRICT_CODE + NUMBER
+// Example: SHGJIN025 (SHG user from JINJA, user #25)
 
 class DistrictCodes {
   /// Official district names from districtinformation.xlsx

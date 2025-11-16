@@ -1,10 +1,10 @@
-/// Uganda National ID Number (NIN) Validator
-/// Based on NIRA (National Identification & Registration Authority) specifications
-/// 
-/// NIN Format: 14 characters total
-/// - First character: 'C' (Citizen) or 'A' (Legal Foreign Resident)
-/// - Remaining 13 characters: Alphanumeric (Letters A-Z and Digits 0-9)
-/// - Example: CM12AB34CD56EF78 (Citizen) or AF98XY76ZW54QR32 (Foreign Resident)
+// Uganda National ID Number (NIN) Validator
+// Based on NIRA (National Identification & Registration Authority) specifications
+// 
+// NIN Format: 14 characters total
+// - First character: 'C' (Citizen) or 'A' (Legal Foreign Resident)
+// - Remaining 13 characters: Alphanumeric (Letters A-Z and Digits 0-9)
+// - Example: CM12AB34CD56EF78 (Citizen) or AF98XY76ZW54QR32 (Foreign Resident)
 
 class NINValidator {
   // Regular expression for NIN validation

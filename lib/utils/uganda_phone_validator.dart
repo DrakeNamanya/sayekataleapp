@@ -1,10 +1,10 @@
-/// Uganda Phone Number Validator
-/// 
-/// Validates Ugandan telephone numbers according to official specifications:
-/// - Country code: +256
-/// - National Significant Number (NSN): 9 digits
-/// - Mobile numbers start with 7 (e.g., 70, 71, 72, 73, 74, 75, 76, 77, 78, 79)
-/// - Format: +256 7XX XXX XXX or 07XX XXX XXX (domestic)
+// Uganda Phone Number Validator
+// 
+// Validates Ugandan telephone numbers according to official specifications:
+// - Country code: +256
+// - National Significant Number (NSN): 9 digits
+// - Mobile numbers start with 7 (e.g., 70, 71, 72, 73, 74, 75, 76, 77, 78, 79)
+// - Format: +256 7XX XXX XXX or 07XX XXX XXX (domestic)
 
 class UgandaPhoneValidator {
   // Mobile operator prefixes in Uganda

@@ -1,12 +1,12 @@
-/// Environment Configuration
-/// Manages environment-specific variables and secrets
-/// 
-/// Usage:
-/// Build with environment variables:
-/// flutter build apk --release \
-///   --dart-define=PRODUCTION=true \
-///   --dart-define=PAWAPAY_API_TOKEN=your_token \
-///   --dart-define=API_BASE_URL=https://api.sayekatale.com
+// Environment Configuration
+// Manages environment-specific variables and secrets
+// 
+// Usage:
+// Build with environment variables:
+// flutter build apk --release \
+//   --dart-define=PRODUCTION=true \
+//   --dart-define=PAWAPAY_API_TOKEN=your_token \
+//   --dart-define=API_BASE_URL=https://api.sayekatale.com
 
 class Environment {
   // ========================================

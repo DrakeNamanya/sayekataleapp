@@ -1,7 +1,7 @@
-/// Uganda Location Data Model
-/// Provides hierarchical location data structure for Uganda
-/// District -> Subcounty -> Parish -> Village
-/// Data source: Official Uganda administrative divisions (Complete Dataset)
+// Uganda Location Data Model
+// Provides hierarchical location data structure for Uganda
+// District -> Subcounty -> Parish -> Village
+// Data source: Official Uganda administrative divisions (Complete Dataset)
 
 class UgandaLocationData {
   // Complete hierarchical location data structure
