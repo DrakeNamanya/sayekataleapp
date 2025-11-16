@@ -197,7 +197,7 @@ class SubscriptionService {
           .get();
 
       final contacts = querySnapshot.docs
-          .map((doc) => SMEContact.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map((doc) => SMEContact.fromFirestore(doc.data(), doc.id))
           .toList();
 
       // Fetch products for each SME from their order history
