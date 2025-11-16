@@ -127,7 +127,8 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
+    // Auth provider available if needed for future use
+    // final authProvider = Provider.of<AuthProvider>(context);
 
     // Group items by farmer
     final itemsByFarmer = <String, List>{};
@@ -185,7 +186,7 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
 
                   // Items grouped by farmer
                   ...itemsByFarmer.entries.map((entry) {
-                    final farmerId = entry.key;
+                    // farmerId available from entry.key if needed
                     final items = entry.value;
                     final farmerName = items[0].farmerName;
                     final farmerTotal = items.fold(

@@ -21,7 +21,8 @@ class _SMECartScreenState extends State<SMECartScreen> {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
+    // Auth provider available if needed for future use
+    // final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       appBar: AppBar(

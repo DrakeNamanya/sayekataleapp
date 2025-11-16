@@ -68,10 +68,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    final authProvider = Provider.of<app_auth.AuthProvider>(
-      context,
-      listen: false,
-    );
+    // Auth provider available if needed
+    // final authProvider = Provider.of<app_auth.AuthProvider>(
+    //   context,
+    //   listen: false,
+    // );
 
     try {
       if (_isSignUpMode) {

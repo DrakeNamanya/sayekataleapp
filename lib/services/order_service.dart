@@ -142,9 +142,7 @@ class OrderService {
         final farmerItems = entry.value;
         final farmerName = farmerItems.first.farmerName;
 
-        // Fetch buyer and farmer profiles to get system IDs (national IDs)
-        String? buyerSystemId;
-        String? farmerSystemId;
+        // Fetch buyer and farmer profiles
         String farmerPhone = '';
 
         try {
