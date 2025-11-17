@@ -64,20 +64,24 @@ void main() async {
       debugPrint('🔄 Initializing Firebase...');
     }
 
+    // Initialize Firebase with longer timeout for slow networks
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     ).timeout(
-      const Duration(seconds: 10),
+      const Duration(seconds: 30),
       onTimeout: () {
-        if (kDebugMode) {
-          debugPrint('⚠️ Firebase initialization timeout - continuing anyway');
-        }
-        throw Exception('Firebase initialization timeout');
+        throw Exception('Firebase initialization timeout after 30 seconds');
       },
     );
 
     if (kDebugMode) {
       debugPrint('✅ Firebase initialized successfully');
+    }
+
+    // Verify Firebase app is accessible
+    final app = Firebase.app();
+    if (kDebugMode) {
+      debugPrint('✅ Firebase app verified: ${app.name}');
     }
 
     // Test Firebase connection (only in debug mode)
@@ -124,12 +128,14 @@ void main() async {
       debugPrint('🚀 App initialization complete!');
       debugPrint('========================================');
     }
-  } catch (e) {
-    // Log error but continue to show app
-    if (kDebugMode) {
-      debugPrint('❌ Initialization error: $e');
-    }
-    // Don't block app startup - Firebase might still work
+  } catch (e, stackTrace) {
+    // CRITICAL: If Firebase init fails, we must still run the app
+    // The App Loader Screen will detect this and show error UI
+    debugPrint('❌ CRITICAL: Initialization error: $e');
+    debugPrint('Stack trace: $stackTrace');
+    
+    // Run app anyway - App Loader will handle Firebase check
+    // This ensures user sees error message instead of crash
   }
 
   runApp(const MyApp());

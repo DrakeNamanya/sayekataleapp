@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../firebase_options.dart';
 import '../utils/app_theme.dart';
 import 'onboarding_screen.dart';
 
@@ -25,12 +27,30 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
 
   Future<void> _checkFirebaseAndNavigate() async {
     try {
-      // Wait a moment to ensure Firebase is fully initialized
+      // Wait a moment for any background initialization
       await Future.delayed(const Duration(milliseconds: 500));
       
-      // Verify Firebase is actually working
+      // Try to get Firebase app - if not initialized, initialize it now
+      try {
+        final app = Firebase.app();
+        debugPrint('✅ Firebase app already initialized: ${app.name}');
+      } catch (e) {
+        // Firebase not initialized in main() - initialize it now
+        debugPrint('⚠️ Firebase not initialized, initializing now...');
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        ).timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            throw Exception('Firebase initialization timeout after 30 seconds');
+          },
+        );
+        debugPrint('✅ Firebase initialized successfully in App Loader');
+      }
+      
+      // Verify Firebase is working
       final app = Firebase.app();
-      debugPrint('✅ Firebase app verified: ${app.name}');
+      debugPrint('✅ Firebase app verified and ready: ${app.name}');
       
       setState(() {
         _isLoading = false;
@@ -44,8 +64,9 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
         );
       }
-    } catch (e) {
-      debugPrint('❌ Firebase verification failed: $e');
+    } catch (e, stackTrace) {
+      debugPrint('❌ Firebase initialization/verification failed: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() {
         _isLoading = false;
         _hasError = true;
