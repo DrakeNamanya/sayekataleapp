@@ -146,6 +146,20 @@ class SMEContact {
       villageValue = data['village'];
     }
 
+    // ✅ FIXED: Safe timestamp conversion with type checking
+    DateTime registeredAtValue = DateTime.now();
+    final createdAtField = data['created_at'];
+    if (createdAtField is Timestamp) {
+      registeredAtValue = createdAtField.toDate();
+    } else if (createdAtField is String) {
+      // Try parsing if it's a string (shouldn't happen but handles edge case)
+      try {
+        registeredAtValue = DateTime.parse(createdAtField);
+      } catch (e) {
+        registeredAtValue = DateTime.now();
+      }
+    }
+
     return SMEContact(
       id: id,
       name: data['name'] ?? '',
@@ -156,8 +170,7 @@ class SMEContact {
       village: villageValue,
       // Products will be populated separately from order history
       products: [],
-      registeredAt:
-          (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      registeredAt: registeredAtValue,
       isVerified: data['is_verified'] ?? false,
       profileImage: data['profile_image'],
     );
