@@ -164,13 +164,18 @@ class _SplashScreenState extends State<SplashScreen>
         }
         Navigator.of(context).pushReplacementNamed(route);
       } else {
-        // Navigate to app loader which will verify Firebase and show onboarding
-        Navigator.of(context).pushReplacementNamed('/app-loader');
+        // On Web, Firebase is already initialized in main(), go directly to onboarding
+        // On Android, use app loader for additional Firebase verification
+        if (kIsWeb) {
+          Navigator.of(context).pushReplacementNamed('/onboarding');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/app-loader');
+        }
       }
     } catch (e) {
-      // If anything fails, go to app loader with error handling
+      // If anything fails, try to go to onboarding
       debugPrint('❌ Navigation error: $e');
-      Navigator.of(context).pushReplacementNamed('/app-loader');
+      Navigator.of(context).pushReplacementNamed('/onboarding');
     }
   }
 
