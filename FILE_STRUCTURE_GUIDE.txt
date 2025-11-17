@@ -1,0 +1,64 @@
+════════════════════════════════════════════════════════════════════════════
+                    📁 FILE STRUCTURE - WHAT TO USE
+════════════════════════════════════════════════════════════════════════════
+
+C:\Users\USER\Downloads\flutter_app\
+├── 📄 firestore.rules  ✅ ← USE THIS ONE! (9.3 KB, 264 lines)
+├── 📄 storage.rules
+├── 📄 firebase.json
+├── 📂 docs\
+│   ├── 📄 fixed_firestore_rules.txt  ❌ Don't use (old version)
+│   ├── 📄 fixed_firestore_rules_v2.txt  ❌ Don't use (old version)
+│   └── 📄 dev_firestore_rules_open.txt  ❌ Don't use (development only)
+├── 📂 lib\
+├── 📂 android\
+└── ... (other folders)
+
+════════════════════════════════════════════════════════════════════════════
+
+✅ THE CORRECT FILE:
+
+   Full Path: C:\Users\USER\Downloads\flutter_app\firestore.rules
+   
+   Location: Root folder (same level as lib, android, etc.)
+   
+   NOT in any subfolder!
+
+════════════════════════════════════════════════════════════════════════════
+
+🔍 HOW TO IDENTIFY THE CORRECT FILE:
+
+1. It's in the MAIN folder (not in docs/ subfolder)
+2. Named exactly: firestore.rules (no .txt extension)
+3. Size: 9.3 KB
+4. Lines: 264 lines
+5. Contains this text: "✅ FIXED: Allow users to create their own profile"
+
+════════════════════════════════════════════════════════════════════════════
+
+📸 VISUAL GUIDE:
+
+When you open File Explorer at C:\Users\USER\Downloads\flutter_app\:
+
+   ┌─────────────────────────────────────────┐
+   │  Name              Date        Size     │
+   ├─────────────────────────────────────────┤
+   │  📂 android/       ...         ...      │
+   │  📂 docs/          ...         ...      │  ← Don't go in here!
+   │  📂 lib/           ...         ...      │
+   │  📄 firestore.rules Nov 17  9.3 KB     │  ← THIS ONE! ✅
+   │  📄 firebase.json   ...         ...      │
+   │  📄 pubspec.yaml   ...         ...      │
+   └─────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════
+
+💡 QUICK TIP:
+
+Double-click: firestore.rules
+It will open in Notepad
+You'll see: "rules_version = '2';" at the top
+Scroll down to line ~52 and look for: "✅ FIXED"
+If you see it → You have the RIGHT file! ✅
+
+════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,84 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           📋 WHICH FIRESTORE RULES FILE TO COPY? (METHOD 2)                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+🎯 USE THIS FILE ONLY:
+
+   📂 Location: C:\Users\USER\Downloads\flutter_app\firestore.rules
+   
+   📄 File: firestore.rules (NOT the files in "docs" folder!)
+   
+   📏 Size: ~9.3 KB
+   
+   📝 Lines: ~264 lines
+
+─────────────────────────────────────────────────────────────────────────────
+
+❌ DO NOT USE THESE FILES (Old/Development versions):
+
+   ✗ docs/fixed_firestore_rules.txt
+   ✗ docs/fixed_firestore_rules_v2.txt  
+   ✗ docs/dev_firestore_rules_open.txt
+   ✗ storage.rules (different service!)
+   ✗ storage_rules_clean.txt
+   ✗ storage_rules_development.txt
+
+─────────────────────────────────────────────────────────────────────────────
+
+📋 STEP-BY-STEP COPY INSTRUCTIONS:
+
+1️⃣  Open File Explorer → Navigate to:
+    C:\Users\USER\Downloads\flutter_app
+
+2️⃣  Find and open: firestore.rules
+    (The file directly in flutter_app folder, NOT in docs subfolder)
+
+3️⃣  Open with Notepad or any text editor
+
+4️⃣  Press Ctrl+A (Select All)
+
+5️⃣  Press Ctrl+C (Copy)
+
+6️⃣  Go to Firebase Console:
+    https://console.firebase.google.com/project/sayekataleapp/firestore/rules
+
+7️⃣  Click "Edit rules" button
+
+8️⃣  Select all existing rules (Ctrl+A)
+
+9️⃣  Press Ctrl+V (Paste) - Replace with your copied rules
+
+🔟 Click "Publish" button
+
+─────────────────────────────────────────────────────────────────────────────
+
+✅ VERIFICATION - Check these lines exist in the file:
+
+Around line 52-54, you should see:
+
+    // ✅ FIXED: Allow users to create their own profile during signup
+    // The userId MUST match their Firebase Auth UID
+    allow create: if isAuthenticated() && request.auth.uid == userId;
+
+If you see this text with "✅ FIXED" comment, you have the CORRECT file!
+
+─────────────────────────────────────────────────────────────────────────────
+
+❓ STILL CONFUSED? Here's the simplest way:
+
+   USE THE FILE THAT IS:
+   - In the ROOT folder (not in docs/)
+   - Named exactly: firestore.rules
+   - About 9.3 KB in size
+   - Has "✅ FIXED" comment in it
+
+─────────────────────────────────────────────────────────────────────────────
+
+🆘 QUICK CHECK - Open the file and search for this text:
+
+   Search for: "✅ FIXED: Allow users to create"
+   
+   Found it? ✅ You have the CORRECT file!
+   Not found? ❌ Wrong file, try again!
+
+╚════════════════════════════════════════════════════════════════════════════╝
