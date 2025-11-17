@@ -58,15 +58,17 @@ class Environment {
   );
 
   /// PawaPay Deposit Callback URL
+  /// Google Cloud Run deployed webhook service
   static const String pawaPayDepositCallback = String.fromEnvironment(
     'PAWAPAY_DEPOSIT_CALLBACK',
-    defaultValue: 'https://api.sayekatale.com/webhooks/pawapay/deposit',
+    defaultValue: 'https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook',
   );
 
-  /// PawaPay Withdrawal Callback URL
+  /// PawaPay Refund Callback URL
+  /// Google Cloud Run deployed webhook service
   static const String pawaPayWithdrawalCallback = String.fromEnvironment(
     'PAWAPAY_WITHDRAWAL_CALLBACK',
-    defaultValue: 'https://api.sayekatale.com/webhooks/pawapay/withdrawal',
+    defaultValue: 'https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook',
   );
 
   // ========================================
