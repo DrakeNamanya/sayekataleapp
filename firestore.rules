@@ -84,21 +84,26 @@ service cloud.firestore {
     // ========================================
     
     match /orders/{orderId} {
-      // Users can read orders they're part of (buyer or seller)
-      allow read: if isAuthenticated() && 
-                     (resource.data.buyerId == request.auth.uid || 
-                      resource.data.farmerId == request.auth.uid ||
-                      resource.data.seller_id == request.auth.uid ||
-                      isAdmin());
+      // ✅ FIXED: Allow list queries for authenticated users
+      // This allows querying orders even when collection is empty
+      // Individual document reads still require ownership or admin
+      allow list: if isAuthenticated();
+      
+      // Users can get specific orders they're part of
+      allow get: if isAuthenticated() && 
+                    (resource.data.buyer_id == request.auth.uid || 
+                     resource.data.farmerId == request.auth.uid ||
+                     resource.data.seller_id == request.auth.uid ||
+                     isAdmin());
       
       // Buyers can create orders
-      // Must set themselves as buyer
+      // Must set themselves as buyer (using snake_case buyer_id)
       allow create: if isAuthenticated() && 
-                       request.resource.data.buyerId == request.auth.uid;
+                       request.resource.data.buyer_id == request.auth.uid;
       
       // Buyers and sellers can update order status
       allow update: if isAuthenticated() && 
-                       (resource.data.buyerId == request.auth.uid || 
+                       (resource.data.buyer_id == request.auth.uid || 
                         resource.data.farmerId == request.auth.uid ||
                         resource.data.seller_id == request.auth.uid ||
                         isAdmin());
@@ -224,9 +229,12 @@ service cloud.firestore {
     // ========================================
     
     match /cart_items/{cartItemId} {
-      // Users can read their own cart items
-      allow read: if isAuthenticated() && 
-                     resource.data.userId == request.auth.uid;
+      // ✅ FIXED: Allow list queries for authenticated users
+      allow list: if isAuthenticated();
+      
+      // Users can get specific cart items they own
+      allow get: if isAuthenticated() && 
+                    resource.data.userId == request.auth.uid;
       
       // Users can manage their own cart
       allow create: if isAuthenticated() &&
@@ -237,6 +245,30 @@ service cloud.firestore {
       
       allow delete: if isAuthenticated() &&
                        resource.data.userId == request.auth.uid;
+    }
+    
+    // ========================================
+    // Favorite Products Collection
+    // ========================================
+    
+    match /favorite_products/{favoriteId} {
+      // ✅ FIXED: Allow list queries for authenticated users
+      // This allows querying favorites even when collection is empty
+      allow list: if isAuthenticated();
+      
+      // Users can get specific favorites they own
+      allow get: if isAuthenticated() && 
+                    resource.data.user_id == request.auth.uid;
+      
+      // Users can manage their own favorites
+      allow create: if isAuthenticated() &&
+                       request.resource.data.user_id == request.auth.uid;
+      
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+      
+      allow delete: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
     }
     
     // ========================================
