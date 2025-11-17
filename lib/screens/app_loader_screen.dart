@@ -30,12 +30,16 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
       // Wait a moment for any background initialization
       await Future.delayed(const Duration(milliseconds: 500));
       
-      // Try to get Firebase app - if not initialized, initialize it now
-      try {
+      // Check if Firebase is already initialized
+      // Use Firebase.apps to check if default app exists
+      bool isInitialized = Firebase.apps.isNotEmpty;
+      
+      if (isInitialized) {
+        // Firebase already initialized - just verify it works
         final app = Firebase.app();
         debugPrint('✅ Firebase app already initialized: ${app.name}');
-      } catch (e) {
-        // Firebase not initialized in main() - initialize it now
+      } else {
+        // Firebase not initialized - initialize it now
         debugPrint('⚠️ Firebase not initialized, initializing now...');
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
@@ -48,7 +52,7 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
         debugPrint('✅ Firebase initialized successfully in App Loader');
       }
       
-      // Verify Firebase is working
+      // Final verification
       final app = Firebase.app();
       debugPrint('✅ Firebase app verified and ready: ${app.name}');
       
