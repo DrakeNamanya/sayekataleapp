@@ -117,11 +117,14 @@ service cloud.firestore {
     // ========================================
     
     match /receipts/{receiptId} {
-      // Users can read their own receipts (buyer or seller)
-      allow read: if isAuthenticated() && 
-                     (resource.data.buyerId == request.auth.uid || 
-                      resource.data.sellerId == request.auth.uid ||
-                      isAdmin());
+      // ✅ FIXED: Allow list queries for authenticated users
+      allow list: if isAuthenticated();
+      
+      // Users can get specific receipts they own (buyer or seller)
+      allow get: if isAuthenticated() && 
+                    (resource.data.buyerId == request.auth.uid || 
+                     resource.data.sellerId == request.auth.uid ||
+                     isAdmin());
       
       // Receipts are system-generated only
       // Created by backend when order is confirmed
@@ -152,9 +155,12 @@ service cloud.firestore {
     // ========================================
     
     match /transactions/{transactionId} {
-      // Users can read their own transactions
-      allow read: if isAuthenticated() && 
-                     (resource.data.userId == request.auth.uid || isAdmin());
+      // ✅ FIXED: Allow list queries for authenticated users
+      allow list: if isAuthenticated();
+      
+      // Users can get specific transactions they own
+      allow get: if isAuthenticated() && 
+                    (resource.data.userId == request.auth.uid || isAdmin());
       
       // Transactions are system-generated only
       // Created by backend webhooks
@@ -168,11 +174,14 @@ service cloud.firestore {
     // ========================================
     
     match /messages/{messageId} {
-      // Users can read messages they're part of
-      allow read: if isAuthenticated() && 
-                     (resource.data.senderId == request.auth.uid || 
-                      resource.data.receiverId == request.auth.uid ||
-                      isAdmin());
+      // ✅ FIXED: Allow list queries for authenticated users
+      allow list: if isAuthenticated();
+      
+      // Users can get specific messages they're part of
+      allow get: if isAuthenticated() && 
+                    (resource.data.senderId == request.auth.uid || 
+                     resource.data.receiverId == request.auth.uid ||
+                     isAdmin());
       
       // Users can create messages
       // Must set themselves as sender
