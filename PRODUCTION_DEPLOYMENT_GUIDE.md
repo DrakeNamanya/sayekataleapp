@@ -1,368 +1,704 @@
-# 🚀 SayeKatale Production Deployment & Updates Guide
+# 🚀 Sayekatale Production Deployment Guide
 
-## 🔒 CRITICAL: Fix Firebase Security Rules (Do This First!)
+**Last Updated**: November 17, 2024  
+**APK Version**: 1.0.0 (Build 1)  
+**Status**: ✅ Ready for Testing → Google Play Store Submission
 
-### Current Issue
-Your Firestore database has **public read/write rules** - anyone can steal, modify, or delete data!
+---
 
-### Solution: Deploy Secure Rules from Windows
+## 📋 Table of Contents
+1. [What's Been Completed](#whats-been-completed)
+2. [Critical Action Required](#critical-action-required)
+3. [APK Download & Installation](#apk-download--installation)
+4. [Testing Checklist](#testing-checklist)
+5. [Google Play Store Submission](#google-play-store-submission)
+6. [Troubleshooting](#troubleshooting)
+
+---
+
+## ✅ What's Been Completed
+
+### 1. Firestore Security Rules - Fixed (6 Collections)
+**Status**: ✅ Fixed in Code | 🔴 **REQUIRES DEPLOYMENT**
+
+**Collections Updated**:
+- `orders` - Split read permissions, fixed field names
+- `cart_items` - Split read permissions  
+- `favorite_products` - NEW rules added (was completely missing)
+- `messages` - Split read permissions for sender/receiver
+- `receipts` - Split read permissions for buyer/seller
+- `transactions` - Split read permissions for user access
+
+**What This Fixes**:
+- ❌ "Permission Denied" errors in Orders screen
+- ❌ "Permission Denied" errors in Favorites screen
+- ❌ "Permission Denied" errors in Messages screen
+- ❌ "Permission Denied" errors in Purchase Receipts screen
+
+### 2. PawaPay Webhook Configuration - Updated ✅
+**Status**: ✅ Complete
+
+**Changes Made**:
+- ✅ Updated deposit callback URL to Google Cloud Run service
+- ✅ Updated refund callback URL to Google Cloud Run service
+- ✅ Both endpoints now point to: `https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook`
+
+**Before**:
+```dart
+defaultValue: 'https://api.sayekatale.com/webhooks/pawapay/deposit'
+```
+
+**After**:
+```dart
+defaultValue: 'https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook'
+```
+
+### 3. Production APK Built ✅
+**Status**: ✅ Complete
+
+**Build Configuration**:
+- ✅ PawaPay API Token: Included via `--dart-define`
+- ✅ Webhook URLs: Updated to Cloud Run service
+- ✅ Signing: Production keystore applied
+- ✅ AdMob: Production IDs included
+- ✅ Firebase: Production project configured
+
+**APK Details**:
+- **File**: `app-release.apk`
+- **Size**: 67 MB
+- **MD5**: `0f2a7d7920653b4479a1bfb3711e55b8`
+- **Package**: `com.datacollectors.sayekatale`
+- **Version**: 1.0.0 (Build 1)
+
+### 4. Version Control ✅
+**Status**: ✅ Complete
+
+- ✅ All changes committed to git
+- ✅ Pushed to GitHub repository
+- ✅ Comprehensive documentation created
+
+---
+
+## 🔴 CRITICAL ACTION REQUIRED
+
+### Deploy Updated Firestore Security Rules
+
+**⚠️ WARNING**: Users will continue to see "Permission Denied" errors until you deploy the updated security rules!
+
+#### Option A: Firebase Console (Recommended - Easiest)
+
+1. **Visit Firebase Console**:
+   ```
+   https://console.firebase.google.com/project/sayekataleapp/firestore/rules
+   ```
+
+2. **Copy Rules Content**:
+   - Open local file: `firestore.rules` (in project root)
+   - Copy entire content (all 215 lines)
+
+3. **Paste & Publish**:
+   - Paste into Firebase Console editor
+   - Click **"Publish"** button
+   - Wait for confirmation message
+
+4. **Verify Deployment**:
+   - Check for success message
+   - Note deployment timestamp
+
+#### Option B: Firebase CLI
 
 ```bash
-cd C:\Users\dnamanya\Documents\sayekataleapp
+# Ensure you're in the project directory
+cd /path/to/sayekataleapp
 
 # Login to Firebase (if not already logged in)
 firebase login
 
-# Deploy secure Firestore rules
+# Deploy security rules
 firebase deploy --only firestore:rules
 
-# Also deploy Storage rules for file uploads
-firebase deploy --only storage:rules
+# Expected output:
+# ✔ Deploy complete!
+# Firestore Rules: Released
 ```
 
-**Expected Output:**
-```
-✔ Deploy complete!
+#### Verification After Deployment
 
-Project Console: https://console.firebase.google.com/project/sayekataleapp/overview
-```
+**Test in Firebase Console**:
+1. Go to: Firestore Rules → **Rules Playground**
+2. Test query: `orders` collection
+3. Simulate authenticated user
+4. Should return: ✅ **"Allowed"**
 
-### Verify Security Rules Deployed
-1. Go to: https://console.firebase.google.com/project/sayekataleapp/firestore/rules
-2. You should see rules starting with `rules_version = '2';`
-3. The warning banner should disappear
+**Test in App**:
+1. Open Orders screen → Should load without errors
+2. Open Favorites screen → Should load without errors
+3. Open Messages → Should load without errors
+4. Open Purchase Receipts → Should load without errors
 
 ---
 
-## 📱 How to Update Your App After Google Play Release
+## 📥 APK Download & Installation
 
-### Overview
-Once your app is on Google Play Store, you can push updates to users. Here's the complete workflow:
+### Download APK
 
-### Method 1: Update Existing APK (Quick Updates)
+**Method 1: Direct Download Link**
+```
+[Download from Cloud Sandbox]
+Location: /home/user/flutter_app/build/app/outputs/flutter-apk/app-release.apk
+```
 
-#### Step 1: Make Code Changes in Sandbox
-1. Tell me what features/fixes you need
-2. I'll update the code in the sandbox
-3. Test changes in web preview first
-
-#### Step 2: Build New APK with Updated Version
+**Method 2: Build Locally**
 ```bash
-# Update version in pubspec.yaml first!
-# Change from: version: 1.0.0+1
-# To:         version: 1.0.1+2  (increment both version and build number)
-
-# Then run production build
-bash build_production.sh
+git clone https://github.com/DrakeNamanya/sayekataleapp.git
+cd sayekataleapp
+flutter build apk --release \
+  --dart-define=PAWAPAY_API_TOKEN=eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJQYXdhUGF5IiwiYXVkIjoicGF3YXBheS1jb3JlIiwiaWF0IjoxNzMxNzY2OTQxLCJleHAiOjIwNDczMjY5NDF9.i3hkfkL08OiBPRXOm5WQHZN1Dz-WV7yApVXTCy7y2G4gzUVPcBYJ3s51c2d-jKrN24bHQkpGDLLH8DYMCfKNnQ
 ```
 
-#### Step 3: Download New APK from Sandbox
-The build script will output a download link for the new APK.
+### Install on Android Device
 
-#### Step 4: Upload to Google Play Console
-1. Go to: https://play.google.com/console/
-2. Select **SayeKatale** app
-3. Go to **Release** → **Production** → **Create new release**
-4. Upload the new APK
-5. Write **Release Notes** (what's new/fixed)
-6. Submit for review
+**Requirements**:
+- Android 5.0 (API 21) or higher
+- 100 MB free storage space
+- Unknown sources enabled (for non-Play Store APKs)
 
-#### Step 5: Google Review & Rollout
-- Google reviews the update (usually 1-3 days)
-- Once approved, update rolls out to users automatically
-- Users get notification: "Update available"
+**Installation Steps**:
+1. **Enable Unknown Sources**:
+   - Go to: Settings → Security → Unknown Sources
+   - Toggle **ON** (temporarily)
+
+2. **Transfer APK**:
+   - USB cable method: Copy APK to device
+   - Cloud method: Upload to Google Drive, download on device
+   - Direct method: Open download link on device
+
+3. **Install**:
+   - Tap `app-release.apk`
+   - Click **"Install"**
+   - Wait for completion
+   - Click **"Open"**
+
+4. **Re-disable Unknown Sources** (security best practice)
 
 ---
 
-### Method 2: Use GitHub Actions (Automated CI/CD)
+## ✅ Testing Checklist
 
-#### Setup (One-Time)
-Your GitHub repository already has GitHub Actions configured! We just need to enable it.
+### Pre-Testing Setup
+- [ ] Firestore security rules deployed
+- [ ] APK installed on test device
+- [ ] Internet connection active
+- [ ] Test user account created/available
 
-#### How It Works
-1. **Push code to GitHub** → Triggers automatic build
-2. **GitHub Actions runs** → Builds APK/AAB automatically
-3. **Upload to Play Store** → Can be automated
+### Core Functionality Testing
 
-#### Enable GitHub Actions Workflow
+#### 1. Authentication & User Management
+- [ ] User registration works
+- [ ] Email verification sent
+- [ ] Login successful
+- [ ] Password reset functional
+- [ ] Profile updates save correctly
 
-**File already exists:** `.github/workflows/build.yml`
+#### 2. Product Browsing (Previously Fixed)
+- [ ] Products list loads without errors
+- [ ] Product details display correctly
+- [ ] Images load properly
+- [ ] Search functionality works
+- [ ] Filters apply correctly
 
-**To enable auto-deployment:**
+#### 3. Orders Screen (NEW FIX - Priority Testing)
+- [ ] **Orders list loads WITHOUT "Permission Denied" error** ⭐
+- [ ] Can view order details
+- [ ] Order status displays correctly
+- [ ] Can filter/sort orders
 
-1. Add these secrets to GitHub:
-   - `PLAY_STORE_CREDENTIALS` - Service account JSON from Google Play Console
-   - `KEYSTORE_BASE64` - Your signing keystore (base64 encoded)
-   - `KEYSTORE_PASSWORD` - Your keystore password
-   - `KEY_ALIAS` - Your key alias
-   - `KEY_PASSWORD` - Your key password
+#### 4. Favorites Screen (NEW FIX - Priority Testing)
+- [ ] **Favorites list loads WITHOUT "Permission Denied" error** ⭐
+- [ ] Can add products to favorites
+- [ ] Can remove from favorites
+- [ ] Favorites sync across sessions
 
-2. Push changes to `main` branch:
+#### 5. Messages Screen (NEW FIX - Priority Testing)
+- [ ] **Messages list loads WITHOUT "Permission Denied" error** ⭐
+- [ ] Can send messages
+- [ ] Can receive messages
+- [ ] Message notifications work
+
+#### 6. Purchase Receipts (NEW FIX - Priority Testing)
+- [ ] **Receipts list loads WITHOUT "Permission Denied" error** ⭐
+- [ ] Can view receipt details
+- [ ] Receipt data accurate
+- [ ] Can download/share receipts
+
+#### 7. Wallet & Payments (CRITICAL - PawaPay Integration)
+- [ ] Wallet balance displays correctly
+- [ ] **Deposit via MTN Mobile Money** ⭐
+  - [ ] Initiate deposit request
+  - [ ] Receive MTN payment prompt on phone
+  - [ ] Enter MTN PIN to confirm
+  - [ ] Wait for webhook confirmation (check backend logs)
+  - [ ] Wallet balance updates correctly
+  - [ ] Transaction appears in history
+- [ ] **Deposit via Airtel Money** ⭐
+  - [ ] Initiate deposit request
+  - [ ] Receive Airtel payment prompt
+  - [ ] Enter Airtel PIN to confirm
+  - [ ] Wait for webhook confirmation
+  - [ ] Wallet balance updates correctly
+  - [ ] Transaction appears in history
+- [ ] Withdrawal request functional
+- [ ] Transaction history accurate
+
+#### 8. Shopping Cart & Checkout
+- [ ] Add items to cart
+- [ ] Update quantities
+- [ ] Remove items
+- [ ] Checkout process completes
+- [ ] Payment options work
+- [ ] Order confirmation received
+
+#### 9. Seller Functionality (if applicable)
+- [ ] List new products
+- [ ] Update product details
+- [ ] Manage inventory
+- [ ] View sales analytics
+- [ ] Process orders
+
+#### 10. AdMob Integration
+- [ ] Banner ads display (production IDs)
+- [ ] Ads don't obstruct UI
+- [ ] Ad revenue tracking works (check AdMob console)
+
+### Performance Testing
+- [ ] App launches in < 3 seconds
+- [ ] Screen transitions smooth (60fps)
+- [ ] Images load progressively
+- [ ] No memory leaks during extended use
+- [ ] Battery usage reasonable
+
+### Edge Cases
+- [ ] App handles poor network gracefully
+- [ ] Offline functionality works (cached data)
+- [ ] Large datasets load without crashing
+- [ ] Concurrent operations don't conflict
+
+---
+
+## 🎯 Expected Test Results
+
+### ✅ FIXED Issues (Should Work Now)
+1. **Orders Screen**: Should load order history without errors
+2. **Favorites Screen**: Should show favorite products without errors
+3. **Messages Screen**: Should display conversations without errors
+4. **Receipts Screen**: Should list purchase receipts without errors
+5. **Wallet Deposits**: Should process MTN/Airtel payments successfully
+
+### 🔍 What to Monitor
+
+#### Backend Webhook Logs
+Monitor your Google Cloud Run service for webhook callbacks:
 ```bash
-git add .
-git commit -m "feat: Add new feature XYZ"
-git push origin main
+# View recent webhook logs
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=pawapay-webhook" --limit 50 --format json
+
+# Or visit Cloud Run console:
+# https://console.cloud.google.com/run/detail/us-central1/pawapay-webhook/logs
 ```
 
-3. GitHub automatically:
-   - Builds APK/AAB
-   - Signs it with your keystore
-   - Uploads to Google Play (if configured)
+**Expected Webhook Flow**:
+1. User initiates deposit in app
+2. App calls PawaPay API with callback URL
+3. User completes payment on mobile money
+4. PawaPay sends POST request to: `https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook`
+5. Your webhook updates Firestore `transactions` and `wallets` collections
+6. App displays updated balance
+
+#### Firestore Console Monitoring
+Watch real-time updates during testing:
+```
+https://console.firebase.google.com/project/sayekataleapp/firestore/data
+```
+
+**Collections to Monitor**:
+- `transactions` - Should see new entries after deposits
+- `wallets` - User balance should increase
+- `orders` - Should see new orders after checkout
+- `messages` - Should see message exchanges
 
 ---
 
-## 🔄 Complete Update Workflow (Recommended)
+## 📱 Google Play Store Submission
 
-### For Small Updates (Bug Fixes, UI Tweaks)
+### Pre-Submission Checklist
+- [ ] All critical bugs fixed
+- [ ] Testing completed successfully
+- [ ] Screenshots prepared (phone + tablet)
+- [ ] App icon finalized (512x512px)
+- [ ] Feature graphic created (1024x500px)
+- [ ] Privacy policy URL ready
+- [ ] Terms of service URL ready
+- [ ] Content rating questionnaire completed
 
+### Google Play Console Steps
+
+#### 1. Create Application
+1. Visit: https://play.google.com/console
+2. Click **"Create app"**
+3. Fill in details:
+   - **App name**: Sayekatale
+   - **Default language**: English (or primary language)
+   - **App type**: App
+   - **Free/Paid**: (Choose based on business model)
+
+#### 2. Store Listing
+**Required Assets**:
+- App icon (512x512px)
+- Feature graphic (1024x500px)
+- Screenshots:
+  - Phone: 2-8 screenshots (16:9 or 9:16)
+  - 7-inch tablet: 2-8 screenshots
+  - 10-inch tablet: 2-8 screenshots
+
+**Description**:
 ```
-1. Code changes in sandbox → 2. Test in web preview → 3. Build new APK → 
-4. Download APK → 5. Test on phone → 6. Upload to Play Store
+Sayekatale - Agricultural Marketplace
+
+Connect farmers, buyers, and sellers in one seamless platform. 
+Buy fresh agricultural products, manage orders, and make secure 
+payments via Mobile Money (MTN & Airtel Uganda).
+
+Features:
+✓ Browse agricultural products
+✓ Secure wallet & Mobile Money payments
+✓ Real-time messaging with sellers
+✓ Order tracking & purchase receipts
+✓ Favorite products for quick access
+✓ Location-based product discovery
+
+Trusted by Ugandan farmers and buyers for transparent, 
+efficient agricultural trade.
 ```
 
-**Timeline:** Same day (1-3 days for Google review)
+#### 3. Content Rating
+Complete the content rating questionnaire:
+- Access category: General audience
+- Violence: None
+- Sexual content: None
+- Language: Polite, no profanity
+- Controlled substances: None
+- Gambling: None
 
-### For Major Features (New Functionality)
+#### 4. App Content
+**Privacy Policy**: Required! Must include:
+- Data collection practices
+- How user data is used
+- Third-party integrations (Firebase, PawaPay, AdMob)
+- User rights (access, deletion)
 
+**Example Privacy Policy URL**:
 ```
-1. Plan feature with me → 2. I implement in sandbox → 3. Test thoroughly → 
-4. Build APK → 5. Beta test (Firebase App Distribution) → 
-6. Gather feedback → 7. Fix issues → 8. Production release
-```
-
-**Timeline:** 1-2 weeks (includes testing and review)
-
----
-
-## 📊 Version Numbering System
-
-### Format: `MAJOR.MINOR.PATCH+BUILD`
-
-**Example:** `1.0.0+1` → `1.0.1+2`
-
-- **MAJOR (1):** Breaking changes, complete redesign
-- **MINOR (0 → 1):** New features, significant changes
-- **PATCH (0 → 1):** Bug fixes, small improvements
-- **BUILD (1 → 2):** Must increment with every upload to Play Store
-
-### Examples:
-- Bug fix: `1.0.0+1` → `1.0.1+2`
-- New feature: `1.0.1+2` → `1.1.0+3`
-- Major redesign: `1.1.0+3` → `2.0.0+4`
-
-### Where to Update Version
-**File:** `pubspec.yaml`
-```yaml
-version: 1.0.1+2  # Change this before building
+https://sayekatale.com/privacy-policy
 ```
 
----
-
-## 🚨 Emergency Hotfix Process
-
-### If Critical Bug Found in Production
-
-1. **Immediate Action:**
-   ```bash
-   # In sandbox - I fix the critical bug immediately
-   # Build emergency hotfix
-   bash build_production.sh
+#### 5. Production Release
+**APK/AAB Upload**:
+1. Go to: Production → Releases
+2. Click **"Create new release"**
+3. Upload: `app-release.apk` (or build AAB: `flutter build appbundle --release`)
+4. Release notes:
+   ```
+   Initial release of Sayekatale agricultural marketplace.
+   
+   Features:
+   - Product browsing & search
+   - Secure Mobile Money payments
+   - Order management
+   - Real-time messaging
+   - Favorites & wishlists
    ```
 
-2. **Fast Track Upload:**
-   - Go to Play Console
-   - Create **Emergency Update** release
-   - Upload fixed APK
-   - Mark as "Critical security update" or "Critical bug fix"
-   - Google prioritizes review (can be approved in hours)
+5. Click **"Review release"**
+6. **Save** → **Start rollout to production**
 
-3. **Staged Rollout:**
-   - Start with 5% of users (test in production)
-   - If stable, increase to 20% → 50% → 100%
-   - Can halt rollout if issues detected
+#### 6. Review Process
+**Timeline**: 1-7 days (typically 2-3 days)
 
----
+**What Google Reviews**:
+- App functionality
+- Privacy policy compliance
+- Content rating accuracy
+- Metadata accuracy
+- Store listing assets
 
-## 🔧 Backend Updates (PawaPay, Firebase)
-
-### Updating PawaPay Webhook
-Your webhook runs on Google Cloud Run. To update:
-
-```bash
-# From Windows:
-cd webhook_server
-gcloud builds submit --tag gcr.io/sayekataleapp/pawapay-webhook
-gcloud run deploy pawapay-webhook --image gcr.io/sayekataleapp/pawapay-webhook --region us-central1
-```
-
-### Updating Firebase Functions
-```bash
-cd functions
-firebase deploy --only functions
-```
-
-### Database Schema Changes
-- **New collections:** Can add anytime (no app update needed)
-- **New fields:** Backward compatible (old apps ignore new fields)
-- **Changed field types:** Requires app update (coordinate with APK release)
+**Possible Outcomes**:
+- ✅ **Approved**: App goes live automatically
+- ⚠️ **Changes requested**: Address feedback and resubmit
+- ❌ **Rejected**: Fix policy violations and appeal/resubmit
 
 ---
 
-## 📲 Beta Testing with Firebase App Distribution
+## 🔧 Troubleshooting
 
-### Before Production Release
+### Issue: "Permission Denied" Errors Persist
 
-1. **Build Beta APK:**
+**Symptoms**:
+- Orders screen shows "No permission to read"
+- Favorites empty despite added products
+- Messages won't load
+
+**Solution**:
+1. Verify security rules deployed:
    ```bash
-   # Use beta configuration
-   flutter build apk --release --dart-define=ENVIRONMENT=beta
+   firebase firestore:rules:get
+   ```
+2. Check Firebase Console timestamp
+3. Clear app data and re-login
+4. Check Firestore Console → Rules tab
+
+**If Still Failing**:
+- Review Firestore Rules in console
+- Check user authentication status
+- Verify user document exists in `users` collection
+
+---
+
+### Issue: Wallet Deposits Not Completing
+
+**Symptoms**:
+- Deposit initiated but balance doesn't update
+- "Processing" status never changes
+- No transaction record
+
+**Diagnostic Steps**:
+
+1. **Check Webhook Logs**:
+   ```bash
+   gcloud logging read "resource.type=cloud_run_revision" --limit 20
+   ```
+   
+   **Expected**: POST requests from PawaPay IPs
+   **If Missing**: Webhook URL may be incorrect in PawaPay dashboard
+
+2. **Check PawaPay API Token**:
+   ```dart
+   // Verify in app logs (debug mode only)
+   debugPrint('PawaPay Token Set: ${Environment.pawaPayToken.isNotEmpty}');
+   ```
+   
+   **Expected**: `true`
+   **If False**: Rebuild APK with `--dart-define=PAWAPAY_API_TOKEN=...`
+
+3. **Verify Callback URL**:
+   ```dart
+   // lib/config/environment.dart
+   debugPrint('Callback URL: ${Environment.pawaPayDepositCallback}');
+   ```
+   
+   **Expected**: `https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook`
+   **If Different**: Update and rebuild APK
+
+4. **Check Firestore Permissions**:
+   - User must have write access to `transactions` collection
+   - User must have write access to `wallets` collection
+
+**Manual Webhook Test**:
+```bash
+curl -X POST https://pawapay-webhook-713040690605.us-central1.run.app/api/pawapay/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "depositId": "test-123",
+    "status": "COMPLETED",
+    "amount": "1000",
+    "currency": "UGX",
+    "correspondent": "MTN_MOMO_UGA",
+    "payer": {
+      "msisdn": "+256700000000"
+    },
+    "metadata": {
+      "userId": "test-user-id"
+    }
+  }'
+```
+
+**Expected Response**: `200 OK` with webhook confirmation
+
+---
+
+### Issue: AdMob Ads Not Showing
+
+**Symptoms**:
+- Banner ad slots empty
+- No ads displayed in app
+
+**Solutions**:
+
+1. **Verify AdMob App Status**:
+   - Visit: https://apps.admob.com/
+   - Check app review status
+   - New apps may take 24-48 hours for ads to start serving
+
+2. **Check Ad Unit IDs**:
+   ```dart
+   // lib/config/environment.dart
+   debugPrint('AdMob App ID: ${Environment.admobAppIdAndroid}');
+   debugPrint('AdMob Banner ID: ${Environment.admobBannerIdAndroid}');
+   ```
+   
+   **Expected**:
+   - App ID: `ca-app-pub-6557386913540479~2174503706`
+   - Banner ID: `ca-app-pub-6557386913540479/5529911893`
+
+3. **Test with Test Ads**:
+   ```dart
+   // Temporarily use test ad unit for debugging
+   static const String testBannerId = 'ca-app-pub-3940256099942544/6300978111';
    ```
 
-2. **Distribute to Testers:**
+---
+
+### Issue: App Crashes on Startup
+
+**Symptoms**:
+- App opens briefly then closes
+- Black screen after splash
+- "App keeps stopping" error
+
+**Diagnostic Steps**:
+
+1. **Check Logcat Logs**:
    ```bash
-   firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
-     --app 1:713040690605:android:YOUR_APP_ID \
-     --groups "beta-testers" \
-     --release-notes "New feature: XYZ for testing"
+   adb logcat -s flutter,AndroidRuntime
    ```
 
-3. **Collect Feedback:**
-   - Testers get email with download link
-   - They install and test
-   - You gather feedback via Firebase Console
+2. **Common Causes**:
+   - Firebase initialization failure
+   - Missing google-services.json
+   - Invalid API keys
+   - Null pointer exceptions
 
-4. **Iterate:**
-   - Fix issues
-   - Build new beta
-   - Repeat until stable
-
-5. **Promote to Production:**
-   - Once beta is stable, use same build for Production
-   - Upload to Google Play Store
+3. **Verify Firebase Setup**:
+   - Check `android/app/google-services.json` exists
+   - Verify package name matches: `com.datacollectors.sayekatale`
+   - Confirm SHA-1 fingerprint registered in Firebase Console
 
 ---
 
-## 🎯 Typical Update Scenarios
+### Issue: Products/Data Not Loading
 
-### Scenario 1: Add New Product Category
-**Changes needed:**
-- Firestore: Add new documents (no app update needed)
-- App: No code changes (reads from database)
-- **Result:** Instant update, no new APK needed! ✅
+**Symptoms**:
+- Empty product lists
+- "No data available" messages
+- Infinite loading spinners
 
-### Scenario 2: Change UI Color Scheme
-**Changes needed:**
-- Code: Update theme colors in `lib/config/theme.dart`
-- Version: Increment to `1.0.1+2`
-- **Result:** Need new APK, push update to Play Store
+**Solutions**:
 
-### Scenario 3: Add Payment Method (e.g., Flutterwave)
-**Changes needed:**
-- Backend: New webhook service
-- App: New payment service, UI updates
-- Version: Increment to `1.1.0+2` (new feature)
-- **Result:** Major update, requires thorough testing
+1. **Check Internet Connection**:
+   - Verify device has active internet
+   - Test on different networks (WiFi, mobile data)
 
-### Scenario 4: Fix Crash Bug
-**Changes needed:**
-- Code: Fix the crash
-- Version: Increment to `1.0.1+2`
-- **Result:** Emergency hotfix, fast-track to Play Store
+2. **Verify Firestore Data Exists**:
+   - Open Firebase Console → Firestore Database
+   - Check `products` collection has documents
+   - Verify product fields are populated
 
----
+3. **Check Security Rules**:
+   - Ensure `products` collection has public read access:
+   ```javascript
+   match /products/{productId} {
+     allow read: if true;  // Public read access
+   }
+   ```
 
-## 📝 Update Checklist Template
-
-### Before Every Production Update:
-
-- [ ] **Code:** Changes tested in sandbox web preview
-- [ ] **Version:** Incremented in `pubspec.yaml`
-- [ ] **Security Rules:** Deployed to Firebase (if changed)
-- [ ] **Database:** Schema changes backward compatible
-- [ ] **Testing:** Tested on real Android device
-- [ ] **Release Notes:** Written (what's new/fixed)
-- [ ] **Screenshots:** Updated if UI changed
-- [ ] **APK Size:** Verified (should be < 100 MB)
-- [ ] **Git:** Changes committed and pushed to GitHub
-- [ ] **Play Store:** Logged in and ready to upload
+4. **Clear App Cache**:
+   - Go to: Settings → Apps → Sayekatale → Storage
+   - Click **"Clear Cache"**
+   - Click **"Clear Data"** (will require re-login)
 
 ---
 
-## 🆘 Support & Workflow
+## 📞 Support & Resources
 
-### Working with Me (Your AI Developer)
+### Documentation Files
+- `SECURITY_AND_API_AUDIT.md` - Comprehensive security audit report
+- `FIRESTORE_RULES_FIX_V2.md` - Detailed security rules documentation
+- `AUDIT_SUMMARY_QUICK.txt` - Quick reference guide
+- `APK_BUILD_SUCCESS.md` - Build documentation
 
-**For Updates:**
-1. Tell me what feature/fix you need
-2. I'll implement it in the sandbox
-3. You test in web preview
-4. I build new APK
-5. You download and upload to Play Store
+### Key URLs
+- **Firebase Console**: https://console.firebase.google.com/project/sayekataleapp
+- **Google Play Console**: https://play.google.com/console
+- **AdMob Console**: https://apps.admob.com/
+- **PawaPay Webhook**: https://pawapay-webhook-713040690605.us-central1.run.app
+- **GitHub Repository**: https://github.com/DrakeNamanya/sayekataleapp
 
-**For Backend Changes:**
-1. Tell me what backend change needed
-2. I update webhook code
-3. You deploy from Windows using gcloud commands I provide
-
-**For Emergency:**
-- Ping me immediately with the issue
-- I'll prioritize and fix ASAP
-- Build emergency hotfix within minutes
-
----
-
-## 🔗 Important Links
-
-- **Google Play Console:** https://play.google.com/console/
-- **Firebase Console:** https://console.firebase.google.com/project/sayekataleapp
-- **GitHub Repository:** https://github.com/DrakeNamanya/sayekataleapp
-- **Cloud Run Services:** https://console.cloud.google.com/run?project=sayekataleapp
-- **PawaPay Dashboard:** https://dashboard.pawapay.io/
+### Technical Configuration
+**Package Name**: `com.datacollectors.sayekatale`  
+**Bundle ID**: `com.datacollectors.sayekatale`  
+**Version Code**: 1  
+**Version Name**: 1.0.0  
+**Min SDK**: 21 (Android 5.0)  
+**Target SDK**: 36 (Android 15)
 
 ---
 
-## 📞 Quick Reference Commands
+## 🎉 Next Steps
 
-### From Windows Machine:
+### Immediate Actions (Today)
+1. ✅ Download APK from build server
+2. 🔴 **Deploy Firestore security rules** (CRITICAL)
+3. ✅ Install APK on test device
+4. ✅ Complete testing checklist
 
-```bash
-# Deploy Firebase rules
-firebase deploy --only firestore:rules,storage:rules
+### This Week
+1. ✅ Prepare Google Play Store assets
+2. ✅ Create privacy policy & terms of service
+3. ✅ Complete content rating questionnaire
+4. ✅ Submit app to Google Play Store
 
-# Deploy Cloud Run webhook
-cd webhook_server
-gcloud builds submit --tag gcr.io/sayekataleapp/pawapay-webhook
-gcloud run deploy pawapay-webhook --image gcr.io/sayekataleapp/pawapay-webhook
-
-# Push code to GitHub
-git add .
-git commit -m "Update: describe changes"
-git push origin main
-
-# Install APK on connected phone
-adb install path/to/app-release.apk
-```
-
----
-
-## 🎓 Learning Resources
-
-- **Play Store Policies:** https://play.google.com/about/developer-content-policy/
-- **Firebase Documentation:** https://firebase.google.com/docs
-- **Flutter Updates Guide:** https://docs.flutter.dev/deployment/android
-- **PawaPay API Docs:** https://docs.pawapay.io/
+### After Submission
+1. Monitor Google Play Console for review status
+2. Address any feedback from Google review team
+3. Plan marketing strategy for app launch
+4. Set up user feedback channels
+5. Monitor analytics and crash reports
 
 ---
 
-## 🎉 Summary
+## 📊 Success Metrics to Track
 
-**You have full control over updates:**
-1. ✅ I implement changes in sandbox
-2. ✅ You test before releasing
-3. ✅ You control when updates go live
-4. ✅ Users auto-update from Play Store
-5. ✅ Backend updates independent of app updates
+### Day 1 (Testing Phase)
+- [ ] All permission errors resolved
+- [ ] At least 3 successful wallet deposits (MTN & Airtel)
+- [ ] 10+ orders placed successfully
+- [ ] No critical crashes
 
-**No downtime, no app store review for backend changes!**
+### Week 1 (After Play Store Approval)
+- Target: 100+ downloads
+- Monitor: Crash rate < 1%
+- Track: Wallet deposit success rate > 95%
+- Measure: Average session duration
 
-Your app is production-ready and fully maintainable! 🚀🇺🇬
+### Month 1 (Growth Phase)
+- Target: 1,000+ active users
+- Monitor: User retention rate
+- Track: Order completion rate
+- Measure: Revenue metrics
+
+---
+
+**Document Version**: 1.0  
+**Last Updated**: November 17, 2024  
+**Maintained By**: Development Team
+
+---
+
+## ⚠️ REMINDER: Deploy Firestore Rules NOW!
+
+**This is the ONLY remaining critical action before testing can begin!**
+
+Visit: https://console.firebase.google.com/project/sayekataleapp/firestore/rules
+
+Copy content from `firestore.rules` → Paste in console → Click "Publish"
+
+✅ Without this step, users will continue seeing "Permission Denied" errors!
