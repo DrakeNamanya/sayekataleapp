@@ -49,8 +49,11 @@ service cloud.firestore {
                        request.resource.data.role == resource.data.role &&
                        request.resource.data.uid == resource.data.uid;
       
-      // Only admins can create/delete users
-      allow create: if isAdmin();
+      // ✅ FIXED: Allow users to create their own profile during signup
+      // The userId MUST match their Firebase Auth UID
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only admins can delete users
       allow delete: if isAdmin();
     }
     
