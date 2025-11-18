@@ -80,15 +80,19 @@ class CartProvider with ChangeNotifier {
         debugPrint('🛒 Loading cart for user: $_userId');
       }
 
+      // Simple query without orderBy to avoid composite index requirement
       final querySnapshot = await _firestore
           .collection('cart_items')
           .where('user_id', isEqualTo: _userId)
-          .orderBy('added_at', descending: true)
           .get();
 
+      // Convert to list and sort in memory
       _cartItems = querySnapshot.docs
           .map((doc) => CartItem.fromFirestore(doc.data(), doc.id))
           .toList();
+      
+      // Sort by added_at in memory (no index needed)
+      _cartItems.sort((a, b) => b.addedAt.compareTo(a.addedAt));
 
       if (kDebugMode) {
         debugPrint('✅ Cart loaded: ${_cartItems.length} items');
