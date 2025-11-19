@@ -8,6 +8,9 @@ import 'environment.dart';
 class PawaPayConfig {
   // API Token from Environment Variables (SECURE)
   static String get apiToken => Environment.pawaPayToken;
+  
+  // Alias for consistency with PawaPayService constructor
+  static String get apiKey => Environment.pawaPayToken;
 
   // Webhook URLs from Environment Variables
   static String get depositCallbackUrl => Environment.pawaPayDepositCallback;

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
+// Wallet service temporarily disabled - only premium subscription payments are implemented
+// General wallet deposits/withdrawals via PawaPay are not yet available
 // import '../../services/wallet_service.dart';
 // import '../../services/pawapay_service.dart';
 // import '../../config/pawapay_config.dart';
 import '../../models/wallet.dart';
+import '../../models/transaction.dart' as app_transaction;
 import '../../utils/app_theme.dart';
 import '../../utils/uganda_phone_validator.dart';
 
@@ -17,16 +21,61 @@ class SHGWalletScreen extends StatefulWidget {
 }
 
 class _SHGWalletScreenState extends State<SHGWalletScreen> {
-  // NOTE: Wallet functionality is view-only in this screen
-  // PawaPay payment integration is handled in subscription_purchase_screen.dart
-  // late WalletService _walletService;
+  // NOTE: Wallet screen is VIEW-ONLY - shows transaction history from Firestore
+  // Premium subscription payments are handled in subscription_purchase_screen.dart
+  // General wallet deposits/withdrawals are not yet implemented
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay with API token from config (COMMENTED OUT - not needed for view-only wallet)
-    // final pawaPayService = PawaPayService(apiToken: PawaPayConfig.apiToken);
-    // _walletService = WalletService(pawaPayService: pawaPayService);
+  }
+
+  // Helper: Get or create wallet (read-only)
+  Future<Wallet> getOrCreateWallet(String userId) async {
+    final walletDoc = await _firestore.collection('wallets').doc(userId).get();
+    if (walletDoc.exists) {
+      return Wallet.fromFirestore(walletDoc.data()!, userId);
+    }
+    // Create empty wallet if it doesn't exist
+    final newWallet = Wallet(
+      userId: userId,
+      balance: 0.0,
+      currency: 'UGX',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    await _firestore.collection('wallets').doc(userId).set(newWallet.toMap());
+    return newWallet;
+  }
+
+  // Helper: Stream wallet data
+  Stream<Wallet> streamWallet(String userId) {
+    return _firestore.collection('wallets').doc(userId).snapshots().map((doc) {
+      if (doc.exists) {
+        return Wallet.fromFirestore(doc.data()!, userId);
+      }
+      return Wallet(
+        userId: userId,
+        balance: 0.0,
+        currency: 'UGX',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    });
+  }
+
+  // Helper: Stream transactions
+  Stream<List<app_transaction.Transaction>> streamTransactions(String userId) {
+    return _firestore
+        .collection('transactions')
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => app_transaction.Transaction.fromFirestore(doc.data(), doc.id))
+            .toList());
   }
 
   @override
@@ -48,7 +97,7 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
       ),
       body: FutureBuilder<Wallet>(
         // First, ensure wallet exists by calling getOrCreateWallet
-        future: _walletService.getOrCreateWallet(user.id),
+        future: getOrCreateWallet(user.id),
         builder: (context, futureSnapshot) {
           // Show loading while creating/fetching wallet
           if (futureSnapshot.connectionState == ConnectionState.waiting) {
@@ -89,7 +138,7 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
 
           // Wallet now exists, use StreamBuilder for real-time updates
           return StreamBuilder<Wallet>(
-            stream: _walletService.streamWallet(user.id),
+            stream: streamWallet(user.id),
             builder: (context, streamSnapshot) {
               // Use futureSnapshot data while stream is loading
               if (streamSnapshot.connectionState == ConnectionState.waiting) {
@@ -255,8 +304,8 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
             child: _ActionButton(
               icon: Icons.add_circle_outline,
               label: 'Deposit',
-              color: Colors.green,
-              onTap: () => _showDepositDialog(userId, userName, userPhone),
+              color: Colors.grey,
+              onTap: () => _showComingSoonMessage('Deposit'),
             ),
           ),
           const SizedBox(width: 12),
@@ -264,8 +313,8 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
             child: _ActionButton(
               icon: Icons.remove_circle_outline,
               label: 'Withdraw',
-              color: Colors.orange,
-              onTap: () => _showWithdrawDialog(userId, userName, userPhone),
+              color: Colors.grey,
+              onTap: () => _showComingSoonMessage('Withdraw'),
             ),
           ),
           const SizedBox(width: 12),
@@ -282,9 +331,19 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
     );
   }
 
+  void _showComingSoonMessage(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature feature coming soon! Currently, only premium subscription payments are available.'),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Widget _buildTransactionsList(String userId) {
-    return StreamBuilder<List<Transaction>>(
-      stream: _walletService.streamTransactions(userId),
+    return StreamBuilder<List<app_transaction.Transaction>>(
+      stream: streamTransactions(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -841,7 +900,6 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
       MaterialPageRoute(
         builder: (context) => _TransactionHistoryScreen(
           userId: userId,
-          walletService: _walletService,
         ),
       ),
     );
@@ -1049,11 +1107,9 @@ class _StatusBadge extends StatelessWidget {
 
 class _TransactionHistoryScreen extends StatelessWidget {
   final String userId;
-  final WalletService walletService;
 
   const _TransactionHistoryScreen({
     required this.userId,
-    required this.walletService,
   });
 
   @override
@@ -1063,8 +1119,16 @@ class _TransactionHistoryScreen extends StatelessWidget {
         title: const Text('Transaction History'),
         backgroundColor: AppTheme.primaryColor,
       ),
-      body: StreamBuilder<List<Transaction>>(
-        stream: walletService.streamTransactions(userId),
+      body: StreamBuilder<List<app_transaction.Transaction>>(
+        stream: FirebaseFirestore.instance
+            .collection('transactions')
+            .where('userId', isEqualTo: userId)
+            .orderBy('createdAt', descending: true)
+            .limit(50)
+            .snapshots()
+            .map((snapshot) => snapshot.docs
+                .map((doc) => app_transaction.Transaction.fromFirestore(doc.data(), doc.id))
+                .toList()),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
