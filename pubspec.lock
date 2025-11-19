@@ -824,6 +824,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  pawa_pay_flutter:
+    dependency: "direct main"
+    description:
+      name: pawa_pay_flutter
+      sha256: a2e64d99b86529582fafa9c224b09bb461773d8ec090863bcf3576ea062e361c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   pdf:
     dependency: "direct main"
     description:

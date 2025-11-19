@@ -1,343 +1,398 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+// Import the PawaPayRepo class from pawa_pay_flutter package
+import 'package:pawa_pay_flutter/pawa_pay_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
+import '../models/transaction.dart' as app_transaction;
 
-/// PawaPay Mobile Money Payment Service
-/// Handles deposits, payouts, and refunds via PawaPay API
+/// Mobile Money Operator types supported in Uganda
+enum MobileMoneyOperator {
+  mtn,
+  airtel,
+  unknown,
+}
+
+/// Payment status for tracking deposit lifecycle
+enum PaymentStatus {
+  initiated,
+  pending,
+  completed,
+  failed,
+  cancelled,
+}
+
+/// Result of a payment operation
+class PaymentResult {
+  final PaymentStatus status;
+  final String? transactionId;
+  final String? errorMessage;
+  final String? depositId;
+
+  PaymentResult({
+    required this.status,
+    this.transactionId,
+    this.errorMessage,
+    this.depositId,
+  });
+
+  bool get isSuccess => status == PaymentStatus.completed;
+}
+
+/// Service for handling PawaPay mobile money payments
 class PawaPayService {
-  // PawaPay API Configuration (Updated from official docs)
-  // Reference: https://docs.pawapay.io/v2/docs/how_to_start
-  static const String _sandboxBaseUrl = 'https://api.sandbox.pawapay.io';
-  static const String _productionBaseUrl = 'https://api.pawapay.io';
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final PawaPayRepo _pawaPayRepo;
+  final String _apiKey;
+  final bool _debugMode;
 
-  // Get API base URL based on environment
-  String get _baseUrl => kDebugMode ? _sandboxBaseUrl : _productionBaseUrl;
+  // Uganda price for premium subscription
+  static const double premiumSubscriptionPrice = 50000.0; // UGX 50,000
 
-  // API Token (should be stored securely in production)
-  // TODO: Move to environment variables or secure storage
-  final String _apiToken;
+  PawaPayService({
+    required String apiKey,
+    bool debugMode = false,
+  })  : _apiKey = apiKey,
+        _debugMode = debugMode {
+    _pawaPayRepo = PawaPayRepo(
+      apiKey: _apiKey,
+      debugeMode: _debugMode,  // Note: package uses 'debugeMode' (with 'e')
+    );
+  }
 
-  final Uuid _uuid = const Uuid();
+  /// Detect Mobile Money Operator from phone number
+  /// MTN: 077, 078, 039, 031
+  /// Airtel: 070, 075, 020
+  MobileMoneyOperator detectOperator(String phoneNumber) {
+    // Clean phone number (remove spaces, hyphens, etc.)
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
 
-  PawaPayService({required String apiToken}) : _apiToken = apiToken;
+    // Extract prefix (works for both +256XXXXXXXXX and 0XXXXXXXXX formats)
+    String prefix = '';
+    if (cleaned.startsWith('+256')) {
+      prefix = cleaned.substring(4, 7); // Get digits after +256
+    } else if (cleaned.startsWith('256')) {
+      prefix = cleaned.substring(3, 6); // Get digits after 256
+    } else if (cleaned.startsWith('0')) {
+      prefix = cleaned.substring(0, 3); // Get first 3 digits including 0
+    }
 
-  // ============================================================================
-  // DEPOSIT (Collect money from customer)
-  // ============================================================================
+    // MTN prefixes
+    if (prefix == '077' ||
+        prefix == '078' ||
+        prefix == '039' ||
+        prefix == '031') {
+      return MobileMoneyOperator.mtn;
+    }
 
-  /// Initiate a mobile money deposit (customer pays)
-  /// Returns deposit ID for tracking
-  Future<Map<String, dynamic>> initiateDeposit({
-    required double amount,
-    required String currency,
+    // Airtel prefixes
+    if (prefix == '070' || prefix == '075' || prefix == '020') {
+      return MobileMoneyOperator.airtel;
+    }
+
+    return MobileMoneyOperator.unknown;
+  }
+
+  /// Validate Uganda phone number format
+  /// Accepts: +256XXXXXXXXX, 256XXXXXXXXX, 0XXXXXXXXX
+  bool isValidPhoneNumber(String phoneNumber) {
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // Check valid formats
+    if (cleaned.startsWith('+256') && cleaned.length == 13) return true;
+    if (cleaned.startsWith('256') && cleaned.length == 12) return true;
+    if (cleaned.startsWith('0') && cleaned.length == 10) return true;
+
+    return false;
+  }
+
+  /// Normalize phone number to format required by PawaPay (0XXXXXXXXX)
+  String normalizePhoneNumber(String phoneNumber) {
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+    if (cleaned.startsWith('+256')) {
+      return '0${cleaned.substring(4)}';
+    } else if (cleaned.startsWith('256')) {
+      return '0${cleaned.substring(3)}';
+    } else if (cleaned.startsWith('0')) {
+      return cleaned;
+    }
+
+    throw ArgumentError('Invalid phone number format: $phoneNumber');
+  }
+
+  /// Get operator display name
+  String getOperatorName(MobileMoneyOperator operator) {
+    switch (operator) {
+      case MobileMoneyOperator.mtn:
+        return 'MTN Mobile Money';
+      case MobileMoneyOperator.airtel:
+        return 'Airtel Money';
+      case MobileMoneyOperator.unknown:
+        return 'Unknown Operator';
+    }
+  }
+
+  /// Initiate premium subscription payment
+  Future<PaymentResult> initiatePremiumPayment({
+    required String userId,
     required String phoneNumber,
-    required String correspondentId, // e.g., 'MTN_MOMO_UGA' for MTN Uganda
-    required String description,
-    String? customerName,
-    String? userId, // Added for webhook identification
-    Map<String, dynamic>? metadata, // Additional metadata
+    required String userName,
   }) async {
     try {
-      final depositId = _uuid.v4();
-
-      final requestBody = {
-        'depositId': depositId,
-        'amount': amount.toStringAsFixed(2),
-        'currency': currency,
-        'correspondent': correspondentId,
-        'payer': {
-          'type': 'MSISDN',
-          'address': {'value': _formatPhoneNumber(phoneNumber)},
-        },
-        'customerTimestamp': DateTime.now().toUtc().toIso8601String(),
-        'statementDescription': description,
-      };
-
-      if (customerName != null) {
-        (requestBody['payer'] as Map<String, dynamic>)['displayName'] =
-            customerName;
+      // Validate phone number
+      if (!isValidPhoneNumber(phoneNumber)) {
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage: 'Invalid phone number format. Use +256XXXXXXXXX or 0XXXXXXXXX',
+        );
       }
 
-      // Add metadata for webhook identification
-      if (userId != null || metadata != null) {
-        final meta = metadata ?? {};
-        if (userId != null) {
-          meta['userId'] = userId;
-        }
-        if (customerName != null) {
-          meta['userName'] = customerName;
-        }
-        requestBody['metadata'] = meta;
+      // Detect operator
+      final operator = detectOperator(phoneNumber);
+      if (operator == MobileMoneyOperator.unknown) {
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage:
+              'Could not detect mobile money operator. Please use MTN (077, 078) or Airtel (070, 075) number.',
+        );
       }
+
+      // Normalize phone number for PawaPay
+      final normalizedPhone = normalizePhoneNumber(phoneNumber);
+
+      // Generate unique deposit ID
+      const uuid = Uuid();
+      final depositId = uuid.v4();
 
       if (kDebugMode) {
-        debugPrint('🔵 PawaPay Deposit Request: $depositId');
-        debugPrint('   Amount: $currency $amount');
-        debugPrint('   Phone: $phoneNumber');
-        debugPrint('   Provider: $correspondentId');
+        debugPrint('🔄 Initiating PawaPay payment:');
+        debugPrint('  User: $userId');
+        debugPrint('  Phone: $normalizedPhone');
+        debugPrint('  Operator: ${getOperatorName(operator)}');
+        debugPrint('  Amount: UGX ${premiumSubscriptionPrice.toStringAsFixed(0)}');
+        debugPrint('  Deposit ID: $depositId');
       }
 
-      final response = await http.post(
-        Uri.parse('$_baseUrl/v2/deposits'), // Updated to v2 API
-        headers: {
-          'Authorization': 'Bearer $_apiToken',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(requestBody),
+      // Create pending transaction record
+      await _createPendingTransaction(
+        userId: userId,
+        depositId: depositId,
+        phoneNumber: phoneNumber,
+        operator: operator,
+      );
+
+      // Initiate deposit with PawaPay
+      // Note: Package method is 'customerDeposite' (with 'e')
+      final purchaseStatus = await _pawaPayRepo.customerDeposite(
+        phone: normalizedPhone,
+        amount: premiumSubscriptionPrice,
       );
 
       if (kDebugMode) {
-        debugPrint('📥 PawaPay Response: ${response.statusCode}');
-        debugPrint('   Body: ${response.body}');
+        debugPrint('📱 PawaPay Response: $purchaseStatus');
       }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {
-          'success': true,
-          'depositId': depositId,
-          'status': 'ACCEPTED',
-          'message':
-              'Deposit initiated. Customer will receive payment prompt on phone.',
-        };
-      } else if (response.statusCode == 202) {
-        return {
-          'success': true,
-          'depositId': depositId,
-          'status': 'SUBMITTED',
-          'message': 'Deposit submitted for processing.',
-        };
-      } else {
-        final errorData = json.decode(response.body);
-        return {
-          'success': false,
-          'error': errorData['message'] ?? 'Deposit failed',
-          'errorCode': errorData['code'],
-        };
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ PawaPay Deposit Error: $e');
-      }
-      return {'success': false, 'error': 'Network error: $e'};
-    }
-  }
-
-  // ============================================================================
-  // PAYOUT (Send money to user)
-  // ============================================================================
-
-  /// Initiate a mobile money payout (send money to user)
-  /// Returns payout ID for tracking
-  Future<Map<String, dynamic>> initiatePayout({
-    required double amount,
-    required String currency,
-    required String phoneNumber,
-    required String correspondentId,
-    required String description,
-    String? recipientName,
-  }) async {
-    try {
-      final payoutId = _uuid.v4();
-
-      final requestBody = {
-        'payoutId': payoutId,
-        'amount': amount.toStringAsFixed(2),
-        'currency': currency,
-        'correspondent': correspondentId,
-        'recipient': {
-          'type': 'MSISDN',
-          'address': {'value': _formatPhoneNumber(phoneNumber)},
-        },
-        'customerTimestamp': DateTime.now().toUtc().toIso8601String(),
-        'statementDescription': description,
-      };
-
-      if (recipientName != null) {
-        (requestBody['recipient'] as Map<String, dynamic>)['displayName'] =
-            recipientName;
-      }
-
-      if (kDebugMode) {
-        debugPrint('🟢 PawaPay Payout Request: $payoutId');
-        debugPrint('   Amount: $currency $amount');
-        debugPrint('   Phone: $phoneNumber');
-        debugPrint('   Provider: $correspondentId');
-      }
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/v2/payouts'), // Updated to v2 API
-        headers: {
-          'Authorization': 'Bearer $_apiToken',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(requestBody),
+      // Handle response
+      return _handlePaymentResponse(
+        purchaseStatus: purchaseStatus,
+        userId: userId,
+        depositId: depositId,
+        operator: operator,
       );
-
+    } catch (e, stackTrace) {
       if (kDebugMode) {
-        debugPrint('📥 PawaPay Response: ${response.statusCode}');
-        debugPrint('   Body: ${response.body}');
+        debugPrint('❌ Payment initiation error: $e');
+        debugPrint('Stack trace: $stackTrace');
       }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {
-          'success': true,
-          'payoutId': payoutId,
-          'status': 'ACCEPTED',
-          'message': 'Payout initiated successfully.',
-        };
-      } else if (response.statusCode == 202) {
-        return {
-          'success': true,
-          'payoutId': payoutId,
-          'status': 'SUBMITTED',
-          'message': 'Payout submitted for processing.',
-        };
-      } else {
-        final errorData = json.decode(response.body);
-        return {
-          'success': false,
-          'error': errorData['message'] ?? 'Payout failed',
-          'errorCode': errorData['code'],
-        };
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ PawaPay Payout Error: $e');
-      }
-      return {'success': false, 'error': 'Network error: $e'};
-    }
-  }
-
-  // ============================================================================
-  // STATUS CHECK
-  // ============================================================================
-
-  /// Check deposit status
-  Future<Map<String, dynamic>> checkDepositStatus(String depositId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/v2/deposits/$depositId'), // Updated to v2 API
-        headers: {'Authorization': 'Bearer $_apiToken'},
+      return PaymentResult(
+        status: PaymentStatus.failed,
+        errorMessage: 'Payment initiation failed: ${e.toString()}',
       );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {'success': true, 'status': data['status'], 'data': data};
-      } else {
-        return {'success': false, 'error': 'Failed to check status'};
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Check Deposit Status Error: $e');
-      }
-      return {'success': false, 'error': 'Network error: $e'};
     }
   }
 
-  /// Check payout status
-  Future<Map<String, dynamic>> checkPayoutStatus(String payoutId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/v2/payouts/$payoutId'), // Updated to v2 API
-        headers: {'Authorization': 'Bearer $_apiToken'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {'success': true, 'status': data['status'], 'data': data};
-      } else {
-        return {'success': false, 'error': 'Failed to check status'};
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Check Payout Status Error: $e');
-      }
-      return {'success': false, 'error': 'Network error: $e'};
-    }
-  }
-
-  // ============================================================================
-  // REFUND
-  // ============================================================================
-
-  /// Initiate a refund for a previous deposit
-  Future<Map<String, dynamic>> initiateRefund({
+  /// Handle payment response from PawaPay
+  PaymentResult _handlePaymentResponse({
+    required String purchaseStatus,
+    required String userId,
     required String depositId,
-    required double amount,
+    required MobileMoneyOperator operator,
+  }) {
+    switch (purchaseStatus) {
+      case 'PAYMENT_APPROVED':
+        if (kDebugMode) {
+          debugPrint('✅ Payment approved successfully');
+        }
+        // Update transaction status to completed
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.completed);
+        return PaymentResult(
+          status: PaymentStatus.completed,
+          transactionId: depositId,
+          depositId: depositId,
+        );
+
+      case 'PAYER_LIMIT_REACHED':
+        if (kDebugMode) {
+          debugPrint('⚠️ Payer limit reached');
+        }
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage:
+              'You have reached your ${getOperatorName(operator)} transaction limit. Please try again later or use a different number.',
+          depositId: depositId,
+        );
+
+      case 'PAYMENT_NOT_APPROVED':
+        if (kDebugMode) {
+          debugPrint('⚠️ Payment not approved by customer');
+        }
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        return PaymentResult(
+          status: PaymentStatus.cancelled,
+          errorMessage: 'Payment was not approved. Please try again.',
+          depositId: depositId,
+        );
+
+      case 'INSUFFICIENT_BALANCE':
+        if (kDebugMode) {
+          debugPrint('⚠️ Insufficient balance');
+        }
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage:
+              'Insufficient balance in your ${getOperatorName(operator)} wallet. Please top up and try again.',
+          depositId: depositId,
+        );
+
+      default:
+        if (kDebugMode) {
+          debugPrint('❌ Unknown payment status: $purchaseStatus');
+        }
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage: 'Payment failed: $purchaseStatus',
+          depositId: depositId,
+        );
+    }
+  }
+
+  /// Create pending transaction record in Firestore
+  Future<void> _createPendingTransaction({
+    required String userId,
+    required String depositId,
+    required String phoneNumber,
+    required MobileMoneyOperator operator,
   }) async {
     try {
-      final refundId = _uuid.v4();
-
-      final requestBody = {
-        'refundId': refundId,
-        'depositId': depositId,
-        'amount': amount.toStringAsFixed(2),
-      };
-
-      if (kDebugMode) {
-        debugPrint('🔴 PawaPay Refund Request: $refundId');
-        debugPrint('   Deposit ID: $depositId');
-        debugPrint('   Amount: $amount');
-      }
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/v2/refunds'), // Updated to v2 API
-        headers: {
-          'Authorization': 'Bearer $_apiToken',
-          'Content-Type': 'application/json',
+      final transaction = app_transaction.Transaction(
+        id: depositId,
+        type: app_transaction.TransactionType.shgPremiumSubscription,
+        buyerId: userId,
+        buyerName: 'User', // Will be updated with actual name
+        sellerId: 'system',
+        sellerName: 'SayeKatale Platform',
+        amount: premiumSubscriptionPrice,
+        serviceFee: 0.0,
+        sellerReceives: premiumSubscriptionPrice,
+        status: app_transaction.TransactionStatus.initiated,
+        paymentMethod: operator == MobileMoneyOperator.mtn
+            ? app_transaction.PaymentMethod.mtnMobileMoney
+            : app_transaction.PaymentMethod.airtelMoney,
+        paymentReference: depositId,
+        createdAt: DateTime.now(),
+        metadata: {
+          'subscription_type': 'premium_sme_directory',
+          'phone_number': phoneNumber,
+          'operator': getOperatorName(operator),
+          'deposit_id': depositId,
         },
-        body: json.encode(requestBody),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {
-          'success': true,
-          'refundId': refundId,
-          'message': 'Refund initiated successfully.',
-        };
-      } else {
-        final errorData = json.decode(response.body);
-        return {
-          'success': false,
-          'error': errorData['message'] ?? 'Refund failed',
-        };
+      await _firestore
+          .collection('transactions')
+          .doc(depositId)
+          .set(transaction.toFirestore());
+
+      if (kDebugMode) {
+        debugPrint('✅ Transaction record created: $depositId');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ PawaPay Refund Error: $e');
+        debugPrint('⚠️ Failed to create transaction record: $e');
       }
-      return {'success': false, 'error': 'Network error: $e'};
+      // Don't throw - allow payment to continue even if transaction logging fails
     }
   }
 
-  // ============================================================================
-  // HELPER METHODS
-  // ============================================================================
+  /// Update transaction status
+  Future<void> _updateTransactionStatus(
+    String depositId,
+    app_transaction.TransactionStatus status,
+  ) async {
+    try {
+      await _firestore.collection('transactions').doc(depositId).update({
+        'status': status.toString().split('.').last,
+        'completedAt':
+            status == app_transaction.TransactionStatus.completed
+                ? Timestamp.now()
+                : null,
+      });
 
-  /// Format phone number for PawaPay (international format without + sign)
-  String _formatPhoneNumber(String phoneNumber) {
-    // Remove all non-digit characters
-    String cleaned = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-
-    // If starts with 0, replace with country code (Uganda: 256)
-    if (cleaned.startsWith('0')) {
-      cleaned = '256${cleaned.substring(1)}';
+      if (kDebugMode) {
+        debugPrint('✅ Transaction status updated: $depositId -> $status');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to update transaction status: $e');
+      }
     }
-
-    // If doesn't start with country code, add it
-    if (!cleaned.startsWith('256')) {
-      cleaned = '256$cleaned';
-    }
-
-    return cleaned;
   }
 
-  /// Get supported correspondents (mobile money operators) for Uganda
-  static List<Map<String, String>> getSupportedCorrespondents() {
-    return [
-      {'id': 'MTN_MOMO_UGA', 'name': 'MTN Mobile Money', 'country': 'Uganda'},
-      {'id': 'AIRTEL_OAPI_UGA', 'name': 'Airtel Money', 'country': 'Uganda'},
-    ];
+  /// Record successful payment in wallet
+  Future<void> recordPaymentInWallet({
+    required String userId,
+    required String transactionId,
+    required double amount,
+  }) async {
+    try {
+      // Note: Wallet collection is backend-managed (firestore.rules prevents direct writes)
+      // This method is here for future webhook integration
+      // For now, wallet updates should be handled by backend webhook handler
+
+      if (kDebugMode) {
+        debugPrint('📝 Payment recorded: User $userId, Amount: UGX $amount');
+        debugPrint('⚠️  Wallet updates should be handled by PawaPay webhook');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to record payment in wallet: $e');
+      }
+    }
+  }
+
+  /// Get transaction details
+  Future<app_transaction.Transaction?> getTransaction(String depositId) async {
+    try {
+      final docSnapshot = await _firestore
+          .collection('transactions')
+          .doc(depositId)
+          .get();
+
+      if (!docSnapshot.exists) return null;
+
+      return app_transaction.Transaction.fromFirestore(
+        docSnapshot.data()!,
+        docSnapshot.id,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error fetching transaction: $e');
+      }
+      return null;
+    }
   }
 }

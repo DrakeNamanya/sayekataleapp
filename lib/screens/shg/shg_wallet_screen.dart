@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/wallet_service.dart';
-import '../../services/pawapay_service.dart';
-import '../../config/pawapay_config.dart';
+// import '../../services/wallet_service.dart';
+// import '../../services/pawapay_service.dart';
+// import '../../config/pawapay_config.dart';
 import '../../models/wallet.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/uganda_phone_validator.dart';
@@ -17,14 +17,16 @@ class SHGWalletScreen extends StatefulWidget {
 }
 
 class _SHGWalletScreenState extends State<SHGWalletScreen> {
-  late WalletService _walletService;
+  // NOTE: Wallet functionality is view-only in this screen
+  // PawaPay payment integration is handled in subscription_purchase_screen.dart
+  // late WalletService _walletService;
 
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay with API token from config
-    final pawaPayService = PawaPayService(apiToken: PawaPayConfig.apiToken);
-    _walletService = WalletService(pawaPayService: pawaPayService);
+    // Initialize PawaPay with API token from config (COMMENTED OUT - not needed for view-only wallet)
+    // final pawaPayService = PawaPayService(apiToken: PawaPayConfig.apiToken);
+    // _walletService = WalletService(pawaPayService: pawaPayService);
   }
 
   @override
