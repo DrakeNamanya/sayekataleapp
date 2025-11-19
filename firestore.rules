@@ -406,6 +406,39 @@ service cloud.firestore {
     }
     
     // ========================================
+    // User Complaints Collection (Main Complaints Collection)
+    // ========================================
+    
+    match /user_complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
     // Admin-Only Collections
     // ========================================
     
