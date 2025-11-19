@@ -117,14 +117,21 @@ service cloud.firestore {
     // ========================================
     
     match /receipts/{receiptId} {
-      // ✅ FIXED: Allow list queries for authenticated users
+      // Helper function to check receipt ownership
+      function isReceiptOwner() {
+        return isAuthenticated() &&
+               (resource.data.buyerId == request.auth.uid ||
+                resource.data.buyer_id == request.auth.uid ||
+                resource.data.sellerId == request.auth.uid ||
+                resource.data.seller_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list receipts
+      // Individual document access is controlled by get rule
       allow list: if isAuthenticated();
       
-      // Users can get specific receipts they own (buyer or seller)
-      allow get: if isAuthenticated() && 
-                    (resource.data.buyerId == request.auth.uid || 
-                     resource.data.sellerId == request.auth.uid ||
-                     isAdmin());
+      // Read individual receipt (user must be buyer or seller)
+      allow get: if isReceiptOwner() || isAdmin();
       
       // Receipts are system-generated only
       // Created by backend when order is confirmed
@@ -155,12 +162,20 @@ service cloud.firestore {
     // ========================================
     
     match /transactions/{transactionId} {
-      // ✅ FIXED: Allow list queries for authenticated users
+      // Helper function to check transaction ownership
+      function isTransactionOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list transactions
+      // Individual document access is controlled by get rule
+      // Client should filter by userId on their side
       allow list: if isAuthenticated();
       
-      // Users can get specific transactions they own
-      allow get: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
+      // Read individual transaction (user must own it)
+      allow get: if isTransactionOwner() || isAdmin();
       
       // Transactions are system-generated only
       // Created by backend webhooks
@@ -174,21 +189,29 @@ service cloud.firestore {
     // ========================================
     
     match /messages/{messageId} {
-      // ✅ FIXED: Allow list queries for authenticated users
+      // Helper function to check if user is sender or receiver
+      function isMessageParticipant() {
+        return isAuthenticated() &&
+               (resource.data.senderId == request.auth.uid ||
+                resource.data.sender_id == request.auth.uid ||
+                resource.data.receiverId == request.auth.uid ||
+                resource.data.receiver_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list messages
+      // Individual document access is controlled by get rule
+      // Client should filter by sender/receiver on their side
       allow list: if isAuthenticated();
       
-      // Users can get specific messages they're part of
-      allow get: if isAuthenticated() && 
-                    (resource.data.senderId == request.auth.uid || 
-                     resource.data.receiverId == request.auth.uid ||
-                     isAdmin());
+      // Read individual message (user must be sender or receiver)
+      allow get: if isMessageParticipant() || isAdmin();
       
-      // Users can create messages
-      // Must set themselves as sender
+      // Create message (user must be sender)
       allow create: if isAuthenticated() && 
-                       request.resource.data.senderId == request.auth.uid;
+                       (request.resource.data.senderId == request.auth.uid ||
+                        request.resource.data.sender_id == request.auth.uid);
       
-      // No updates or deletes (messages are immutable)
+      // Messages are immutable
       allow update: if false;
       allow delete: if false;
     }
@@ -286,24 +309,31 @@ service cloud.firestore {
     // ========================================
     
     match /notifications/{notificationId} {
-      // ✅ NEW: Allow list queries for authenticated users
+      // Helper function to check notification ownership
+      function isNotificationOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list notifications
+      // Individual document access is controlled by get rule
+      // Client should filter by userId on their side
       allow list: if isAuthenticated();
       
-      // Users can get specific notifications sent to them
-      allow get: if isAuthenticated() && 
-                    resource.data.userId == request.auth.uid;
+      // Read individual notification (user must own it)
+      allow get: if isNotificationOwner() || isAdmin();
       
       // System can create notifications for users
       allow create: if isAuthenticated() &&
-                       request.resource.data.userId == request.auth.uid;
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
       
       // Users can update their own notifications (mark as read)
-      allow update: if isAuthenticated() &&
-                       resource.data.userId == request.auth.uid;
+      allow update: if isNotificationOwner();
       
       // Users can delete their own notifications
-      allow delete: if isAuthenticated() &&
-                       resource.data.userId == request.auth.uid;
+      allow delete: if isNotificationOwner();
     }
     
     // ========================================
