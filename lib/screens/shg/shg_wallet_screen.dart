@@ -8,7 +8,7 @@ import '../../providers/auth_provider.dart';
 // import '../../services/wallet_service.dart';
 // import '../../services/pawapay_service.dart';
 // import '../../config/pawapay_config.dart';
-import '../../models/wallet.dart';
+import '../../models/wallet.dart' hide Transaction;
 import '../../models/transaction.dart' as app_transaction;
 import '../../utils/app_theme.dart';
 import '../../utils/uganda_phone_validator.dart';
@@ -39,13 +39,14 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
     }
     // Create empty wallet if it doesn't exist
     final newWallet = Wallet(
+      id: userId,
       userId: userId,
       balance: 0.0,
       currency: 'UGX',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
-    await _firestore.collection('wallets').doc(userId).set(newWallet.toMap());
+    await _firestore.collection('wallets').doc(userId).set(newWallet.toFirestore());
     return newWallet;
   }
 
@@ -56,6 +57,7 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
         return Wallet.fromFirestore(doc.data()!, userId);
       }
       return Wallet(
+        id: userId,
         userId: userId,
         balance: 0.0,
         currency: 'UGX',
@@ -398,503 +400,6 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
   // DIALOGS
   // ============================================================================
 
-  void _showDepositDialog(String userId, String userName, String userPhone) {
-    final phoneController = TextEditingController();
-    final amountController = TextEditingController();
-    String? selectedProvider;
-    String? detectedOperator;
-    String? phoneError;
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Deposit Money'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Step 1: Phone Number Input
-                const Text(
-                  'Step 1: Enter your mobile money number',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '0712 345 678',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.phone),
-                    errorText: phoneError,
-                  ),
-                  onChanged: (value) {
-                    setDialogState(() {
-                      // Validate phone number
-                      phoneError = UgandaPhoneValidator.validate(value);
-
-                      if (phoneError == null) {
-                        // Detect operator
-                        detectedOperator = UgandaPhoneValidator.getOperatorName(
-                          value,
-                        );
-
-                        // Auto-select provider based on operator
-                        if (detectedOperator?.contains('MTN') ?? false) {
-                          selectedProvider = 'MTN_MOMO_UGA';
-                        } else if (detectedOperator?.contains('Airtel') ??
-                            false) {
-                          selectedProvider = 'AIRTEL_OAPI_UGA';
-                        } else {
-                          selectedProvider = null;
-                          phoneError =
-                              'Only MTN and Airtel are supported for mobile money';
-                        }
-                      } else {
-                        detectedOperator = null;
-                        selectedProvider = null;
-                      }
-                    });
-                  },
-                ),
-                if (detectedOperator != null && phoneError == null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green.shade700,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '✓ Detected: $detectedOperator',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.green.shade900,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 20),
-
-                // Step 2: Amount Input
-                const Text(
-                  'Step 2: Enter amount to deposit',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount (UGX)',
-                    hintText: '10,000',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.money),
-                  ),
-                  enabled: phoneError == null && detectedOperator != null,
-                ),
-                const SizedBox(height: 16),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: Colors.blue.shade700,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'How it works:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '1. Enter your MTN or Airtel number\n'
-                        '2. Enter the amount to deposit\n'
-                        '3. Click "Initiate Deposit"\n'
-                        '4. You will receive a prompt on your phone\n'
-                        '5. Enter your PIN to complete the payment',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed:
-                  (isLoading ||
-                      phoneError != null ||
-                      detectedOperator == null ||
-                      selectedProvider == null)
-                  ? null
-                  : () async {
-                      final amount = double.tryParse(
-                        amountController.text.replaceAll(',', ''),
-                      );
-                      if (amount == null || amount <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please enter a valid amount'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (amount < 1000) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Minimum deposit amount is UGX 1,000',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-
-                      setDialogState(() {
-                        isLoading = true;
-                      });
-
-                      final result = await _walletService.initiateDeposit(
-                        userId: userId,
-                        amount: amount,
-                        phoneNumber: phoneController.text,
-                        provider: selectedProvider!,
-                        userName: userName,
-                      );
-
-                      setDialogState(() {
-                        isLoading = false;
-                      });
-
-                      if (mounted) {
-                        Navigator.pop(context);
-
-                        if (result['success']) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '✅ Deposit initiated!\n'
-                                'Check your phone (${phoneController.text}) for payment prompt.\n'
-                                'Enter your PIN to complete the deposit.',
-                              ),
-                              backgroundColor: Colors.green,
-                              duration: const Duration(seconds: 6),
-                            ),
-                          );
-                        } else {
-                          // Check if it's a CORS/network error
-                          final errorMsg = result['error'] ?? '';
-                          final isCorsError =
-                              errorMsg.contains('ClientException') ||
-                              errorMsg.contains('failed to fetch') ||
-                              errorMsg.contains('Network error');
-
-                          if (isCorsError) {
-                            // Show detailed CORS explanation
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      color: Colors.blue,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Web Preview Limitation'),
-                                  ],
-                                ),
-                                content: const SingleChildScrollView(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '🌐 PawaPay Integration Status',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      SizedBox(height: 12),
-                                      Text(
-                                        'The web preview cannot directly connect to PawaPay API due to browser security restrictions (CORS policy).',
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        '✅ Solutions:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        '1. Android APK (Recommended)',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        '   Mobile apps work perfectly - no CORS restrictions.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        '2. Backend Server',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        '   Use Cloud Functions or backend API to proxy PawaPay calls.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        '📱 To test PawaPay:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        '• Build Android APK and install on device\n• PawaPay will work fully in the mobile app',
-                                        style: TextStyle(fontSize: 13),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Got it'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else {
-                            // Show regular error
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(errorMsg),
-                                backgroundColor: Colors.red,
-                                duration: const Duration(seconds: 4),
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
-              child: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Initiate Deposit'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showWithdrawDialog(String userId, String userName, String userPhone) {
-    final amountController = TextEditingController();
-    String selectedProvider = 'MTN_MOMO_UGA';
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Withdraw Money'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Enter amount to withdraw',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount (UGX)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.money),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Withdraw to',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedProvider,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'MTN_MOMO_UGA',
-                      child: Text('MTN Mobile Money'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'AIRTEL_OAPI_UGA',
-                      child: Text('Airtel Money'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedProvider = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Money will be sent to your registered mobile number.',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      final amount = double.tryParse(amountController.text);
-                      if (amount == null || amount <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please enter a valid amount'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      setDialogState(() {
-                        isLoading = true;
-                      });
-
-                      final result = await _walletService.initiateWithdrawal(
-                        userId: userId,
-                        amount: amount,
-                        phoneNumber: userPhone,
-                        provider: selectedProvider,
-                        userName: userName,
-                      );
-
-                      setDialogState(() {
-                        isLoading = false;
-                      });
-
-                      if (mounted) {
-                        Navigator.pop(context);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              result['success']
-                                  ? result['message']
-                                  : result['error'],
-                            ),
-                            backgroundColor: result['success']
-                                ? Colors.green
-                                : Colors.red,
-                          ),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Withdraw'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showTransactionHistory(String userId) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -951,15 +456,15 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  final Transaction transaction;
+  final app_transaction.Transaction transaction;
 
   const _TransactionTile({required this.transaction});
 
   @override
   Widget build(BuildContext context) {
+    // Product purchases are income for SHG
     final isPositive =
-        transaction.type == TransactionType.deposit ||
-        transaction.type == TransactionType.earning;
+        transaction.type == app_transaction.TransactionType.smeToShgProductPurchase;
 
     return ListTile(
       leading: Container(
@@ -999,33 +504,27 @@ class _TransactionTile extends StatelessWidget {
 
   IconData _getTypeIcon() {
     switch (transaction.type) {
-      case TransactionType.deposit:
-        return Icons.add_circle;
-      case TransactionType.withdrawal:
-        return Icons.remove_circle;
-      case TransactionType.payment:
+      case app_transaction.TransactionType.shgToPsaInputPurchase:
         return Icons.shopping_cart;
-      case TransactionType.refund:
-        return Icons.refresh;
-      case TransactionType.earning:
-        return Icons.attach_money;
-      case TransactionType.purchase:
+      case app_transaction.TransactionType.smeToShgProductPurchase:
         return Icons.shopping_bag;
+      case app_transaction.TransactionType.shgPremiumSubscription:
+        return Icons.star;
+      case app_transaction.TransactionType.psaAnnualSubscription:
+        return Icons.card_membership;
     }
   }
 
   Color _getTypeColor() {
     switch (transaction.type) {
-      case TransactionType.deposit:
-      case TransactionType.earning:
-        return Colors.green;
-      case TransactionType.withdrawal:
-      case TransactionType.purchase:
+      case app_transaction.TransactionType.shgToPsaInputPurchase:
         return Colors.orange;
-      case TransactionType.payment:
-        return Colors.blue;
-      case TransactionType.refund:
+      case app_transaction.TransactionType.smeToShgProductPurchase:
+        return Colors.green;
+      case app_transaction.TransactionType.shgPremiumSubscription:
         return Colors.purple;
+      case app_transaction.TransactionType.psaAnnualSubscription:
+        return Colors.blue;
     }
   }
 
@@ -1046,7 +545,7 @@ class _TransactionTile extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final TransactionStatus status;
+  final app_transaction.TransactionStatus status;
 
   const _StatusBadge({required this.status});
 
@@ -1074,29 +573,44 @@ class _StatusBadge extends StatelessWidget {
 
   Color _getStatusColor() {
     switch (status) {
-      case TransactionStatus.completed:
+      case app_transaction.TransactionStatus.completed:
+      case app_transaction.TransactionStatus.confirmed:
         return Colors.green;
-      case TransactionStatus.pending:
-      case TransactionStatus.processing:
+      case app_transaction.TransactionStatus.initiated:
+      case app_transaction.TransactionStatus.paymentPending:
+      case app_transaction.TransactionStatus.paymentHeld:
+      case app_transaction.TransactionStatus.deliveryPending:
+      case app_transaction.TransactionStatus.deliveredPendingConfirmation:
+      case app_transaction.TransactionStatus.disbursementPending:
         return Colors.orange;
-      case TransactionStatus.failed:
-      case TransactionStatus.cancelled:
+      case app_transaction.TransactionStatus.failed:
+      case app_transaction.TransactionStatus.refunded:
         return Colors.red;
     }
   }
 
   String _getStatusText() {
     switch (status) {
-      case TransactionStatus.pending:
-        return 'Pending';
-      case TransactionStatus.processing:
-        return 'Processing';
-      case TransactionStatus.completed:
+      case app_transaction.TransactionStatus.initiated:
+        return 'Initiated';
+      case app_transaction.TransactionStatus.paymentPending:
+        return 'Payment Pending';
+      case app_transaction.TransactionStatus.paymentHeld:
+        return 'Payment Held';
+      case app_transaction.TransactionStatus.deliveryPending:
+        return 'Delivery Pending';
+      case app_transaction.TransactionStatus.deliveredPendingConfirmation:
+        return 'Awaiting Confirmation';
+      case app_transaction.TransactionStatus.confirmed:
+        return 'Confirmed';
+      case app_transaction.TransactionStatus.disbursementPending:
+        return 'Disbursement Pending';
+      case app_transaction.TransactionStatus.completed:
         return 'Completed';
-      case TransactionStatus.failed:
+      case app_transaction.TransactionStatus.failed:
         return 'Failed';
-      case TransactionStatus.cancelled:
-        return 'Cancelled';
+      case app_transaction.TransactionStatus.refunded:
+        return 'Refunded';
     }
   }
 }
