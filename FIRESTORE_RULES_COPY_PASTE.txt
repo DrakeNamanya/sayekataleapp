@@ -1,0 +1,337 @@
+═══════════════════════════════════════════════════════════════════════════
+FIRESTORE SECURITY RULES - COMPLETE FILE
+═══════════════════════════════════════════════════════════════════════════
+
+Copy and paste this ENTIRE content into Firebase Console → Firestore → Rules
+
+═══════════════════════════════════════════════════════════════════════════
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // Helper Functions
+    // ========================================
+    
+    /// Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /// Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    /// Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // ========================================
+    // Users Collection
+    // ========================================
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow update: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Products Collection
+    // ========================================
+    
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.farmerId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+    }
+    
+    // ========================================
+    // Orders Collection
+    // ========================================
+    
+    match /orders/{orderId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && 
+                    (resource.data.buyer_id == request.auth.uid || 
+                     resource.data.farmerId == request.auth.uid ||
+                     resource.data.seller_id == request.auth.uid ||
+                     isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       (resource.data.buyer_id == request.auth.uid || 
+                        resource.data.farmerId == request.auth.uid ||
+                        resource.data.seller_id == request.auth.uid ||
+                        isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Receipts Collection
+    // ========================================
+    
+    match /receipts/{receiptId} {
+      function isReceiptOwner() {
+        return isAuthenticated() &&
+               (resource.data.buyerId == request.auth.uid ||
+                resource.data.buyer_id == request.auth.uid ||
+                resource.data.sellerId == request.auth.uid ||
+                resource.data.seller_id == request.auth.uid);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isReceiptOwner() || isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Wallets Collection
+    // ========================================
+    
+    match /wallets/{walletId} {
+      allow read: if isOwner(walletId) || isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Transactions Collection
+    // ========================================
+    
+    match /transactions/{transactionId} {
+      function isTransactionOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isTransactionOwner() || isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Conversations Collection
+    // ========================================
+    
+    match /conversations/{conversationId} {
+      function isConversationParticipant() {
+        return isAuthenticated() &&
+               resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      function isCreatingValidConversation() {
+        return isAuthenticated() &&
+               request.resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isConversationParticipant() || isAdmin();
+      allow create: if isCreatingValidConversation();
+      allow update: if isConversationParticipant();
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Messages Collection
+    // ========================================
+    
+    match /messages/{messageId} {
+      function isMessageConversationParticipant(conversationId) {
+        return isAuthenticated() &&
+               exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+               get(/databases/$(database)/documents/conversations/$(conversationId))
+                 .data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() &&
+                    (isMessageConversationParticipant(resource.data.conversation_id) ||
+                     isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.sender_id == request.auth.uid &&
+                       isMessageConversationParticipant(request.resource.data.conversation_id);
+      allow update: if isAuthenticated() &&
+                       isMessageConversationParticipant(resource.data.conversation_id) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read']);
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Subscriptions Collection
+    // ========================================
+    
+    match /subscriptions/{subscriptionId} {
+      allow read: if isOwner(subscriptionId) || isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Reviews Collection
+    // ========================================
+    
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.reviewerId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                       resource.data.reviewerId == request.auth.uid &&
+                       request.resource.data.reviewerId == resource.data.reviewerId &&
+                       request.resource.data.orderId == resource.data.orderId &&
+                       request.resource.data.revieweeId == resource.data.revieweeId;
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Cart Items Collection
+    // ========================================
+    
+    match /cart_items/{cartItemId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && 
+                    resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+    }
+    
+    // ========================================
+    // Favorite Products Collection
+    // ========================================
+    
+    match /favorite_products/{favoriteId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && 
+                    resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+    }
+    
+    // ========================================
+    // Notifications Collection
+    // ========================================
+    
+    match /notifications/{notificationId} {
+      function isNotificationOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isNotificationOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      allow update: if isNotificationOwner();
+      allow delete: if isNotificationOwner();
+    }
+    
+    // ========================================
+    // Complaints Collection (CSV Export)
+    // ========================================
+    
+    match /complaints/{complaintId} {
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isComplaintOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // 🔥 USER COMPLAINTS COLLECTION (MAIN APP)
+    // ========================================
+    
+    match /user_complaints/{complaintId} {
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      allow list: if isAuthenticated();
+      allow get: if isComplaintOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Admin-Only Collections
+    // ========================================
+    
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /system_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // Default Deny All
+    // ========================================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+═══════════════════════════════════════════════════════════════════════════
+END OF FIRESTORE RULES
+═══════════════════════════════════════════════════════════════════════════
+
+KEY SECTIONS FOR COMPLAINTS:
+
+1. Line ~320-340: "complaints" collection (for CSV export)
+2. Line ~345-365: "user_complaints" collection (MAIN APP - THIS IS CRITICAL!)
+
+Both collections have identical rules:
+- ✅ Allow list: All authenticated users
+- ✅ Allow get: Owner or admin only
+- ✅ Allow create: User must set themselves as complainant
+- ✅ Allow update: Admin or owner (pending complaints only)
+- ✅ Allow delete: Admin only
+
+═══════════════════════════════════════════════════════════════════════════

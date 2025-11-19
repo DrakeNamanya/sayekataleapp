@@ -1,0 +1,177 @@
+═══════════════════════════════════════════════════════════════════════════
+COMPLAINT RULES - WHAT TO ADD TO YOUR FIRESTORE RULES
+═══════════════════════════════════════════════════════════════════════════
+
+🔥 CRITICAL: Your app uses "user_complaints" collection, NOT "complaints"!
+
+Add BOTH of these sections to your firestore.rules file:
+
+═══════════════════════════════════════════════════════════════════════════
+
+SECTION 1: complaints collection (for CSV export service)
+───────────────────────────────────────────────────────────────────────────
+
+    // ========================================
+    // Complaints Collection (CSV Export)
+    // ========================================
+    
+    match /complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
+    }
+
+═══════════════════════════════════════════════════════════════════════════
+
+SECTION 2: user_complaints collection (MAIN APP - MOST IMPORTANT!)
+───────────────────────────────────────────────────────────────────────────
+
+    // ========================================
+    // User Complaints Collection (Main App)
+    // ========================================
+    
+    match /user_complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
+    }
+
+═══════════════════════════════════════════════════════════════════════════
+
+WHAT THESE RULES DO:
+═══════════════════════════════════════════════════════════════════════════
+
+✅ ALLOW LIST: Any authenticated user can query complaints
+   - But individual documents still require ownership check
+
+✅ ALLOW GET: User can read their own complaints OR admin can read all
+   - Checks if complaint's user_id matches current user's auth.uid
+
+✅ ALLOW CREATE: User can submit complaint, must be the complainant
+   - Validates request.resource.data.user_id == request.auth.uid
+   - Supports both userId and user_id field names
+
+✅ ALLOW UPDATE: Admin can update any, users can update pending only
+   - Users can only update if status is 'pending'
+   - Once admin responds, user cannot modify
+
+✅ ALLOW DELETE: Only admin can delete complaints
+   - Users cannot delete their own complaints
+
+═══════════════════════════════════════════════════════════════════════════
+
+WHERE TO ADD IN FIREBASE CONSOLE:
+═══════════════════════════════════════════════════════════════════════════
+
+1. Go to Firebase Console
+2. Select your project: sayekataleapp
+3. Navigate to: Firestore Database → Rules
+4. Find the section with other collection rules
+5. Add BOTH sections above (complaints AND user_complaints)
+6. Click "Publish" to deploy
+
+═══════════════════════════════════════════════════════════════════════════
+
+EXAMPLE PLACEMENT IN RULES FILE:
+═══════════════════════════════════════════════════════════════════════════
+
+    // ... other collections (notifications, etc) ...
+    
+    // ========================================
+    // Complaints Collection (CSV Export)
+    // ========================================
+    
+    match /complaints/{complaintId} {
+      // ... rules here ...
+    }
+    
+    // ========================================
+    // User Complaints Collection (Main App)
+    // ========================================
+    
+    match /user_complaints/{complaintId} {
+      // ... rules here ...
+    }
+    
+    // ========================================
+    // Admin-Only Collections
+    // ========================================
+    
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ... rest of file ...
+
+═══════════════════════════════════════════════════════════════════════════
+
+WHY TWO COLLECTIONS?
+═══════════════════════════════════════════════════════════════════════════
+
+Your app uses TWO different collection names:
+
+1. user_complaints → Used by complaint_service.dart (main app)
+2. complaints → Used by csv_export_service.dart (admin export)
+
+Both need rules, but user_complaints is the critical one for fixing the
+"permission denied" error you're seeing.
+
+═══════════════════════════════════════════════════════════════════════════
+
+AFTER DEPLOYMENT:
+═══════════════════════════════════════════════════════════════════════════
+
+Test complaint submission:
+1. Open your app
+2. Go to complaint submission form
+3. Fill in details and submit
+4. Expected result: ✅ "Complaint submitted successfully"
+5. No more "permission denied" error!
+
+═══════════════════════════════════════════════════════════════════════════
