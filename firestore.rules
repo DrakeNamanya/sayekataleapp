@@ -185,35 +185,71 @@ service cloud.firestore {
     }
     
     // ========================================
+    // Conversations Collection
+    // ========================================
+    
+    match /conversations/{conversationId} {
+      // Helper function to check if user is part of conversation
+      function isConversationParticipant() {
+        return isAuthenticated() &&
+               resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      // Helper function to check if user is creating conversation they're part of
+      function isCreatingValidConversation() {
+        return isAuthenticated() &&
+               request.resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      // ✅ Allow authenticated users to list conversations
+      allow list: if isAuthenticated();
+      
+      // Read individual conversation (user must be participant)
+      allow get: if isConversationParticipant() || isAdmin();
+      
+      // Create conversation (user must be one of the participants)
+      allow create: if isCreatingValidConversation();
+      
+      // Update conversation (user must be participant - for last message, unread count)
+      allow update: if isConversationParticipant();
+      
+      // Delete conversations (only admin or if user is sole participant)
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
     // Messages Collection
     // ========================================
     
     match /messages/{messageId} {
-      // Helper function to check if user is sender or receiver
-      function isMessageParticipant() {
+      // Helper function to check if user is part of the conversation
+      function isMessageConversationParticipant(conversationId) {
         return isAuthenticated() &&
-               (resource.data.senderId == request.auth.uid ||
-                resource.data.sender_id == request.auth.uid ||
-                resource.data.receiverId == request.auth.uid ||
-                resource.data.receiver_id == request.auth.uid);
+               exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+               get(/databases/$(database)/documents/conversations/$(conversationId))
+                 .data.participant_ids.hasAny([request.auth.uid]);
       }
       
-      // ✅ IMPROVED: Allow authenticated users to list messages
-      // Individual document access is controlled by get rule
-      // Client should filter by sender/receiver on their side
+      // ✅ Allow authenticated users to list messages
       allow list: if isAuthenticated();
       
-      // Read individual message (user must be sender or receiver)
-      allow get: if isMessageParticipant() || isAdmin();
+      // Read individual message (user must be part of conversation)
+      allow get: if isAuthenticated() &&
+                    (isMessageConversationParticipant(resource.data.conversation_id) ||
+                     isAdmin());
       
-      // Create message (user must be sender)
+      // Create message (user must be sender and part of conversation)
       allow create: if isAuthenticated() && 
-                       (request.resource.data.senderId == request.auth.uid ||
-                        request.resource.data.sender_id == request.auth.uid);
+                       request.resource.data.sender_id == request.auth.uid &&
+                       isMessageConversationParticipant(request.resource.data.conversation_id);
       
-      // Messages are immutable
-      allow update: if false;
-      allow delete: if false;
+      // Update message (only to mark as read, by conversation participant)
+      allow update: if isAuthenticated() &&
+                       isMessageConversationParticipant(resource.data.conversation_id) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read']);
+      
+      // Delete messages (only admin)
+      allow delete: if isAdmin();
     }
     
     // ========================================
@@ -334,6 +370,39 @@ service cloud.firestore {
       
       // Users can delete their own notifications
       allow delete: if isNotificationOwner();
+    }
+    
+    // ========================================
+    // Complaints Collection (User Complaints/Issues)
+    // ========================================
+    
+    match /complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
     }
     
     // ========================================
