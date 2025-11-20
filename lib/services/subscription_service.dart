@@ -125,6 +125,11 @@ class SubscriptionService {
       final startDate = DateTime.now();
       final endDate = startDate.add(const Duration(days: 365));
 
+      // ✅ Ensure payment reference is always non-null and non-empty
+      final effectivePaymentRef = (paymentReference != null && paymentReference.isNotEmpty)
+          ? paymentReference
+          : 'PENDING-${DateTime.now().millisecondsSinceEpoch}';
+
       final subscription = Subscription(
         id: userId, // Use userId as document ID to match security rules
         userId: userId,
@@ -134,7 +139,7 @@ class SubscriptionService {
         endDate: endDate,
         amount: yearlySmeDirectoryPrice,
         paymentMethod: paymentMethod,
-        paymentReference: paymentReference ?? 'PENDING-${DateTime.now().millisecondsSinceEpoch}',
+        paymentReference: effectivePaymentRef,
         createdAt: DateTime.now(),
       );
 

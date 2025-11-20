@@ -80,7 +80,8 @@ class Subscription {
 
   /// Convert to Firestore document
   Map<String, dynamic> toFirestore() {
-    return {
+    // ✅ Ensure all required String fields are non-null
+    final Map<String, dynamic> data = {
       'user_id': userId,
       'type': type.toString().split('.').last,
       'status': status.toString().split('.').last,
@@ -88,12 +89,19 @@ class Subscription {
       'end_date': Timestamp.fromDate(endDate),
       'amount': amount,
       'payment_method': paymentMethod,
-      'payment_reference': paymentReference,
       'created_at': Timestamp.fromDate(createdAt),
-      'cancelled_at': cancelledAt != null
-          ? Timestamp.fromDate(cancelledAt!)
-          : null,
     };
+    
+    // Add optional fields only if they have values
+    if (paymentReference != null && paymentReference!.isNotEmpty) {
+      data['payment_reference'] = paymentReference;
+    }
+    
+    if (cancelledAt != null) {
+      data['cancelled_at'] = Timestamp.fromDate(cancelledAt!);
+    }
+    
+    return data;
   }
 }
 
