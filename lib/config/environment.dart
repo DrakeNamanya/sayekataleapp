@@ -54,7 +54,7 @@ class Environment {
   /// PawaPay API Token (MUST be provided via --dart-define in production)
   static const String pawaPayToken = String.fromEnvironment(
     'PAWAPAY_API_TOKEN',
-    defaultValue: '', // Empty for security - must be provided at build time
+    defaultValue: 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc5MTY2MzYxLCJpYXQiOjE3NjM2MzM1NjEsInBtIjoiREFGLFBBRiIsImp0aSI6IjBlYmU3NDAwLWYxNzgtNGIyMi04ODRjLWZkZmJlODdmNjNjZiJ9.omxE-Q_5xu3wL8bq90REgP8FTPB7uWtJFgjtOZAUamuIYlOF9QlHn719zmi-kk0r7OFQUzBU3LiTi4nJdF_Tqw', // Temporary for testing
   );
 
   /// PawaPay Deposit Callback URL
