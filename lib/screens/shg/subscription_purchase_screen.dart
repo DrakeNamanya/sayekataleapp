@@ -572,7 +572,7 @@ class _SubscriptionPurchaseScreenState
                     )
                   : null,
               border: const OutlineInputBorder(),
-              helperText: 'MTN: 077/078/076/079  •  Airtel: 070/074/075',
+              helperText: 'MTN: 077/078/076/079/031/039  •  Airtel: 070/074/075',
             ),
           ),
           if (_detectedOperator == MobileMoneyOperator.unknown) ...[
