@@ -1,0 +1,49 @@
+🚀 Quick Deployment Commands
+==============================
+
+GOOGLE CLOUD SHELL (Recommended):
+---------------------------------
+1. Open: https://console.cloud.google.com/
+2. Click: "Activate Cloud Shell" (>_)
+3. Run these commands:
+
+git clone https://github.com/DrakeNamanya/sayekataleapp.git
+cd sayekataleapp
+npm install -g firebase-tools
+firebase login --no-localhost
+cd functions && npm install && cd ..
+firebase deploy --only functions --project sayekataleapp
+
+
+EXPECTED OUTPUT:
+----------------
+✔  functions[pawaPayWebhook(us-central1)]: Deployed
+✔  functions[pawaPayWebhookHealth(us-central1)]: Deployed
+
+Webhook URL:
+https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook
+
+COPY THIS URL FOR PAWAPAY CONFIGURATION!
+
+
+PAWAPAY CONFIGURATION:
+---------------------
+1. Go to: https://dashboard.pawapay.io/
+2. Navigate to: Settings → Webhooks
+3. Add Webhook:
+   - URL: https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook
+   - Method: POST
+   - Events: deposit.status.updated
+4. Save and test
+
+
+VERIFICATION:
+-------------
+curl https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhookHealth
+
+Expected: {"status":"healthy","service":"PawaPay Webhook"}
+
+
+FIREBASE LOGS:
+--------------
+https://console.firebase.google.com/project/sayekataleapp/functions/logs

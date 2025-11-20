@@ -1,582 +1,314 @@
-# PawaPay Webhook Deployment Guide
+# 🚀 Firebase Webhook Deployment Guide
 
-## 🎯 Overview
+## Prerequisites Completed ✅
 
-This guide walks you through deploying the PawaPay webhook handler to Firebase Cloud Functions. The webhook enables reliable, asynchronous payment confirmation and automatic premium subscription activation.
-
-**What the Webhook Does:**
-- ✅ Receives payment status updates from PawaPay
-- ✅ Verifies webhook signatures (RFC-9421)
-- ✅ Prevents duplicate processing (idempotency)
-- ✅ Updates transaction status in Firestore
-- ✅ Activates premium subscriptions automatically
-- ✅ Handles retries gracefully
+- ✅ Webhook functions code ready (`functions/index.js`)
+- ✅ Firebase project configured (`sayekataleapp`)
+- ✅ Node.js dependencies installed (403 packages)
+- ✅ Firebase Admin SDK configured
+- ✅ Firestore security rules deployed
 
 ---
 
-## 📋 Prerequisites
+## Deployment Options
 
-Before starting, ensure you have:
+### **Option 1: Google Cloud Shell (Recommended)** ⭐
 
-- [x] Firebase CLI installed (`firebase --version` shows 14.20.0 or higher)
-- [x] Node.js v20 installed (`node --version` shows v20.x.x)
-- [x] Firebase project initialized
-- [x] Admin access to Firebase Console
-- [x] PawaPay account and API credentials
+**Advantages:**
+- ✅ No local setup required
+- ✅ Direct access to Google Cloud
+- ✅ Pre-configured authentication
+- ✅ Fastest deployment method
 
----
+**Steps:**
 
-## 🚀 Step 1: Install Dependencies
+1. **Open Google Cloud Shell:**
+   - Go to: https://console.cloud.google.com/
+   - Click the **"Activate Cloud Shell"** icon (>_) in the top right
+   - Wait for terminal to initialize
 
-Navigate to the functions directory and install required packages:
-
-```bash
-cd /home/user/flutter_app/functions
-npm install
-```
-
-This installs:
-- `firebase-admin` - Firestore database access
-- `firebase-functions` - Cloud Functions runtime
-- `express` - HTTP server framework
-- `cors` - Cross-origin resource sharing
-
----
-
-## 🔐 Step 2: Firebase Authentication
-
-Ensure you're logged into Firebase:
-
-```bash
-firebase login
-```
-
-If already logged in, verify your projects:
-
-```bash
-firebase projects:list
-```
-
-Select your project (if not already selected):
-
-```bash
-firebase use <your-project-id>
-```
-
----
-
-## 🧪 Step 3: Test Locally (Optional but Recommended)
-
-Test the webhook locally before deploying:
-
-```bash
-cd /home/user/flutter_app
-firebase emulators:start --only functions
-```
-
-This starts a local emulator at:
-- Functions: `http://localhost:5001/<project-id>/us-central1/pawaPayWebhook`
-- Health check: `http://localhost:5001/<project-id>/us-central1/pawaPayWebhookHealth`
-
-**Test the health endpoint:**
-
-```bash
-curl http://localhost:5001/<project-id>/us-central1/pawaPayWebhookHealth
-```
-
-Expected response:
-```json
-{
-  "status": "healthy",
-  "message": "PawaPay webhook handler is running",
-  "timestamp": "2025-11-19T...",
-  "version": "2.0.0"
-}
-```
-
-**Test webhook with sample payload:**
-
-```bash
-curl -X POST http://localhost:5001/<project-id>/us-central1/pawaPayWebhook \
-  -H "Content-Type: application/json" \
-  -H "Digest: sha-256=..." \
-  -d '{
-    "id": "test-deposit-id-123",
-    "status": "COMPLETED",
-    "amount": "50000.00",
-    "currency": "UGX",
-    "correspondent": "MTN_MOMO_UGA"
-  }'
-```
-
-**Stop emulator when done:**
-Press `Ctrl+C` in the terminal.
-
----
-
-## 🚀 Step 4: Deploy to Firebase
-
-Deploy the webhook to Firebase Cloud Functions:
-
-```bash
-cd /home/user/flutter_app
-firebase deploy --only functions
-```
-
-**Expected output:**
-```
-✔  functions: Finished running predeploy script.
-i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
-✔  functions: required API cloudfunctions.googleapis.com is enabled
-i  functions: preparing functions directory for uploading...
-i  functions: packaged functions (XX.XX KB) for uploading
-✔  functions: functions folder uploaded successfully
-i  functions: updating Node.js 20 function pawaPayWebhook(us-central1)...
-i  functions: updating Node.js 20 function pawaPayWebhookHealth(us-central1)...
-i  functions: updating Node.js 20 function manualActivateSubscription(us-central1)...
-✔  functions[pawaPayWebhook(us-central1)]: Successful update operation.
-✔  functions[pawaPayWebhookHealth(us-central1)]: Successful update operation.
-✔  functions[manualActivateSubscription(us-central1)]: Successful update operation.
-
-✔  Deploy complete!
-
-Functions URL (pawaPayWebhook):
-https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhook
-```
-
-**Save the Function URL** - you'll need it for PawaPay configuration.
-
----
-
-## 🔗 Step 5: Configure PawaPay Webhook URL
-
-### Option A: Via PawaPay Dashboard (Recommended)
-
-1. Log into PawaPay Dashboard:
-   - Production: https://dashboard.pawapay.io/
-   - Sandbox: https://dashboard.sandbox.pawapay.io/
-
-2. Navigate to **Settings** → **Webhooks** or **Callbacks**
-
-3. Add your webhook URL:
-   ```
-   https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhook
-   ```
-
-4. Configure webhook events:
-   - ✅ Deposit Status Updates
-   - ✅ Payment Completed
-   - ✅ Payment Failed
-
-5. **Save** and **Test** the webhook connection
-
-### Option B: Via PawaPay API
-
-If webhook URL needs to be set via API:
-
-```bash
-curl -X POST https://api.pawapay.io/v1/config/callbacks \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "depositCallback": "https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhook"
-  }'
-```
-
----
-
-## ✅ Step 6: Verify Deployment
-
-### 6.1 Check Health Endpoint
-
-```bash
-curl https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhookHealth
-```
-
-Expected response:
-```json
-{
-  "status": "healthy",
-  "message": "PawaPay webhook handler is running",
-  "timestamp": "2025-11-19T21:45:00.000Z",
-  "version": "2.0.0"
-}
-```
-
-### 6.2 View Function Logs
-
-```bash
-firebase functions:log --only pawaPayWebhook
-```
-
-Or view in Firebase Console:
-1. Go to https://console.firebase.google.com/
-2. Select your project
-3. Navigate to **Functions** → **Logs**
-
-### 6.3 Test with Real Payment
-
-Make a small test payment (UGX 1,000) to verify:
-
-1. Open SayeKatale app
-2. Navigate to Premium Subscription screen
-3. Enter phone number: `0772123456` (or your test number)
-4. Click "Activate Subscription"
-5. Approve payment on your phone
-
-**Monitor logs:**
-```bash
-firebase functions:log --only pawaPayWebhook --follow
-```
-
-Expected log output:
-```
-📥 PawaPay Webhook Received
-✅ Digest verified
-✅ Signature verification passed
-📋 Transaction found: {...}
-✅ Payment COMPLETED: abc-123, Amount: UGX 50000.0
-✅ Premium subscription activated for user: user_xyz
-🎉 Premium subscription activated for user user_xyz
-✅ Marked as processed: abc-123
-```
-
----
-
-## 🔧 Step 7: Configure Firestore Security (Already Done)
-
-The webhook needs to write to Firestore. Security rules are already configured, but verify:
-
-```bash
-cat /home/user/flutter_app/firestore.rules
-```
-
-Ensure these collections allow backend writes:
-- ✅ `transactions` - Allow updates
-- ✅ `subscriptions` - Allow writes
-- ✅ `webhook_logs` - Allow writes
-
----
-
-## 📊 Step 8: Monitor & Maintain
-
-### View Function Metrics
-
-Firebase Console → Functions → Select function → View metrics:
-- Invocations count
-- Execution time
-- Error rate
-- Memory usage
-
-### Set Up Alerts
-
-1. Go to Firebase Console → **Alerting**
-2. Create alert for:
-   - Function errors exceeding threshold
-   - High invocation count (possible attack)
-   - Execution time exceeding 10 seconds
-
-### View Webhook Logs in Firestore
-
-All processed webhooks are logged to `webhook_logs` collection:
-
-```javascript
-// Query in Firebase Console or your admin panel
-db.collection('webhook_logs')
-  .orderBy('processed_at', 'desc')
-  .limit(50)
-  .get()
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: Function Not Found
-
-**Error:**
-```
-Cannot find function pawaPayWebhook
-```
-
-**Solution:**
-```bash
-# Redeploy functions
-cd /home/user/flutter_app
-firebase deploy --only functions
-```
-
----
-
-### Issue: Permission Denied
-
-**Error:**
-```
-403 Forbidden - Missing permissions
-```
-
-**Solution:**
-1. Check Firebase project permissions
-2. Ensure service account has Firestore write access
-3. Verify IAM roles in Google Cloud Console
-
----
-
-### Issue: Signature Verification Failed
-
-**Error in logs:**
-```
-❌ Signature verification failed
-❌ Digest mismatch
-```
-
-**Solution:**
-1. This is expected if testing manually (no valid signature)
-2. Real PawaPay webhooks will have valid signatures
-3. For testing, temporarily disable signature verification (NOT for production)
-
----
-
-### Issue: Transaction Not Found
-
-**Error in logs:**
-```
-⚠️ Transaction not found for depositId: xxx
-```
-
-**Possible causes:**
-1. Transaction not created before payment (app flow issue)
-2. Wrong depositId in webhook
-3. Database connection issue
-
-**Solution:**
-1. Verify transaction is created in Firestore before payment
-2. Check transaction document ID matches depositId
-3. Review app payment flow logs
-
----
-
-### Issue: Webhook Not Receiving Callbacks
-
-**Symptoms:**
-- Payment succeeds in app
-- No webhook logs in Firebase
-- Subscription not activated
-
-**Solution:**
-
-1. **Verify webhook URL in PawaPay Dashboard:**
-   ```
-   https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhook
-   ```
-
-2. **Test webhook endpoint manually:**
+2. **Clone Repository:**
    ```bash
-   curl https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhookHealth
+   git clone https://github.com/DrakeNamanya/sayekataleapp.git
+   cd sayekataleapp
    ```
 
-3. **Check PawaPay webhook logs** (in PawaPay Dashboard)
-
-4. **Verify function permissions:**
-   - Function must be publicly accessible
-   - No authentication required for webhook endpoint
-
-5. **Check function status:**
+3. **Install Firebase Tools:**
    ```bash
-   firebase functions:log --only pawaPayWebhook
+   npm install -g firebase-tools
+   ```
+
+4. **Login to Firebase:**
+   ```bash
+   firebase login --no-localhost
+   ```
+   - Follow the authentication link
+   - Copy the authorization code
+   - Paste it back in the terminal
+
+5. **Install Function Dependencies:**
+   ```bash
+   cd functions
+   npm install
+   cd ..
+   ```
+
+6. **Deploy Functions:**
+   ```bash
+   firebase deploy --only functions --project sayekataleapp
+   ```
+
+7. **Copy Webhook URL:**
+   After deployment, you'll see output like:
+   ```
+   ✔  functions: Finished running predeploy script.
+   ✔  functions[pawaPayWebhook(us-central1)]: Deployed
+   ✔  functions[pawaPayWebhookHealth(us-central1)]: Deployed
+   
+   Function URL (pawaPayWebhook):
+   https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook
+   ```
+   
+   **Copy this URL** - you'll need it for PawaPay configuration!
+
+---
+
+### **Option 2: Local Deployment**
+
+**Prerequisites:**
+- Node.js 20+ installed
+- Firebase CLI installed globally
+- Git installed
+
+**Steps:**
+
+1. **Clone Repository:**
+   ```bash
+   git clone https://github.com/DrakeNamanya/sayekataleapp.git
+   cd sayekataleapp
+   ```
+
+2. **Install Firebase Tools:**
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+3. **Login to Firebase:**
+   ```bash
+   firebase login
+   ```
+
+4. **Install Function Dependencies:**
+   ```bash
+   cd functions
+   npm install
+   cd ..
+   ```
+
+5. **Deploy:**
+   ```bash
+   firebase deploy --only functions --project sayekataleapp
    ```
 
 ---
 
-## 🔒 Security Considerations
+## Deployed Functions
 
-### Current Implementation
+After successful deployment, you'll have these Cloud Functions:
 
-✅ **Implemented:**
-- Digest verification (SHA-256)
-- Timestamp validation (replay protection)
-- Idempotency handling
-- CORS headers
-- Error handling
+### **1. pawaPayWebhook** (Main Handler)
+- **URL:** `https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook`
+- **Method:** POST
+- **Purpose:** Receives payment status updates from PawaPay
+- **Features:**
+  - ✅ RFC-9421 signature verification
+  - ✅ Idempotency handling
+  - ✅ Transaction status updates
+  - ✅ Automatic subscription activation
 
-⚠️ **Pending (Production TODO):**
-- Full RFC-9421 signature verification with PawaPay public key
-- Rate limiting
-- IP whitelist (PawaPay IP ranges)
-- Request logging and monitoring
-
-### Production Security Checklist
-
-Before going live:
-
-- [ ] Implement full RFC-9421 signature verification
-- [ ] Add PawaPay IP whitelist
-- [ ] Enable function authentication (with exception for webhook)
-- [ ] Set up monitoring and alerting
-- [ ] Test webhook retry logic
-- [ ] Review Firestore security rules
-- [ ] Implement rate limiting
-- [ ] Set up backup webhook handler (redundancy)
-
----
-
-## 📈 Performance Optimization
-
-### Current Configuration
-
-- Runtime: Node.js 20
-- Memory: 256 MB (default)
-- Timeout: 60 seconds (default)
-- Max instances: Unlimited (default)
-
-### Recommended Production Settings
-
-Update `firebase.json`:
-
-```json
-{
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs20",
-    "memory": "512MB",
-    "timeoutSeconds": 30,
-    "maxInstances": 100,
-    "minInstances": 1
+### **2. pawaPayWebhookHealth** (Health Check)
+- **URL:** `https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhookHealth`
+- **Method:** GET
+- **Purpose:** Verify webhook is running
+- **Response:** 
+  ```json
+  {
+    "status": "healthy",
+    "timestamp": "2025-11-20T12:00:00Z",
+    "service": "PawaPay Webhook"
   }
+  ```
+
+### **3. manualActivateSubscription** (Admin Utility)
+- **Type:** Callable Function
+- **Purpose:** Manually activate subscriptions for testing
+- **Usage:** Call from Flutter app or Firebase Console
+
+---
+
+## PawaPay Configuration
+
+After webhook deployment, configure PawaPay to send status updates:
+
+### **Step 1: Access PawaPay Dashboard**
+- Go to: https://dashboard.pawapay.io/ (or your PawaPay portal)
+- Login with your credentials
+
+### **Step 2: Navigate to Webhooks**
+- Click **"Developers"** or **"Settings"**
+- Select **"Webhooks"** or **"API Configuration"**
+
+### **Step 3: Add Webhook URL**
+- Click **"Add Webhook"** or **"New Endpoint"**
+- **URL:** `https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook`
+- **Method:** POST
+- **Events to subscribe:**
+  - ✅ `deposit.status.updated` (Critical)
+  - ✅ `payment.completed`
+  - ✅ `payment.failed`
+
+### **Step 4: Configure Signature Verification**
+- **Signature Type:** RFC-9421 (HTTP Message Signatures)
+- **Algorithm:** HMAC-SHA256
+- **Secret:** (Your PawaPay API secret key)
+
+### **Step 5: Test Webhook**
+- Use PawaPay's "Test Webhook" feature
+- Or initiate a real payment from the Flutter app
+- Check Firebase Functions logs to verify receipt
+
+---
+
+## Verification Steps
+
+### **1. Test Webhook Health Check**
+```bash
+curl https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhookHealth
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-11-20T...",
+  "service": "PawaPay Webhook"
 }
 ```
 
-Benefits:
-- Faster cold starts (min instances = 1)
-- Better performance (512MB memory)
-- Cost control (max instances = 100)
-- Faster timeout (30s instead of 60s)
+### **2. Check Firebase Function Logs**
+- Go to: https://console.firebase.google.com/project/sayekataleapp/functions/logs
+- Filter by function: `pawaPayWebhook`
+- Look for deployment success messages
+
+### **3. Monitor Webhook Activity**
+After PawaPay configuration:
+- Initiate a test payment from Flutter app
+- Check Firebase logs for incoming webhook requests
+- Verify transaction status updates in Firestore
 
 ---
 
-## 💰 Cost Estimation
+## Webhook Flow
 
-### Firebase Cloud Functions Pricing
+```
+1. User initiates payment in Flutter app
+   └─> Transaction created (status: initiated)
+   └─> Subscription created (status: pending)
 
-**Free Tier (per month):**
-- 2 million invocations
-- 400,000 GB-seconds
-- 200,000 CPU-seconds
-- 5 GB network egress
+2. User approves payment on phone
+   └─> PawaPay processes payment
 
-**Paid Tier:**
-- $0.40 per million invocations
-- $0.0000025 per GB-second
-- $0.00001 per CPU-second
+3. PawaPay sends webhook to Firebase Function
+   └─> Webhook verifies signature (RFC-9421)
+   └─> Webhook updates transaction (status: completed)
+   └─> Webhook activates subscription (status: active)
 
-**Estimated costs for 1,000 subscriptions/month:**
-- Invocations: ~3,000 (payment initiated + webhook callback + retry)
-- Cost: ~$0.01/month (well within free tier)
-
----
-
-## 🔄 Update & Redeploy
-
-When making changes to webhook code:
-
-1. **Edit** `/home/user/flutter_app/functions/index.js`
-
-2. **Test locally** (optional):
-   ```bash
-   firebase emulators:start --only functions
-   ```
-
-3. **Deploy:**
-   ```bash
-   firebase deploy --only functions
-   ```
-
-4. **Verify deployment:**
-   ```bash
-   curl https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhookHealth
-   ```
-
-5. **Monitor logs:**
-   ```bash
-   firebase functions:log --only pawaPayWebhook --follow
-   ```
+4. User gains premium access automatically
+```
 
 ---
 
-## 📚 Additional Resources
+## Troubleshooting
 
-### Firebase Documentation
-- Cloud Functions: https://firebase.google.com/docs/functions
-- Firestore: https://firebase.google.com/docs/firestore
-- Function logs: https://firebase.google.com/docs/functions/writing-and-viewing-logs
+### **Issue: Deployment fails with authentication error**
+**Solution:**
+```bash
+firebase login --reauth
+firebase use sayekataleapp
+firebase deploy --only functions
+```
 
-### PawaPay Documentation
-- Webhooks: https://docs.pawapay.io/implementation#handling-callbacks
-- Callback URL config: https://docs.pawapay.io/using_the_api#callback-urls
-- RFC-9421 signatures: https://docs.pawapay.io/v1/api-reference/deposits/deposit-callback
+### **Issue: Functions not deploying**
+**Solution:**
+```bash
+# Check Firebase CLI version
+firebase --version
 
-### Support
-- Firebase Support: https://firebase.google.com/support
-- PawaPay Support: support@pawapay.io
-- GitHub Issues: https://github.com/DrakeNamanya/sayekataleapp/issues
+# Update Firebase CLI
+npm install -g firebase-tools@latest
 
----
+# Clear cache and redeploy
+cd functions
+rm -rf node_modules package-lock.json
+npm install
+cd ..
+firebase deploy --only functions
+```
 
-## ✅ Deployment Checklist
+### **Issue: Webhook not receiving requests**
+**Solution:**
+1. Verify webhook URL in PawaPay dashboard
+2. Check if HTTPS is used (not HTTP)
+3. Verify PawaPay events are enabled
+4. Check Firebase Function logs for errors
 
-Use this checklist to verify successful deployment:
-
-**Pre-Deployment:**
-- [ ] Code reviewed and tested locally
-- [ ] Dependencies installed (`npm install`)
-- [ ] Firebase CLI authenticated (`firebase login`)
-- [ ] Correct project selected (`firebase use`)
-
-**Deployment:**
-- [ ] Functions deployed (`firebase deploy --only functions`)
-- [ ] Health endpoint accessible
-- [ ] Function logs show no errors
-
-**Configuration:**
-- [ ] Webhook URL configured in PawaPay Dashboard
-- [ ] Webhook events enabled (Deposit Status Updates)
-- [ ] Test webhook connection successful
-
-**Testing:**
-- [ ] Health check passes
-- [ ] Test payment completes successfully
-- [ ] Webhook logs show "COMPLETED" status
-- [ ] Subscription activated in Firestore
-- [ ] User can access premium directory
-
-**Monitoring:**
-- [ ] Function metrics visible in Firebase Console
-- [ ] Alerts configured for errors
-- [ ] Webhook logs collection monitored
-
-**Production:**
-- [ ] Full RFC-9421 signature verification implemented
-- [ ] Rate limiting enabled
-- [ ] IP whitelist configured
-- [ ] Backup webhook handler deployed
+### **Issue: Signature verification failing**
+**Solution:**
+1. Verify API secret key in PawaPay config
+2. Check signature algorithm (should be HMAC-SHA256)
+3. Review Firebase Function logs for signature details
 
 ---
 
-## 🎉 Success!
+## Important URLs
 
-Your PawaPay webhook is now deployed and ready to handle payment callbacks!
-
-**Next steps:**
-1. Make test payment
-2. Verify subscription activation
-3. Monitor logs for any issues
-4. Implement remaining security features
-5. Set up production monitoring
-
-**Questions?** Refer to the troubleshooting section or contact support.
+- **Firebase Console:** https://console.firebase.google.com/project/sayekataleapp
+- **Function Logs:** https://console.firebase.google.com/project/sayekataleapp/functions/logs
+- **Firestore Data:** https://console.firebase.google.com/project/sayekataleapp/firestore
+- **GitHub Repo:** https://github.com/DrakeNamanya/sayekataleapp
+- **Google Cloud Shell:** https://console.cloud.google.com/
 
 ---
 
-**Last Updated:** 2025-11-19  
-**Version:** 2.0.0  
-**Deployed Function URL:** `https://us-central1-<your-project-id>.cloudfunctions.net/pawaPayWebhook`
+## Expected Webhook URL
+
+After deployment, your webhook URL will be:
+```
+https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook
+```
+
+**Copy this URL for PawaPay configuration!**
+
+---
+
+## Security Notes
+
+1. **Signature Verification:** All webhook requests are verified using RFC-9421
+2. **Idempotency:** Duplicate webhook requests are safely handled
+3. **Admin SDK:** Firestore updates use Admin SDK (bypasses security rules)
+4. **HTTPS Only:** Webhook only accepts HTTPS requests
+
+---
+
+## Success Criteria
+
+✅ Webhook deployed successfully  
+✅ Health check responds with 200 OK  
+✅ PawaPay webhook URL configured  
+✅ Test payment updates subscription status  
+✅ Firebase logs show webhook activity  
+
+---
+
+**Last Updated:** November 20, 2025  
+**Status:** Ready for deployment 🚀
