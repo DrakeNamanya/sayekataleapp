@@ -119,6 +119,7 @@ class SubscriptionService {
     required String userId,
     required SubscriptionType type,
     required String paymentMethod,
+    String? paymentReference,
   }) async {
     try {
       final startDate = DateTime.now();
@@ -133,6 +134,7 @@ class SubscriptionService {
         endDate: endDate,
         amount: yearlySmeDirectoryPrice,
         paymentMethod: paymentMethod,
+        paymentReference: paymentReference ?? 'PENDING-${DateTime.now().millisecondsSinceEpoch}',
         createdAt: DateTime.now(),
       );
 

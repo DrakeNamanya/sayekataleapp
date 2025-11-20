@@ -143,6 +143,7 @@ class _SubscriptionPurchaseScreenState
           paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
               ? 'MTN Mobile Money'
               : 'Airtel Money',
+          paymentReference: paymentResult.depositId,
         );
 
         if (mounted) {
