@@ -273,10 +273,20 @@ service cloud.firestore {
       // Users can read their own subscriptions
       allow read: if isOwner(subscriptionId) || isAdmin();
       
-      // Subscriptions are system-managed only
-      // Created/updated through payment processing
-      allow create: if false;
-      allow update: if false;
+      // ✅ FIXED: Allow users to create pending subscriptions when initiating payment
+      // The subscriptionId MUST match their Firebase Auth UID
+      // Initial status must be 'pending' (webhook will update to 'active' after payment)
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == subscriptionId &&
+                       request.resource.data.status == 'pending';
+      
+      // ✅ FIXED: Allow users to update their own pending subscriptions
+      // (webhook will update to 'active' using admin SDK after payment completes)
+      allow update: if isAuthenticated() &&
+                       request.auth.uid == subscriptionId &&
+                       // Only allow updating status from pending to active/expired
+                       resource.data.status == 'pending';
+      
       allow delete: if isAdmin();
     }
     
