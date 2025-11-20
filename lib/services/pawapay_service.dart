@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-// Import the PawaPayRepo class from pawa_pay_flutter package
-import 'package:pawa_pay_flutter/pawa_pay_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/transaction.dart' as app_transaction;
 
 /// Mobile Money Operator types supported in Uganda
@@ -41,23 +41,21 @@ class PaymentResult {
 /// Service for handling PawaPay mobile money payments
 class PawaPayService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  late final PawaPayRepo _pawaPayRepo;
   final String _apiKey;
   final bool _debugMode;
 
   // Uganda price for premium subscription
   static const double premiumSubscriptionPrice = 50000.0; // UGX 50,000
+  
+  // PawaPay API endpoints
+  static const String _sandboxApiUrl = 'https://api.sandbox.pawapay.cloud';
+  static const String _productionApiUrl = 'https://api.pawapay.cloud';
 
   PawaPayService({
     required String apiKey,
     bool debugMode = false,
   })  : _apiKey = apiKey,
-        _debugMode = debugMode {
-    _pawaPayRepo = PawaPayRepo(
-      apiKey: _apiKey,
-      debugeMode: _debugMode,  // Note: package uses 'debugeMode' (with 'e')
-    );
-  }
+        _debugMode = debugMode;
 
   /// Detect Mobile Money Operator from phone number
   /// MTN: 077, 078, 039, 031
@@ -181,11 +179,16 @@ class PawaPayService {
         operator: operator,
       );
 
-      // Initiate deposit with PawaPay
-      // Note: Package method is 'customerDeposite' (with 'e')
-      final purchaseStatus = await _pawaPayRepo.customerDeposite(
+      // Initiate deposit with PawaPay - Direct API call for Uganda
+      final correspondent = operator == MobileMoneyOperator.mtn
+          ? 'MTN_MOMO_UGA'
+          : 'AIRTEL_OAPI_UGA';
+      
+      final purchaseStatus = await _initiateDepositDirectly(
+        depositId: depositId,
         phone: normalizedPhone,
         amount: premiumSubscriptionPrice,
+        correspondent: correspondent,
       );
 
       if (kDebugMode) {
@@ -222,6 +225,113 @@ class PawaPayService {
         status: PaymentStatus.failed,
         errorMessage: 'Payment initiation failed: ${e.toString()}',
       );
+    }
+  }
+
+  /// Initiate deposit directly with PawaPay API (Uganda-specific)
+  Future<String?> _initiateDepositDirectly({
+    required String depositId,
+    required String phone,
+    required double amount,
+    required String correspondent,
+  }) async {
+    try {
+      final apiUrl = _debugMode ? _sandboxApiUrl : _productionApiUrl;
+      
+      // Prepare request headers
+      final headers = {
+        'Authorization': 'Bearer $_apiKey',
+        'Content-Type': 'application/json',
+      };
+      
+      // Prepare request body for Uganda
+      final body = {
+        'depositId': depositId,
+        'amount': amount.toStringAsFixed(2),
+        'currency': 'UGX',  // Uganda Shillings
+        'country': 'UGA',   // Uganda
+        'correspondent': correspondent,  // MTN_MOMO_UGA or AIRTEL_OAPI_UGA
+        'payer': {
+          'type': 'MSISDN',
+          'address': {
+            'value': phone.startsWith('0') ? '+256${phone.substring(1)}' : phone,
+          },
+        },
+        'customerTimestamp': DateTime.now().toIso8601String(),
+        'statementDescription': 'Premium Subscription Payment',
+      };
+      
+      if (kDebugMode) {
+        debugPrint('🌐 Calling PawaPay API: $apiUrl/deposits');
+        debugPrint('📤 Request body: ${jsonEncode(body)}');
+      }
+      
+      // Send POST request to PawaPay API
+      final response = await http.post(
+        Uri.parse('$apiUrl/deposits'),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      
+      if (kDebugMode) {
+        debugPrint('📥 Response status: ${response.statusCode}');
+        debugPrint('📥 Response body: ${response.body}');
+      }
+      
+      // Check response status
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 202) {
+        // Deposit initiated successfully
+        // Now check the status after a brief delay
+        await Future.delayed(const Duration(seconds: 3));
+        return await _checkDepositStatus(depositId);
+      } else {
+        final errorBody = jsonDecode(response.body);
+        if (kDebugMode) {
+          debugPrint('❌ PawaPay API error: $errorBody');
+        }
+        return null;
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ Direct API call error: $e');
+        debugPrint('Stack trace: $stackTrace');
+      }
+      return null;
+    }
+  }
+  
+  /// Check deposit status with PawaPay API
+  Future<String?> _checkDepositStatus(String depositId) async {
+    try {
+      final apiUrl = _debugMode ? _sandboxApiUrl : _productionApiUrl;
+      
+      final headers = {
+        'Authorization': 'Bearer $_apiKey',
+        'Content-Type': 'application/json',
+      };
+      
+      final response = await http.get(
+        Uri.parse('$apiUrl/deposits/$depositId'),
+        headers: headers,
+      );
+      
+      if (kDebugMode) {
+        debugPrint('📥 Status check response: ${response.body}');
+      }
+      
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        // PawaPay returns an array with a single item
+        final depositData = result is List ? result.first : result;
+        return depositData['status'] as String?;
+      }
+      
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Status check error: $e');
+      }
+      return null;
     }
   }
 
