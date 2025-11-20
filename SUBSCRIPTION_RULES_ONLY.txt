@@ -1,0 +1,52 @@
+// ========================================
+// SUBSCRIPTIONS COLLECTION RULES ONLY
+// Replace lines 272-281 in your existing firestore.rules
+// ========================================
+
+match /subscriptions/{subscriptionId} {
+  // Users can read their own subscriptions
+  allow read: if isOwner(subscriptionId) || isAdmin();
+  
+  // ✅ FIXED: Allow users to create pending subscriptions when initiating payment
+  // The subscriptionId MUST match their Firebase Auth UID
+  // Initial status must be 'pending' (webhook will update to 'active' after payment)
+  allow create: if isAuthenticated() &&
+                   request.auth.uid == subscriptionId &&
+                   request.resource.data.status == 'pending';
+  
+  // ✅ FIXED: Allow users to update their own pending subscriptions
+  // (webhook will update to 'active' using admin SDK after payment completes)
+  allow update: if isAuthenticated() &&
+                   request.auth.uid == subscriptionId &&
+                   // Only allow updating status from pending to active/expired
+                   resource.data.status == 'pending';
+  
+  allow delete: if isAdmin();
+}
+
+// ========================================
+// DEPLOYMENT INSTRUCTIONS
+// ========================================
+// 
+// Option 1: Manual Edit in Firebase Console
+// ------------------------------------------
+// 1. Go to: https://console.firebase.google.com/project/sayekatale-app/firestore/rules
+// 2. Find the "Subscriptions Collection" section (around line 272)
+// 3. Find the match block: match /subscriptions/{subscriptionId} {
+// 4. Replace ONLY that block with the content above
+// 5. Keep everything else unchanged
+// 6. Click "Publish"
+//
+// Option 2: Replace Entire File (Safest)
+// ---------------------------------------
+// 1. Go to: https://console.firebase.google.com/project/sayekatale-app/firestore/rules
+// 2. Copy entire rules file from: https://github.com/DrakeNamanya/sayekataleapp/blob/main/firestore.rules
+// 3. Click "Raw" button to see plain text
+// 4. Select All (Ctrl+A) and Copy (Ctrl+C)
+// 5. In Firebase Console, Select All (Ctrl+A)
+// 6. Paste (Ctrl+V)
+// 7. Click "Publish"
+// 
+// RECOMMENDED: Option 2 (Replace Entire File)
+// This ensures no syntax errors and all rules are in sync
+//
