@@ -135,14 +135,14 @@ class _SubscriptionPurchaseScreenState
       }
 
       if (paymentResult.isSuccess) {
-        // Create subscription in Firestore
-        await _subscriptionService.createSubscription(
+        // Create PENDING subscription in Firestore
+        // Webhook will update to ACTIVE after payment completes
+        await _subscriptionService.createPendingSubscription(
           userId: userId,
           type: SubscriptionType.smeDirectory,
           paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
               ? 'MTN Mobile Money'
               : 'Airtel Money',
-          paymentReference: paymentResult.depositId ?? 'PAWA-${DateTime.now().millisecondsSinceEpoch}',
         );
 
         if (mounted) {

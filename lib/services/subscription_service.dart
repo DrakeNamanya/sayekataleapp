@@ -114,6 +114,7 @@ class SubscriptionService {
   }
 
   /// Create pending subscription (before payment)
+  /// CRITICAL: Document ID MUST be userId to match security rules
   Future<String> createPendingSubscription({
     required String userId,
     required SubscriptionType type,
@@ -124,10 +125,10 @@ class SubscriptionService {
       final endDate = startDate.add(const Duration(days: 365));
 
       final subscription = Subscription(
-        id: '',
+        id: userId, // Use userId as document ID to match security rules
         userId: userId,
         type: type,
-        status: SubscriptionStatus.pending,
+        status: SubscriptionStatus.pending, // PENDING status for security rules
         startDate: startDate,
         endDate: endDate,
         amount: yearlySmeDirectoryPrice,
@@ -135,15 +136,18 @@ class SubscriptionService {
         createdAt: DateTime.now(),
       );
 
-      final docRef = await _firestore
+      // ✅ FIXED: Use userId as document ID (required by security rules)
+      // Security rule: request.auth.uid == subscriptionId
+      await _firestore
           .collection('subscriptions')
-          .add(subscription.toFirestore());
+          .doc(userId) // Use userId as document ID
+          .set(subscription.toFirestore(), SetOptions(merge: false));
 
       if (kDebugMode) {
-        debugPrint('✅ Pending subscription created: ${docRef.id}');
+        debugPrint('✅ Pending subscription created for user: $userId');
       }
 
-      return docRef.id;
+      return userId;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error creating pending subscription: $e');

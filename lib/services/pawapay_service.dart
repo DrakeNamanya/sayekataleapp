@@ -192,6 +192,19 @@ class PawaPayService {
         debugPrint('📱 PawaPay Response: $purchaseStatus');
       }
 
+      // ✅ FIXED: Handle null response from PawaPay
+      if (purchaseStatus == null) {
+        if (kDebugMode) {
+          debugPrint('❌ PawaPay returned null response');
+        }
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage: 'Payment service did not respond. Please try again.',
+          depositId: depositId,
+        );
+      }
+
       // Handle response
       return _handlePaymentResponse(
         purchaseStatus: purchaseStatus,
@@ -224,8 +237,8 @@ class PawaPayService {
         if (kDebugMode) {
           debugPrint('✅ Payment approved successfully');
         }
-        // Update transaction status to completed
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.completed);
+        // Update transaction status to completed (fire and forget - webhook will also update)
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.completed).ignore();
         return PaymentResult(
           status: PaymentStatus.completed,
           transactionId: depositId,
@@ -236,7 +249,7 @@ class PawaPayService {
         if (kDebugMode) {
           debugPrint('⚠️ Payer limit reached');
         }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
         return PaymentResult(
           status: PaymentStatus.failed,
           errorMessage:
@@ -248,7 +261,7 @@ class PawaPayService {
         if (kDebugMode) {
           debugPrint('⚠️ Payment not approved by customer');
         }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
         return PaymentResult(
           status: PaymentStatus.cancelled,
           errorMessage: 'Payment was not approved. Please try again.',
@@ -259,7 +272,7 @@ class PawaPayService {
         if (kDebugMode) {
           debugPrint('⚠️ Insufficient balance');
         }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
         return PaymentResult(
           status: PaymentStatus.failed,
           errorMessage:
@@ -271,7 +284,7 @@ class PawaPayService {
         if (kDebugMode) {
           debugPrint('❌ Unknown payment status: $purchaseStatus');
         }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
         return PaymentResult(
           status: PaymentStatus.failed,
           errorMessage: 'Payment failed: $purchaseStatus',
