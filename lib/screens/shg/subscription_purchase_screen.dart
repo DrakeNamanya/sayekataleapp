@@ -572,7 +572,7 @@ class _SubscriptionPurchaseScreenState
                     )
                   : null,
               border: const OutlineInputBorder(),
-              helperText: 'MTN: 077/078  •  Airtel: 070/075',
+              helperText: 'MTN: 077/078/076/079  •  Airtel: 070/074/075',
             ),
           ),
           if (_detectedOperator == MobileMoneyOperator.unknown) ...[
@@ -642,7 +642,7 @@ class _SubscriptionPurchaseScreenState
           '5. Approve the payment of UGX 50,000';
     } else {
       instructions =
-          '1. Enter your MTN (077, 078) or Airtel (070, 075) number\n'
+          '1. Enter your MTN (077, 078, 076, 079, 031, 039) or Airtel (070, 074, 075) number\n'
           '2. Click "Activate Subscription" below\n'
           '3. Check your phone for payment prompt\n'
           '4. Enter your Mobile Money PIN to approve\n'

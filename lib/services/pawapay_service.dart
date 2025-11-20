@@ -58,8 +58,8 @@ class PawaPayService {
         _debugMode = debugMode;
 
   /// Detect Mobile Money Operator from phone number
-  /// MTN: 077, 078, 039, 031
-  /// Airtel: 070, 075, 020
+  /// MTN: 077, 078, 031, 039, 076, 079
+  /// Airtel: 070, 074, 075
   MobileMoneyOperator detectOperator(String phoneNumber) {
     // Clean phone number (remove spaces, hyphens, etc.)
     final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
@@ -74,16 +74,18 @@ class PawaPayService {
       prefix = cleaned.substring(0, 3); // Get first 3 digits including 0
     }
 
-    // MTN prefixes
+    // MTN prefixes (Updated with all current MTN Uganda prefixes)
     if (prefix == '077' ||
         prefix == '078' ||
+        prefix == '031' ||
         prefix == '039' ||
-        prefix == '031') {
+        prefix == '076' ||
+        prefix == '079') {
       return MobileMoneyOperator.mtn;
     }
 
-    // Airtel prefixes
-    if (prefix == '070' || prefix == '075' || prefix == '020') {
+    // Airtel prefixes (Updated with all current Airtel Uganda prefixes)
+    if (prefix == '070' || prefix == '074' || prefix == '075') {
       return MobileMoneyOperator.airtel;
     }
 
@@ -151,7 +153,7 @@ class PawaPayService {
         return PaymentResult(
           status: PaymentStatus.failed,
           errorMessage:
-              'Could not detect mobile money operator. Please use MTN (077, 078) or Airtel (070, 075) number.',
+              'Could not detect mobile money operator. Please use MTN (077, 078, 076, 079, 031, 039) or Airtel (070, 074, 075) number.',
         );
       }
 
