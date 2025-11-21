@@ -32,10 +32,11 @@ class _SubscriptionPurchaseScreenState
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay service with production API key
+    // Initialize PawaPay service with sandbox API for testing
+    // TODO: Set debugMode: false for production deployment
     _pawaPayService = PawaPayService(
       apiKey: pawaPayApiKey,
-      debugMode: false, // Production mode
+      debugMode: true, // Sandbox mode for testing - CHANGE TO false FOR PRODUCTION
     );
 
     // Listen to phone number changes to detect operator
