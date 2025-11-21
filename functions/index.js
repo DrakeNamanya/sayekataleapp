@@ -75,8 +75,33 @@ function toMsisdn(phone) {
  * @return {string} - Correspondent ID
  */
 function detectCorrespondent(phone) {
-  const msisdn = toMsisdn(phone);
-  const prefix = msisdn.substring(3, 6); // Get 3 digits after 256
+  // Work with original phone to preserve leading 0
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  
+  // Remove leading + if present
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  }
+  
+  // Extract prefix based on format
+  let prefix;
+  if (cleaned.startsWith('256')) {
+    // International format: 256774000001 -> check 774 first, then try 077
+    const digitAfter256 = cleaned.substring(3, 6);
+    // Check if it matches our patterns (might be 774 instead of 077)
+    // Try to reconstruct: 774 -> 077, 700 -> 070, etc.
+    if (digitAfter256.length === 3) {
+      prefix = '0' + digitAfter256.substring(0, 2); // Take first 2 digits and add 0 prefix
+    }
+  } else if (cleaned.startsWith('0')) {
+    // Local format: 0774000001 -> get 077
+    prefix = cleaned.substring(0, 3);
+  } else {
+    // Unknown format
+    prefix = cleaned.substring(0, 3);
+  }
+  
+  console.log('🔍 Operator detection:', { phone, cleaned, prefix });
   
   // MTN prefixes
   if (['077', '078', '031', '039', '076', '079'].includes(prefix)) {
@@ -88,7 +113,7 @@ function detectCorrespondent(phone) {
     return 'AIRTEL_OAPI_UGA';
   }
   
-  throw new Error(`Unknown operator for prefix ${prefix}`);
+  throw new Error(`Unknown operator for prefix ${prefix}. Please use MTN (077/078/076/079/031/039) or Airtel (070/074/075) number.`);
 }
 
 /**
