@@ -298,7 +298,7 @@ exports.initiatePayment = functions.https.onRequest(async (req, res) => {
     // Prepare PawaPay deposit request
     const depositData = {
       depositId: depositId,
-      amount: parseFloat(amount).toFixed(2),
+      amount: amount.toString(), // Send as string integer (no decimals for Airtel)
       currency: 'UGX',
       country: 'UGA',
       correspondent: correspondent,
