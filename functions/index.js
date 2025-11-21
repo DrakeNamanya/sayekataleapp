@@ -302,14 +302,23 @@ exports.initiatePayment = functions.https.onRequest(async (req, res) => {
     // Call PawaPay API
     const pawaPayResponse = await callPawaPayApi(depositData);
     
+    // Store PawaPay response in transaction for debugging
+    await transactionRef.update({
+      pawapay_response: pawaPayResponse,
+      pawapay_status: pawaPayResponse.data?.status || pawaPayResponse.error?.code || 'UNKNOWN',
+      pawapay_updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
     if (pawaPayResponse.success) {
       console.log('✅ PawaPay deposit initiated:', depositId);
+      console.log('📊 PawaPay Response:', JSON.stringify(pawaPayResponse.data));
       
       return res.status(200).json({
         success: true,
         depositId: depositId,
         message: 'Payment initiated. Please approve on your phone.',
-        status: 'SUBMITTED',
+        status: pawaPayResponse.data?.status || 'SUBMITTED',
+        pawapayData: pawaPayResponse.data, // Include PawaPay response
       });
     } else {
       console.error('❌ PawaPay API error:', pawaPayResponse.error);
