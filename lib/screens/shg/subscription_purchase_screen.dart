@@ -20,9 +20,7 @@ class _SubscriptionPurchaseScreenState
   final SubscriptionService _subscriptionService = SubscriptionService();
   final TextEditingController _phoneController = TextEditingController();
   
-  // PawaPay API key (from user's credentials)
-  static const String pawaPayApiKey = 'eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ.eyJ0dCI6IkFBVCIsInN1YiI6IjE5MTEiLCJtYXYiOiIxIiwiZXhwIjoyMDc5MTIwMDM2LCJpYXQiOjE3NjM1ODcyMzYsInBtIjoiREFGLFBBRiIsImp0aSI6Ijc4NWE5ZWFlLWM2YWQtNDNjZC1hN2RlLTA4YzQzNmJkMzQ0ZCJ9.sed2zJT2ZkNSsHm4kB-GXLejgbE5VQLHNGULX9L7mI_Vxcrcqcu6_Vb9i83nuHKZ00c3eV6-s1DWKZ1bzVYunw';
-  
+  // PawaPay service (no API key needed - handled by backend)
   late final PawaPayService _pawaPayService;
 
   bool _isProcessing = false;
@@ -32,12 +30,8 @@ class _SubscriptionPurchaseScreenState
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay service with sandbox API for testing
-    // TODO: Set debugMode: false for production deployment
-    _pawaPayService = PawaPayService(
-      apiKey: pawaPayApiKey,
-      debugMode: true, // Sandbox mode for testing - CHANGE TO false FOR PRODUCTION
-    );
+    // Initialize PawaPay service (backend handles API calls)
+    _pawaPayService = PawaPayService();
 
     // Listen to phone number changes to detect operator
     _phoneController.addListener(_onPhoneNumberChanged);

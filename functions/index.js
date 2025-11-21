@@ -14,9 +14,303 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const https = require('https');
+const http = require('http');
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// PawaPay Configuration
+const PAWAPAY_API_TOKEN = functions.config().pawapay?.api_token || process.env.PAWAPAY_API_TOKEN;
+const PAWAPAY_PRODUCTION_URL = 'https://api.pawapay.cloud';
+const PAWAPAY_SANDBOX_URL = 'https://api.sandbox.pawapay.cloud';
+const USE_SANDBOX = functions.config().pawapay?.use_sandbox === 'true' || process.env.USE_SANDBOX === 'true';
+const PAWAPAY_BASE_URL = USE_SANDBOX ? PAWAPAY_SANDBOX_URL : PAWAPAY_PRODUCTION_URL;
+
+console.log('🔧 PawaPay Configuration:', {
+  baseUrl: PAWAPAY_BASE_URL,
+  tokenSet: !!PAWAPAY_API_TOKEN,
+  mode: USE_SANDBOX ? 'SANDBOX' : 'PRODUCTION'
+});
+
+// ============================================================================
+// PAYMENT INITIATION (SERVER-SIDE)
+// ============================================================================
+
+/**
+ * Sanitize phone number to PawaPay MSISDN format: 2567XXXXXXXX
+ * Removes +, spaces, and leading 0
+ * 
+ * @param {string} phone - Phone number in various formats
+ * @return {string} - Sanitized MSISDN (e.g., 256774000001)
+ */
+function toMsisdn(phone) {
+  // Remove all non-digit characters except +
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  
+  // Remove leading + if present
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  }
+  
+  // Handle different formats
+  if (cleaned.startsWith('256')) {
+    // Already in international format (256...)
+    return cleaned;
+  } else if (cleaned.startsWith('0')) {
+    // Local format (0774...) -> add 256 prefix
+    return '256' + cleaned.substring(1);
+  } else {
+    // Assume it's already in correct format
+    return cleaned;
+  }
+}
+
+/**
+ * Detect correspondent from phone number
+ * MTN: 077, 078, 031, 039, 076, 079
+ * Airtel: 070, 074, 075
+ * 
+ * @param {string} phone - Phone number
+ * @return {string} - Correspondent ID
+ */
+function detectCorrespondent(phone) {
+  const msisdn = toMsisdn(phone);
+  const prefix = msisdn.substring(3, 6); // Get 3 digits after 256
+  
+  // MTN prefixes
+  if (['077', '078', '031', '039', '076', '079'].includes(prefix)) {
+    return 'MTN_MOMO_UGA';
+  }
+  
+  // Airtel prefixes
+  if (['070', '074', '075'].includes(prefix)) {
+    return 'AIRTEL_OAPI_UGA';
+  }
+  
+  throw new Error(`Unknown operator for prefix ${prefix}`);
+}
+
+/**
+ * Call PawaPay API to initiate deposit
+ * 
+ * @param {Object} depositData - Deposit request data
+ * @return {Promise<Object>} - PawaPay API response
+ */
+function callPawaPayApi(depositData) {
+  return new Promise((resolve, reject) => {
+    const dataString = JSON.stringify(depositData);
+    
+    const url = new URL(`${PAWAPAY_BASE_URL}/deposits`);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PAWAPAY_API_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(dataString),
+      },
+    };
+    
+    console.log('🌐 Calling PawaPay API:', {
+      url: url.toString(),
+      method: options.method,
+      depositId: depositData.depositId,
+    });
+    
+    const protocol = url.protocol === 'https:' ? https : http;
+    const req = protocol.request(options, (res) => {
+      let body = '';
+      
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      
+      res.on('end', () => {
+        console.log('📥 PawaPay Response:', {
+          statusCode: res.statusCode,
+          body: body,
+        });
+        
+        try {
+          const response = JSON.parse(body);
+          
+          if (res.statusCode === 200 || res.statusCode === 201 || res.statusCode === 202) {
+            resolve({
+              success: true,
+              statusCode: res.statusCode,
+              data: response,
+            });
+          } else {
+            resolve({
+              success: false,
+              statusCode: res.statusCode,
+              error: response,
+            });
+          }
+        } catch (e) {
+          reject(new Error(`Failed to parse PawaPay response: ${e.message}`));
+        }
+      });
+    });
+    
+    req.on('error', (e) => {
+      console.error('❌ PawaPay API error:', e);
+      reject(e);
+    });
+    
+    req.write(dataString);
+    req.end();
+  });
+}
+
+/**
+ * Initiate Payment Endpoint
+ * Called by Flutter client to start payment flow
+ * 
+ * POST /initiatePayment
+ * Body: { userId, phoneNumber, amount }
+ */
+exports.initiatePayment = functions.https.onRequest(async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+  
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const { userId, phoneNumber, amount } = req.body;
+    
+    // Validate request
+    if (!userId || !phoneNumber || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: userId, phoneNumber, amount',
+      });
+    }
+    
+    // Check if PAWAPAY_API_TOKEN is set
+    if (!PAWAPAY_API_TOKEN) {
+      console.error('❌ PAWAPAY_API_TOKEN not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Payment service not configured. Please contact support.',
+      });
+    }
+    
+    console.log('💳 Payment initiation request:', { userId, phoneNumber, amount });
+    
+    // Sanitize phone number to MSISDN format
+    const msisdn = toMsisdn(phoneNumber);
+    console.log('📱 Sanitized MSISDN:', msisdn);
+    
+    // Detect correspondent
+    let correspondent;
+    try {
+      correspondent = detectCorrespondent(phoneNumber);
+    } catch (e) {
+      return res.status(400).json({
+        success: false,
+        error: e.message,
+      });
+    }
+    console.log('📡 Correspondent:', correspondent);
+    
+    // Generate unique deposit ID
+    const depositId = `dep_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
+    // Create pending transaction in Firestore FIRST
+    const transactionRef = db.collection('transactions').doc(depositId);
+    await transactionRef.set({
+      id: depositId,
+      type: 'shgPremiumSubscription',
+      buyerId: userId,
+      buyerName: 'User',
+      sellerId: 'system',
+      sellerName: 'SayeKatale Platform',
+      amount: parseFloat(amount),
+      serviceFee: 0.0,
+      sellerReceives: parseFloat(amount),
+      status: 'initiated',
+      paymentMethod: correspondent.includes('MTN') ? 'mtnMobileMoney' : 'airtelMoney',
+      paymentReference: depositId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      metadata: {
+        subscription_type: 'premium_sme_directory',
+        phone_number: phoneNumber,
+        msisdn: msisdn,
+        operator: correspondent.includes('MTN') ? 'MTN Mobile Money' : 'Airtel Money',
+        deposit_id: depositId,
+        correspondent: correspondent,
+      },
+    });
+    
+    console.log('✅ Transaction created:', depositId);
+    
+    // Prepare PawaPay deposit request
+    const depositData = {
+      depositId: depositId,
+      amount: parseFloat(amount).toFixed(2),
+      currency: 'UGX',
+      country: 'UGA',
+      correspondent: correspondent,
+      payer: {
+        type: 'MSISDN',
+        address: {
+          value: msisdn,
+        },
+      },
+      customerTimestamp: new Date().toISOString(),
+      statementDescription: 'Premium Subscription Payment',
+    };
+    
+    // Call PawaPay API
+    const pawaPayResponse = await callPawaPayApi(depositData);
+    
+    if (pawaPayResponse.success) {
+      console.log('✅ PawaPay deposit initiated:', depositId);
+      
+      return res.status(200).json({
+        success: true,
+        depositId: depositId,
+        message: 'Payment initiated. Please approve on your phone.',
+        status: 'SUBMITTED',
+      });
+    } else {
+      console.error('❌ PawaPay API error:', pawaPayResponse.error);
+      
+      // Update transaction as failed
+      await transactionRef.update({
+        status: 'failed',
+        failureReason: JSON.stringify(pawaPayResponse.error),
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      return res.status(400).json({
+        success: false,
+        error: pawaPayResponse.error?.message || 'Payment initiation failed',
+        details: pawaPayResponse.error,
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error initiating payment:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 // ============================================================================
 // SIGNATURE VERIFICATION (RFC-9421)
@@ -315,13 +609,17 @@ exports.pawaPayWebhook = functions.https.onRequest(async (req, res) => {
         },
       });
 
-      // ACTIVATE PREMIUM SUBSCRIPTION
+      // ACTIVATE PREMIUM SUBSCRIPTION (only after successful payment)
       if (transactionType === 'shgPremiumSubscription') {
         const paymentMethod = correspondent.includes('MTN') ? 'MTN Mobile Money' : 'Airtel Money';
         
-        await activatePremiumSubscription(userId, depositId, paymentMethod);
-        
-        console.log(`🎉 Premium subscription activated for user ${userId}`);
+        try {
+          await activatePremiumSubscription(userId, depositId, paymentMethod);
+          console.log(`🎉 Premium subscription activated for user ${userId}`);
+        } catch (error) {
+          console.error(`❌ Failed to activate subscription for user ${userId}:`, error);
+          // Don't fail the webhook - transaction is already marked as completed
+        }
       }
 
     } else if (status === 'FAILED' || status === 'REJECTED') {

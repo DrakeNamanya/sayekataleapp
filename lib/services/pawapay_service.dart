@@ -39,23 +39,17 @@ class PaymentResult {
 }
 
 /// Service for handling PawaPay mobile money payments
+/// Uses server-side Cloud Functions for secure payment initiation
 class PawaPayService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _apiKey;
-  final bool _debugMode;
 
   // Uganda price for premium subscription
   static const double premiumSubscriptionPrice = 50000.0; // UGX 50,000
   
-  // PawaPay API endpoints
-  static const String _sandboxApiUrl = 'https://api.sandbox.pawapay.cloud';
-  static const String _productionApiUrl = 'https://api.pawapay.cloud';
+  // Cloud Functions endpoint for payment initiation
+  static const String _paymentInitiationUrl = 'https://us-central1-sayekataleapp.cloudfunctions.net/initiatePayment';
 
-  PawaPayService({
-    required String apiKey,
-    bool debugMode = false,
-  })  : _apiKey = apiKey,
-        _debugMode = debugMode;
+  PawaPayService();
 
   /// Detect Mobile Money Operator from phone number
   /// MTN: 077, 078, 031, 039, 076, 079
@@ -173,50 +167,51 @@ class PawaPayService {
         debugPrint('  Deposit ID: $depositId');
       }
 
-      // Create pending transaction record
-      await _createPendingTransaction(
+      // Call backend Cloud Function to initiate payment
+      final response = await _callBackendInitiatePayment(
         userId: userId,
-        depositId: depositId,
-        phoneNumber: phoneNumber,
-        operator: operator,
-      );
-
-      // Initiate deposit with PawaPay - Direct API call for Uganda
-      final correspondent = operator == MobileMoneyOperator.mtn
-          ? 'MTN_MOMO_UGA'
-          : 'AIRTEL_OAPI_UGA';
-      
-      final purchaseStatus = await _initiateDepositDirectly(
-        depositId: depositId,
-        phone: normalizedPhone,
+        phoneNumber: normalizedPhone,
         amount: premiumSubscriptionPrice,
-        correspondent: correspondent,
       );
 
       if (kDebugMode) {
-        debugPrint('📱 PawaPay Response: $purchaseStatus');
+        debugPrint('📱 Backend Response: $response');
       }
 
-      // ✅ FIXED: Handle null response from PawaPay
-      if (purchaseStatus == null) {
+      // Handle response from backend
+      if (response['success'] == true) {
+        final depositId = response['depositId'] as String;
+        final message = response['message'] as String;
+        
         if (kDebugMode) {
-          debugPrint('❌ PawaPay returned null response');
+          debugPrint('✅ Payment initiated: $depositId');
         }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed);
+        
+        // Create PENDING subscription (will be activated by webhook)
+        await _createPendingSubscription(
+          userId: userId,
+          depositId: depositId,
+          operator: operator,
+        );
+        
         return PaymentResult(
-          status: PaymentStatus.failed,
-          errorMessage: 'Payment service did not respond. Please try again.',
+          status: PaymentStatus.pending,
+          transactionId: depositId,
           depositId: depositId,
         );
+      } else {
+        // Payment initiation failed
+        final errorMessage = response['error'] as String? ?? 'Payment initiation failed';
+        
+        if (kDebugMode) {
+          debugPrint('❌ Payment initiation failed: $errorMessage');
+        }
+        
+        return PaymentResult(
+          status: PaymentStatus.failed,
+          errorMessage: errorMessage,
+        );
       }
-
-      // Handle response
-      return _handlePaymentResponse(
-        purchaseStatus: purchaseStatus,
-        userId: userId,
-        depositId: depositId,
-        operator: operator,
-      );
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('❌ Payment initiation error: $e');
@@ -230,252 +225,95 @@ class PawaPayService {
     }
   }
 
-  /// Initiate deposit directly with PawaPay API (Uganda-specific)
-  Future<String?> _initiateDepositDirectly({
-    required String depositId,
-    required String phone,
+  /// Call backend Cloud Function to initiate payment
+  /// This is the SECURE approach - API keys stay on server
+  Future<Map<String, dynamic>> _callBackendInitiatePayment({
+    required String userId,
+    required String phoneNumber,
     required double amount,
-    required String correspondent,
   }) async {
     try {
-      final apiUrl = _debugMode ? _sandboxApiUrl : _productionApiUrl;
-      
-      // Prepare request headers
-      final headers = {
-        'Authorization': 'Bearer $_apiKey',
-        'Content-Type': 'application/json',
-      };
-      
-      // Prepare request body for Uganda
-      final body = {
-        'depositId': depositId,
-        'amount': amount.toStringAsFixed(2),
-        'currency': 'UGX',  // Uganda Shillings
-        'country': 'UGA',   // Uganda
-        'correspondent': correspondent,  // MTN_MOMO_UGA or AIRTEL_OAPI_UGA
-        'payer': {
-          'type': 'MSISDN',
-          'address': {
-            'value': phone.startsWith('0') ? '+256${phone.substring(1)}' : phone,
-          },
-        },
-        'customerTimestamp': DateTime.now().toIso8601String(),
-        'statementDescription': 'Premium Subscription Payment',
-      };
-      
       if (kDebugMode) {
-        debugPrint('🌐 Calling PawaPay API: $apiUrl/deposits');
-        debugPrint('📤 Request body: ${jsonEncode(body)}');
+        debugPrint('🌐 Calling backend payment initiation');
+        debugPrint('  URL: $_paymentInitiationUrl');
+        debugPrint('  User: $userId');
+        debugPrint('  Phone: $phoneNumber');
+        debugPrint('  Amount: $amount');
       }
       
-      // Send POST request to PawaPay API
       final response = await http.post(
-        Uri.parse('$apiUrl/deposits'),
-        headers: headers,
-        body: jsonEncode(body),
+        Uri.parse(_paymentInitiationUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userId': userId,
+          'phoneNumber': phoneNumber,
+          'amount': amount,
+        }),
       );
       
       if (kDebugMode) {
-        debugPrint('📥 Response status: ${response.statusCode}');
-        debugPrint('📥 Response body: ${response.body}');
+        debugPrint('📥 Backend response status: ${response.statusCode}');
+        debugPrint('📥 Backend response body: ${response.body}');
       }
       
-      // Check response status
-      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 202) {
-        // Deposit initiated successfully
-        // Now check the status after a brief delay
-        await Future.delayed(const Duration(seconds: 3));
-        return await _checkDepositStatus(depositId);
-      } else {
-        final errorBody = jsonDecode(response.body);
-        if (kDebugMode) {
-          debugPrint('❌ PawaPay API error: $errorBody');
-        }
-        return null;
-      }
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      return responseData;
+      
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        debugPrint('❌ Direct API call error: $e');
+        debugPrint('❌ Backend call error: $e');
         debugPrint('Stack trace: $stackTrace');
       }
-      return null;
-    }
-  }
-  
-  /// Check deposit status with PawaPay API
-  Future<String?> _checkDepositStatus(String depositId) async {
-    try {
-      final apiUrl = _debugMode ? _sandboxApiUrl : _productionApiUrl;
       
-      final headers = {
-        'Authorization': 'Bearer $_apiKey',
-        'Content-Type': 'application/json',
+      return {
+        'success': false,
+        'error': 'Failed to connect to payment service: ${e.toString()}',
       };
-      
-      final response = await http.get(
-        Uri.parse('$apiUrl/deposits/$depositId'),
-        headers: headers,
-      );
-      
-      if (kDebugMode) {
-        debugPrint('📥 Status check response: ${response.body}');
-      }
-      
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        // PawaPay returns an array with a single item
-        final depositData = result is List ? result.first : result;
-        return depositData['status'] as String?;
-      }
-      
-      return null;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Status check error: $e');
-      }
-      return null;
     }
   }
 
-  /// Handle payment response from PawaPay
-  PaymentResult _handlePaymentResponse({
-    required String purchaseStatus,
+  /// Create pending subscription record
+  /// Subscription will be activated by webhook after successful payment
+  Future<void> _createPendingSubscription({
     required String userId,
     required String depositId,
-    required MobileMoneyOperator operator,
-  }) {
-    switch (purchaseStatus) {
-      case 'PAYMENT_APPROVED':
-        if (kDebugMode) {
-          debugPrint('✅ Payment approved successfully');
-        }
-        // Update transaction status to completed (fire and forget - webhook will also update)
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.completed).ignore();
-        return PaymentResult(
-          status: PaymentStatus.completed,
-          transactionId: depositId,
-          depositId: depositId,
-        );
-
-      case 'PAYER_LIMIT_REACHED':
-        if (kDebugMode) {
-          debugPrint('⚠️ Payer limit reached');
-        }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
-        return PaymentResult(
-          status: PaymentStatus.failed,
-          errorMessage:
-              'You have reached your ${getOperatorName(operator)} transaction limit. Please try again later or use a different number.',
-          depositId: depositId,
-        );
-
-      case 'PAYMENT_NOT_APPROVED':
-        if (kDebugMode) {
-          debugPrint('⚠️ Payment not approved by customer');
-        }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
-        return PaymentResult(
-          status: PaymentStatus.cancelled,
-          errorMessage: 'Payment was not approved. Please try again.',
-          depositId: depositId,
-        );
-
-      case 'INSUFFICIENT_BALANCE':
-        if (kDebugMode) {
-          debugPrint('⚠️ Insufficient balance');
-        }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
-        return PaymentResult(
-          status: PaymentStatus.failed,
-          errorMessage:
-              'Insufficient balance in your ${getOperatorName(operator)} wallet. Please top up and try again.',
-          depositId: depositId,
-        );
-
-      default:
-        if (kDebugMode) {
-          debugPrint('❌ Unknown payment status: $purchaseStatus');
-        }
-        _updateTransactionStatus(depositId, app_transaction.TransactionStatus.failed).ignore();
-        return PaymentResult(
-          status: PaymentStatus.failed,
-          errorMessage: 'Payment failed: $purchaseStatus',
-          depositId: depositId,
-        );
-    }
-  }
-
-  /// Create pending transaction record in Firestore
-  Future<void> _createPendingTransaction({
-    required String userId,
-    required String depositId,
-    required String phoneNumber,
     required MobileMoneyOperator operator,
   }) async {
     try {
-      final transaction = app_transaction.Transaction(
-        id: depositId,
-        type: app_transaction.TransactionType.shgPremiumSubscription,
-        buyerId: userId,
-        buyerName: 'User', // Will be updated with actual name
-        sellerId: 'system',
-        sellerName: 'SayeKatale Platform',
-        amount: premiumSubscriptionPrice,
-        serviceFee: 0.0,
-        sellerReceives: premiumSubscriptionPrice,
-        status: app_transaction.TransactionStatus.initiated,
-        paymentMethod: operator == MobileMoneyOperator.mtn
-            ? app_transaction.PaymentMethod.mtnMobileMoney
-            : app_transaction.PaymentMethod.airtelMoney,
-        paymentReference: depositId,
-        createdAt: DateTime.now(),
-        metadata: {
-          'subscription_type': 'premium_sme_directory',
-          'phone_number': phoneNumber,
-          'operator': getOperatorName(operator),
-          'deposit_id': depositId,
-        },
-      );
-
-      await _firestore
-          .collection('transactions')
-          .doc(depositId)
-          .set(transaction.toFirestore());
-
-      if (kDebugMode) {
-        debugPrint('✅ Transaction record created: $depositId');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('⚠️ Failed to create transaction record: $e');
-      }
-      // Don't throw - allow payment to continue even if transaction logging fails
-    }
-  }
-
-  /// Update transaction status
-  Future<void> _updateTransactionStatus(
-    String depositId,
-    app_transaction.TransactionStatus status,
-  ) async {
-    try {
-      await _firestore.collection('transactions').doc(depositId).update({
-        'status': status.toString().split('.').last,
-        'completedAt':
-            status == app_transaction.TransactionStatus.completed
-                ? Timestamp.now()
-                : null,
+      final now = DateTime.now();
+      final endDate = DateTime(now.year + 1, now.month, now.day);
+      
+      await _firestore.collection('subscriptions').doc(userId).set({
+        'user_id': userId,
+        'type': 'smeDirectory',
+        'status': 'pending', // IMPORTANT: Start as pending
+        'start_date': Timestamp.fromDate(now),
+        'end_date': Timestamp.fromDate(endDate),
+        'amount': premiumSubscriptionPrice,
+        'payment_method': getOperatorName(operator),
+        'payment_reference': depositId,
+        'created_at': Timestamp.now(),
+        'cancelled_at': null,
       });
-
+      
       if (kDebugMode) {
-        debugPrint('✅ Transaction status updated: $depositId -> $status');
+        debugPrint('✅ Pending subscription created for user: $userId');
+        debugPrint('   Payment reference: $depositId');
+        debugPrint('   Will be activated by webhook after payment success');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('⚠️ Failed to update transaction status: $e');
+        debugPrint('⚠️ Failed to create pending subscription: $e');
       }
+      // Don't throw - payment initiation already succeeded
     }
   }
+
+
+
+
 
   /// Record successful payment in wallet
   Future<void> recordPaymentInWallet({
