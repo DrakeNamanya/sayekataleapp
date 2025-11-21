@@ -309,7 +309,7 @@ exports.initiatePayment = functions.https.onRequest(async (req, res) => {
         },
       },
       customerTimestamp: new Date().toISOString(),
-      statementDescription: 'Premium Subscription Payment',
+      statementDescription: 'Premium Subscription', // Max 22 chars (currently 21)
     };
     
     // Call PawaPay API
