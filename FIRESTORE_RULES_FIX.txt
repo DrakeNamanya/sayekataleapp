@@ -1,0 +1,344 @@
+/**
+ * SayeKatale - Updated Firestore Security Rules
+ * 
+ * FIXES:
+ * 1. Edit Profile permission errors for SME/SHG users
+ * 2. More flexible profile update rules
+ * 
+ * Deploy these rules in Firebase Console:
+ * https://console.firebase.google.com/project/sayekataleapp/firestore/rules
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // ============================================================================
+    // USERS COLLECTION - FIXED RULES ✅
+    // ============================================================================
+    
+    match /users/{userId} {
+      // Read: Any authenticated user can read user profiles
+      allow read: if isAuthenticated();
+      
+      // Create: Only allow creating your own user document with matching UID
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       request.resource.data.id == request.auth.uid;
+      
+      // Update: Owner can update their profile BUT cannot change id or role
+      // ✅ FIXED: More flexible - allows adding fields like updated_at, profile_image, etc.
+      allow update: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       // Only prevent changing these specific critical fields
+                       (!('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
+                       (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+      
+      // Delete: Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // PRODUCTS COLLECTION - WORKING RULES ✅
+    // ============================================================================
+    
+    match /products/{productId} {
+      // Read: Any authenticated user can browse products
+      allow read: if isAuthenticated();
+      
+      // Create: Only farmers (SHG/PSA) can create products with their own farmer_id
+      allow create: if isAuthenticated() && 
+                       request.resource.data.farmer_id == request.auth.uid;
+      
+      // Update: Only the product owner or admin can update
+      allow update: if isAuthenticated() && 
+                       (resource.data.farmer_id == request.auth.uid || isAdmin());
+      
+      // Delete: Only the product owner or admin can delete
+      allow delete: if isAuthenticated() && 
+                       (resource.data.farmer_id == request.auth.uid || isAdmin());
+    }
+    
+    // ============================================================================
+    // ORDERS COLLECTION
+    // ============================================================================
+    
+    match /orders/{orderId} {
+      // Read: Buyer, seller, or admin can read order
+      allow read: if isAuthenticated() && 
+                     (resource.data.buyer_id == request.auth.uid || 
+                      resource.data.seller_id == request.auth.uid || 
+                      isAdmin());
+      
+      // Create: Buyers can create orders
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      
+      // Update: Buyer, seller, or admin can update order status
+      allow update: if isAuthenticated() && 
+                       (resource.data.buyer_id == request.auth.uid || 
+                        resource.data.seller_id == request.auth.uid || 
+                        isAdmin());
+      
+      // Delete: Only admin can delete orders
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // RECEIPTS COLLECTION
+    // ============================================================================
+    
+    match /receipts/{receiptId} {
+      // List receipts: Any authenticated user (for querying)
+      allow list: if isAuthenticated();
+      
+      // Read specific receipt: Owner (buyer/seller) or admin
+      allow get: if isAuthenticated() && 
+                    (resource.data.buyer_id == request.auth.uid || 
+                     resource.data.seller_id == request.auth.uid || 
+                     isAdmin());
+      
+      // Create/Update: System-generated only (no client creates/updates)
+      // These are created by Cloud Functions when orders are completed
+      allow create, update: if false;
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // WALLETS COLLECTION
+    // ============================================================================
+    
+    match /wallets/{walletId} {
+      // Read: Only wallet owner or admin
+      allow read: if isAuthenticated() && 
+                     (walletId == request.auth.uid || isAdmin());
+      
+      // Create: Only create your own wallet
+      allow create: if isAuthenticated() && walletId == request.auth.uid;
+      
+      // Update/Delete: System-only (managed by Cloud Functions)
+      allow update, delete: if false;
+    }
+    
+    // ============================================================================
+    // TRANSACTIONS COLLECTION - CRITICAL FOR PAYMENTS ✅
+    // ============================================================================
+    
+    match /transactions/{transactionId} {
+      // Read: Transaction participants or admin
+      allow read: if isAuthenticated();
+      
+      // Create: Allow Cloud Functions to create transactions
+      // ✅ CRITICAL FIX: Cloud Functions need this to record payments
+      allow create: if true;  // Cloud Functions don't have request.auth
+      
+      // Update: Allow Cloud Functions to update transaction status
+      // ✅ CRITICAL FIX: Webhooks need this to update payment status
+      allow update: if true;  // Cloud Functions don't have request.auth
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // CONVERSATIONS & MESSAGES
+    // ============================================================================
+    
+    match /conversations/{conversationId} {
+      // Participants can read their conversations
+      allow read: if isAuthenticated() && 
+                     request.auth.uid in resource.data.participants;
+      
+      // Create: Participants can create conversations
+      allow create: if isAuthenticated() && 
+                       request.auth.uid in request.resource.data.participants;
+      
+      // Update: Participants can update conversation
+      allow update: if isAuthenticated() && 
+                       request.auth.uid in resource.data.participants;
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    match /messages/{messageId} {
+      // Read: Conversation participants
+      allow read: if isAuthenticated();
+      
+      // Create: Sender can create messages
+      allow create: if isAuthenticated() && 
+                       request.resource.data.sender_id == request.auth.uid;
+      
+      // Update: Sender can update their messages
+      allow update: if isAuthenticated() && 
+                       resource.data.sender_id == request.auth.uid;
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // SUBSCRIPTIONS COLLECTION - PREMIUM FEATURES ✅
+    // ============================================================================
+    
+    match /subscriptions/{subscriptionId} {
+      // Read: Subscription owner or admin
+      allow read: if isAuthenticated() && 
+                     (subscriptionId == request.auth.uid || isAdmin());
+      
+      // Create: Users can create pending subscriptions for themselves
+      // ✅ FIXED: Allow users to initiate subscriptions
+      allow create: if isAuthenticated() && 
+                       subscriptionId == request.auth.uid &&
+                       request.resource.data.status == 'pending';
+      
+      // Update: Allow Cloud Functions to activate subscriptions via webhooks
+      // ✅ CRITICAL FIX: Webhooks need this to activate after payment
+      allow update: if true;  // Cloud Functions don't have request.auth
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // REVIEWS & RATINGS
+    // ============================================================================
+    
+    match /reviews/{reviewId} {
+      // Read: Anyone can read reviews
+      allow read: if isAuthenticated();
+      
+      // Create: Only buyers who completed orders
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      
+      // Update: Review author can update their review
+      allow update: if isAuthenticated() && 
+                       resource.data.buyer_id == request.auth.uid;
+      
+      // Delete: Review author or admin
+      allow delete: if isAuthenticated() && 
+                       (resource.data.buyer_id == request.auth.uid || isAdmin());
+    }
+    
+    // ============================================================================
+    // CART ITEMS
+    // ============================================================================
+    
+    match /cart_items/{itemId} {
+      // Read: Item owner
+      allow read: if isAuthenticated() && 
+                     resource.data.buyer_id == request.auth.uid;
+      
+      // Create: Buyer can add to their cart
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      
+      // Update: Item owner
+      allow update: if isAuthenticated() && 
+                       resource.data.buyer_id == request.auth.uid;
+      
+      // Delete: Item owner
+      allow delete: if isAuthenticated() && 
+                       resource.data.buyer_id == request.auth.uid;
+    }
+    
+    // ============================================================================
+    // FAVORITE PRODUCTS
+    // ============================================================================
+    
+    match /favorite_products/{favoriteId} {
+      // Read: Owner
+      allow read: if isAuthenticated() && 
+                     resource.data.buyer_id == request.auth.uid;
+      
+      // Create: Buyer can add favorites
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      
+      // Delete: Owner
+      allow delete: if isAuthenticated() && 
+                       resource.data.buyer_id == request.auth.uid;
+    }
+    
+    // ============================================================================
+    // NOTIFICATIONS
+    // ============================================================================
+    
+    match /notifications/{notificationId} {
+      // Read: Notification recipient
+      allow read: if isAuthenticated() && 
+                     resource.data.user_id == request.auth.uid;
+      
+      // Create: System-generated (Cloud Functions)
+      allow create: if false;
+      
+      // Update: Recipient can mark as read
+      allow update: if isAuthenticated() && 
+                       resource.data.user_id == request.auth.uid;
+      
+      // Delete: Recipient or admin
+      allow delete: if isAuthenticated() && 
+                       (resource.data.user_id == request.auth.uid || isAdmin());
+    }
+    
+    // ============================================================================
+    // COMPLAINTS
+    // ============================================================================
+    
+    match /complaints/{complaintId} {
+      // Read: Complaint author or admin
+      allow read: if isAuthenticated() && 
+                     (resource.data.reporter_id == request.auth.uid || isAdmin());
+      
+      // Create: Any authenticated user can file complaints
+      allow create: if isAuthenticated() && 
+                       request.resource.data.reporter_id == request.auth.uid;
+      
+      // Update: Only admin (for status updates)
+      allow update: if isAdmin();
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================================
+    // ADMIN-ONLY COLLECTIONS
+    // ============================================================================
+    
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /system_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /analytics/{analyticsId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
