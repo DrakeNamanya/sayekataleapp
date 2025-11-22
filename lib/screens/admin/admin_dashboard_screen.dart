@@ -7,6 +7,7 @@ import 'user_management_screen.dart';
 import 'product_moderation_screen.dart';
 import 'order_management_screen.dart';
 import 'analytics_screen.dart';
+import 'admin_analytics_dashboard.dart';
 import 'complaints_screen.dart';
 import 'team_management_screen.dart';
 
@@ -549,15 +550,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     if (widget.adminUser.hasPermission(AdminPermissions.viewAnalytics)) {
       actions.add({
-        'title': 'Analytics',
+        'title': 'Analytics Dashboard',
         'icon': Icons.analytics,
         'color': Colors.teal,
         'onTap': () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  AnalyticsScreen(adminUser: widget.adminUser),
+              builder: (context) => const AdminAnalyticsDashboard(),
             ),
           );
         },
