@@ -279,9 +279,11 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                       child: RadioGroup<PaymentMethod>(
                         groupValue: _selectedPaymentMethod,
                         onChanged: (value) {
-                          setState(() {
-                            _selectedPaymentMethod = value;
-                          });
+                          if (value != null) {
+                            setState(() {
+                              _selectedPaymentMethod = value;
+                            });
+                          }
                         },
                         child: Column(
                           children: [

@@ -820,9 +820,11 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
             RadioGroup<DisabilityStatus>(
               groupValue: _disabilityStatus,
               onChanged: (value) {
-                setState(() {
-                  _disabilityStatus = value;
-                });
+                if (value != null) {
+                  setState(() {
+                    _disabilityStatus = value;
+                  });
+                }
               },
               child: Row(
                 children: [

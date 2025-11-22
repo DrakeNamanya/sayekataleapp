@@ -308,9 +308,11 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                 RadioGroup<app_order.PaymentMethod>(
                   groupValue: _selectedPaymentMethod,
                   onChanged: (value) {
-                    setState(() {
-                      _selectedPaymentMethod = value;
-                    });
+                    if (value != null) {
+                      setState(() {
+                        _selectedPaymentMethod = value;
+                      });
+                    }
                   },
                   child: Column(
                     children: [
