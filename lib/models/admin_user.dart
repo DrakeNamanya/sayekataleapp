@@ -6,6 +6,7 @@ class AdminUser {
   final AdminRole role;
   final List<String> permissions;
   final bool isActive;
+  final bool mustChangePassword;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
 
@@ -16,6 +17,7 @@ class AdminUser {
     required this.role,
     required this.permissions,
     this.isActive = true,
+    this.mustChangePassword = false,
     required this.createdAt,
     this.lastLoginAt,
   });
@@ -43,6 +45,7 @@ class AdminUser {
           ? List<String>.from(data['permissions'])
           : [],
       isActive: data['is_active'] ?? true,
+      mustChangePassword: data['must_change_password'] ?? false,
       createdAt: parseDateTime(data['created_at']),
       lastLoginAt: data['last_login_at'] != null
           ? parseDateTime(data['last_login_at'])
@@ -57,6 +60,7 @@ class AdminUser {
       'role': role.toString().split('.').last,
       'permissions': permissions,
       'is_active': isActive,
+      'must_change_password': mustChangePassword,
       'created_at': createdAt.toIso8601String(),
       'last_login_at': lastLoginAt?.toIso8601String(),
     };

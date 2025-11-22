@@ -6,7 +6,6 @@ import 'psa_verification_screen.dart';
 import 'user_management_screen.dart';
 import 'product_moderation_screen.dart';
 import 'order_management_screen.dart';
-import 'analytics_screen.dart';
 import 'admin_analytics_dashboard.dart';
 import 'complaints_screen.dart';
 import 'team_management_screen.dart';

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../services/admin_auth_service.dart';
 import '../../models/admin_user.dart';
 import '../admin/admin_dashboard_screen.dart';
+import 'admin_change_password_screen.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
@@ -92,14 +93,24 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     }
   }
 
-  /// Navigate to admin dashboard
+  /// Navigate to admin dashboard or password change screen
   void _navigateToDashboard(AdminUser adminUser) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AdminDashboardScreen(adminUser: adminUser),
-      ),
-    );
+    // Check if password change is required
+    if (adminUser.mustChangePassword) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdminChangePasswordScreen(adminUser: adminUser),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdminDashboardScreen(adminUser: adminUser),
+        ),
+      );
+    }
   }
 
   /// Handle forgot password
@@ -418,11 +429,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           _buildCredentialRow('Analyst', 'analyst@sayekatale.com'),
           const SizedBox(height: 8),
           Text(
-            'Password: password123',
+            'Password: Admin@2024!',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
               fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '⚠️  You will be required to change password on first login',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.orange.shade700,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
