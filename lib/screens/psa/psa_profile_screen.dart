@@ -397,28 +397,62 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                   },
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
 
-                // Delete Account Button (Hidden option)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextButton.icon(
-                    onPressed: () async {
-                      await showAccountDeletionDialog(context);
-                    },
-                    icon: const Icon(
-                      Icons.delete_forever,
-                      size: 20,
-                    ),
-                    label: const Text(
-                      'Delete Account',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.errorColor,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                  ),
+                // Privacy & Security - Contains Delete Account
+                _ProfileOption(
+                  icon: Icons.security,
+                  title: 'Privacy & Security',
+                  subtitle: 'Account settings and data privacy',
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Privacy & Security'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Manage your account security and privacy settings.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(height: 24),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.delete_forever,
+                                color: AppTheme.errorColor,
+                                size: 28,
+                              ),
+                              title: const Text(
+                                'Delete Account',
+                                style: TextStyle(
+                                  color: AppTheme.errorColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                'Permanently delete your account and all data',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              onTap: () {
+                                Navigator.pop(context);
+                                showAccountDeletionDialog(context);
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -452,12 +486,46 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                       );
 
                       if (confirm == true && context.mounted) {
-                        await authProvider.logout();
-                        if (context.mounted) {
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/onboarding',
-                            (route) => false,
-                          );
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(
+                            child: Card(
+                              child: Padding(
+                                padding: EdgeInsets.all(32.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 16),
+                                    Text('Logging out...'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+
+                        try {
+                          await authProvider.logout();
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/onboarding',
+                              (route) => false,
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Logout failed: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
                       }
                     },

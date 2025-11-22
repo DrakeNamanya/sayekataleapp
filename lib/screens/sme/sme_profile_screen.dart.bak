@@ -365,18 +365,7 @@ class SMEProfileScreen extends StatelessWidget {
                             Navigator.pushReplacementNamed(
                               context,
                               '/onboarding',
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Logout failed: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
+                          );
                         }
                       }
                     },

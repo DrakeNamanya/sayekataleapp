@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/deleted_accounts_tracking_service.dart';
-import '../theme/app_theme.dart';
+import '../utils/app_theme.dart';
 
 /// Admin widget to view deleted accounts history
 /// Shows audit trail of all account deletions
