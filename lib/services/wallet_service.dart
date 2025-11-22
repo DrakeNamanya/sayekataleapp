@@ -90,6 +90,7 @@ class WalletService {
   // ============================================================================
 
   /// Initiate deposit via PawaPay
+  /// NOTE: This method is currently disabled - PawaPay integration pending
   Future<Map<String, dynamic>> initiateDeposit({
     required String userId,
     required double amount,
@@ -97,6 +98,16 @@ class WalletService {
     required String provider, // 'MTN_MOMO_UGA' or 'AIRTEL_OAPI_UGA'
     String? userName,
   }) async {
+    // TODO: Implement PawaPay deposit integration
+    if (kDebugMode) {
+      debugPrint('⚠️ Deposit feature not yet implemented - PawaPay integration pending');
+    }
+    return {
+      'success': false,
+      'error': 'Deposit feature not yet implemented',
+    };
+    
+    /* DISABLED - Awaiting PawaPay integration
     try {
       if (kDebugMode) {
         debugPrint('💰 Initiating deposit: UGX $amount for user $userId');
@@ -146,6 +157,7 @@ class WalletService {
       }
       return {'success': false, 'error': 'Failed to initiate deposit: $e'};
     }
+    */
   }
 
   /// Handle deposit callback from PawaPay
@@ -232,6 +244,7 @@ class WalletService {
   // ============================================================================
 
   /// Initiate withdrawal via PawaPay
+  /// NOTE: This method is currently disabled - PawaPay integration pending
   Future<Map<String, dynamic>> initiateWithdrawal({
     required String userId,
     required double amount,
@@ -239,18 +252,28 @@ class WalletService {
     required String provider,
     String? userName,
   }) async {
+    // Check wallet balance first
+    final wallet = await getOrCreateWallet(userId);
+    
+    if (wallet.balance < amount) {
+      return {
+        'success': false,
+        'error':
+            'Insufficient balance. Available: UGX ${wallet.balance.toStringAsFixed(0)}',
+      };
+    }
+    
+    // TODO: Implement PawaPay withdrawal integration
+    if (kDebugMode) {
+      debugPrint('⚠️ Withdrawal feature not yet implemented - PawaPay integration pending');
+    }
+    return {
+      'success': false,
+      'error': 'Withdrawal feature not yet implemented',
+    };
+    
+    /* DISABLED - Awaiting PawaPay integration
     try {
-      // Check wallet balance
-      final wallet = await getOrCreateWallet(userId);
-
-      if (wallet.balance < amount) {
-        return {
-          'success': false,
-          'error':
-              'Insufficient balance. Available: UGX ${wallet.balance.toStringAsFixed(0)}',
-        };
-      }
-
       if (kDebugMode) {
         debugPrint('💸 Initiating withdrawal: UGX $amount for user $userId');
       }
@@ -293,6 +316,7 @@ class WalletService {
       }
       return {'success': false, 'error': 'Failed to initiate withdrawal: $e'};
     }
+    */
   }
 
   /// Handle payout callback from PawaPay

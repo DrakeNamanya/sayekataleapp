@@ -11,7 +11,6 @@ import '../../providers/auth_provider.dart';
 import '../../models/wallet.dart' hide Transaction;
 import '../../models/transaction.dart' as app_transaction;
 import '../../utils/app_theme.dart';
-import '../../utils/uganda_phone_validator.dart';
 
 class SHGWalletScreen extends StatefulWidget {
   const SHGWalletScreen({super.key});

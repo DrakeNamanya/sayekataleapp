@@ -282,9 +282,7 @@ class ProfileCompletionGate extends StatelessWidget {
   }
 
   void _navigateToProfileEdit(BuildContext context, UserRole role) {
-    // Import edit profile screens at the top of the file
-    Widget editProfileScreen;
-    
+    // Navigate directly to role-specific edit profile screen
     switch (role) {
       case UserRole.shg:
         // Navigate directly to SHG edit profile screen
