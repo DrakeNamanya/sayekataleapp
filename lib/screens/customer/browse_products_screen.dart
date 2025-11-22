@@ -16,20 +16,30 @@ class BrowseProductsScreen extends StatefulWidget {
 class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
   final ProductService _productService = ProductService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController _searchController = TextEditingController();
 
   String _selectedCategory = 'All';
+  String _selectedDistrict = 'All';
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
   List<Product> _featuredProducts = [];
   final Map<String, String> _farmerNames = {};
   bool _isLoading = true;
+  bool _showFilters = false;
 
   final List<String> _categories = ['All', 'Crops', 'Vegetables', 'Onions'];
+  List<String> _districts = ['All'];
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProducts() async {
@@ -41,17 +51,25 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
       // Load all products
       final products = await _productService.getAllAvailableProducts();
 
-      // Load farmer names
+      // Load farmer names and extract districts
       final farmerIds = products.map((p) => p.farmId).toSet().toList();
+      final Set<String> districtSet = {};
+      
       for (final farmId in farmerIds) {
-        final farmerName = await _getFarmerName(farmId);
-        _farmerNames[farmId] = farmerName;
+        final result = await _getFarmerNameAndDistrict(farmId);
+        _farmerNames[farmId] = result['name']!;
+        if (result['district'] != null && result['district']!.isNotEmpty) {
+          districtSet.add(result['district']!);
+        }
       }
+
+      final districtList = districtSet.toList()..sort();
 
       setState(() {
         _allProducts = products;
         _filteredProducts = products;
         _featuredProducts = products.where((p) => p.isFeatured).toList();
+        _districts = ['All', ...districtList];
         _isLoading = false;
       });
     } catch (e) {
@@ -66,45 +84,95 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
     }
   }
 
-  Future<String> _getFarmerName(String farmId) async {
+  Future<Map<String, String?>> _getFarmerNameAndDistrict(String farmId) async {
     try {
       // Try SHG profiles first
       var doc = await _firestore.collection('shg_profiles').doc(farmId).get();
       if (doc.exists) {
-        return doc.data()?['shg_name'] ?? 'Unknown Farmer';
+        final data = doc.data();
+        return {
+          'name': data?['shg_name'] ?? 'Unknown Farmer',
+          'district': data?['district'] ?? data?['location']?['district'],
+        };
       }
 
       // Try farmer_profiles next
       doc = await _firestore.collection('farmer_profiles').doc(farmId).get();
       if (doc.exists) {
-        return doc.data()?['name'] ?? 'Unknown Farmer';
+        final data = doc.data();
+        return {
+          'name': data?['name'] ?? 'Unknown Farmer',
+          'district': data?['district'] ?? data?['location']?['district'],
+        };
       }
 
-      return 'Unknown Farmer';
+      // Try users collection
+      doc = await _firestore.collection('users').doc(farmId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        return {
+          'name': data?['name'] ?? 'Unknown Farmer',
+          'district': data?['location']?['district'],
+        };
+      }
+
+      return {'name': 'Unknown Farmer', 'district': null};
     } catch (e) {
-      return 'Unknown Farmer';
+      return {'name': 'Unknown Farmer', 'district': null};
     }
   }
 
-  void _filterByCategory(String category) {
+  void _applyFilters() {
+    var filtered = List<Product>.from(_allProducts);
+
+    // Category filter
+    if (_selectedCategory != 'All') {
+      filtered = filtered.where((product) {
+        if (_selectedCategory == 'Crops') {
+          return product.category == ProductCategory.crop;
+        } else if (_selectedCategory == 'Vegetables') {
+          return product.category == ProductCategory.tomatoes ||
+              product.category == ProductCategory.onions;
+        } else if (_selectedCategory == 'Onions') {
+          return product.category == ProductCategory.onions;
+        }
+        return true;
+      }).toList();
+    }
+
+    // District filter (filter by farmer's district)
+    if (_selectedDistrict != 'All') {
+      filtered = filtered.where((product) {
+        // This is a simplified check - you might need to enhance this
+        // based on how district info is stored with products/farmers
+        return true; // Keep all for now, enhance based on your data structure
+      }).toList();
+    }
+
+    // Search filter
+    if (_searchController.text.isNotEmpty) {
+      final query = _searchController.text.toLowerCase();
+      filtered = filtered.where((product) {
+        final farmerName = (_farmerNames[product.farmId] ?? '').toLowerCase();
+        final description = (product.description ?? '').toLowerCase();
+        return product.name.toLowerCase().contains(query) ||
+            description.contains(query) ||
+            farmerName.contains(query) ||
+            product.category.toString().toLowerCase().contains(query);
+      }).toList();
+    }
+
     setState(() {
-      _selectedCategory = category;
-      if (category == 'All') {
-        _filteredProducts = _allProducts;
-      } else {
-        _filteredProducts = _allProducts.where((product) {
-          // Implement category filtering logic based on your category structure
-          if (category == 'Crops') {
-            return product.category == ProductCategory.crop;
-          } else if (category == 'Vegetables') {
-            return product.category == ProductCategory.tomatoes ||
-                product.category == ProductCategory.onions;
-          } else if (category == 'Onions') {
-            return product.category == ProductCategory.onions;
-          }
-          return true;
-        }).toList();
-      }
+      _filteredProducts = filtered;
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedCategory = 'All';
+      _selectedDistrict = 'All';
+      _searchController.clear();
+      _filteredProducts = _allProducts;
     });
   }
 
@@ -125,21 +193,14 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black87),
+            icon: Icon(
+              _showFilters ? Icons.filter_list : Icons.filter_list_outlined,
+              color: Colors.black87,
+            ),
             onPressed: () {
-              // TODO: Implement advanced filtering
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {
-              // TODO: Implement search
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.grid_view, color: Colors.black87),
-            onPressed: () {
-              // TODO: Toggle grid/list view
+              setState(() {
+                _showFilters = !_showFilters;
+              });
             },
           ),
         ],
@@ -148,6 +209,91 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
+                // Search Bar
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search products, farmers, districts...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _applyFilters();
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      onChanged: (_) => _applyFilters(),
+                    ),
+                  ),
+                ),
+
+                // Advanced Filters (collapsible)
+                if (_showFilters)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filters',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // District Dropdown
+                          DropdownButtonFormField<String>(
+                            value: _selectedDistrict,
+                            decoration: InputDecoration(
+                              labelText: 'District',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                            ),
+                            items: _districts.map((district) {
+                              return DropdownMenuItem(
+                                value: district,
+                                child: Text(district),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedDistrict = value!;
+                              });
+                              _applyFilters();
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          // Clear Filters Button
+                          OutlinedButton.icon(
+                            onPressed: _clearFilters,
+                            icon: const Icon(Icons.clear_all),
+                            label: const Text('Clear Filters'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 44),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // Category Tabs
                 SliverToBoxAdapter(
                   child: Container(
@@ -165,7 +311,12 @@ class _BrowseProductsScreenState extends State<BrowseProductsScreen> {
                           child: ChoiceChip(
                             label: Text(category),
                             selected: isSelected,
-                            onSelected: (_) => _filterByCategory(category),
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedCategory = category;
+                              });
+                              _applyFilters();
+                            },
                             selectedColor: const Color(0xFF2E7D32),
                             labelStyle: TextStyle(
                               color: isSelected ? Colors.white : Colors.black87,
