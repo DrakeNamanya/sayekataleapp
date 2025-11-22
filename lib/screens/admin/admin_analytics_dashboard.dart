@@ -15,7 +15,7 @@ class AdminAnalyticsDashboard extends StatefulWidget {
 
 class _AdminAnalyticsDashboardState extends State<AdminAnalyticsDashboard> {
   final AnalyticsService _analyticsService = AnalyticsService();
-  final CSVExportService _exportService = CSVExportService();
+  final CsvExportService _exportService = CsvExportService();
 
   AnalyticsData? _data;
   bool _isLoading = true;

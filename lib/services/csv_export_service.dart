@@ -20,4 +20,10 @@ class CsvExportService {
 
   /// Export complaints collection to CSV
   Future<void> exportComplaints() => _impl.exportComplaints();
+
+  /// Export custom data to CSV
+  Future<void> exportToCSV({
+    required List<Map<String, dynamic>> data,
+    required String filename,
+  }) => _impl.exportToCSV(data: data, filename: filename);
 }

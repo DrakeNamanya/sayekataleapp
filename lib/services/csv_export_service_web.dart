@@ -189,6 +189,37 @@ class CsvExportServiceImpl {
     }
   }
 
+  /// Export custom data to CSV
+  Future<void> exportToCSV({
+    required List<Map<String, dynamic>> data,
+    required String filename,
+  }) async {
+    try {
+      if (data.isEmpty) {
+        throw Exception('No data to export');
+      }
+
+      // Get headers from first row
+      final headers = data.first.keys.toList();
+      
+      // Build rows
+      List<List<dynamic>> rows = [headers];
+      
+      for (var item in data) {
+        rows.add(headers.map((key) => item[key]?.toString() ?? '').toList());
+      }
+
+      // Convert to CSV
+      String csv = const ListToCsvConverter().convert(rows);
+      
+      // Download file
+      final bytes = utf8.encode(csv);
+      downloadFile('$filename.csv', bytes);
+    } catch (e) {
+      throw Exception('Failed to export data: $e');
+    }
+  }
+
   /// Export complaints collection to CSV
   Future<void> exportComplaints() async {
     try {

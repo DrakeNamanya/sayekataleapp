@@ -19,4 +19,12 @@ class CsvExportServiceImpl {
   Future<void> exportComplaints() async {
     throw UnsupportedError('CSV export is only available on web platform');
   }
+
+  /// Export custom data - throws on non-web platforms
+  Future<void> exportToCSV({
+    required List<Map<String, dynamic>> data,
+    required String filename,
+  }) async {
+    throw UnsupportedError('CSV export is only available on web platform');
+  }
 }

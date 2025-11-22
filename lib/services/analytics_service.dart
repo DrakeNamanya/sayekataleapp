@@ -148,12 +148,12 @@ class AnalyticsService {
       var filteredOrders = orders;
       if (district != null && district.isNotEmpty) {
         filteredOrders = filteredOrders
-            .where((o) => o.buyerLocation?.district == district)
+            .where((o) => o.deliveryAddress.contains(district))
             .toList();
       }
       if (productCategory != null && productCategory.isNotEmpty) {
         filteredOrders = filteredOrders
-            .where((o) => o.productCategory.displayName == productCategory)
+            .where((o) => o.items.any((item) => item.productName.contains(productCategory)))
             .toList();
       }
 
@@ -178,20 +178,25 @@ class AnalyticsService {
       // Calculate revenue
       final totalRevenue = filteredOrders
           .where((o) => o.status == app_order.OrderStatus.completed)
-          .fold<double>(0.0, (sum, order) => sum + order.totalPrice);
+          .fold<double>(0.0, (sum, order) => sum + order.totalAmount);
 
-      // Group by district
+      // Group by district (extract from delivery address)
       final byDistrict = <String, int>{};
       for (var order in filteredOrders) {
-        final orderDistrict = order.buyerLocation?.district ?? 'Unknown';
+        // Try to extract district from delivery address
+        final addressParts = order.deliveryAddress.split(',');
+        final orderDistrict = addressParts.isNotEmpty ? addressParts[0].trim() : 'Unknown';
         byDistrict[orderDistrict] = (byDistrict[orderDistrict] ?? 0) + 1;
       }
 
       // Group by product
       final byProduct = <String, int>{};
       for (var order in filteredOrders) {
-        final category = order.productCategory.displayName;
-        byProduct[category] = (byProduct[category] ?? 0) + 1;
+        // Group by first product in order items
+        if (order.items.isNotEmpty) {
+          final productName = order.items.first.productName;
+          byProduct[productName] = (byProduct[productName] ?? 0) + 1;
+        }
       }
 
       return {
