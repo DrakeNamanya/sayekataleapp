@@ -11,6 +11,7 @@ import '../../models/order.dart';
 import '../../models/subscription.dart';
 import '../../widgets/notification_badge.dart';
 import '../../widgets/features_guide_dialog.dart';
+import '../../widgets/profile_completion_gate.dart';
 import 'shg_products_screen.dart';
 import 'shg_orders_screen.dart';
 import 'shg_buy_inputs_screen.dart';
@@ -59,7 +60,9 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
     final farmerId = authProvider.currentUser?.id ?? '';
     final orderService = OrderService();
 
-    return Scaffold(
+    return ProfileCompletionGate(
+      blockedFeatureName: 'SHG Dashboard',
+      child: Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: FutureBuilder<int>(
         future: orderService.getFarmerPendingOrdersCount(farmerId),
@@ -112,6 +115,7 @@ class _SHGDashboardScreenState extends State<SHGDashboardScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }

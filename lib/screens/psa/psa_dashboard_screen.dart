@@ -8,6 +8,7 @@ import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/admob_banner_widget.dart';
+import '../../widgets/profile_completion_gate.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
@@ -50,7 +51,9 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
     final supplierId = authProvider.currentUser?.id ?? '';
     final orderService = OrderService();
 
-    return Scaffold(
+    return ProfileCompletionGate(
+      blockedFeatureName: 'PSA Dashboard',
+      child: Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: FutureBuilder<int>(
         future: orderService.getFarmerPendingOrdersCount(supplierId),
@@ -107,6 +110,7 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }

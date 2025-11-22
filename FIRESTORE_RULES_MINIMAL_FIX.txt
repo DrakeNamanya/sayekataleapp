@@ -1,0 +1,85 @@
+========================================
+MINIMAL FIX FOR EDIT PROFILE ISSUE
+========================================
+
+PROBLEM: Lines 48-50 in current firestore.rules are too strict
+
+CURRENT (BROKEN) - Lines 48-50:
+------------------------------------
+      allow update: if isOwner(userId) &&
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.uid == resource.data.uid;
+
+
+REPLACE WITH (FIXED):
+------------------------------------
+      allow update: if isOwner(userId) &&
+                       (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+                       (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid);
+
+
+EXPLANATION:
+------------------------------------
+OLD: request.resource.data.role == resource.data.role
+     ❌ FAILS if 'role' field is not in the update payload
+
+NEW: (!('role' in request.resource.data) || request.resource.data.role == resource.data.role)
+     ✅ If 'role' is NOT in update → ALLOW (user isn't changing it)
+     ✅ If 'role' IS in update → Only allow if unchanged
+
+
+ALTERNATIVE FIX (Even Simpler):
+------------------------------------
+If the above doesn't work, use this even simpler version:
+
+      allow update: if isOwner(userId) &&
+                       // Only prevent changing role if it's being updated
+                       (request.resource.data.get('role', resource.data.role) == resource.data.role) &&
+                       (request.resource.data.get('uid', resource.data.uid) == resource.data.uid);
+
+
+HOW TO APPLY:
+------------------------------------
+Option 1: Firebase Console
+1. Go to: https://console.firebase.google.com/project/sayekataleapp/firestore/rules
+2. Find lines 48-50
+3. Replace with the FIXED version above
+4. Click "Publish"
+
+Option 2: Cloud Shell
+1. Open the file: nano firestore.rules
+2. Find lines 48-50
+3. Replace with the FIXED version
+4. Save and run: firebase deploy --only firestore:rules
+
+
+TESTING:
+------------------------------------
+After deploying:
+1. Login as Rita (SME user)
+2. Go to: Profile → Edit Profile
+3. Update any field (name, location, images)
+4. Click Save
+5. ✅ Should work without "permission denied" error
+
+
+WHY THIS WORKS:
+------------------------------------
+The updateProfile() method in Flutter sends updates like:
+{
+  "profile_image": "https://...",
+  "location": {...},
+  "updated_at": Timestamp
+}
+
+Notice: 'role' and 'uid' are NOT included in the update.
+
+OLD RULE LOGIC:
+- Check: request.resource.data.role == resource.data.role
+- Problem: request.resource.data.role is UNDEFINED (not in payload)
+- Result: undefined == "sme" → FALSE → DENIED ❌
+
+NEW RULE LOGIC:
+- Check: Is 'role' in the update payload?
+- NO → Allow the update (user isn't changing role) ✅
+- YES → Only allow if role value matches original ✅

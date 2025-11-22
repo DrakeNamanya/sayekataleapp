@@ -9,6 +9,7 @@ import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/features_guide_dialog.dart';
 import '../../widgets/admob_banner_widget.dart';
+import '../../widgets/profile_completion_gate.dart';
 import 'sme_browse_products_screen.dart';
 import 'sme_cart_screen.dart';
 import 'sme_orders_screen.dart';
@@ -54,9 +55,12 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
     final buyerId = authProvider.currentUser?.id ?? '';
     final orderService = OrderService();
 
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: FutureBuilder<int>(
+    // Wrap the dashboard in ProfileCompletionGate
+    return ProfileCompletionGate(
+      blockedFeatureName: 'SME Dashboard',
+      child: Scaffold(
+        body: _screens[_selectedIndex],
+        bottomNavigationBar: FutureBuilder<int>(
         future: orderService.getBuyerActiveOrdersCount(buyerId),
         builder: (context, snapshot) {
           final activeOrders = snapshot.data ?? 0;
@@ -111,6 +115,7 @@ class _SMEDashboardScreenState extends State<SMEDashboardScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }

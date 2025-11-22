@@ -1,95 +1,94 @@
-# ⚡ QUICK START - Server-Side PawaPay Integration
+# 🚀 Quick Start - Deploy Firestore Rules Fix
 
-## 🚨 CRITICAL FIRST STEP
-
-### 1. Rotate Exposed API Key (DO THIS NOW!)
-
-1. **PawaPay Dashboard**: https://dashboard.pawapay.io/
-2. **Settings → API Keys**
-3. **Revoke** old key (starts with `eyJraWQiOiIxIiwiYWxnIjoiRVMyNTYifQ`)
-4. **Create** new Production key
-5. **Save** it securely
+**Time to fix**: 5 minutes  
+**What it fixes**: Edit Profile permission errors for SME/SHG users
 
 ---
 
-## 🔧 2. Configure Firebase Functions
+## ⚡ Super Quick Deploy (Copy-Paste)
+
+Open **Google Cloud Shell** and run:
 
 ```bash
-# Set new API key
-firebase functions:config:set pawapay.api_token="YOUR_NEW_KEY"
-firebase functions:config:set pawapay.use_sandbox="false"
+# 1. Clone repository
+git clone https://github.com/DrakeNamanya/sayekataleapp.git
+cd sayekataleapp
 
-# Deploy functions
-cd /home/user/flutter_app
-firebase deploy --only functions
+# 2. Deploy rules
+bash deploy_firestore_rules.sh
+```
+
+**Done!** ✅ Profile editing should now work for all users.
+
+---
+
+## 📝 Manual Deploy (If script fails)
+
+```bash
+# 1. Install Firebase CLI
+npm install -g firebase-tools
+
+# 2. Login
+firebase login --no-localhost
+
+# 3. Clone and setup
+git clone https://github.com/DrakeNamanya/sayekataleapp.git
+cd sayekataleapp
+
+# 4. Create config
+cat > firebase.json << 'EOF'
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
+EOF
+
+cat > .firebaserc << 'EOF'
+{
+  "projects": {
+    "default": "sayekataleapp"
+  }
+}
+EOF
+
+# 5. Copy rules
+cp FIRESTORE_RULES_FIX.txt firestore.rules
+
+# 6. Deploy
+firebase deploy --only firestore:rules
 ```
 
 ---
 
-## 🌐 3. Configure PawaPay Webhook
+## ✅ Test It Works
 
-1. **PawaPay Dashboard** → Settings → Webhooks
-2. **URL**: `https://us-central1-sayekataleapp.cloudfunctions.net/pawaPayWebhook`
-3. **Method**: POST
-4. **Events**: `deposit.status.updated`
-5. **Active**: ✅ Enabled
-
----
-
-## 🧪 4. Test Payment Flow
-
-```bash
-# Install test APK
-flutter build apk --release
-adb install build/app/outputs/flutter-apk/app-release.apk
-```
-
-**Test Steps:**
-1. Login: `drnamanya@gmail.com`
-2. SME Directory → Upgrade to Premium
-3. Enter Uganda number (e.g., `0774000001`)
-4. Click "Pay with Mobile Money"
-5. **EXPECT**: Mobile money prompt on phone
-6. Enter PIN
-7. **EXPECT**: Subscription activates
+1. Open SayeKatale app
+2. Login as Rita (SME user)
+3. Go to: Profile → Edit Profile
+4. Update any field (name, location, image)
+5. Click Save Profile
+6. ✅ **Should work without errors!**
 
 ---
 
-## 📊 5. Monitor
+## 📚 More Info
 
-**Firebase Logs**: https://console.firebase.google.com/project/sayekataleapp/functions/logs
-
-**Look for:**
-- ✅ `🌐 Calling PawaPay API`
-- ✅ `📥 Response status: 201`
-- ✅ `✅ Premium subscription activated`
-
-**Firestore**: https://console.firebase.google.com/project/sayekataleapp/firestore
-- `transactions/{id}` - status: `initiated` → `completed`
-- `subscriptions/{userId}` - status: `pending` → `active`
+- **Detailed Guide**: `DEPLOY_WITH_CLOUD_SHELL.md`
+- **All Fixes**: `USER_ISSUES_FIX_GUIDE.md`
+- **Diagnosis Results**: `ISSUE_RESOLUTION_SUMMARY.md`
 
 ---
 
-## ❌ Troubleshooting
+## 🎯 What This Fixes
 
-**No mobile money prompt?**
-1. Check Firebase logs for PawaPay error
-2. Common: `401` = wrong API key, `403` = correspondent not activated
-
-**Subscription not activating?**
-1. Verify webhook URL in PawaPay Dashboard
-2. Test webhook manually with curl (see DEPLOYMENT_INSTRUCTIONS.md)
-
----
-
-## 📚 Full Documentation
-
-- **Security Details**: `SECURITY_CRITICAL_FIXES.md`
-- **Step-by-Step Deployment**: `DEPLOYMENT_INSTRUCTIONS.md`
-- **GitHub**: https://github.com/DrakeNamanya/sayekataleapp
+| Issue | Status |
+|-------|--------|
+| Grey Dashboard | Guide provided |
+| Purchase Receipts | Working correctly |
+| Edit Profile Errors | ✅ **FIXED BY THIS** |
+| Product Permissions | Guide provided |
 
 ---
 
-**Status**: ✅ Code ready - Deploy after API key rotation  
-**Latest Commit**: `71b0838`  
-**Updated**: November 20, 2025
+**That's it!** 🎉 Just deploy the rules and profile editing will work for all users.

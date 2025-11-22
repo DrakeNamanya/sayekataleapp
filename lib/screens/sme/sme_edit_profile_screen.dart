@@ -22,6 +22,7 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
   final _phoneController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _nameOnIdPhotoController = TextEditingController();
+  DateTime? _selectedDateOfBirth;
 
   // Partner information controllers
   final _heiferAgrihubNameController = TextEditingController();
@@ -72,6 +73,7 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
       _nationalIdController.text = user.nationalId ?? '';
       _nameOnIdPhotoController.text = user.nameOnIdPhoto ?? '';
       _selectedSex = user.sex;
+      _selectedDateOfBirth = user.dateOfBirth;
       _disabilityStatus = user.disabilityStatus;
       _profileImagePath = user.profileImage;
       _nationalIdPhotoPath = user.nationalIdPhoto;
@@ -370,6 +372,7 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
             ? _nationalIdPhotoPath
             : null, // Only pass URL if no file
         nameOnIdPhoto: _nameOnIdPhotoController.text.trim(),
+        dateOfBirth: _selectedDateOfBirth,
         sex: _selectedSex,
         disabilityStatus: _disabilityStatus,
         location: location,
@@ -752,6 +755,59 @@ class _SMEEditProfileScreenState extends State<SMEEditProfileScreen> {
                 }
                 return null;
               },
+            ),
+            const SizedBox(height: 16),
+
+            // Date of Birth
+            GestureDetector(
+              onTap: () async {
+                final DateTime? picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDateOfBirth ?? DateTime(2000),
+                  firstDate: DateTime(1924),
+                  lastDate: DateTime.now(),
+                  helpText: 'Select your date of birth',
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedDateOfBirth = picked;
+                  });
+                }
+              },
+              child: AbsorbPointer(
+                child: TextFormField(
+                  decoration: InputDecoration(
+                    labelText: 'Date of Birth *',
+                    prefixIcon: const Icon(Icons.calendar_today),
+                    suffixIcon: _selectedDateOfBirth != null
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _selectedDateOfBirth = null;
+                              });
+                            },
+                          )
+                        : null,
+                  ),
+                  controller: TextEditingController(
+                    text: _selectedDateOfBirth != null
+                        ? '${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}'
+                        : '',
+                  ),
+                  validator: (value) {
+                    if (_selectedDateOfBirth == null) {
+                      return 'Please select your date of birth';
+                    }
+                    // Check if user is at least 18 years old
+                    final age = DateTime.now().difference(_selectedDateOfBirth!).inDays ~/ 365;
+                    if (age < 18) {
+                      return 'You must be at least 18 years old';
+                    }
+                    return null;
+                  },
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 

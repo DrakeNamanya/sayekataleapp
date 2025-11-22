@@ -119,6 +119,7 @@ class AuthProvider with ChangeNotifier {
     XFile? nationalIdPhotoFile,
     String? nationalIdPhotoUrl,
     String? nameOnIdPhoto,
+    DateTime? dateOfBirth,
     Sex? sex,
     DisabilityStatus? disabilityStatus,
     Location? location,
@@ -261,6 +262,7 @@ class AuthProvider with ChangeNotifier {
           nationalId != null &&
           finalNationalIdPhotoUrl != null &&
           nameOnIdPhoto != null &&
+          dateOfBirth != null &&
           sex != null &&
           location != null;
 
@@ -271,6 +273,7 @@ class AuthProvider with ChangeNotifier {
           '   - finalNationalIdPhotoUrl: ${finalNationalIdPhotoUrl != null ? "✅" : "❌"}',
         );
         debugPrint('   - nameOnIdPhoto: ${nameOnIdPhoto != null ? "✅" : "❌"}');
+        debugPrint('   - dateOfBirth: ${dateOfBirth != null ? "✅" : "❌"}');
         debugPrint('   - sex: ${sex != null ? "✅" : "❌"}');
         debugPrint('   - location: ${location != null ? "✅" : "❌"}');
         debugPrint(
@@ -290,6 +293,7 @@ class AuthProvider with ChangeNotifier {
       if (finalNationalIdPhotoUrl != null)
         updates['national_id_photo'] = finalNationalIdPhotoUrl;
       if (nameOnIdPhoto != null) updates['name_on_id_photo'] = nameOnIdPhoto;
+      if (dateOfBirth != null) updates['date_of_birth'] = dateOfBirth.toIso8601String();
       if (sex != null)
         updates['sex'] = sex.toString().split('.').last.toUpperCase();
       if (disabilityStatus != null) {
@@ -362,6 +366,7 @@ class AuthProvider with ChangeNotifier {
         nationalIdPhoto:
             finalNationalIdPhotoUrl ?? _currentUser!.nationalIdPhoto,
         nameOnIdPhoto: nameOnIdPhoto ?? _currentUser!.nameOnIdPhoto,
+        dateOfBirth: dateOfBirth ?? _currentUser!.dateOfBirth,
         sex: sex ?? _currentUser!.sex,
         disabilityStatus: disabilityStatus ?? _currentUser!.disabilityStatus,
         location: location ?? _currentUser!.location,

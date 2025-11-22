@@ -11,6 +11,7 @@ class AppUser {
   final String? nationalIdPhoto;
   final String?
   nameOnIdPhoto; // Name extracted from National ID photo for verification
+  final DateTime? dateOfBirth; // Date of birth for profile completion
   final Sex? sex;
   final DisabilityStatus disabilityStatus;
   final Location? location;
@@ -46,6 +47,7 @@ class AppUser {
     this.nationalId,
     this.nationalIdPhoto,
     this.nameOnIdPhoto,
+    this.dateOfBirth,
     this.sex,
     this.disabilityStatus = DisabilityStatus.no,
     this.location,
@@ -117,6 +119,7 @@ class AppUser {
       nationalId: data['national_id'],
       nationalIdPhoto: data['national_id_photo'],
       nameOnIdPhoto: data['name_on_id_photo'],
+      dateOfBirth: parseDateTime(data['date_of_birth']),
       sex: data['sex'] != null
           ? Sex.values.firstWhere(
               (e) => e.toString() == 'Sex.${data['sex']}',
@@ -172,6 +175,7 @@ class AppUser {
       'national_id': nationalId,
       'national_id_photo': nationalIdPhoto,
       'name_on_id_photo': nameOnIdPhoto,
+      'date_of_birth': dateOfBirth?.toIso8601String(),
       'sex': sex?.toString().split('.').last,
       'disability_status': disabilityStatus.toString().split('.').last,
       'location': location?.toMap(),
