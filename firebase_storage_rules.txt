@@ -1,0 +1,229 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for SayeKatale
+// Last Updated: January 2025
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: Check if user owns the resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Helper function: Check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             (request.auth.token.admin == true || 
+              request.auth.token.role == 'admin' ||
+              request.auth.token.role == 'superAdmin');
+    }
+    
+    // Helper function: Validate file size (max 5MB for images, 10MB for documents)
+    function isValidImageSize() {
+      return request.resource.size <= 5 * 1024 * 1024; // 5MB
+    }
+    
+    function isValidDocumentSize() {
+      return request.resource.size <= 10 * 1024 * 1024; // 10MB
+    }
+    
+    // Helper function: Validate image file types
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             (request.resource.contentType.matches('image/jpeg') ||
+              request.resource.contentType.matches('image/jpg') ||
+              request.resource.contentType.matches('image/png') ||
+              request.resource.contentType.matches('image/gif') ||
+              request.resource.contentType.matches('image/webp'));
+    }
+    
+    // Helper function: Validate document file types
+    function isValidDocument() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType.matches('application/pdf');
+    }
+    
+    // =================================================================
+    // USER PROFILE PHOTOS
+    // =================================================================
+    // Path: user_profiles/{userId}/profile_photo.{ext}
+    match /user_profiles/{userId}/{allPaths=**} {
+      // User can upload/update their own profile photo
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) && 
+                      isValidImage() && 
+                      isValidImageSize();
+      
+      // Anyone can view profile photos (public)
+      allow read: if true;
+    }
+    
+    // =================================================================
+    // PRODUCT IMAGES
+    // =================================================================
+    // Path: products/{productId}/{imageFile}
+    match /products/{productId}/{allPaths=**} {
+      // Authenticated users can upload product images (SHG, PSA)
+      allow write: if isAuthenticated() && 
+                      isValidImage() && 
+                      isValidImageSize();
+      
+      // Anyone can view product images (public marketplace)
+      allow read: if true;
+      
+      // Users can delete their own product images
+      allow delete: if isAuthenticated();
+    }
+    
+    // =================================================================
+    // VERIFICATION DOCUMENTS (ID, Business Registration)
+    // =================================================================
+    // Path: verification_documents/{userId}/{documentFile}
+    match /verification_documents/{userId}/{allPaths=**} {
+      // User can upload their own verification documents
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) && 
+                      isValidDocument() && 
+                      isValidDocumentSize();
+      
+      // Only the owner and admins can view verification documents
+      allow read: if isAuthenticated() && 
+                     (isOwner(userId) || isAdmin());
+      
+      // Only admins can delete verification documents
+      allow delete: if isAdmin();
+    }
+    
+    // =================================================================
+    // PSA VERIFICATION DOCUMENTS
+    // =================================================================
+    // Path: psa_verifications/{psaUserId}/{documentFile}
+    match /psa_verifications/{psaUserId}/{allPaths=**} {
+      // PSA users can upload their business verification documents
+      allow write: if isAuthenticated() && 
+                      isOwner(psaUserId) && 
+                      isValidDocument() && 
+                      isValidDocumentSize();
+      
+      // Only the PSA owner and admins can view these documents
+      allow read: if isAuthenticated() && 
+                     (isOwner(psaUserId) || isAdmin());
+      
+      // Only admins can delete PSA verification documents
+      allow delete: if isAdmin();
+    }
+    
+    // =================================================================
+    // REVIEW PHOTOS
+    // =================================================================
+    // Path: reviews/{productId}/{reviewId}/{imageFile}
+    match /reviews/{productId}/{reviewId}/{allPaths=**} {
+      // Authenticated users can upload review photos
+      allow write: if isAuthenticated() && 
+                      isValidImage() && 
+                      isValidImageSize();
+      
+      // Anyone can view review photos (public)
+      allow read: if true;
+      
+      // Users can delete their own review photos, admins can delete any
+      allow delete: if isAuthenticated();
+    }
+    
+    // =================================================================
+    // MESSAGE ATTACHMENTS (Images only for now)
+    // =================================================================
+    // Path: messages/{conversationId}/{messageId}/{attachmentFile}
+    match /messages/{conversationId}/{messageId}/{allPaths=**} {
+      // Authenticated users can upload message attachments
+      allow write: if isAuthenticated() && 
+                      isValidImage() && 
+                      isValidImageSize();
+      
+      // Only authenticated users can view message attachments
+      // (conversation participants should be verified in Firestore rules)
+      allow read: if isAuthenticated();
+      
+      // Users can delete their own attachments, admins can delete any
+      allow delete: if isAuthenticated();
+    }
+    
+    // =================================================================
+    // COMPLAINT ATTACHMENTS
+    // =================================================================
+    // Path: complaints/{complaintId}/{attachmentFile}
+    match /complaints/{complaintId}/{allPaths=**} {
+      // Authenticated users can upload complaint attachments
+      allow write: if isAuthenticated() && 
+                      isValidImage() && 
+                      isValidImageSize();
+      
+      // Only the complaint creator and admins can view attachments
+      allow read: if isAuthenticated();
+      
+      // Only admins can delete complaint attachments
+      allow delete: if isAdmin();
+    }
+    
+    // =================================================================
+    // ADMIN DOCUMENTS (Analytics exports, reports, etc.)
+    // =================================================================
+    // Path: admin/{documentType}/{fileName}
+    match /admin/{allPaths=**} {
+      // Only admins can upload admin documents
+      allow write: if isAdmin() && isValidDocumentSize();
+      
+      // Only admins can view admin documents
+      allow read: if isAdmin();
+      
+      // Only admins can delete admin documents
+      allow delete: if isAdmin();
+    }
+    
+    // =================================================================
+    // TEMPORARY UPLOADS (for image processing, cropping, etc.)
+    // =================================================================
+    // Path: temp/{userId}/{tempFile}
+    match /temp/{userId}/{allPaths=**} {
+      // Users can upload to their temp folder
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) && 
+                      isValidImageSize();
+      
+      // Users can read their own temp files
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Users can delete their own temp files
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // =================================================================
+    // BACKUP FOLDER (Admin only)
+    // =================================================================
+    // Path: backups/{backupFile}
+    match /backups/{allPaths=**} {
+      // Only admins can write backups
+      allow write: if isAdmin();
+      
+      // Only admins can read backups
+      allow read: if isAdmin();
+      
+      // Only admins can delete backups
+      allow delete: if isAdmin();
+    }
+    
+    // =================================================================
+    // DEFAULT RULE (DENY ALL)
+    // =================================================================
+    // All other paths are denied by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
