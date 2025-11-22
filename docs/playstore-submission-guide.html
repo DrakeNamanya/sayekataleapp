@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Play Store Submission Guide - SayeKatale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step-section {
+            margin-bottom: 50px;
+            border-left: 4px solid #2E7D32;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .step-section::before {
+            content: attr(data-step);
+            position: absolute;
+            left: -20px;
+            top: -5px;
+            background: #2E7D32;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .step-section h2 {
+            color: #2E7D32;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            margin-top: 5px;
+        }
+
+        .step-section h3 {
+            color: #1B5E20;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+            padding-left: 20px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .step-section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .checklist {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .checklist ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .checklist li::before {
+            content: '✓';
+            background: #4CAF50;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .warning-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box h4 {
+            color: #F57C00;
+            margin-bottom: 10px;
+        }
+
+        .code-box {
+            background: #263238;
+            color: #00E676;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #2E7D32;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
+
+        .button:hover {
+            background: #1B5E20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            width: 15px;
+            height: 15px;
+            background: #2E7D32;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 30px;
+            text-align: center;
+            border-top: 3px solid #2E7D32;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        table th {
+            background: #2E7D32;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:hover {
+            background: #f5f5f5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .step-section {
+                padding-left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Google Play Store Submission Guide</h1>
+            <p>Complete Step-by-Step Process for SayeKatale App</p>
+        </div>
+
+        <div class="content">
+            <!-- Introduction -->
+            <section>
+                <h2 style="color: #2E7D32; margin-bottom: 20px;">Overview</h2>
+                <p>This comprehensive guide will walk you through the entire process of submitting the SayeKatale app to Google Play Store, from initial setup to publishing updates. Follow each step carefully to ensure a smooth submission process.</p>
+                
+                <div class="info-box">
+                    <h4>📋 Prerequisites</h4>
+                    <p>Before starting, ensure you have:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>A Google Play Developer account ($25 one-time registration fee)</li>
+                        <li>Your signed APK file (app-release.apk)</li>
+                        <li>App assets (icon, screenshots, feature graphic)</li>
+                        <li>Business details and privacy policy</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 1: Google Play Console Setup -->
+            <section class="step-section" data-step="1">
+                <h2>Create Google Play Developer Account</h2>
+                
+                <h3>1.1 Register for Developer Account</h3>
+                <p>Visit <strong>https://play.google.com/console</strong> and sign in with your Google account.</p>
+                
+                <div class="checklist">
+                    <ul>
+                        <li>Go to Google Play Console</li>
+                        <li>Click "Sign up" or "Get started"</li>
+                        <li>Accept Developer Distribution Agreement</li>
+                        <li>Pay $25 one-time registration fee</li>
+                        <li>Complete account verification (may take 24-48 hours)</li>
+                    </ul>
+                </div>
+
+                <h3>1.2 Complete Developer Profile</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Add developer name: "SayeKatale" or your organization name</li>
+                        <li>Add contact email: admin@sayekatale.com</li>
+                        <li>Add physical address (required)</li>
+                        <li>Add phone number</li>
+                        <li>Complete identity verification if prompted</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 2: Create App -->
+            <section class="step-section" data-step="2">
+                <h2>Create New App in Play Console</h2>
+                
+                <h3>2.1 Start App Creation</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Click "Create app" button</li>
+                        <li>Enter app name: <strong>SayeKatale - Demand Meets Supply</strong></li>
+                        <li>Select default language: <strong>English (United States)</strong></li>
+                        <li>Choose app type: <strong>App</strong> (not Game)</li>
+                        <li>Choose free or paid: <strong>Free</strong></li>
+                    </ul>
+                </div>
+
+                <h3>2.2 Declare App Category</h3>
+                <table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Selection</th>
+                    </tr>
+                    <tr>
+                        <td>Main Category</td>
+                        <td>Business</td>
+                    </tr>
+                    <tr>
+                        <td>Content Rating</td>
+                        <td>Everyone (will complete questionnaire)</td>
+                    </tr>
+                    <tr>
+                        <td>Contains Ads</td>
+                        <td>Yes (if using AdMob)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Step 3: App Content -->
+            <section class="step-section" data-step="3">
+                <h2>Setup App Content & Policies</h2>
+                
+                <h3>3.1 Privacy Policy</h3>
+                <div class="warning-box">
+                    <h4>⚠️ Required</h4>
+                    <p>You MUST provide a privacy policy URL. This is mandatory for all apps that collect user data.</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4>Privacy Policy URL</h4>
+                    <p>Host your privacy policy on a publicly accessible URL, for example:</p>
+                    <div class="code-box">https://sayekatale.com/privacy-policy</div>
+                    <p>The privacy policy should cover:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>What data you collect (name, email, location, etc.)</li>
+                        <li>How you use the data</li>
+                        <li>Third-party services (Firebase, AdMob, etc.)</li>
+                        <li>User rights and data deletion</li>
+                    </ul>
+                </div>
+
+                <h3>3.2 App Access</h3>
+                <p>Declare if your app requires special access:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Requires login: <strong>Yes</strong> (for certain features)</li>
+                        <li>Provide test credentials for reviewers (if needed)</li>
+                        <li>Special access instructions: Describe different user roles (SHG, SME, PSA)</li>
+                    </ul>
+                </div>
+
+                <h3>3.3 Data Safety</h3>
+                <p>Complete the data safety section to inform users about data collection:</p>
+                <table>
+                    <tr>
+                        <th>Data Type</th>
+                        <th>Collected?</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>Location</td>
+                        <td>Yes</td>
+                        <td>App functionality, Analytics</td>
+                    </tr>
+                    <tr>
+                        <td>Personal Info</td>
+                        <td>Yes</td>
+                        <td>Account management, Communication</td>
+                    </tr>
+                    <tr>
+                        <td>Photos</td>
+                        <td>Yes</td>
+                        <td>Product listings, Profile pictures</td>
+                    </tr>
+                    <tr>
+                        <td>Device ID</td>
+                        <td>Yes</td>
+                        <td>Analytics, App functionality</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Step 4: Store Listing -->
+            <section class="step-section" data-step="4">
+                <h2>Create Store Listing</h2>
+                
+                <h3>4.1 App Details</h3>
+                <div class="info-box">
+                    <h4>App Name</h4>
+                    <p><strong>SayeKatale - Demand Meets Supply</strong></p>
+                    
+                    <h4>Short Description (80 characters max)</h4>
+                    <p>Connect farmers, suppliers, and buyers. Trade fresh produce easily.</p>
+                    
+                    <h4>Full Description (4000 characters max)</h4>
+                    <p>SayeKatale is a comprehensive agricultural marketplace platform connecting Self-Help Groups (SHG) farmers, Production and Supply Agents (PSA), and Small-Medium Enterprises (SME) buyers in Uganda.</p>
+                    <p><strong>Key Features:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>🌾 Browse fresh produce from local farmers</li>
+                        <li>📦 Direct connection between suppliers and buyers</li>
+                        <li>💰 Transparent pricing and secure transactions</li>
+                        <li>📱 Real-time order tracking</li>
+                        <li>⭐ Rating and review system</li>
+                        <li>📊 Business analytics for suppliers</li>
+                        <li>🗂️ Premium SME directory</li>
+                    </ul>
+                </div>
+
+                <h3>4.2 App Icon Requirements</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Size: 512 x 512 px</li>
+                        <li>Format: PNG (32-bit)</li>
+                        <li>Max file size: 1 MB</li>
+                        <li>Square shape with rounded corners (Google applies automatically)</li>
+                        <li>No transparency</li>
+                    </ul>
+                </div>
+
+                <h3>4.3 Screenshots (Required)</h3>
+                <p>You need at least 2 screenshots (max 8) for phone form factor:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>JPEG or PNG format (24-bit)</li>
+                        <li>Minimum dimension: 320 px</li>
+                        <li>Maximum dimension: 3840 px</li>
+                        <li>Aspect ratio: Between 16:9 and 9:16</li>
+                        <li>Recommended: 1080 x 1920 px (portrait)</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4>📸 Screenshot Guidelines</h4>
+                    <p>Capture screenshots showing:</p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li>Product browsing screen</li>
+                        <li>Product details with images</li>
+                        <li>Order placement flow</li>
+                        <li>User dashboard (SHG/SME/PSA)</li>
+                        <li>Search and filter features</li>
+                        <li>Profile and settings</li>
+                    </ol>
+                </div>
+
+                <h3>4.4 Feature Graphic</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Size: 1024 x 500 px</li>
+                        <li>Format: JPEG or PNG (24-bit)</li>
+                        <li>Max file size: 1 MB</li>
+                        <li>Should showcase app's main features</li>
+                        <li>Include app name and tagline</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 5: Upload APK -->
+            <section class="step-section" data-step="5">
+                <h2>Upload Your APK</h2>
+                
+                <h3>5.1 Production Track Setup</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Go to "Release" → "Production"</li>
+                        <li>Click "Create new release"</li>
+                        <li>Choose "Upload" option</li>
+                        <li>Upload your <strong>app-release.apk</strong> file</li>
+                        <li>Wait for upload and processing (may take a few minutes)</li>
+                    </ul>
+                </div>
+
+                <h3>5.2 Release Name and Notes</h3>
+                <div class="info-box">
+                    <h4>Release Name</h4>
+                    <p>Version 1.0.0 - Initial Release</p>
+                    
+                    <h4>Release Notes (What's new)</h4>
+                    <div class="code-box">🎉 Initial Release - SayeKatale v1.0.0
+
+✨ Features:
+• Browse fresh produce from local farmers
+• Connect suppliers with buyers directly
+• Secure order placement and tracking
+• Real-time messaging between users
+• Rating and review system
+• Business analytics dashboard
+• Premium SME directory access
+
+🚀 For Farmers (SHG):
+• List products easily
+• Manage inventory
+• Track sales and orders
+
+📦 For Suppliers (PSA):
+• Verify business credentials
+• Add multiple products
+• Access business analytics
+
+🛒 For Buyers (SME):
+• Advanced search and filters
+• Compare products and prices
+• Track order deliveries
+
+Thank you for using SayeKatale!</div>
+                </div>
+
+                <h3>5.3 Review APK Details</h3>
+                <p>Verify the APK information displayed:</p>
+                <table>
+                    <tr>
+                        <th>Field</th>
+                        <th>Expected Value</th>
+                    </tr>
+                    <tr>
+                        <td>Package Name</td>
+                        <td>com.datacollectors.sayekatale</td>
+                    </tr>
+                    <tr>
+                        <td>Version Code</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Version Name</td>
+                        <td>1.0.0</td>
+                    </tr>
+                    <tr>
+                        <td>Min SDK</td>
+                        <td>21 (Android 5.0)</td>
+                    </tr>
+                    <tr>
+                        <td>Target SDK</td>
+                        <td>36 (Android 15)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Step 6: Content Rating -->
+            <section class="step-section" data-step="6">
+                <h2>Complete Content Rating Questionnaire</h2>
+                
+                <p>Google requires all apps to complete a content rating questionnaire to determine the appropriate age rating.</p>
+
+                <h3>6.1 Start Questionnaire</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Go to "App content" → "Content ratings"</li>
+                        <li>Click "Start questionnaire"</li>
+                        <li>Provide your email address</li>
+                        <li>Select app category: <strong>Business/Productivity</strong></li>
+                    </ul>
+                </div>
+
+                <h3>6.2 Answer Questions</h3>
+                <p>For SayeKatale app, typical answers:</p>
+                <table>
+                    <tr>
+                        <th>Question</th>
+                        <th>Answer</th>
+                    </tr>
+                    <tr>
+                        <td>Violence</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>Sexual content</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>Profanity</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>User interaction</td>
+                        <td>Yes (users can communicate and share content)</td>
+                    </tr>
+                    <tr>
+                        <td>Share location</td>
+                        <td>Yes (optional, for finding nearby suppliers)</td>
+                    </tr>
+                    <tr>
+                        <td>Purchase digital goods</td>
+                        <td>No</td>
+                    </tr>
+                </table>
+
+                <div class="info-box">
+                    <h4>Expected Rating</h4>
+                    <p>Based on these answers, your app should receive:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>ESRB:</strong> Everyone</li>
+                        <li><strong>PEGI:</strong> 3+</li>
+                        <li><strong>USK:</strong> All ages</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 7: Target Audience -->
+            <section class="step-section" data-step="7">
+                <h2>Set Target Audience & Content</h2>
+                
+                <h3>7.1 Target Age</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Select target age groups: <strong>18 and over</strong></li>
+                        <li>Appeal to children under 13: <strong>No</strong></li>
+                    </ul>
+                </div>
+
+                <h3>7.2 Store Presence</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Available in Google Play for Families: <strong>No</strong></li>
+                        <li>Reason: App targets business users, not children</li>
+                    </ul>
+                </div>
+
+                <h3>7.3 Ads Declaration</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Contains ads: <strong>Yes</strong> (if using AdMob)</li>
+                        <li>Ad format: Banner ads, Interstitial ads</li>
+                        <li>Ads comply with families policy: <strong>N/A</strong></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 8: Pricing & Distribution -->
+            <section class="step-section" data-step="8">
+                <h2>Configure Pricing & Distribution</h2>
+                
+                <h3>8.1 Pricing</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>App price: <strong>Free</strong></li>
+                        <li>In-app purchases: <strong>No</strong> (or Yes if you have subscriptions)</li>
+                        <li>Distributed via: Google Play only</li>
+                    </ul>
+                </div>
+
+                <h3>8.2 Countries/Regions</h3>
+                <div class="info-box">
+                    <h4>Recommended Distribution</h4>
+                    <p>For initial launch, you can either:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Option 1:</strong> Uganda only (targeted launch)</li>
+                        <li><strong>Option 2:</strong> All countries (wider reach)</li>
+                    </ul>
+                    <p>You can always add/remove countries later.</p>
+                </div>
+
+                <h3>8.3 Program Opt-in</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Google Play for Education: No (not an educational app)</li>
+                        <li>Android Excellence: Optional (requires quality metrics)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 9: Review and Publish -->
+            <section class="step-section" data-step="9">
+                <h2>Submit for Review</h2>
+                
+                <h3>9.1 Pre-launch Checklist</h3>
+                <div class="warning-box">
+                    <h4>⚠️ Before Submitting</h4>
+                    <p>Ensure ALL of these are complete:</p>
+                </div>
+                
+                <div class="checklist">
+                    <ul>
+                        <li>App icon uploaded (512x512 px)</li>
+                        <li>Screenshots uploaded (at least 2)</li>
+                        <li>Feature graphic uploaded (1024x500 px)</li>
+                        <li>Privacy policy URL provided</li>
+                        <li>Content rating completed</li>
+                        <li>Store listing completed</li>
+                        <li>APK uploaded</li>
+                        <li>Target audience set</li>
+                        <li>Pricing & distribution configured</li>
+                        <li>Data safety section completed</li>
+                    </ul>
+                </div>
+
+                <h3>9.2 Submit for Review</h3>
+                <p>Once all sections are marked as complete:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Review all sections in the dashboard</li>
+                        <li>Click "Review release" button</li>
+                        <li>Confirm all details are correct</li>
+                        <li>Click "Start rollout to Production"</li>
+                        <li>Confirm submission</li>
+                    </ul>
+                </div>
+
+                <h3>9.3 Review Timeline</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <strong>Day 1:</strong> App submitted for review
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Day 1-3:</strong> Google Play review (usually 1-3 days, can be up to 7 days)
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Day 3-4:</strong> App approved or feedback provided
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Day 4:</strong> App goes live on Google Play Store
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>📧 Email Notifications</h4>
+                    <p>You'll receive emails at key stages:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Submission confirmed</li>
+                        <li>Under review</li>
+                        <li>Approved / Needs changes</li>
+                        <li>Published successfully</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 10: Publishing Updates -->
+            <section class="step-section" data-step="10">
+                <h2>Publishing Updates & Changes</h2>
+                
+                <h3>10.1 Creating Update APK</h3>
+                <p>When you need to publish an update:</p>
+                
+                <div class="info-box">
+                    <h4>Version Code Rules</h4>
+                    <p>Each new APK must have a higher version code than the previous one:</p>
+                    <table style="margin-top: 10px;">
+                        <tr>
+                            <th>Release</th>
+                            <th>Version Name</th>
+                            <th>Version Code</th>
+                        </tr>
+                        <tr>
+                            <td>Initial</td>
+                            <td>1.0.0</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>Bug Fix</td>
+                            <td>1.0.1</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>Minor Update</td>
+                            <td>1.1.0</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td>Major Update</td>
+                            <td>2.0.0</td>
+                            <td>4</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h3>10.2 Update Version Numbers</h3>
+                <p>Edit your <code>pubspec.yaml</code> file:</p>
+                <div class="code-box">version: 1.0.1+2
+
+# Format: major.minor.patch+buildNumber
+# Increase +buildNumber for each release</div>
+
+                <h3>10.3 Build Updated APK</h3>
+                <div class="code-box">cd /home/user/flutter_app
+flutter build apk --release</div>
+
+                <h3>10.4 Upload Update</h3>
+                <div class="checklist">
+                    <ul>
+                        <li>Go to Play Console → Production</li>
+                        <li>Click "Create new release"</li>
+                        <li>Upload new APK</li>
+                        <li>Add release notes describing changes</li>
+                        <li>Review and submit</li>
+                    </ul>
+                </div>
+
+                <h3>10.5 Update Types</h3>
+                <table>
+                    <tr>
+                        <th>Update Type</th>
+                        <th>When to Use</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td>Patch (x.x.X)</td>
+                        <td>Bug fixes, minor improvements</td>
+                        <td>1.0.1 → 1.0.2</td>
+                    </tr>
+                    <tr>
+                        <td>Minor (x.X.x)</td>
+                        <td>New features, enhancements</td>
+                        <td>1.0.0 → 1.1.0</td>
+                    </tr>
+                    <tr>
+                        <td>Major (X.x.x)</td>
+                        <td>Major redesign, breaking changes</td>
+                        <td>1.0.0 → 2.0.0</td>
+                    </tr>
+                </table>
+
+                <h3>10.6 Staged Rollout (Recommended)</h3>
+                <p>For safer updates, use staged rollout:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Start with 20% of users</li>
+                        <li>Monitor for crashes and ratings</li>
+                        <li>Gradually increase to 50%, then 100%</li>
+                        <li>Pause rollout if issues detected</li>
+                        <li>Can halt and rollback if critical issues found</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Step 11: Post-Launch -->
+            <section class="step-section" data-step="11">
+                <h2>Post-Launch Management</h2>
+                
+                <h3>11.1 Monitor App Performance</h3>
+                <p>Use Play Console dashboard to track:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Downloads and installations</li>
+                        <li>User ratings and reviews</li>
+                        <li>Crash reports and ANRs</li>
+                        <li>User engagement metrics</li>
+                        <li>Revenue (if applicable)</li>
+                    </ul>
+                </div>
+
+                <h3>11.2 Respond to Reviews</h3>
+                <div class="info-box">
+                    <h4>Review Response Best Practices</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Respond to reviews within 24-48 hours</li>
+                        <li>Thank users for positive feedback</li>
+                        <li>Address negative reviews professionally</li>
+                        <li>Offer solutions for reported issues</li>
+                        <li>Update users when issues are fixed</li>
+                    </ul>
+                </div>
+
+                <h3>11.3 Handle Crashes</h3>
+                <p>When crashes are reported:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Review crash reports in Play Console</li>
+                        <li>Identify affected Android versions</li>
+                        <li>Reproduce and fix the issue</li>
+                        <li>Test thoroughly</li>
+                        <li>Release update quickly</li>
+                    </ul>
+                </div>
+
+                <h3>11.4 Optimize Store Listing</h3>
+                <p>Based on performance data:</p>
+                <div class="checklist">
+                    <ul>
+                        <li>Update screenshots to show new features</li>
+                        <li>Refresh app description</li>
+                        <li>A/B test different icons (Play Console feature)</li>
+                        <li>Improve feature graphic</li>
+                        <li>Add promo video (optional)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section class="step-section" data-step="12">
+                <h2>Common Issues & Solutions</h2>
+                
+                <h3>12.1 Rejection Reasons</h3>
+                <table>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Solution</th>
+                    </tr>
+                    <tr>
+                        <td>Missing privacy policy</td>
+                        <td>Add valid privacy policy URL in store listing</td>
+                    </tr>
+                    <tr>
+                        <td>Misleading store listing</td>
+                        <td>Ensure screenshots and description match actual app</td>
+                    </tr>
+                    <tr>
+                        <td>Dangerous permissions</td>
+                        <td>Justify all permissions in app description</td>
+                    </tr>
+                    <tr>
+                        <td>Content rating issues</td>
+                        <td>Re-complete questionnaire accurately</td>
+                    </tr>
+                    <tr>
+                        <td>Crashes during review</td>
+                        <td>Test thoroughly, provide test account if needed</td>
+                    </tr>
+                </table>
+
+                <h3>12.2 APK Upload Issues</h3>
+                <div class="warning-box">
+                    <h4>Common Errors</h4>
+                    <p><strong>Error:</strong> "Version code already exists"</p>
+                    <p><strong>Solution:</strong> Increase version code in pubspec.yaml</p>
+                    
+                    <p style="margin-top: 15px;"><strong>Error:</strong> "APK not signed"</p>
+                    <p><strong>Solution:</strong> Ensure you're building with --release flag</p>
+                    
+                    <p style="margin-top: 15px;"><strong>Error:</strong> "Package name mismatch"</p>
+                    <p><strong>Solution:</strong> Don't change package name after first upload</p>
+                </div>
+
+                <h3>12.3 Getting Help</h3>
+                <div class="info-box">
+                    <h4>Support Resources</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Play Console Help:</strong> help.console.google.com</li>
+                        <li><strong>Policy Guidelines:</strong> play.google.com/about/developer-content-policy</li>
+                        <li><strong>Developer Community:</strong> stackoverflow.com/questions/tagged/google-play</li>
+                        <li><strong>Direct Support:</strong> Contact through Play Console (if eligible)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Quick Reference -->
+            <section>
+                <h2 style="color: #2E7D32; margin-top: 40px; margin-bottom: 20px;">Quick Reference Checklist</h2>
+                
+                <div class="checklist">
+                    <h3>Before First Submission:</h3>
+                    <ul>
+                        <li>Google Play Developer account created ($25 paid)</li>
+                        <li>Signed APK ready (app-release.apk)</li>
+                        <li>App icon 512x512 px</li>
+                        <li>At least 2 screenshots (1080x1920 px)</li>
+                        <li>Feature graphic 1024x500 px</li>
+                        <li>Privacy policy URL</li>
+                        <li>Store listing text prepared</li>
+                        <li>Content rating completed</li>
+                        <li>Data safety questions answered</li>
+                        <li>Target audience defined</li>
+                    </ul>
+                </div>
+
+                <div class="checklist">
+                    <h3>For Each Update:</h3>
+                    <ul>
+                        <li>Increment version code (+1)</li>
+                        <li>Update version name (semantic versioning)</li>
+                        <li>Build release APK</li>
+                        <li>Write clear release notes</li>
+                        <li>Test thoroughly before submission</li>
+                        <li>Consider staged rollout</li>
+                        <li>Monitor for issues post-release</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="footer">
+            <h3 style="color: #2E7D32; margin-bottom: 15px;">Ready to Publish! 🚀</h3>
+            <p style="margin-bottom: 20px;">Follow this guide step-by-step to successfully publish SayeKatale to Google Play Store.</p>
+            <a href="#" class="button">📱 Start Submission Process</a>
+            <a href="app-usage-guide.html" class="button">📖 View App Usage Guide</a>
+            <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+                For support, contact: admin@sayekatale.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>

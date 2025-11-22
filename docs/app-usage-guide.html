@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SayeKatale App Usage Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 1.4em;
+            opacity: 0.95;
+        }
+
+        .nav-tabs {
+            background: #f5f5f5;
+            padding: 20px 40px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 3px solid #2E7D32;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            background: white;
+            border: 2px solid #2E7D32;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .nav-tab:hover {
+            background: #2E7D32;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            color: #2E7D32;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .step-container {
+            margin: 40px 0;
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .step-container.reverse {
+            flex-direction: row-reverse;
+        }
+
+        .mock-phone {
+            flex: 0 0 350px;
+            background: #1a1a1a;
+            border-radius: 35px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .mock-phone::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 6px;
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .mock-phone::after {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 50%;
+            transform: translateX(45px);
+            width: 12px;
+            height: 12px;
+            background: #222;
+            border-radius: 50%;
+        }
+
+        .phone-screen {
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            min-height: 700px;
+        }
+
+        .screen-header {
+            background: #2E7D32;
+            color: white;
+            padding: 50px 20px 20px 20px;
+            text-align: center;
+        }
+
+        .screen-header h3 {
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+
+        .screen-content {
+            padding: 20px;
+        }
+
+        .step-info {
+            flex: 1;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #2E7D32;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .step-info h3 {
+            color: #1B5E20;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .step-info p {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .pointer {
+            position: relative;
+            padding-left: 30px;
+            margin: 15px 0;
+            font-size: 1.05em;
+        }
+
+        .pointer::before {
+            content: '👉';
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+
+        .pointer strong {
+            color: #2E7D32;
+        }
+
+        .input-field {
+            border: 2px solid #ddd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+        }
+
+        .input-field:focus {
+            border-color: #2E7D32;
+            outline: none;
+        }
+
+        .button-primary {
+            background: #2E7D32;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #2E7D32;
+            border: 2px solid #2E7D32;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+
+        .role-card {
+            background: #f9f9f9;
+            border: 2px solid #2E7D32;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-card:hover {
+            background: #E8F5E9;
+            transform: translateX(5px);
+        }
+
+        .role-card.selected {
+            background: #2E7D32;
+            color: white;
+        }
+
+        .role-card h4 {
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+
+        .product-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+        }
+
+        .product-name {
+            font-weight: bold;
+            font-size: 1.05em;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            color: #2E7D32;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .dashboard-card {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 10px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .dashboard-card h4 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+
+        .dashboard-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .bottom-nav {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .nav-item.active {
+            color: #2E7D32;
+        }
+
+        .nav-icon {
+            font-size: 1.5em;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.95em;
+        }
+
+        .filter-icon {
+            width: 45px;
+            height: 45px;
+            background: #2E7D32;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .category-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .chip {
+            padding: 8px 20px;
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .chip.active {
+            background: #2E7D32;
+            color: white;
+            border-color: #2E7D32;
+        }
+
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-box {
+            background: #E8F5E9;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 968px) {
+            .step-container {
+                flex-direction: column !important;
+            }
+
+            .mock-phone {
+                flex: 0 0 auto;
+                width: 100%;
+                max-width: 350px;
+                margin: 0 auto;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 SayeKatale App Usage Guide</h1>
+            <p>Step-by-Step Guide for All User Roles</p>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showSection('getting-started')">🚀 Getting Started</div>
+            <div class="nav-tab" onclick="showSection('shg-role')">🌾 SHG (Farmer) Guide</div>
+            <div class="nav-tab" onclick="showSection('sme-role')">🛒 SME (Buyer) Guide</div>
+            <div class="nav-tab" onclick="showSection('psa-role')">📦 PSA (Supplier) Guide</div>
+            <div class="nav-tab" onclick="showSection('features')">✨ Key Features</div>
+        </div>
+
+        <div class="content">
+            <!-- Getting Started Section -->
+            <section id="getting-started" class="section active">
+                <h2>🚀 Getting Started</h2>
+
+                <!-- Step 1: Download App -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div style="font-size: 4em; margin-bottom: 15px;">📱</div>
+                                <h3>SayeKatale</h3>
+                                <p style="font-size: 0.9em; opacity: 0.9;">Demand Meets Supply</p>
+                            </div>
+                            <div class="screen-content" style="padding-top: 60px; text-align: center;">
+                                <div style="font-size: 5em; margin-bottom: 20px; color: #2E7D32;">🎉</div>
+                                <h3 style="color: #2E7D32; margin-bottom: 15px;">Welcome!</h3>
+                                <p style="color: #666; margin-bottom: 30px;">Connect farmers, suppliers, and buyers in one platform</p>
+                                <button class="button-primary">Get Started</button>
+                                <p style="color: #999; font-size: 0.85em; margin-top: 30px;">Download from Google Play Store</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">1</div>
+                        <h3>Download & Install the App</h3>
+                        <p>Start your journey by downloading SayeKatale from the Google Play Store.</p>
+                        
+                        <div class="pointer">
+                            <strong>Search:</strong> "SayeKatale" in Play Store
+                        </div>
+                        <div class="pointer">
+                            <strong>Tap:</strong> Install button
+                        </div>
+                        <div class="pointer">
+                            <strong>Open:</strong> App after installation completes
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ What you'll see:</strong> Welcome splash screen with the SayeKatale logo and tagline "Demand Meets Supply"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Create Account -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Create Account</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Join SayeKatale Today</p>
+                            </div>
+                            <div class="screen-content">
+                                <input type="text" class="input-field" placeholder="📱 Phone Number" value="+256 700 123 456">
+                                <input type="text" class="input-field" placeholder="✉️ Email Address" value="john@example.com">
+                                <input type="text" class="input-field" placeholder="👤 Full Name" value="John Doe">
+                                <input type="password" class="input-field" placeholder="🔒 Password" value="••••••••">
+                                <input type="password" class="input-field" placeholder="🔒 Confirm Password" value="••••••••">
+                                
+                                <div style="margin: 20px 0;">
+                                    <label style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" checked> 
+                                        <span style="font-size: 0.9em;">I agree to Terms & Conditions</span>
+                                    </label>
+                                </div>
+
+                                <button class="button-primary">Create Account</button>
+                                <button class="button-secondary">Already have an account? Login</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">2</div>
+                        <h3>Create Your Account</h3>
+                        <p>Register with your details to access the platform. All user types start with account creation.</p>
+                        
+                        <div class="pointer">
+                            <strong>Phone Number:</strong> Your active mobile number (for verification)
+                        </div>
+                        <div class="pointer">
+                            <strong>Email:</strong> Valid email address
+                        </div>
+                        <div class="pointer">
+                            <strong>Full Name:</strong> Your real name as per ID
+                        </div>
+                        <div class="pointer">
+                            <strong>Password:</strong> Strong password (8+ characters)
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Tip:</strong> Use a strong password with uppercase, lowercase, numbers, and special characters for better security.
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Important:</strong> Keep your password safe. You'll need it to log in on other devices.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Select Role -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Choose Your Role</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Select how you'll use SayeKatale</p>
+                            </div>
+                            <div class="screen-content">
+                                <p style="margin-bottom: 20px; color: #666;">Select the role that best describes you:</p>
+
+                                <div class="role-card selected">
+                                    <h4>🌾 SHG (Self-Help Group)</h4>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">I'm a farmer or farmer group selling produce</p>
+                                </div>
+
+                                <div class="role-card">
+                                    <h4>🛒 SME (Small-Medium Enterprise)</h4>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">I'm a buyer looking for agricultural products</p>
+                                </div>
+
+                                <div class="role-card">
+                                    <h4>📦 PSA (Production & Supply Agent)</h4>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">I'm a supplier/distributor of products</p>
+                                </div>
+
+                                <button class="button-primary" style="margin-top: 20px;">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">3</div>
+                        <h3>Select Your Role</h3>
+                        <p>Choose the role that matches how you'll use the platform. This determines your dashboard and features.</p>
+                        
+                        <div class="pointer">
+                            <strong>SHG (Farmer):</strong> Sell your farm produce, manage inventory, track sales
+                        </div>
+                        <div class="pointer">
+                            <strong>SME (Buyer):</strong> Browse products, place orders, find suppliers
+                        </div>
+                        <div class="pointer">
+                            <strong>PSA (Supplier):</strong> Large-scale supply, business verification, premium features
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ After selection:</strong> You'll be directed to complete your profile based on your chosen role. Each role has specific profile requirements.
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Can I change roles later?</strong> Contact support if you need to change your role, but it's best to choose correctly from the start.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Complete Profile -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Complete Profile</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">24 hours to complete</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="background: #FFF3E0; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                    <p style="font-size: 0.9em; color: #F57C00;">⏰ Complete your profile within 24 hours to keep your account active</p>
+                                </div>
+
+                                <input type="text" class="input-field" placeholder="📍 District" value="Kampala">
+                                <input type="text" class="input-field" placeholder="🏘️ Sub-county" value="Kawempe">
+                                <input type="text" class="input-field" placeholder="🏠 Village" value="Kazo">
+                                
+                                <div style="margin: 15px 0;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">📸 Profile Photo (Optional)</label>
+                                    <button class="button-secondary">Upload Photo</button>
+                                </div>
+
+                                <div style="margin: 15px 0;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">🆔 National ID Photo</label>
+                                    <button class="button-secondary">Upload ID Photo</button>
+                                </div>
+
+                                <button class="button-primary" style="margin-top: 20px;">Save & Continue</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">4</div>
+                        <h3>Complete Your Profile</h3>
+                        <p>Fill in additional details within 24 hours of registration. This helps verify your account and connect you with the right people.</p>
+                        
+                        <div class="pointer">
+                            <strong>Location:</strong> District, Sub-county, and Village (helps buyers find you)
+                        </div>
+                        <div class="pointer">
+                            <strong>Profile Photo:</strong> Optional but recommended for trust
+                        </div>
+                        <div class="pointer">
+                            <strong>National ID Photo:</strong> Required for verification
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ 24-Hour Deadline:</strong> You have 24 hours from registration to complete your profile. Incomplete profiles will be deactivated.
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ What happens next:</strong> After completing your profile, you can access your dashboard and start using the platform!
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SHG Role Section -->
+            <section id="shg-role" class="section">
+                <h2>🌾 SHG (Farmer) User Guide</h2>
+
+                <div class="info-box">
+                    <strong>Who is SHG?</strong> Self-Help Group (SHG) users are farmers or farmer groups who grow and sell agricultural produce. Use this role if you produce crops, vegetables, or other farm products.
+                </div>
+
+                <!-- SHG Dashboard -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>SHG Dashboard</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Welcome back, John!</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="dashboard-card">
+                                    <h4>Total Products</h4>
+                                    <div class="value">12</div>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%);">
+                                    <h4>Active Orders</h4>
+                                    <div class="value">5</div>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #FFA726 0%, #F57C00 100%);">
+                                    <h4>This Month Sales</h4>
+                                    <div class="value">UGX 450K</div>
+                                </div>
+
+                                <h4 style="margin: 20px 0 10px 0; color: #2E7D32;">Quick Actions</h4>
+                                <button class="button-primary">+ Add New Product</button>
+                                <button class="button-secondary">View All Orders</button>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📦</span>
+                                    <span>Products</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">1</div>
+                        <h3>SHG Dashboard Overview</h3>
+                        <p>Your dashboard shows key metrics and quick actions for managing your farming business.</p>
+                        
+                        <div class="pointer">
+                            <strong>Total Products:</strong> Number of products you've listed for sale
+                        </div>
+                        <div class="pointer">
+                            <strong>Active Orders:</strong> Orders currently being processed or delivered
+                        </div>
+                        <div class="pointer">
+                            <strong>Monthly Sales:</strong> Your total revenue for the current month
+                        </div>
+                        <div class="pointer">
+                            <strong>Quick Actions:</strong> Fast access to common tasks
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Bottom Navigation:</strong> Tap icons to switch between Dashboard, Products, Orders, and Profile sections.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Product -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Add New Product</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">List your produce</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">📸 Product Photos (Up to 5)</label>
+                                    <div style="display: flex; gap: 10px; overflow-x: auto; padding: 5px 0;">
+                                        <div style="width: 80px; height: 80px; background: #E8F5E9; border: 2px dashed #4CAF50; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em;">+</div>
+                                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px;"></div>
+                                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px;"></div>
+                                    </div>
+                                </div>
+
+                                <input type="text" class="input-field" placeholder="🌾 Product Name" value="Fresh Tomatoes">
+                                
+                                <select class="input-field" style="margin-bottom: 12px;">
+                                    <option>📂 Category: Vegetables</option>
+                                    <option>Crops</option>
+                                    <option>Onions</option>
+                                </select>
+
+                                <input type="text" class="input-field" placeholder="💰 Price per Unit" value="5000">
+                                <input type="text" class="input-field" placeholder="📦 Unit (KG, Bag, etc.)" value="KG">
+                                <input type="number" class="input-field" placeholder="📊 Stock Quantity" value="100">
+
+                                <textarea class="input-field" placeholder="📝 Description" rows="3" style="resize: vertical;">Fresh organic tomatoes from our farm</textarea>
+
+                                <button class="button-primary">Publish Product</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">2</div>
+                        <h3>Adding Products</h3>
+                        <p>List your farm produce so buyers can find and purchase from you.</p>
+                        
+                        <div class="pointer">
+                            <strong>Photos:</strong> Upload clear photos of your product (up to 5 images)
+                        </div>
+                        <div class="pointer">
+                            <strong>Product Name:</strong> Clear name (e.g., "Fresh Tomatoes", "Red Onions")
+                        </div>
+                        <div class="pointer">
+                            <strong>Category:</strong> Choose the right category for easy discovery
+                        </div>
+                        <div class="pointer">
+                            <strong>Price:</strong> Set competitive price per unit
+                        </div>
+                        <div class="pointer">
+                            <strong>Stock:</strong> Available quantity
+                        </div>
+                        <div class="pointer">
+                            <strong>Description:</strong> Brief details about your product
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ After publishing:</strong> Your product appears in the marketplace for buyers to see and order!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Orders -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>My Orders</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Manage customer orders</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="category-chips">
+                                    <div class="chip active">All</div>
+                                    <div class="chip">Pending</div>
+                                    <div class="chip">Delivered</div>
+                                    <div class="chip">Cancelled</div>
+                                </div>
+
+                                <div style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <strong>Order #1234</strong>
+                                        <span style="background: #FFF3E0; color: #F57C00; padding: 4px 12px; border-radius: 12px; font-size: 0.85em;">Pending</span>
+                                    </div>
+                                    <p style="color: #666; font-size: 0.9em;">Fresh Tomatoes - 20 KG</p>
+                                    <p style="color: #2E7D32; font-weight: bold; margin-top: 8px;">UGX 100,000</p>
+                                    <div style="display: flex; gap: 10px; margin-top: 12px;">
+                                        <button class="button-primary" style="padding: 8px 20px; font-size: 0.9em;">Accept</button>
+                                        <button class="button-secondary" style="padding: 8px 20px; font-size: 0.9em;">View Details</button>
+                                    </div>
+                                </div>
+
+                                <div style="background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <strong>Order #1233</strong>
+                                        <span style="background: #E8F5E9; color: #2E7D32; padding: 4px 12px; border-radius: 12px; font-size: 0.85em;">Delivered</span>
+                                    </div>
+                                    <p style="color: #666; font-size: 0.9em;">Red Onions - 50 KG</p>
+                                    <p style="color: #2E7D32; font-weight: bold; margin-top: 8px;">UGX 150,000</p>
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📦</span>
+                                    <span>Products</span>
+                                </div>
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">3</div>
+                        <h3>Managing Orders</h3>
+                        <p>Track and fulfill customer orders efficiently.</p>
+                        
+                        <div class="pointer">
+                            <strong>Filter Orders:</strong> View by status (Pending, Delivered, Cancelled)
+                        </div>
+                        <div class="pointer">
+                            <strong>Accept Orders:</strong> Confirm you can fulfill the order
+                        </div>
+                        <div class="pointer">
+                            <strong>View Details:</strong> See customer info and delivery address
+                        </div>
+                        <div class="pointer">
+                            <strong>Mark Delivered:</strong> Update status when order is delivered
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Important:</strong> Accept orders promptly to maintain good ratings. Communicate with buyers if there are delays.
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Communication:</strong> Tap "View Details" to message the buyer directly about delivery arrangements.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium SME Directory -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Premium SME Directory</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Find verified buyers</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; text-align: center;">
+                                    <div style="font-size: 2.5em; margin-bottom: 10px;">👑</div>
+                                    <h4>Premium Feature</h4>
+                                    <p style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">Subscribe for UGX 120,000/year</p>
+                                    <button class="button-primary" style="background: white; color: #FFA500; margin-top: 15px;">Subscribe Now</button>
+                                </div>
+
+                                <p style="margin-bottom: 15px; font-weight: bold;">Benefits:</p>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Access verified SME buyer contacts
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Direct business connections
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Filter by district and product type
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Priority customer support
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📦</span>
+                                    <span>Products</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item active">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">4</div>
+                        <h3>Premium SME Directory</h3>
+                        <p>Access a directory of verified SME buyers looking for agricultural products.</p>
+                        
+                        <div class="pointer">
+                            <strong>Annual Subscription:</strong> UGX 120,000 per year
+                        </div>
+                        <div class="pointer">
+                            <strong>Verified Contacts:</strong> Direct access to genuine business buyers
+                        </div>
+                        <div class="pointer">
+                            <strong>Search & Filter:</strong> Find buyers by location and product needs
+                        </div>
+                        <div class="pointer">
+                            <strong>Direct Communication:</strong> Call or message buyers directly
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Why subscribe?</strong> Expand your market beyond the platform. Connect directly with bulk buyers and secure long-term contracts.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SME Role Section -->
+            <section id="sme-role" class="section">
+                <h2>🛒 SME (Buyer) User Guide</h2>
+
+                <div class="info-box">
+                    <strong>Who is SME?</strong> Small-Medium Enterprise (SME) users are buyers looking to purchase agricultural products. Use this role if you run a business that needs farm produce, whether for resale, processing, or consumption.
+                </div>
+
+                <!-- SME Dashboard -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>SME Dashboard</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Welcome back, Jane!</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="search-bar">
+                                    <input type="text" class="search-input" placeholder="🔍 Search products...">
+                                    <div class="filter-icon">⚙️</div>
+                                </div>
+
+                                <h4 style="margin: 15px 0 10px 0;">Featured Products</h4>
+                                
+                                <div class="product-card">
+                                    <div class="product-image">🍅</div>
+                                    <div class="product-name">Fresh Tomatoes</div>
+                                    <p style="color: #666; font-size: 0.9em; margin: 5px 0;">John's Farm • Kampala</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                        <div class="product-price">5,000 UGX/KG</div>
+                                        <button class="button-primary" style="padding: 8px 20px; font-size: 0.9em; width: auto;">Order</button>
+                                    </div>
+                                </div>
+
+                                <div class="product-card">
+                                    <div class="product-image" style="background: linear-gradient(135deg, #DCE775 0%, #C0CA33 100%);">🧅</div>
+                                    <div class="product-name">Red Onions</div>
+                                    <p style="color: #666; font-size: 0.9em; margin: 5px 0;">Mary's Farm • Wakiso</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                        <div class="product-price">3,000 UGX/KG</div>
+                                        <button class="button-primary" style="padding: 8px 20px; font-size: 0.9em; width: auto;">Order</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Home</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🔍</span>
+                                    <span>Browse</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">⭐</span>
+                                    <span>Favorites</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Account</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">1</div>
+                        <h3>SME Dashboard Overview</h3>
+                        <p>Browse and purchase products from farmers and suppliers.</p>
+                        
+                        <div class="pointer">
+                            <strong>Search Bar:</strong> Find specific products quickly
+                        </div>
+                        <div class="pointer">
+                            <strong>Filter Icon (⚙️):</strong> Refine search by category, price, location
+                        </div>
+                        <div class="pointer">
+                            <strong>Product Cards:</strong> See product details, price, and seller
+                        </div>
+                        <div class="pointer">
+                            <strong>Order Button:</strong> Quickly place orders
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Navigation:</strong> Use bottom tabs to access Home, Browse (all products), Orders, Favorites, and Account sections.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Browse & Search -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Browse Products</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Find what you need</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="search-bar">
+                                    <input type="text" class="search-input" placeholder="🔍 Search by name, farmer, district..." value="Tomatoes">
+                                    <div class="filter-icon">⚙️</div>
+                                </div>
+
+                                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                                    <h4 style="margin-bottom: 10px; font-size: 0.95em;">Advanced Filters</h4>
+                                    <select class="input-field" style="margin-bottom: 8px; font-size: 0.9em;">
+                                        <option>📍 District: All</option>
+                                        <option>Kampala</option>
+                                        <option>Wakiso</option>
+                                    </select>
+                                    <button class="button-secondary" style="padding: 8px 20px; font-size: 0.9em;">Clear Filters</button>
+                                </div>
+
+                                <div class="category-chips">
+                                    <div class="chip active">All</div>
+                                    <div class="chip">Crops</div>
+                                    <div class="chip">Vegetables</div>
+                                    <div class="chip">Onions</div>
+                                </div>
+
+                                <p style="color: #666; font-size: 0.9em; margin: 10px 0;">Found 24 products</p>
+
+                                <div class="product-card">
+                                    <div class="product-image">🍅</div>
+                                    <div class="product-name">Fresh Tomatoes</div>
+                                    <p style="color: #666; font-size: 0.9em; margin: 5px 0;">⭐ 4.5 • John's Farm • Kampala</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                        <div class="product-price">5,000 UGX/KG</div>
+                                        <button class="button-primary" style="padding: 8px 20px; font-size: 0.9em; width: auto;">View</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Home</span>
+                                </div>
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🔍</span>
+                                    <span>Browse</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">⭐</span>
+                                    <span>Favorites</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Account</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">2</div>
+                        <h3>Browse & Search Products</h3>
+                        <p>Find exactly what you need using powerful search and filter features.</p>
+                        
+                        <div class="pointer">
+                            <strong>Search Box:</strong> Type product name, farmer name, or district
+                        </div>
+                        <div class="pointer">
+                            <strong>Advanced Filters:</strong> Click gear icon (⚙️) to see district filter
+                        </div>
+                        <div class="pointer">
+                            <strong>Category Chips:</strong> Quick filter by product category
+                        </div>
+                        <div class="pointer">
+                            <strong>Results Count:</strong> See how many products match your search
+                        </div>
+                        <div class="pointer">
+                            <strong>Ratings:</strong> See seller ratings (⭐) to choose trusted suppliers
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Pro Tip:</strong> Combine search, filters, and categories for precise results. Example: Search "tomatoes" + District "Kampala" + Category "Vegetables"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Place Order -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Product Details</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Fresh Tomatoes</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px;">
+                                    <div style="min-width: 150px; height: 150px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 4em;">🍅</div>
+                                    <div style="min-width: 150px; height: 150px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 10px;"></div>
+                                </div>
+
+                                <h4 style="font-size: 1.3em; margin-bottom: 10px;">Fresh Tomatoes</h4>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <span>⭐⭐⭐⭐⭐ 4.5</span>
+                                    <span style="color: #666;">• 23 reviews</span>
+                                </div>
+
+                                <div class="product-price" style="font-size: 1.5em; margin: 15px 0;">5,000 UGX/KG</div>
+
+                                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                    <p style="margin-bottom: 10px;"><strong>Seller:</strong> John's Farm</p>
+                                    <p style="margin-bottom: 10px;"><strong>Location:</strong> Kampala, Kawempe</p>
+                                    <p><strong>Stock:</strong> 100 KG available</p>
+                                </div>
+
+                                <p style="color: #666; margin: 15px 0;">Fresh organic tomatoes from our farm. Perfect quality for resale or processing.</p>
+
+                                <div style="display: flex; gap: 10px; align-items: center; margin: 20px 0;">
+                                    <label style="font-size: 0.95em; font-weight: bold;">Quantity:</label>
+                                    <input type="number" class="input-field" value="10" style="width: 100px; margin: 0;">
+                                    <span style="color: #666;">KG</span>
+                                </div>
+
+                                <button class="button-primary">Place Order • 50,000 UGX</button>
+                                <button class="button-secondary">💬 Contact Seller</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">3</div>
+                        <h3>View Product & Place Order</h3>
+                        <p>Review product details and place your order.</p>
+                        
+                        <div class="pointer">
+                            <strong>Photo Gallery:</strong> Swipe through multiple product photos
+                        </div>
+                        <div class="pointer">
+                            <strong>Ratings & Reviews:</strong> Check quality based on other buyers' feedback
+                        </div>
+                        <div class="pointer">
+                            <strong>Seller Info:</strong> See who you're buying from and their location
+                        </div>
+                        <div class="pointer">
+                            <strong>Stock Level:</strong> Check availability before ordering
+                        </div>
+                        <div class="pointer">
+                            <strong>Quantity:</strong> Enter how much you need
+                        </div>
+                        <div class="pointer">
+                            <strong>Total Price:</strong> Automatically calculated based on quantity
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Contact Seller:</strong> Use the "Contact Seller" button to ask questions about delivery, quality, or negotiate bulk prices.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Track Orders -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>My Orders</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Track your purchases</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="category-chips">
+                                    <div class="chip active">All</div>
+                                    <div class="chip">Processing</div>
+                                    <div class="chip">Delivered</div>
+                                    <div class="chip">Cancelled</div>
+                                </div>
+
+                                <div style="background: white; border: 2px solid #2E7D32; border-radius: 12px; padding: 15px; margin: 10px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <strong style="color: #2E7D32;">Order #5678</strong>
+                                        <span style="background: #FFF3E0; color: #F57C00; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; font-weight: bold;">Processing</span>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 15px; margin-bottom: 12px;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em;">🍅</div>
+                                        <div style="flex: 1;">
+                                            <p style="font-weight: bold;">Fresh Tomatoes</p>
+                                            <p style="color: #666; font-size: 0.9em;">John's Farm</p>
+                                            <p style="font-size: 0.9em;">10 KG • 50,000 UGX</p>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #E8F5E9; padding: 12px; border-radius: 8px; margin-top: 12px;">
+                                        <p style="font-size: 0.9em; margin-bottom: 8px;"><strong>📍 Delivery:</strong> Kampala, Central Division</p>
+                                        <p style="font-size: 0.9em;"><strong>📅 Estimated:</strong> Tomorrow, 2:00 PM</p>
+                                    </div>
+
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <button class="button-primary" style="padding: 10px 20px; font-size: 0.9em;">Track Delivery</button>
+                                        <button class="button-secondary" style="padding: 10px 20px; font-size: 0.9em;">Contact Seller</button>
+                                    </div>
+                                </div>
+
+                                <div style="background: white; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin: 10px 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <strong>Order #5677</strong>
+                                        <span style="background: #E8F5E9; color: #2E7D32; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; font-weight: bold;">Delivered</span>
+                                    </div>
+                                    <p style="color: #666; font-size: 0.9em;">Red Onions - 20 KG</p>
+                                    <p style="color: #2E7D32; font-weight: bold; margin-top: 8px;">60,000 UGX</p>
+                                    <button class="button-secondary" style="margin-top: 10px; padding: 8px 20px; font-size: 0.9em;">⭐ Rate & Review</button>
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Home</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🔍</span>
+                                    <span>Browse</span>
+                                </div>
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">⭐</span>
+                                    <span>Favorites</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Account</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">4</div>
+                        <h3>Track Your Orders</h3>
+                        <p>Monitor order status and delivery progress.</p>
+                        
+                        <div class="pointer">
+                            <strong>Filter by Status:</strong> View Processing, Delivered, or Cancelled orders
+                        </div>
+                        <div class="pointer">
+                            <strong>Order Details:</strong> Product, quantity, price, and seller info
+                        </div>
+                        <div class="pointer">
+                            <strong>Delivery Info:</strong> Address and estimated delivery time
+                        </div>
+                        <div class="pointer">
+                            <strong>Track Delivery:</strong> Real-time tracking of your order
+                        </div>
+                        <div class="pointer">
+                            <strong>Contact Seller:</strong> Message seller about delivery or quality
+                        </div>
+                        <div class="pointer">
+                            <strong>Rate & Review:</strong> Leave feedback after delivery
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Order Status Flow:</strong> Pending → Accepted → Processing → Out for Delivery → Delivered
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Issues?</strong> If there's a problem with your order, contact the seller immediately through the app. You can also report issues to admin support.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PSA Role Section -->
+            <section id="psa-role" class="section">
+                <h2>📦 PSA (Supplier) User Guide</h2>
+
+                <div class="info-box">
+                    <strong>Who is PSA?</strong> Production and Supply Agent (PSA) users are large-scale suppliers and distributors of agricultural products. Use this role if you operate a supply business that connects multiple farmers with bulk buyers.
+                </div>
+
+                <!-- PSA Registration Flow -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>PSA Verification</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Verify your business</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="background: #FFF3E0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                                    <p style="font-size: 0.95em; color: #F57C00;"><strong>⚠️ Verification Required</strong></p>
+                                    <p style="font-size: 0.9em; color: #F57C00; margin-top: 8px;">Your account is pending admin approval. Please complete your business verification.</p>
+                                </div>
+
+                                <input type="text" class="input-field" placeholder="🏢 Business Name" value="AgriSupply Ltd">
+                                <input type="text" class="input-field" placeholder="👤 Contact Person" value="Jane Mukasa">
+                                <input type="text" class="input-field" placeholder="📞 Business Phone" value="+256 700 123 456">
+                                
+                                <select class="input-field">
+                                    <option>📂 Business Type</option>
+                                    <option>Distributor</option>
+                                    <option>Wholesaler</option>
+                                    <option>Processor</option>
+                                </select>
+
+                                <div style="margin: 15px 0;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">📄 Business Registration Document</label>
+                                    <button class="button-secondary">Upload Document</button>
+                                </div>
+
+                                <div style="margin: 15px 0;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">🆔 National ID</label>
+                                    <button class="button-secondary">Upload ID Photo</button>
+                                </div>
+
+                                <button class="button-primary" style="margin-top: 20px;">Submit for Verification</button>
+
+                                <div style="background: #E3F2FD; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                                    <p style="font-size: 0.9em; color: #1976D2;"><strong>ℹ️ What happens next?</strong></p>
+                                    <p style="font-size: 0.9em; color: #1976D2; margin-top: 8px;">Admin will review your documents (1-3 business days). You'll receive a notification when approved.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">1</div>
+                        <h3>PSA Verification Process</h3>
+                        <p>After selecting PSA role, you must verify your business before accessing full features.</p>
+                        
+                        <div class="pointer">
+                            <strong>Business Name:</strong> Registered name of your company
+                        </div>
+                        <div class="pointer">
+                            <strong>Contact Person:</strong> Primary business representative
+                        </div>
+                        <div class="pointer">
+                            <strong>Business Phone:</strong> Official contact number
+                        </div>
+                        <div class="pointer">
+                            <strong>Business Type:</strong> Nature of your supply business
+                        </div>
+                        <div class="pointer">
+                            <strong>Documents:</strong> Business registration certificate and owner's ID
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Account Locked:</strong> Until verification is complete, you cannot add products or access the full dashboard. Most features are locked.
+                        </div>
+
+                        <div class="info-box">
+                            <strong>📋 Review Timeline:</strong> Admin typically reviews applications within 1-3 business days. You'll receive an email and in-app notification.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PSA Subscription -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">
+                                <h3>🎉 Verification Approved!</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Subscribe to activate your account</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="text-align: center; padding: 20px 0;">
+                                    <div style="font-size: 4em; margin-bottom: 15px;">👑</div>
+                                    <h3 style="color: #2E7D32; margin-bottom: 10px;">PSA Subscription Required</h3>
+                                    <p style="color: #666; margin-bottom: 20px;">Unlock full platform access</p>
+                                </div>
+
+                                <div style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: white; padding: 30px 20px; border-radius: 15px; text-align: center; margin-bottom: 20px;">
+                                    <p style="font-size: 0.95em; opacity: 0.9; margin-bottom: 10px;">Annual Subscription</p>
+                                    <div style="font-size: 3em; font-weight: bold; margin-bottom: 5px;">UGX 120,000</div>
+                                    <p style="font-size: 0.9em; opacity: 0.9;">per year</p>
+                                </div>
+
+                                <h4 style="margin: 20px 0 15px 0; color: #2E7D32;">✨ Benefits Included:</h4>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Add unlimited products to marketplace
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Access business analytics dashboard
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Priority customer support
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Verified business badge
+                                </div>
+                                <div class="pointer" style="margin-left: 0;">
+                                    Direct customer messaging
+                                </div>
+
+                                <h4 style="margin: 20px 0 10px 0;">Payment Method:</h4>
+                                <div class="role-card selected">
+                                    <h4>📱 MTN Mobile Money</h4>
+                                </div>
+                                <div class="role-card">
+                                    <h4>📱 Airtel Money</h4>
+                                </div>
+
+                                <button class="button-primary" style="margin-top: 20px;">Pay Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">2</div>
+                        <h3>PSA Subscription Payment</h3>
+                        <p>After admin approval, pay annual subscription to activate your account.</p>
+                        
+                        <div class="pointer">
+                            <strong>Subscription Fee:</strong> UGX 120,000 per year
+                        </div>
+                        <div class="pointer">
+                            <strong>Payment Methods:</strong> MTN Mobile Money or Airtel Money
+                        </div>
+                        <div class="pointer">
+                            <strong>Benefits:</strong> Full platform access and premium features
+                        </div>
+                        <div class="pointer">
+                            <strong>Validity:</strong> 365 days from payment date
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Payment Process:</strong>
+                            <ol style="margin-left: 20px; margin-top: 10px;">
+                                <li>Select payment method (MTN or Airtel)</li>
+                                <li>Enter your mobile money number</li>
+                                <li>Approve payment on your phone</li>
+                                <li>Account activates immediately</li>
+                            </ol>
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Renewal:</strong> You'll receive renewal reminders 30 days before expiry. Unpaid subscriptions will be suspended.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PSA Dashboard -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>PSA Dashboard</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">AgriSupply Ltd</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <p style="font-size: 0.9em; opacity: 0.9;">Subscription Status</p>
+                                        <p style="font-size: 1.1em; font-weight: bold;">Active ✓</p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p style="font-size: 0.9em; opacity: 0.9;">Expires</p>
+                                        <p style="font-size: 0.95em; font-weight: bold;">Dec 31, 2025</p>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <h4>Total Products</h4>
+                                    <div class="value">45</div>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%);">
+                                    <h4>Pending Orders</h4>
+                                    <div class="value">12</div>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #FFA726 0%, #F57C00 100%);">
+                                    <h4>Monthly Revenue</h4>
+                                    <div class="value">UGX 2.5M</div>
+                                </div>
+
+                                <h4 style="margin: 20px 0 10px 0; color: #2E7D32;">Quick Actions</h4>
+                                <button class="button-primary">+ Add Product</button>
+                                <button class="button-secondary">View Analytics</button>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item active">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📦</span>
+                                    <span>Products</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📊</span>
+                                    <span>Analytics</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">3</div>
+                        <h3>PSA Dashboard (After Activation)</h3>
+                        <p>Full access to all features after verification and payment.</p>
+                        
+                        <div class="pointer">
+                            <strong>Subscription Status:</strong> Active status displayed prominently with expiry date
+                        </div>
+                        <div class="pointer">
+                            <strong>Total Products:</strong> Number of products you've listed
+                        </div>
+                        <div class="pointer">
+                            <strong>Pending Orders:</strong> Orders awaiting your action
+                        </div>
+                        <div class="pointer">
+                            <strong>Monthly Revenue:</strong> Your earnings this month
+                        </div>
+                        <div class="pointer">
+                            <strong>Quick Actions:</strong> Fast access to add products and view analytics
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Complete Access:</strong> All features are now unlocked. You can add products, manage orders, view analytics, and run your supply business efficiently.
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 PSA Advantages:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Add unlimited products (no restrictions)</li>
+                                <li>Upload up to 5 photos per product</li>
+                                <li>Business analytics and insights</li>
+                                <li>Verified business badge (builds trust)</li>
+                                <li>Priority support from admin team</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PSA Product Management -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Add Product</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">List your supply items</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">📸 Product Photos (Up to 5)</label>
+                                    <div style="display: flex; gap: 10px; overflow-x: auto; padding: 5px 0;">
+                                        <div style="width: 80px; height: 80px; background: #E8F5E9; border: 2px dashed #4CAF50; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em;">+</div>
+                                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px;"></div>
+                                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px;"></div>
+                                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 8px;"></div>
+                                    </div>
+                                </div>
+
+                                <input type="text" class="input-field" placeholder="🏢 Business Product Name" value="Premium Grade Tomatoes">
+                                <input type="text" class="input-field" placeholder="📝 Business Name (Optional)" value="AgriSupply Ltd">
+                                
+                                <select class="input-field">
+                                    <option>📂 Main Category: Crops</option>
+                                    <option>Vegetables</option>
+                                    <option>Onions</option>
+                                </select>
+
+                                <input type="text" class="input-field" placeholder="💰 Price per Unit" value="4500">
+                                <input type="text" class="input-field" placeholder="📦 Unit (KG, Bag, Ton)" value="KG">
+                                <input type="number" class="input-field" placeholder="📊 Stock Quantity" value="5000">
+
+                                <textarea class="input-field" placeholder="📝 Detailed Description" rows="3">Premium quality tomatoes sourced from certified farmers. Available for bulk orders.</textarea>
+
+                                <button class="button-primary">Publish Product</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">4</div>
+                        <h3>PSA Product Management</h3>
+                        <p>Add and manage large-scale supply products.</p>
+                        
+                        <div class="pointer">
+                            <strong>Multiple Photos:</strong> Upload up to 5 high-quality product images
+                        </div>
+                        <div class="pointer">
+                            <strong>Business Name Field:</strong> Optional - adds credibility to listing
+                        </div>
+                        <div class="pointer">
+                            <strong>Detailed Categories:</strong> Main category and subcategory for better discovery
+                        </div>
+                        <div class="pointer">
+                            <strong>Large Stock Quantities:</strong> PSA can list high volumes (1000s of KG)
+                        </div>
+                        <div class="pointer">
+                            <strong>Professional Descriptions:</strong> Space for detailed business information
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ PSA Product Features:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Unlimited product listings</li>
+                                <li>Bulk quantity support</li>
+                                <li>Business branding (business name appears)</li>
+                                <li>Verified badge on products</li>
+                                <li>Priority in search results</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PSA Analytics -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Business Analytics</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Track your performance</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="category-chips">
+                                    <div class="chip active">This Month</div>
+                                    <div class="chip">Last Month</div>
+                                    <div class="chip">This Year</div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <h4>Total Sales</h4>
+                                    <div class="value">UGX 2.5M</div>
+                                    <p style="font-size: 0.85em; opacity: 0.9; margin-top: 8px;">↑ 15% from last month</p>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%);">
+                                    <h4>Orders Completed</h4>
+                                    <div class="value">78</div>
+                                    <p style="font-size: 0.85em; opacity: 0.9; margin-top: 8px;">↑ 12% growth</p>
+                                </div>
+
+                                <div class="dashboard-card" style="background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);">
+                                    <h4>Average Order Value</h4>
+                                    <div class="value">32K</div>
+                                    <p style="font-size: 0.85em; opacity: 0.9; margin-top: 8px;">UGX per order</p>
+                                </div>
+
+                                <h4 style="margin: 20px 0 10px 0; color: #2E7D32;">Top Products</h4>
+                                <div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                                    <p style="font-weight: bold; margin-bottom: 5px;">Fresh Tomatoes</p>
+                                    <p style="font-size: 0.9em; color: #666;">245 orders • UGX 980K</p>
+                                </div>
+
+                                <div style="background: #f5f5f5; padding: 12px; border-radius: 8px;">
+                                    <p style="font-weight: bold; margin-bottom: 5px;">Red Onions</p>
+                                    <p style="font-size: 0.9em; color: #666;">189 orders • UGX 756K</p>
+                                </div>
+                            </div>
+
+                            <div class="bottom-nav">
+                                <div class="nav-item">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">📦</span>
+                                    <span>Products</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">🛒</span>
+                                    <span>Orders</span>
+                                </div>
+                                <div class="nav-item active">
+                                    <span class="nav-icon">📊</span>
+                                    <span>Analytics</span>
+                                </div>
+                                <div class="nav-item">
+                                    <span class="nav-icon">👤</span>
+                                    <span>Profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <div class="step-number">5</div>
+                        <h3>Business Analytics Dashboard</h3>
+                        <p>Exclusive feature for PSA users - comprehensive business insights.</p>
+                        
+                        <div class="pointer">
+                            <strong>Time Filters:</strong> View data for different time periods
+                        </div>
+                        <div class="pointer">
+                            <strong>Total Sales:</strong> Revenue with growth percentage
+                        </div>
+                        <div class="pointer">
+                            <strong>Orders Completed:</strong> Number of fulfilled orders
+                        </div>
+                        <div class="pointer">
+                            <strong>Average Order Value:</strong> Revenue per transaction
+                        </div>
+                        <div class="pointer">
+                            <strong>Top Products:</strong> Best-selling items by orders and revenue
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Use Analytics To:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Identify trending products</li>
+                                <li>Track business growth</li>
+                                <li>Plan inventory based on demand</li>
+                                <li>Optimize pricing strategies</li>
+                                <li>Make data-driven decisions</li>
+                            </ul>
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Premium Insight:</strong> PSA analytics help you run your supply business like a professional enterprise. Monitor performance, identify opportunities, and grow your revenue systematically.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Features Section -->
+            <section id="features" class="section">
+                <h2>✨ Key Features</h2>
+
+                <div class="info-box">
+                    <strong>Common Features Available to All Users</strong>
+                    <p style="margin-top: 10px;">These features are accessible to SHG, SME, and PSA users (after their respective onboarding is complete).</p>
+                </div>
+
+                <!-- Messaging Feature -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Messages</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Direct communication</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="border-bottom: 1px solid #ddd; padding: 15px 0; display: flex; gap: 12px; align-items: center;">
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2em;">JD</div>
+                                    <div style="flex: 1;">
+                                        <p style="font-weight: bold;">John's Farm</p>
+                                        <p style="color: #666; font-size: 0.9em;">When can you deliver the tomatoes?</p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p style="font-size: 0.85em; color: #666;">2m ago</p>
+                                        <div style="background: #2E7D32; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8em; margin-top: 5px; margin-left: auto;">2</div>
+                                    </div>
+                                </div>
+
+                                <div style="border-bottom: 1px solid #ddd; padding: 15px 0; display: flex; gap: 12px; align-items: center;">
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2em;">AS</div>
+                                    <div style="flex: 1;">
+                                        <p style="font-weight: bold;">AgriSupply Ltd</p>
+                                        <p style="color: #666; font-size: 0.9em;">Order #1234 is ready for pickup</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 0.85em; color: #666;">1h ago</p>
+                                    </div>
+                                </div>
+
+                                <div style="padding: 15px 0; display: flex; gap: 12px; align-items: center; opacity: 0.6;">
+                                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FFA726 0%, #F57C00 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2em;">MF</div>
+                                    <div style="flex: 1;">
+                                        <p style="font-weight: bold;">Mary's Farm</p>
+                                        <p style="color: #666; font-size: 0.9em;">Thank you for your order!</p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 0.85em; color: #666;">2d ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <h3>💬 Direct Messaging</h3>
+                        <p>Communicate with buyers, sellers, and suppliers directly within the app.</p>
+                        
+                        <div class="pointer">
+                            <strong>Real-time Chat:</strong> Instant messaging with other users
+                        </div>
+                        <div class="pointer">
+                            <strong>Conversation List:</strong> All your chats in one place
+                        </div>
+                        <div class="pointer">
+                            <strong>Unread Badge:</strong> Number indicators for new messages
+                        </div>
+                        <div class="pointer">
+                            <strong>Context:</strong> Discuss orders, products, delivery details
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Use Messaging For:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Negotiating prices for bulk orders</li>
+                                <li>Coordinating delivery times and locations</li>
+                                <li>Asking questions about product quality</li>
+                                <li>Resolving order issues quickly</li>
+                                <li>Building business relationships</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ratings & Reviews -->
+                <div class="step-container reverse">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Rate Your Experience</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Help others make informed choices</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="text-align: center; padding: 20px 0;">
+                                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 3em;">🍅</div>
+                                    <h4 style="margin-bottom: 5px;">Fresh Tomatoes</h4>
+                                    <p style="color: #666; font-size: 0.9em;">from John's Farm</p>
+                                </div>
+
+                                <h4 style="text-align: center; margin: 20px 0 15px 0;">Rate this product:</h4>
+                                <div style="text-align: center; font-size: 2.5em; margin-bottom: 20px;">⭐⭐⭐⭐⭐</div>
+
+                                <textarea class="input-field" placeholder="📝 Share your experience (optional)" rows="4" style="resize: vertical;">Excellent quality tomatoes. Fresh and well-packaged. Delivery was on time. Highly recommended!</textarea>
+
+                                <div style="margin: 15px 0;">
+                                    <label style="font-size: 0.9em; color: #666; display: block; margin-bottom: 8px;">📸 Add Photos (Optional)</label>
+                                    <button class="button-secondary">Upload Photos</button>
+                                </div>
+
+                                <button class="button-primary">Submit Review</button>
+
+                                <div style="background: #E8F5E9; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                                    <p style="font-size: 0.9em; color: #2E7D32;"><strong>✓ Thank you!</strong></p>
+                                    <p style="font-size: 0.9em; color: #2E7D32; margin-top: 5px;">Your review helps others make better purchasing decisions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <h3>⭐ Ratings & Reviews</h3>
+                        <p>Build trust through transparent feedback from verified buyers.</p>
+                        
+                        <div class="pointer">
+                            <strong>Star Ratings:</strong> Quick 1-5 star rating system
+                        </div>
+                        <div class="pointer">
+                            <strong>Written Reviews:</strong> Detailed feedback about experience
+                        </div>
+                        <div class="pointer">
+                            <strong>Photo Reviews:</strong> Upload images of received products
+                        </div>
+                        <div class="pointer">
+                            <strong>Verified Purchases:</strong> Only buyers who ordered can review
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Why Reviews Matter:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li><strong>For Buyers:</strong> Make informed decisions based on real experiences</li>
+                                <li><strong>For Sellers:</strong> Build reputation and attract more customers</li>
+                                <li><strong>For Platform:</strong> Maintain quality and trust</li>
+                            </ul>
+                        </div>
+
+                        <div class="info-box">
+                            <strong>💡 Best Practices:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Be honest and constructive in reviews</li>
+                                <li>Include specific details about quality, delivery, etc.</li>
+                                <li>Add photos to make reviews more helpful</li>
+                                <li>Review promptly after receiving your order</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Management -->
+                <div class="step-container">
+                    <div class="mock-phone">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>My Profile</h3>
+                                <p style="font-size: 0.85em; opacity: 0.9;">Manage your account</p>
+                            </div>
+                            <div class="screen-content">
+                                <div style="text-align: center; padding: 20px 0;">
+                                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3em; font-weight: bold;">JD</div>
+                                    <h4 style="margin-bottom: 5px;">John Doe</h4>
+                                    <p style="color: #666; font-size: 0.9em;">john@example.com</p>
+                                    <p style="background: #E8F5E9; color: #2E7D32; display: inline-block; padding: 5px 15px; border-radius: 15px; font-size: 0.85em; margin-top: 10px; font-weight: bold;">✓ Verified SHG</p>
+                                </div>
+
+                                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                    <p style="margin-bottom: 8px;"><strong>📞 Phone:</strong> +256 700 123 456</p>
+                                    <p style="margin-bottom: 8px;"><strong>📍 Location:</strong> Kampala, Kawempe, Kazo</p>
+                                    <p><strong>📅 Member Since:</strong> Jan 2024</p>
+                                </div>
+
+                                <button class="button-primary">Edit Profile</button>
+                                <button class="button-secondary">Change Password</button>
+                                <button class="button-secondary">Privacy Settings</button>
+                                <button class="button-secondary" style="color: #d32f2f; border-color: #d32f2f;">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-info">
+                        <h3>👤 Profile Management</h3>
+                        <p>Manage your personal information, settings, and preferences.</p>
+                        
+                        <div class="pointer">
+                            <strong>Profile Photo:</strong> Upload or change your profile picture
+                        </div>
+                        <div class="pointer">
+                            <strong>Verified Badge:</strong> Shows your role and verification status
+                        </div>
+                        <div class="pointer">
+                            <strong>Contact Info:</strong> Keep phone and email up to date
+                        </div>
+                        <div class="pointer">
+                            <strong>Location:</strong> Edit your district, sub-county, village
+                        </div>
+                        <div class="pointer">
+                            <strong>Security:</strong> Change password regularly
+                        </div>
+
+                        <div class="success-box">
+                            <strong>✓ Keep Profile Updated:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Accurate location helps buyers find you</li>
+                                <li>Profile photo builds trust</li>
+                                <li>Valid contact info ensures communication</li>
+                                <li>Verified badge increases credibility</li>
+                            </ul>
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>⚠️ Security Tips:</strong>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Never share your password with anyone</li>
+                                <li>Use a strong, unique password</li>
+                                <li>Enable notifications for account activity</li>
+                                <li>Log out on shared devices</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="footer">
+            <h3 style="color: #2E7D32; margin-bottom: 20px;">Start Your SayeKatale Journey! 🚀</h3>
+            <p style="margin-bottom: 20px; font-size: 1.1em;">Download the app and connect with the agricultural marketplace today.</p>
+            <a href="playstore-submission-guide.html" class="button">📱 Play Store Submission Guide</a>
+            <a href="#getting-started" class="button">📖 Back to Getting Started</a>
+            <p style="margin-top: 30px; color: #666; font-size: 0.95em;">
+                Need help? Contact support: <strong>admin@sayekatale.com</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>
