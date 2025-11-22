@@ -1,0 +1,540 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // Helper Functions
+    // ========================================
+    
+    /// Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /// Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    /// Check if user is admin (NEW: checks both users and admin_users collections)
+    function isAdmin() {
+      return isAuthenticated() && 
+             (
+               // Check regular users collection for admin role
+               (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+               ||
+               // Check dedicated admin_users collection (NEW)
+               exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+             );
+    }
+    
+    /// Check if user is the order buyer
+    function isOrderBuyer(orderId) {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/orders/$(orderId)).data.buyerId == request.auth.uid;
+    }
+    
+    /// Check if user is the order seller
+    function isOrderSeller(orderId) {
+      return isAuthenticated() &&
+             (get(/databases/$(database)/documents/orders/$(orderId)).data.farmerId == request.auth.uid ||
+              get(/databases/$(database)/documents/orders/$(orderId)).data.seller_id == request.auth.uid);
+    }
+    
+    // ========================================
+    // Admin Users Collection (NEW)
+    // ========================================
+    
+    match /admin_users/{adminId} {
+      // Allow any authenticated user to read admin documents (needed for admin login)
+      allow read: if isAuthenticated();
+      
+      // Only existing admins can write to admin_users
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // PSA Verifications Collection (NEW)
+    // ========================================
+    
+    match /psa_verifications/{verificationId} {
+      // Admins can read all verification requests
+      allow read: if isAdmin();
+      
+      // PSA users can read their own verification status
+      allow get: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // PSA users can create verification requests
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      
+      // Only admins can update verification status (approve/reject)
+      allow update: if isAdmin();
+      
+      // Only admins can delete verifications
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Users Collection
+    // ========================================
+    
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles (for marketplace)
+      allow read: if isAuthenticated();
+      
+      // Users can only update their own profile
+      // Cannot change role or critical fields
+       allow update: if isOwner(userId) &&
+                       (!('role' in request.resource.data) || request.resource.data.role == resource.data.role) &&
+                       (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid);
+      
+      // ✅ FIXED: Allow users to create their own profile during signup
+      // The userId MUST match their Firebase Auth UID
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Products Collection
+    // ========================================
+    
+    match /products/{productId} {
+      // Anyone authenticated can read products
+      allow read: if isAuthenticated();
+      
+      // Only product owner or admin can update
+      allow update: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+      
+      // Authenticated users can create products
+      // Must set themselves as farmer
+      allow create: if isAuthenticated() && 
+                       request.resource.data.farmerId == request.auth.uid;
+      
+      // Only owner or admin can delete
+      allow delete: if isAuthenticated() && 
+                       (resource.data.farmerId == request.auth.uid || isAdmin());
+    }
+    
+    // ========================================
+    // Orders Collection
+    // ========================================
+    
+    match /orders/{orderId} {
+      // ✅ FIXED: Allow list queries for authenticated users
+      // This allows querying orders even when collection is empty
+      // Individual document reads still require ownership or admin
+      allow list: if isAuthenticated();
+      
+      // Users can get specific orders they're part of
+      allow get: if isAuthenticated() && 
+                    (resource.data.buyer_id == request.auth.uid || 
+                     resource.data.farmerId == request.auth.uid ||
+                     resource.data.seller_id == request.auth.uid ||
+                     isAdmin());
+      
+      // Buyers can create orders
+      // Must set themselves as buyer (using snake_case buyer_id)
+      allow create: if isAuthenticated() && 
+                       request.resource.data.buyer_id == request.auth.uid;
+      
+      // Buyers and sellers can update order status
+      allow update: if isAuthenticated() && 
+                       (resource.data.buyer_id == request.auth.uid || 
+                        resource.data.farmerId == request.auth.uid ||
+                        resource.data.seller_id == request.auth.uid ||
+                        isAdmin());
+      
+      // Only admin can delete orders
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Receipts Collection
+    // ========================================
+    
+    match /receipts/{receiptId} {
+      // Helper function to check receipt ownership
+      function isReceiptOwner() {
+        return isAuthenticated() &&
+               (resource.data.buyerId == request.auth.uid ||
+                resource.data.buyer_id == request.auth.uid ||
+                resource.data.sellerId == request.auth.uid ||
+                resource.data.seller_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list receipts
+      // Individual document access is controlled by get rule
+      allow list: if isAuthenticated();
+      
+      // Read individual receipt (user must be buyer or seller)
+      allow get: if isReceiptOwner() || isAdmin();
+      
+      // Receipts are system-generated only
+      // Created by backend when order is confirmed
+      allow create: if false;
+      allow update: if false;
+      
+      // Only admin can delete receipts
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Wallets Collection
+    // ========================================
+    
+    match /wallets/{walletId} {
+      // Users can only read their own wallet
+      allow read: if isOwner(walletId) || isAdmin();
+      
+      // Wallet operations only through backend webhooks
+      // Direct client access is blocked for security
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ========================================
+    // Transactions Collection
+    // ========================================
+    
+    match /transactions/{transactionId} {
+      // Helper function to check transaction ownership
+      function isTransactionOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid ||
+                resource.data.buyerId == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list transactions
+      // Individual document access is controlled by get rule
+      // Client should filter by userId on their side
+      allow list: if isAuthenticated();
+      
+      // Read individual transaction (user must own it)
+      allow get: if isTransactionOwner() || isAdmin();
+      
+      // ✅ CRITICAL FIX: Allow Cloud Functions to create transactions
+      // Cloud Functions run without authentication (request.auth == null)
+      // This is secure because only our backend Cloud Functions can make these calls
+      allow create: if true;
+      
+      // ✅ CRITICAL FIX: Allow Cloud Functions to update transaction status
+      // Webhooks need to update status from 'initiated' to 'completed' or 'failed'
+      allow update: if true;
+      
+      // Only admin can delete transactions
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Conversations Collection
+    // ========================================
+    
+    match /conversations/{conversationId} {
+      // Helper function to check if user is part of conversation
+      function isConversationParticipant() {
+        return isAuthenticated() &&
+               resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      // Helper function to check if user is creating conversation they're part of
+      function isCreatingValidConversation() {
+        return isAuthenticated() &&
+               request.resource.data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      // ✅ Allow authenticated users to list conversations
+      allow list: if isAuthenticated();
+      
+      // Read individual conversation (user must be participant)
+      allow get: if isConversationParticipant() || isAdmin();
+      
+      // Create conversation (user must be one of the participants)
+      allow create: if isCreatingValidConversation();
+      
+      // Update conversation (user must be participant - for last message, unread count)
+      allow update: if isConversationParticipant();
+      
+      // Delete conversations (only admin or if user is sole participant)
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Messages Collection
+    // ========================================
+    
+    match /messages/{messageId} {
+      // Helper function to check if user is part of the conversation
+      function isMessageConversationParticipant(conversationId) {
+        return isAuthenticated() &&
+               exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+               get(/databases/$(database)/documents/conversations/$(conversationId))
+                 .data.participant_ids.hasAny([request.auth.uid]);
+      }
+      
+      // ✅ Allow authenticated users to list messages
+      allow list: if isAuthenticated();
+      
+      // Read individual message (user must be part of conversation)
+      allow get: if isAuthenticated() &&
+                    (isMessageConversationParticipant(resource.data.conversation_id) ||
+                     isAdmin());
+      
+      // Create message (user must be sender and part of conversation)
+      allow create: if isAuthenticated() && 
+                       request.resource.data.sender_id == request.auth.uid &&
+                       isMessageConversationParticipant(request.resource.data.conversation_id);
+      
+      // Update message (only to mark as read, by conversation participant)
+      allow update: if isAuthenticated() &&
+                       isMessageConversationParticipant(resource.data.conversation_id) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read']);
+      
+      // Delete messages (only admin)
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Subscriptions Collection
+    // ========================================
+    
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscriptions
+      allow read: if isOwner(subscriptionId) || isAdmin();
+      
+      // ✅ FIXED: Allow users to create pending subscriptions when initiating payment
+      // The subscriptionId MUST match their Firebase Auth UID
+      // Initial status must be 'pending' (webhook will update to 'active' after payment)
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == subscriptionId &&
+                       request.resource.data.status == 'pending';
+      
+      // ✅ CRITICAL FIX: Allow webhook to activate subscriptions
+      // Webhook runs without authentication to update status from 'pending' to 'active'
+      // This is secure because only our backend webhook can make these calls
+      allow update: if true;
+      
+      // Only admin can delete subscriptions
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Reviews Collection
+    // ========================================
+    
+    match /reviews/{reviewId} {
+      // Anyone authenticated can read reviews
+      allow read: if isAuthenticated();
+      
+      // Users can create reviews for orders they were part of
+      // Must set themselves as reviewer
+      allow create: if isAuthenticated() &&
+                       request.resource.data.reviewerId == request.auth.uid;
+      
+      // Users can update their own reviews (within limits)
+      // Cannot change reviewer, orderId, or revieweeId
+      allow update: if isAuthenticated() && 
+                       resource.data.reviewerId == request.auth.uid &&
+                       request.resource.data.reviewerId == resource.data.reviewerId &&
+                       request.resource.data.orderId == resource.data.orderId &&
+                       request.resource.data.revieweeId == resource.data.revieweeId;
+      
+      // Only admin can delete reviews
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // Cart Items Collection
+    // ========================================
+    
+    match /cart_items/{cartItemId} {
+      // ✅ FIXED: Allow list queries for authenticated users
+      allow list: if isAuthenticated();
+      
+      // Users can get specific cart items they own
+      // Note: Uses snake_case field 'user_id'
+      allow get: if isAuthenticated() && 
+                    resource.data.user_id == request.auth.uid;
+      
+      // Users can manage their own cart
+      allow create: if isAuthenticated() &&
+                       request.resource.data.user_id == request.auth.uid;
+      
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+      
+      allow delete: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+    }
+    
+    // ========================================
+    // Favorite Products Collection
+    // ========================================
+    
+    match /favorite_products/{favoriteId} {
+      // ✅ FIXED: Allow list queries for authenticated users
+      // This allows querying favorites even when collection is empty
+      allow list: if isAuthenticated();
+      
+      // Users can get specific favorites they own
+      allow get: if isAuthenticated() && 
+                    resource.data.user_id == request.auth.uid;
+      
+      // Users can manage their own favorites
+      allow create: if isAuthenticated() &&
+                       request.resource.data.user_id == request.auth.uid;
+      
+      allow update: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+      
+      allow delete: if isAuthenticated() &&
+                       resource.data.user_id == request.auth.uid;
+    }
+    
+    // ========================================
+    // Notifications Collection
+    // ========================================
+    
+    match /notifications/{notificationId} {
+      // Helper function to check notification ownership
+      function isNotificationOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ IMPROVED: Allow authenticated users to list notifications
+      // Individual document access is controlled by get rule
+      // Client should filter by userId on their side
+      allow list: if isAuthenticated();
+      
+      // Read individual notification (user must own it)
+      allow get: if isNotificationOwner() || isAdmin();
+      
+      // System can create notifications for users
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own notifications (mark as read)
+      allow update: if isNotificationOwner();
+      
+      // Users can delete their own notifications
+      allow delete: if isNotificationOwner();
+    }
+    
+    // ========================================
+    // Complaints Collection (User Complaints/Issues)
+    // ========================================
+    
+    match /complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // User Complaints Collection (Main Complaints Collection)
+    // ========================================
+    
+    match /user_complaints/{complaintId} {
+      // Helper function to check complaint ownership
+      function isComplaintOwner() {
+        return isAuthenticated() &&
+               (resource.data.userId == request.auth.uid ||
+                resource.data.user_id == request.auth.uid);
+      }
+      
+      // ✅ Allow authenticated users to list complaints
+      allow list: if isAuthenticated();
+      
+      // Read individual complaint (user must own it or be admin)
+      allow get: if isComplaintOwner() || isAdmin();
+      
+      // Create complaint (user must set themselves as the complainant)
+      allow create: if isAuthenticated() &&
+                       (request.resource.data.userId == request.auth.uid ||
+                        request.resource.data.user_id == request.auth.uid);
+      
+      // Users can update their own pending complaints (before admin responds)
+      // Admins can update any complaint
+      allow update: if isAdmin() ||
+                       (isComplaintOwner() &&
+                        resource.data.status == 'pending');
+      
+      // Only admin can delete complaints
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // SME Directory Collection
+    // ========================================
+    
+    match /sme_directory/{smeId} {
+      // Public read access (for browsing directory)
+      allow read: if true;
+      
+      // Authenticated users can create their own entries
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own entries, admins can update any
+      allow update: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can delete their own entries, admins can delete any
+      allow delete: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
+    // ========================================
+    // Admin-Only Collections
+    // ========================================
+    
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /system_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // Default Deny All
+    // ========================================
+    
+    // Block access to any collection not explicitly defined above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

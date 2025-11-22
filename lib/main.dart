@@ -18,6 +18,7 @@ import 'screens/sme/sme_dashboard_screen.dart';
 import 'screens/psa/psa_dashboard_screen.dart';
 import 'screens/test/validation_test_screen.dart';
 import 'screens/auth/admin_login_screen.dart';
+import 'screens/admin/admin_web_portal.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'services/firebase_test.dart';
@@ -170,7 +171,8 @@ class MyApp extends StatelessWidget {
               const PSADashboardScreen(), // Supplier (PSA)
           '/validation-test': (context) =>
               const ValidationTestScreen(), // Validation Test Screen
-          '/admin-login': (context) => const AdminLoginScreen(), // Admin Portal
+          '/admin-login': (context) => const AdminLoginScreen(), // Admin Login
+          '/admin': (context) => const AdminWebPortal(), // Admin Web Portal (Desktop)
         },
       ),
     );
