@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/user.dart';
 import '../utils/app_theme.dart';
+import '../screens/shg/shg_edit_profile_screen.dart';
+import '../screens/sme/sme_edit_profile_screen.dart';
+import '../screens/psa/psa_edit_profile_screen.dart';
 
 /// Profile Completion Gate Widget
 /// Blocks access to app features if profile is incomplete and deadline has passed
@@ -279,22 +282,37 @@ class ProfileCompletionGate extends StatelessWidget {
   }
 
   void _navigateToProfileEdit(BuildContext context, UserRole role) {
-    String route;
+    // Import edit profile screens at the top of the file
+    Widget editProfileScreen;
+    
     switch (role) {
       case UserRole.shg:
-        route = '/shg-dashboard'; // Will be redirected to edit profile
-        break;
+        // Navigate directly to SHG edit profile screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const SHGEditProfileScreen(),
+          ),
+        );
+        return;
       case UserRole.sme:
-        route = '/sme-dashboard'; // Will be redirected to edit profile
-        break;
+        // Navigate directly to SME edit profile screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const SMEEditProfileScreen(),
+          ),
+        );
+        return;
       case UserRole.psa:
-        route = '/psa-dashboard'; // Will be redirected to edit profile
-        break;
+        // Navigate directly to PSA edit profile screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const PSAEditProfileScreen(),
+          ),
+        );
+        return;
       default:
-        route = '/onboarding';
+        Navigator.of(context).pushReplacementNamed('/onboarding');
     }
-    
-    Navigator.of(context).pushReplacementNamed(route);
   }
 
   void _showHelpDialog(BuildContext context) {

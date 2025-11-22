@@ -119,23 +119,6 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
             color: AppTheme.textSecondary,
           ),
         ),
-        const SizedBox(height: 24),
-        // Skip button for debugging
-        TextButton(
-          onPressed: () {
-            // Force navigation to onboarding even if Firebase not ready
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-            );
-          },
-          child: Text(
-            'Skip (For Testing)',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ),
       ],
     );
   }

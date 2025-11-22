@@ -647,7 +647,7 @@ class OrderService {
       final distance = originPoint.distanceTo(destPoint);
       final duration = _trackingService.calculateEstimatedDuration(distance);
 
-      // Create delivery tracking
+      // Create delivery tracking with confirmed status (ready to start)
       final tracking = DeliveryTracking(
         id: '', // Firestore will generate
         orderId: orderId,
@@ -660,7 +660,7 @@ class OrderService {
         recipientPhone: buyerPhone,
         originLocation: originPoint,
         destinationLocation: destPoint,
-        status: DeliveryStatus.pending,
+        status: DeliveryStatus.confirmed, // Auto-confirmed, ready for GPS tracking
         estimatedDistance: distance,
         estimatedDuration: duration,
         notes: order.deliveryNotes,
@@ -672,13 +672,28 @@ class OrderService {
         tracking,
       );
 
-      if (kDebugMode) {
-        debugPrint(
-          '✅ Delivery tracking created: $trackingId for order $orderId',
-        );
-        debugPrint(
-          '   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min',
-        );
+      // Auto-start GPS tracking for the delivery
+      try {
+        await _trackingService.startDelivery(trackingId);
+        await _trackingService.startLocationTracking(trackingId);
+        
+        if (kDebugMode) {
+          debugPrint(
+            '✅ Delivery tracking created AND STARTED: $trackingId for order $orderId',
+          );
+          debugPrint(
+            '   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min',
+          );
+          debugPrint('   📍 GPS tracking activated automatically');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint(
+            '⚠️ Delivery tracking created but GPS tracking failed to start: $e',
+          );
+          debugPrint('   Tracking ID: $trackingId - Farmer can manually start GPS');
+        }
+        // Don't fail - tracking is created, just GPS didn't start automatically
       }
     } catch (e) {
       if (kDebugMode) {
