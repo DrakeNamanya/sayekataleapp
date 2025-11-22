@@ -305,15 +305,27 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildPaymentMethodOption(
-                  app_order.PaymentMethod.mtnMobileMoney,
-                  'MTN Mobile Money',
-                  Icons.phone_android,
-                ),
-                _buildPaymentMethodOption(
-                  app_order.PaymentMethod.cashOnDelivery,
-                  'Cash on Delivery',
-                  Icons.money,
+                RadioGroup<app_order.PaymentMethod>(
+                  groupValue: _selectedPaymentMethod,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedPaymentMethod = value;
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      _buildPaymentMethodOption(
+                        app_order.PaymentMethod.mtnMobileMoney,
+                        'MTN Mobile Money',
+                        Icons.phone_android,
+                      ),
+                      _buildPaymentMethodOption(
+                        app_order.PaymentMethod.cashOnDelivery,
+                        'Cash on Delivery',
+                        Icons.money,
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -395,12 +407,6 @@ class _SHGInputCartScreenState extends State<SHGInputCartScreen> {
   ) {
     return RadioListTile<app_order.PaymentMethod>(
       value: method,
-      groupValue: _selectedPaymentMethod,
-      onChanged: (value) {
-        setState(() {
-          _selectedPaymentMethod = value!;
-        });
-      },
       title: Row(
         children: [Icon(icon, size: 20), const SizedBox(width: 8), Text(label)],
       ),

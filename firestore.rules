@@ -22,19 +22,6 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    /// Check if user is the order buyer
-    function isOrderBuyer(orderId) {
-      return isAuthenticated() &&
-             get(/databases/$(database)/documents/orders/$(orderId)).data.buyerId == request.auth.uid;
-    }
-    
-    /// Check if user is the order seller
-    function isOrderSeller(orderId) {
-      return isAuthenticated() &&
-             (get(/databases/$(database)/documents/orders/$(orderId)).data.farmerId == request.auth.uid ||
-              get(/databases/$(database)/documents/orders/$(orderId)).data.seller_id == request.auth.uid);
-    }
-    
     // ========================================
     // Users Collection
     // ========================================

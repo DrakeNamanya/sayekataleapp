@@ -859,33 +859,29 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<DisabilityStatus>(
-                    title: const Text('No'),
-                    value: DisabilityStatus.no,
-                    groupValue: _disabilityStatus,
-                    onChanged: (value) {
-                      setState(() {
-                        _disabilityStatus = value!;
-                      });
-                    },
+            RadioGroup<DisabilityStatus>(
+              groupValue: _disabilityStatus,
+              onChanged: (value) {
+                setState(() {
+                  _disabilityStatus = value;
+                });
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<DisabilityStatus>(
+                      title: const Text('No'),
+                      value: DisabilityStatus.no,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: RadioListTile<DisabilityStatus>(
-                    title: const Text('Yes (PWD)'),
-                    value: DisabilityStatus.yes,
-                    groupValue: _disabilityStatus,
-                    onChanged: (value) {
-                      setState(() {
-                        _disabilityStatus = value!;
-                      });
-                    },
+                  Expanded(
+                    child: RadioListTile<DisabilityStatus>(
+                      title: const Text('Yes (PWD)'),
+                      value: DisabilityStatus.yes,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 

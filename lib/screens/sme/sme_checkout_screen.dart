@@ -276,60 +276,56 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        children: [
-                          // MTN Mobile Money
-                          RadioListTile<PaymentMethod>(
-                            title: const Text('MTN Mobile Money'),
-                            subtitle: const Text('Pay securely with MTN MoMo'),
-                            secondary: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.yellow.shade700,
-                                borderRadius: BorderRadius.circular(8),
+                      child: RadioGroup<PaymentMethod>(
+                        groupValue: _selectedPaymentMethod,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedPaymentMethod = value;
+                          });
+                        },
+                        child: Column(
+                          children: [
+                            // MTN Mobile Money
+                            RadioListTile<PaymentMethod>(
+                              title: const Text('MTN Mobile Money'),
+                              subtitle: const Text('Pay securely with MTN MoMo'),
+                              secondary: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow.shade700,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.phone_android,
+                                  color: Colors.black,
+                                  size: 24,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.phone_android,
-                                color: Colors.black,
-                                size: 24,
-                              ),
+                              value: PaymentMethod.mtnMobileMoney,
                             ),
-                            value: PaymentMethod.mtnMobileMoney,
-                            groupValue: _selectedPaymentMethod,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPaymentMethod = value!;
-                              });
-                            },
-                          ),
-                          const Divider(height: 1),
-                          // Cash on Delivery
-                          RadioListTile<PaymentMethod>(
-                            title: const Text('Cash on Delivery (COD)'),
-                            subtitle: const Text(
-                              'Pay with cash when order is delivered',
-                            ),
-                            secondary: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(8),
+                            const Divider(height: 1),
+                            // Cash on Delivery
+                            RadioListTile<PaymentMethod>(
+                              title: const Text('Cash on Delivery (COD)'),
+                              subtitle: const Text(
+                                'Pay with cash when order is delivered',
                               ),
-                              child: const Icon(
-                                Icons.money,
-                                color: Colors.green,
-                                size: 24,
+                              secondary: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.money,
+                                  color: Colors.green,
+                                  size: 24,
+                                ),
                               ),
+                              value: PaymentMethod.cashOnDelivery,
                             ),
-                            value: PaymentMethod.cashOnDelivery,
-                            groupValue: _selectedPaymentMethod,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedPaymentMethod = value!;
-                              });
-                            },
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
