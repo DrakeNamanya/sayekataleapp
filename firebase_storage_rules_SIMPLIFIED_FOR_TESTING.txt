@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// ⚠️ SIMPLIFIED STORAGE RULES FOR TESTING
+// Use these rules to test if authentication is working
+// Replace with production rules after testing
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // TEMPORARY: Allow all authenticated users
+    // ============================================
+    // This removes all file size and type restrictions
+    // Use ONLY for debugging permission issues
+    
+    match /{allPaths=**} {
+      // Any authenticated user can read, write, delete
+      allow read, write, delete: if request.auth != null;
+    }
+    
+    // ============================================
+    // TO DEBUG:
+    // ============================================
+    // 1. Deploy these rules to Firebase Console
+    // 2. Try uploading products in your app
+    // 3. If uploads work: Original rules were too restrictive
+    // 4. If uploads fail: Authentication issue (check Firebase Auth)
+    // 
+    // ============================================
+    // REMEMBER: Replace with production rules after testing!
+    // ============================================
+  }
+}
