@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'shg_edit_profile_screen.dart';
 import '../common/help_support_screen.dart';
+import '../../widgets/account_deletion_dialog.dart';
 
 class SHGProfileScreen extends StatelessWidget {
   const SHGProfileScreen({super.key});
@@ -240,6 +241,31 @@ class SHGProfileScreen extends StatelessWidget {
                 },
               ),
               const Divider(height: 32),
+              
+              // Delete Account Button (Hidden option)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextButton.icon(
+                  onPressed: () async {
+                    await showAccountDeletionDialog(context);
+                  },
+                  icon: const Icon(
+                    Icons.delete_forever,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    'Delete Account',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.errorColor,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 8),
+              
               // Logout Button
               Padding(
                 padding: const EdgeInsets.all(16),

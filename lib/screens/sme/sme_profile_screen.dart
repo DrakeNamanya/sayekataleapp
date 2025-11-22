@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'sme_edit_profile_screen.dart';
 import '../common/help_support_screen.dart';
+import '../../widgets/account_deletion_dialog.dart';
 
 class SMEProfileScreen extends StatelessWidget {
   const SMEProfileScreen({super.key});
@@ -245,6 +246,19 @@ class SMEProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
                   const Divider(),
+                  const SizedBox(height: 8),
+
+                  // Delete Account Button (Hidden option)
+                  _ProfileOption(
+                    icon: Icons.delete_forever,
+                    title: 'Delete Account',
+                    subtitle: 'Permanently delete your account and data',
+                    isDestructive: true,
+                    onTap: () async {
+                      await showAccountDeletionDialog(context);
+                    },
+                  ),
+
                   const SizedBox(height: 8),
 
                   // Logout Button

@@ -7,6 +7,7 @@ import '../../services/psa_verification_service.dart';
 import 'psa_verification_form_screen.dart';
 import 'psa_business_info_screen.dart';
 import '../common/help_support_screen.dart';
+import '../../widgets/account_deletion_dialog.dart';
 
 class PSAProfileScreen extends StatefulWidget {
   const PSAProfileScreen({super.key});
@@ -397,6 +398,30 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                 ),
 
                 const SizedBox(height: 32),
+
+                // Delete Account Button (Hidden option)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      await showAccountDeletionDialog(context);
+                    },
+                    icon: const Icon(
+                      Icons.delete_forever,
+                      size: 20,
+                    ),
+                    label: const Text(
+                      'Delete Account',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.errorColor,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // Logout Button
                 Padding(
