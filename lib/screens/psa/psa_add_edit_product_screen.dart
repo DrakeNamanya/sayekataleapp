@@ -677,6 +677,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -729,7 +731,6 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           ),
         ],
       ),
-    ),
     );
   }
 }

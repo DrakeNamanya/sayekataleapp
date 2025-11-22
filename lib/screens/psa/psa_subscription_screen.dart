@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/subscription.dart';
 import '../../utils/app_theme.dart';
-import '../../services/wallet_service.dart';
 
 class PSASubscriptionScreen extends StatefulWidget {
   const PSASubscriptionScreen({super.key});
@@ -17,7 +16,6 @@ class _PSASubscriptionScreenState extends State<PSASubscriptionScreen> {
   final _phoneController = TextEditingController();
   bool _isProcessing = false;
   String _selectedPaymentMethod = 'mtn_mobile_money';
-  final WalletService _walletService = WalletService();
 
   @override
   void dispose() {
@@ -288,22 +286,53 @@ class _PSASubscriptionScreenState extends State<PSASubscriptionScreen> {
     String value,
     IconData icon,
   ) {
-    return RadioListTile<String>(
-      title: Row(
-        children: [
-          Icon(icon, color: AppTheme.primaryColor),
-          const SizedBox(width: 12),
-          Text(title),
-        ],
-      ),
-      value: value,
-      groupValue: _selectedPaymentMethod,
-      onChanged: (val) {
+    return InkWell(
+      onTap: () {
         setState(() {
-          _selectedPaymentMethod = val!;
+          _selectedPaymentMethod = value;
         });
       },
-      activeColor: AppTheme.primaryColor,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: _selectedPaymentMethod == value
+                ? AppTheme.primaryColor
+                : Colors.grey.shade300,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: _selectedPaymentMethod == value
+              ? AppTheme.primaryColor.withValues(alpha: 0.1)
+              : Colors.white,
+        ),
+        child: Row(
+          children: [
+            Radio<String>(
+              value: value,
+              groupValue: _selectedPaymentMethod,
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _selectedPaymentMethod = val;
+                  });
+                }
+              },
+              activeColor: AppTheme.primaryColor,
+            ),
+            Icon(icon, color: AppTheme.primaryColor),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: _selectedPaymentMethod == value
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
