@@ -8,6 +8,7 @@ import '../../services/message_service.dart';
 import '../../services/delivery_tracking_service.dart';
 import '../../services/receipt_service.dart';
 import '../../models/order.dart' as app_order;
+import '../../models/delivery_tracking.dart';
 import '../common/chat_screen.dart';
 import '../delivery/live_tracking_screen.dart';
 import '../common/receipt_detail_screen.dart';
@@ -563,6 +564,32 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen>
               ),
               duration: const Duration(seconds: 6),
               action: SnackBarAction(label: 'Got it', onPressed: () {}),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if tracking is pending GPS
+      if (tracking.status == DeliveryStatus.pending) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                '⚠️ Tracking Created - GPS Required\n\n'
+                'Your order tracking has been created, but GPS coordinates are needed to start live tracking.\n\n'
+                '📍 Please add your GPS location:\n'
+                'Go to Profile → Edit Profile → Add GPS Location\n\n'
+                'The farmer also needs to add GPS coordinates.\n\n'
+                'Live tracking will activate automatically once both GPS locations are added.',
+              ),
+              duration: const Duration(seconds: 8),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: 'Got it', 
+                textColor: Colors.white,
+                onPressed: () {},
+              ),
             ),
           );
         }

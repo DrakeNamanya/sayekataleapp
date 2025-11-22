@@ -584,8 +584,10 @@ class OrderService {
       final buyerPhone = buyerData['phone'] ?? '';
       final buyerLocation = buyerData['location'] as Map<String, dynamic>?;
 
-      // Validate GPS coordinates exist - GPS is MANDATORY for delivery tracking
+      // Check GPS coordinates - warn if missing but don't fail
+      bool hasValidGPS = true;
       if (sellerLocation == null || buyerLocation == null) {
+        hasValidGPS = false;
         if (kDebugMode) {
           debugPrint('⚠️ Missing GPS coordinates for order $orderId');
           debugPrint(
@@ -594,31 +596,26 @@ class OrderService {
           debugPrint(
             '   Buyer location: ${buyerLocation != null ? "Present" : "MISSING"}',
           );
+          debugPrint('   Creating tracking record without GPS - will be updated when GPS is added');
         }
-        throw Exception(
-          'GPS_MISSING: Cannot create delivery tracking. '
-          '${sellerLocation == null ? "Seller" : "Buyer"} needs to add GPS coordinates in profile settings.',
-        );
       }
 
-      // Extract GPS coordinates
-      final originLat = sellerLocation['latitude']?.toDouble() ?? 0.0;
-      final originLng = sellerLocation['longitude']?.toDouble() ?? 0.0;
-      final destLat = buyerLocation['latitude']?.toDouble() ?? 0.0;
-      final destLng = buyerLocation['longitude']?.toDouble() ?? 0.0;
+      // Extract GPS coordinates (use 0.0 as placeholder if missing)
+      final originLat = sellerLocation?['latitude']?.toDouble() ?? 0.0;
+      final originLng = sellerLocation?['longitude']?.toDouble() ?? 0.0;
+      final destLat = buyerLocation?['latitude']?.toDouble() ?? 0.0;
+      final destLng = buyerLocation?['longitude']?.toDouble() ?? 0.0;
 
-      // Validate coordinates are not zero (invalid)
+      // Validate coordinates are not zero (invalid) - warn but don't fail
       if (originLat == 0.0 ||
           originLng == 0.0 ||
           destLat == 0.0 ||
           destLng == 0.0) {
+        hasValidGPS = false;
         if (kDebugMode) {
-          debugPrint('⚠️ Invalid GPS coordinates (0,0) for order $orderId');
+          debugPrint('⚠️ Invalid or missing GPS coordinates for order $orderId');
+          debugPrint('   Creating tracking record - GPS can be added later');
         }
-        throw Exception(
-          'GPS_INVALID: Cannot create delivery tracking. '
-          'Please update your GPS coordinates in profile settings.',
-        );
       }
 
       // Determine delivery type (default to SHG_TO_SME)
@@ -634,20 +631,20 @@ class OrderService {
       final originPoint = LocationPoint(
         latitude: originLat,
         longitude: originLng,
-        address: sellerLocation['address'],
+        address: sellerLocation?['address'],
       );
 
       final destPoint = LocationPoint(
         latitude: destLat,
         longitude: destLng,
-        address: buyerLocation['address'],
+        address: buyerLocation?['address'],
       );
 
       // Calculate distance and duration
       final distance = originPoint.distanceTo(destPoint);
       final duration = _trackingService.calculateEstimatedDuration(distance);
 
-      // Create delivery tracking with confirmed status (ready to start)
+      // Create delivery tracking (pending if no GPS, confirmed if GPS available)
       final tracking = DeliveryTracking(
         id: '', // Firestore will generate
         orderId: orderId,
@@ -660,10 +657,12 @@ class OrderService {
         recipientPhone: buyerPhone,
         originLocation: originPoint,
         destinationLocation: destPoint,
-        status: DeliveryStatus.confirmed, // Auto-confirmed, ready for GPS tracking
+        status: hasValidGPS ? DeliveryStatus.confirmed : DeliveryStatus.pending,
         estimatedDistance: distance,
         estimatedDuration: duration,
-        notes: order.deliveryNotes,
+        notes: hasValidGPS 
+            ? order.deliveryNotes 
+            : '⚠️ GPS coordinates required. ${order.deliveryNotes ?? ""}',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -672,28 +671,38 @@ class OrderService {
         tracking,
       );
 
-      // Auto-start GPS tracking for the delivery
-      try {
-        await _trackingService.startDelivery(trackingId);
-        await _trackingService.startLocationTracking(trackingId);
+      // Auto-start GPS tracking ONLY if valid GPS coordinates exist
+      if (hasValidGPS) {
+        try {
+          await _trackingService.startDelivery(trackingId);
+          await _trackingService.startLocationTracking(trackingId);
         
+          if (kDebugMode) {
+            debugPrint(
+              '✅ Delivery tracking created AND STARTED: $trackingId for order $orderId',
+            );
+            debugPrint(
+              '   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min',
+            );
+            debugPrint('   📍 GPS tracking activated automatically');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint(
+              '⚠️ Delivery tracking created but GPS tracking failed to start: $e',
+            );
+            debugPrint('   Tracking ID: $trackingId - Farmer can manually start GPS');
+          }
+          // Don't fail - tracking is created, just GPS didn't start automatically
+        }
+      } else {
+        // GPS not available - tracking created but needs GPS before it can start
         if (kDebugMode) {
           debugPrint(
-            '✅ Delivery tracking created AND STARTED: $trackingId for order $orderId',
+            '✅ Delivery tracking created (pending GPS): $trackingId for order $orderId',
           );
-          debugPrint(
-            '   Distance: ${distance.toStringAsFixed(1)} km, ETA: $duration min',
-          );
-          debugPrint('   📍 GPS tracking activated automatically');
+          debugPrint('   ⚠️ GPS coordinates missing - tracking will activate when GPS is added');
         }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint(
-            '⚠️ Delivery tracking created but GPS tracking failed to start: $e',
-          );
-          debugPrint('   Tracking ID: $trackingId - Farmer can manually start GPS');
-        }
-        // Don't fail - tracking is created, just GPS didn't start automatically
       }
     } catch (e) {
       if (kDebugMode) {
