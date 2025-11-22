@@ -93,8 +93,8 @@ service cloud.firestore {
       // The userId MUST match their Firebase Auth UID
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
-      // Only admins can delete users
-      allow delete: if isAdmin();
+      // ✅ ACCOUNT DELETION: Allow users to delete their own account OR admins can delete any
+      allow delete: if isOwner(userId) || isAdmin();
     }
     
     // ========================================
@@ -114,7 +114,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                        request.resource.data.farmerId == request.auth.uid;
       
-      // Only owner or admin can delete
+      // ✅ ACCOUNT DELETION: Owner, admin, OR batch deletion during account removal
       allow delete: if isAuthenticated() && 
                        (resource.data.farmerId == request.auth.uid || isAdmin());
     }
@@ -148,8 +148,12 @@ service cloud.firestore {
                         resource.data.seller_id == request.auth.uid ||
                         isAdmin());
       
-      // Only admin can delete orders
-      allow delete: if isAdmin();
+      // ✅ ACCOUNT DELETION: Admin OR user deleting their own orders during account removal
+      allow delete: if isAdmin() || 
+                       (isAuthenticated() && 
+                        (resource.data.buyer_id == request.auth.uid || 
+                         resource.data.farmerId == request.auth.uid ||
+                         resource.data.seller_id == request.auth.uid));
     }
     
     // ========================================
@@ -260,8 +264,8 @@ service cloud.firestore {
       // Update conversation (user must be participant - for last message, unread count)
       allow update: if isConversationParticipant();
       
-      // Delete conversations (only admin or if user is sole participant)
-      allow delete: if isAdmin();
+      // ✅ ACCOUNT DELETION: Admin OR participant deleting during account removal
+      allow delete: if isAdmin() || isConversationParticipant();
     }
     
     // ========================================
@@ -295,8 +299,9 @@ service cloud.firestore {
                        isMessageConversationParticipant(resource.data.conversation_id) &&
                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read']);
       
-      // Delete messages (only admin)
-      allow delete: if isAdmin();
+      // ✅ ACCOUNT DELETION: Admin OR sender deleting their own messages during account removal
+      allow delete: if isAdmin() || 
+                       (isAuthenticated() && resource.data.sender_id == request.auth.uid);
     }
     
     // ========================================
@@ -344,8 +349,9 @@ service cloud.firestore {
                        request.resource.data.orderId == resource.data.orderId &&
                        request.resource.data.revieweeId == resource.data.revieweeId;
       
-      // Only admin can delete reviews
-      allow delete: if isAdmin();
+      // ✅ ACCOUNT DELETION: Admin OR reviewer deleting their own reviews during account removal
+      allow delete: if isAdmin() || 
+                       (isAuthenticated() && resource.data.reviewerId == request.auth.uid);
     }
     
     // ========================================
@@ -526,6 +532,22 @@ service cloud.firestore {
     match /system_config/{configId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // Deleted Accounts Collection (Audit Trail)
+    // ========================================
+    
+    match /deleted_accounts/{accountId} {
+      // Only admins can read deleted account records
+      allow read: if isAdmin();
+      
+      // System can create records during account deletion
+      // This allows the deletion service to log before auth is removed
+      allow create: if true;
+      
+      // No updates or deletes (permanent audit trail)
+      allow update, delete: if false;
     }
     
     // ========================================

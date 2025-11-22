@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'deleted_accounts_tracking_service.dart';
 
 /// Service for handling account deletion with comprehensive data cleanup
 /// This service deletes user account and all associated data from Firebase
@@ -9,6 +10,7 @@ class AccountDeletionService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final DeletedAccountsTrackingService _trackingService = DeletedAccountsTrackingService();
 
   /// Delete user account and all associated data
   /// Returns true if deletion was successful, false otherwise
@@ -16,6 +18,20 @@ class AccountDeletionService {
     try {
       if (kDebugMode) {
         debugPrint('🗑️ ACCOUNT DELETION - Starting for user: $userId');
+      }
+
+      // Step 0: Get user data for tracking before deletion
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data()!;
+        await _trackingService.logAccountDeletion(
+          userId: userId,
+          userEmail: userData['email'] ?? 'unknown@email.com',
+          userName: userData['name'] ?? 'Unknown User',
+          userRole: userData['role'] ?? 'unknown',
+          deletionReason: 'User initiated account deletion',
+          deletedBy: 'self',
+        );
       }
 
       // Step 1: Delete user's products
