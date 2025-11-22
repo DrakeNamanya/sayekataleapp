@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/product.dart';
+import '../../models/review.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../services/message_service.dart';
 import '../../services/firebase_user_service.dart';
-// import '../../services/rating_service.dart';
-// import '../../widgets/review_list.dart'; // Unused widget with compilation errors
+import '../../widgets/review_card.dart';
 import '../common/chat_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -21,9 +22,46 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
+  int _currentImageIndex = 0;
+  final PageController _imagePageController = PageController();
   final MessageService _messageService = MessageService();
   final FirebaseUserService _userService = FirebaseUserService();
-  // final RatingService _ratingService = RatingService(); // Unused for now
+  List<Review> _reviews = [];
+  bool _loadingReviews = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProductReviews();
+  }
+
+  @override
+  void dispose() {
+    _imagePageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProductReviews() async {
+    try {
+      final reviewsSnapshot = await FirebaseFirestore.instance
+          .collection('reviews')
+          .where('product_id', isEqualTo: widget.product.id)
+          .orderBy('created_at', descending: true)
+          .limit(20)
+          .get();
+
+      setState(() {
+        _reviews = reviewsSnapshot.docs
+            .map((doc) => Review.fromFirestore(doc.data(), doc.id))
+            .toList();
+        _loadingReviews = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loadingReviews = false;
+      });
+    }
+  }
 
   Future<void> _handleContactSeller() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -125,19 +163,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Image
-                    Container(
-                      height: 300,
-                      width: double.infinity,
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      child: Center(
-                        child: Icon(
-                          _getProductIcon(widget.product.category),
-                          size: 120,
-                          color: AppTheme.primaryColor,
+                    // Product Image Gallery
+                    _buildImageGallery(),
+                    // Image Indicators
+                    if (widget.product.images.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            widget.product.images.length,
+                            (index) => Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _currentImageIndex == index
+                                    ? AppTheme.primaryColor
+                                    : Colors.grey.shade300,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -256,7 +305,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          // Farmer Rating Section - Temporarily disabled
+                          // Customer Reviews Section
+                          _buildReviewsSection(),
+                          const SizedBox(height: 24),
                           // Quantity Selector
                           const Text(
                             'Quantity',
@@ -401,6 +452,260 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageGallery() {
+    final images = widget.product.images;
+
+    // If no images, show placeholder
+    if (images.isEmpty) {
+      return Container(
+        height: 300,
+        width: double.infinity,
+        color: AppTheme.primaryColor.withValues(alpha: 0.1),
+        child: Center(
+          child: Icon(
+            _getProductIcon(widget.product.category),
+            size: 120,
+            color: AppTheme.primaryColor,
+          ),
+        ),
+      );
+    }
+
+    // Show image gallery
+    return SizedBox(
+      height: 300,
+      child: PageView.builder(
+        controller: _imagePageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentImageIndex = index;
+          });
+        },
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              _showImageDialog(index);
+            },
+            child: Container(
+              width: double.infinity,
+              color: Colors.grey.shade100,
+              child: Image.network(
+                images[index],
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    child: Center(
+                      child: Icon(
+                        _getProductIcon(widget.product.category),
+                        size: 120,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showImageDialog(int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initialIndex),
+              itemCount: widget.product.images.length,
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  child: Center(
+                    child: Image.network(
+                      widget.product.images[index],
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewsSection() {
+    if (_loadingReviews) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_reviews.isEmpty) {
+      return Container();
+    }
+
+    // Calculate average rating
+    final avgRating = _reviews.isEmpty
+        ? 0.0
+        : _reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Reviews Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Customer Reviews',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      avgRating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      ' (${_reviews.length} review${_reviews.length != 1 ? 's' : ''})',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            if (_reviews.length > 3)
+              TextButton(
+                onPressed: () {
+                  _showAllReviews();
+                },
+                child: const Text('See All'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Show first 3 reviews
+        ..._reviews.take(3).map((review) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ReviewCard(review: review),
+            )),
+      ],
+    );
+  }
+
+  void _showAllReviews() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'All Reviews',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              // Reviews List
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  itemCount: _reviews.length,
+                  itemBuilder: (context, index) {
+                    return ReviewCard(review: _reviews[index]);
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

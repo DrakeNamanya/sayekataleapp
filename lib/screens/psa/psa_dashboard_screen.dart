@@ -9,6 +9,8 @@ import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/admob_banner_widget.dart';
 import '../../widgets/profile_completion_gate.dart';
+import '../../widgets/psa_approval_gate.dart';
+import '../../widgets/psa_subscription_gate.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
@@ -53,7 +55,11 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
 
     return ProfileCompletionGate(
       blockedFeatureName: 'PSA Dashboard',
-      child: Scaffold(
+      child: PSAApprovalGate(
+        blockedFeatureName: 'PSA Dashboard',
+        child: PSASubscriptionGate(
+          blockedFeatureName: 'PSA Dashboard',
+          child: Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: FutureBuilder<int>(
         future: orderService.getFarmerPendingOrdersCount(supplierId),
@@ -110,6 +116,8 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
             ],
           );
         },
+      ),
+      ),
       ),
       ),
     );

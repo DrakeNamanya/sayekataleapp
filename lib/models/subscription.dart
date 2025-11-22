@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Subscription types available
 enum SubscriptionType {
-  smeDirectory, // SHG premium access to SME directory
+  smeDirectory, // SHG premium access to SME directory  
+  psaAccountActivation, // PSA account activation (UGX 120,000/year)
 }
 
 /// Subscription status

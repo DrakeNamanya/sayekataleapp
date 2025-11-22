@@ -8,6 +8,8 @@ import '../../utils/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/image_storage_service.dart';
+import '../../widgets/psa_approval_gate.dart';
+import '../../widgets/psa_subscription_gate.dart';
 
 class PSAAddEditProductScreen extends StatefulWidget {
   final Product? product; // null for add, non-null for edit
@@ -261,8 +263,12 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   Widget build(BuildContext context) {
     final isEditMode = widget.product != null;
 
-    return Scaffold(
-      appBar: AppBar(
+    return PSAApprovalGate(
+      blockedFeatureName: isEditMode ? 'Edit Product' : 'Add Product',
+      child: PSASubscriptionGate(
+        blockedFeatureName: isEditMode ? 'Edit Product' : 'Add Product',
+        child: Scaffold(
+          appBar: AppBar(
         title: Text(isEditMode ? 'Edit Product' : 'Add New Product'),
         actions: [
           if (isEditMode)
@@ -723,6 +729,7 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
