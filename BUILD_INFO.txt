@@ -1,0 +1,5 @@
+Build Date: Sat Nov 22 17:09:44 UTC 2025
+APK Size: 67.3 MB
+MD5: b9a291bb8108f50d9f505b749161344c
+Build Type: Release APK
+Signing: Configured (release-key.jks)
