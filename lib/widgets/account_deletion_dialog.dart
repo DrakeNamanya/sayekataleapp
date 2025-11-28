@@ -114,13 +114,17 @@ class _AccountDeletionDialogState extends State<AccountDeletionDialog> {
   /// Get user-friendly error message
   String _getErrorMessage(String error) {
     if (error.contains('requires-recent-login')) {
-      return 'For security reasons, please logout and login again before deleting your account.';
+      return 'For security, please logout and login again (within last 5 minutes) before deleting your account.';
     } else if (error.contains('wrong-password')) {
       return 'Incorrect password. Please try again.';
     } else if (error.contains('network')) {
       return 'Network error. Please check your connection and try again.';
+    } else if (error.contains('permission-denied')) {
+      return 'Permission denied. Please ensure you have proper authentication.';
+    } else if (error.contains('user-token-expired')) {
+      return 'Your session has expired. Please logout and login again.';
     } else {
-      return 'An error occurred. Please try again or contact support.';
+      return 'An error occurred: ${error.substring(0, error.length > 100 ? 100 : error.length)}...\n\nPlease try:\n1. Logout and login again\n2. Check your internet connection\n3. Contact support if issue persists';
     }
   }
 

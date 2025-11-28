@@ -142,6 +142,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         errorMessage = 'Password is too weak (min 6 characters)';
       } else if (e.code == 'email-already-in-use') {
         errorMessage = 'Email already registered. Please sign in.';
+        
+        // Switch to sign-in mode
+        if (mounted) {
+          setState(() {
+            _isSignUpMode = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return; // IMPORTANT: Stop execution after error
       } else if (e.code == 'user-not-found') {
         errorMessage = 'No account found. Please sign up.';
       } else if (e.code == 'wrong-password') {
@@ -161,6 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         );
       }
+      return; // IMPORTANT: Stop execution after showing error
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('❌ Unexpected Error: $e');
@@ -176,6 +193,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         );
       }
+      return; // IMPORTANT: Stop execution after error
     }
   }
 
