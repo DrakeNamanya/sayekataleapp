@@ -212,14 +212,6 @@ class SHGProfileScreen extends StatelessWidget {
                 },
               ),
               _ProfileOption(
-                icon: Icons.security_outlined,
-                title: 'Privacy & Security',
-                subtitle: 'Manage your privacy settings',
-                onTap: () {
-                  // Privacy settings
-                },
-              ),
-              _ProfileOption(
                 icon: Icons.help_outline,
                 title: 'Help & Support',
                 subtitle: 'Get help with the app',

@@ -331,14 +331,6 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                   },
                 ),
                 _ProfileOption(
-                  icon: Icons.security,
-                  title: 'Privacy & Security',
-                  subtitle: 'Password and security settings',
-                  onTap: () {
-                    // TODO: Navigate to security settings
-                  },
-                ),
-                _ProfileOption(
                   icon: Icons.language,
                   title: 'Language',
                   subtitle: 'Change app language',
