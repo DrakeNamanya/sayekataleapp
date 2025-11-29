@@ -194,6 +194,51 @@ class WebLandingPage extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 32),
+                // Google Play Store Badge
+                InkWell(
+                  onTap: () {
+                    // TODO: Replace with actual Google Play Store link
+                    // For now, navigate to onboarding (mobile app simulation)
+                    Navigator.pushNamed(context, '/onboarding');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.shop, color: Colors.white, size: 32),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text(
+                              'Available on',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Google Play Store',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -284,15 +329,7 @@ class WebLandingPage extends StatelessWidget {
                 routeName: '/psa',
                 description: 'Supply products, manage listings, handle deliveries',
               ),
-              _buildRoleCard(
-                context,
-                title: 'Admin Portal',
-                subtitle: 'For System Administrators',
-                icon: Icons.admin_panel_settings,
-                color: Colors.red,
-                routeName: '/admin',
-                description: 'Manage users, analytics, system configuration',
-              ),
+              // Admin portal removed from public landing page
             ],
           ),
         ],
@@ -601,7 +638,6 @@ class WebLandingPage extends StatelessWidget {
                     _buildFooterLink('SME Portal', '/sme'),
                     _buildFooterLink('SHG Portal', '/shg'),
                     _buildFooterLink('PSA Portal', '/psa'),
-                    _buildFooterLink('Admin Portal', '/admin'),
                   ],
                 ),
               ),
@@ -620,9 +656,9 @@ class WebLandingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildContactItem(Icons.email, 'info@datacollectors.org'),
-                    _buildContactItem(Icons.phone, '+256 XXX XXX XXX'),
-                    _buildContactItem(Icons.location_on, 'Kampala, Uganda'),
+                    _buildContactItem(Icons.email, 'drnamanya@gmail.com'),
+                    _buildContactItem(Icons.phone, '+256 701 634 653'),
+                    _buildContactItem(Icons.location_on, 'Jinja, Uganda'),
                   ],
                 ),
               ),
@@ -632,12 +668,26 @@ class WebLandingPage extends StatelessWidget {
           const Divider(color: Colors.white24),
           const SizedBox(height: 20),
           Text(
-            '© ${DateTime.now().year} SAYE KATALE. All rights reserved.',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white54,
+            Column(
+              children: [
+                Text(
+                  'Developed and Powered by DATACOLLECTORS LTD',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '© ${DateTime.now().year} SAYE KATALE. All rights reserved.',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
             ),
-          ),
         ],
       ),
     );
