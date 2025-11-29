@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       if (_isSignUpMode) {
         // Sign Up with Email
-        await _authService.signUpWithEmail(
+        final userCredential = await _authService.signUpWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           name: _nameController.text.trim(),
@@ -94,6 +94,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               duration: Duration(seconds: 5),
             ),
           );
+        }
+
+        // 🔧 FIX: Wait for AuthProvider to load user profile before navigating
+        if (kDebugMode) {
+          debugPrint('⏳ ONBOARDING - Waiting for AuthProvider to load user...');
+        }
+
+        // Wait for AuthProvider to detect the new user and load profile
+        final authProvider = Provider.of<app_auth.AuthProvider>(
+          context,
+          listen: false,
+        );
+
+        // Poll until user is loaded (max 10 seconds)
+        int attempts = 0;
+        while (!authProvider.isAuthenticated && attempts < 20) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          attempts++;
+
+          if (kDebugMode) {
+            debugPrint(
+              '⏳ ONBOARDING - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}',
+            );
+          }
+        }
+
+        if (!authProvider.isAuthenticated) {
+          if (kDebugMode) {
+            debugPrint(
+              '⚠️ ONBOARDING - AuthProvider did not load user after 10 seconds',
+            );
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint(
+              '✅ ONBOARDING - AuthProvider loaded user: ${authProvider.currentUser?.name}',
+            );
+          }
         }
       } else {
         // Sign In with Email
