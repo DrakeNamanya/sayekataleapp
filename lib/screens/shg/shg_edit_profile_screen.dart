@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
 import '../../services/image_picker_service.dart';
@@ -145,20 +146,94 @@ class _SHGEditProfileScreenState extends State<SHGEditProfileScreen> {
   }
 
   Future<void> _getCurrentLocation() async {
-    // Simulate getting GPS coordinates
-    // In production, use geolocator package
-    setState(() {
-      _latitude = 0.3476; // Kampala default
-      _longitude = 32.5825;
-    });
+    try {
+      setState(() {
+        _isLoading = true;
+      });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('GPS coordinates captured'),
-          backgroundColor: AppTheme.successColor,
-        ),
+      // Check location permissions
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location services are disabled. Please enable location services.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Location permission denied'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permissions are permanently denied. Please enable them in settings.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
       );
+
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('GPS coordinates captured: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get location: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
