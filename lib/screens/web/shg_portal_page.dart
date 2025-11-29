@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../auth/shg_login_screen.dart';
-import '../auth/shg_registration_screen.dart';
+
+import '../onboarding_screen.dart';
+
 
 /// SHG (Self-Help Group / Farmers) Portal Landing Page  
 class SHGPortalPage extends StatelessWidget {
@@ -59,7 +60,7 @@ class SHGPortalPage extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SHGLoginScreen()),
+                        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -72,7 +73,7 @@ class SHGPortalPage extends StatelessWidget {
                     OutlinedButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SHGRegistrationScreen()),
+                        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white, width: 2),
@@ -152,7 +153,7 @@ class SHGPortalPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SHGRegistrationScreen()),
+              MaterialPageRoute(builder: (context) => const OnboardingScreen()),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,

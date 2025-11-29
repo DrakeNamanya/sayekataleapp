@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../auth/sme_login_screen.dart';
-import '../auth/sme_registration_screen.dart';
+
+import '../onboarding_screen.dart';
+
 
 /// SME (Buyer) Portal Landing Page
 /// Features: Product browsing, order management, delivery tracking
@@ -78,7 +79,7 @@ class SMEPortalPage extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SMELoginScreen(),
+                          builder: (context) => const OnboardingScreen(),
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -105,7 +106,7 @@ class SMEPortalPage extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SMERegistrationScreen(),
+                          builder: (context) => const OnboardingScreen(),
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -363,7 +364,7 @@ class SMEPortalPage extends StatelessWidget {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const SMERegistrationScreen(),
+                builder: (context) => const OnboardingScreen(),
               ),
             ),
             style: ElevatedButton.styleFrom(

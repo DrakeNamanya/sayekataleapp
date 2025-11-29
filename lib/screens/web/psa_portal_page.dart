@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../auth/psa_login_screen.dart';
-import '../auth/psa_registration_screen.dart';
+
+import '../onboarding_screen.dart';
+
 
 /// PSA (Private Sector Agent / Suppliers) Portal Landing Page
 class PSAPortalPage extends StatelessWidget {
@@ -45,7 +46,7 @@ class PSAPortalPage extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PSALoginScreen())),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OnboardingScreen())),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.orange.shade700,
@@ -55,7 +56,7 @@ class PSAPortalPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 20),
                     OutlinedButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PSARegistrationScreen())),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OnboardingScreen())),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white, width: 2),
                         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
@@ -130,7 +131,7 @@ class PSAPortalPage extends StatelessWidget {
           const Text('Expand Your Business', style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 40),
           ElevatedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PSARegistrationScreen())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OnboardingScreen())),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.orange.shade700,

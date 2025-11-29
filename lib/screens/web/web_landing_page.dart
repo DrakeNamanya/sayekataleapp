@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:html' as html;
 
 /// Main public landing page for datacollectors.org
 /// Features: Hero section, role selection, about, contact
@@ -264,7 +263,7 @@ class WebLandingPage extends StatelessWidget {
                 subtitle: 'For Buyers & Small-Medium Enterprises',
                 icon: Icons.business,
                 color: Colors.blue,
-                route: '/sme',
+                routeName: '/sme',
                 description: 'Browse products, place orders, track deliveries',
               ),
               _buildRoleCard(
@@ -273,7 +272,7 @@ class WebLandingPage extends StatelessWidget {
                 subtitle: 'For Self-Help Groups & Farmers',
                 icon: Icons.groups,
                 color: Colors.green,
-                route: '/shg',
+                routeName: '/shg',
                 description: 'Sell products, manage inventory, fulfill orders',
               ),
               _buildRoleCard(
@@ -282,7 +281,7 @@ class WebLandingPage extends StatelessWidget {
                 subtitle: 'For Private Sector Agents & Suppliers',
                 icon: Icons.store,
                 color: Colors.orange,
-                route: '/psa',
+                routeName: '/psa',
                 description: 'Supply products, manage listings, handle deliveries',
               ),
               _buildRoleCard(
@@ -291,7 +290,7 @@ class WebLandingPage extends StatelessWidget {
                 subtitle: 'For System Administrators',
                 icon: Icons.admin_panel_settings,
                 color: Colors.red,
-                route: '/admin',
+                routeName: '/admin',
                 description: 'Manage users, analytics, system configuration',
               ),
             ],
@@ -307,13 +306,13 @@ class WebLandingPage extends StatelessWidget {
     required String subtitle,
     required IconData icon,
     required Color color,
-    required String route,
+    required String routeName,
     required String description,
   }) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => html.window.location.href = route,
+        onTap: () => Navigator.pushNamed(context, routeName),
         child: Container(
           width: 320,
           padding: const EdgeInsets.all(32),
@@ -372,7 +371,7 @@ class WebLandingPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => html.window.location.href = route,
+                onPressed: () => Navigator.pushNamed(context, routeName),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
                   foregroundColor: Colors.white,
@@ -647,15 +646,17 @@ class WebLandingPage extends StatelessWidget {
   Widget _buildFooterLink(String text, String route) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () => html.window.location.href = route,
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
+      child: Builder(
+        builder: (context) => MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => Navigator.pushNamed(context, route),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
             ),
           ),
         ),
@@ -683,11 +684,10 @@ class WebLandingPage extends StatelessWidget {
   }
 
   void _scrollToTop() {
-    html.window.scrollTo(0, 0);
+    // Scroll functionality handled by SingleChildScrollView
   }
 
   void _scrollToSection(String sectionId) {
     // Scroll to section (simplified for web)
-    html.window.scrollBy(0, 500);
   }
 }
