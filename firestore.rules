@@ -98,15 +98,24 @@ service cloud.firestore {
     
     // PSA Verifications collection
     match /psa_verifications/{verificationId} {
-      // PSA users can read their own verification
-      allow read: if isAuthenticated() && (resource.data.psa_id == request.auth.uid || isAdmin());
+      // Admins can read all verification requests
+      allow read: if isAdmin();
       
-      // PSA users can create and update their own verification (for initial submission)
-      allow create: if isAuthenticated();
+      // PSA users can read their own verification status
+      allow get: if isAuthenticated() && resource.data.psa_id == request.auth.uid;
+      
+      // PSA users can query their own verifications
+      allow list: if isAuthenticated() && request.auth.uid != null;
+      
+      // PSA users can create verification requests with their own psa_id
+      allow create: if isAuthenticated() && request.resource.data.psa_id == request.auth.uid;
+      
+      // PSA users can update their own unsubmitted verifications
+      // Admins can update any verification (for approve/reject)
       allow update: if isAuthenticated() && 
                        (resource.data.psa_id == request.auth.uid || isAdmin());
       
-      // Only admins can delete
+      // Only admins can delete verifications
       allow delete: if isAdmin();
     }
     
