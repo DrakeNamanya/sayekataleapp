@@ -22,6 +22,18 @@ class AppNotification {
   });
 
   factory AppNotification.fromFirestore(Map<String, dynamic> data, String id) {
+    // Helper function to parse DateTime from various formats
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      // Handle Firestore Timestamp
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
     return AppNotification(
       id: id,
       userId: data['user_id'] ?? '',
@@ -34,7 +46,7 @@ class AppNotification {
       actionUrl: data['action_url'],
       relatedId: data['related_id'],
       isRead: data['is_read'] ?? false,
-      createdAt: DateTime.parse(data['created_at']),
+      createdAt: parseDateTime(data['created_at']),
     );
   }
 

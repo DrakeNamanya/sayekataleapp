@@ -20,6 +20,16 @@ class Conversation {
   });
 
   factory Conversation.fromFirestore(Map<String, dynamic> data, String id) {
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
     return Conversation(
       id: id,
       participantIds: List<String>.from(data['participant_ids'] ?? []),
@@ -28,11 +38,11 @@ class Conversation {
       ),
       lastMessage: data['last_message'],
       lastMessageTime: data['last_message_time'] != null
-          ? DateTime.parse(data['last_message_time'])
+          ? parseDateTime(data['last_message_time'])
           : null,
       unreadCount: Map<String, int>.from(data['unread_count'] ?? {}),
-      createdAt: DateTime.parse(data['created_at']),
-      updatedAt: DateTime.parse(data['updated_at']),
+      createdAt: parseDateTime(data['created_at']),
+      updatedAt: parseDateTime(data['updated_at']),
     );
   }
 
@@ -73,6 +83,16 @@ class Message {
   });
 
   factory Message.fromFirestore(Map<String, dynamic> data, String id) {
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
     return Message(
       id: id,
       conversationId: data['conversation_id'] ?? '',
@@ -85,7 +105,7 @@ class Message {
       ),
       attachmentUrl: data['attachment_url'],
       isRead: data['is_read'] ?? false,
-      createdAt: DateTime.parse(data['created_at']),
+      createdAt: parseDateTime(data['created_at']),
     );
   }
 
