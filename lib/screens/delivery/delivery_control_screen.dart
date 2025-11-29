@@ -275,7 +275,10 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
       }
 
       // Complete delivery with photo URL
-      await _trackingService.completeDelivery(tracking.id, photoUrl: photoUrl);
+      await _trackingService.completeDelivery(
+        tracking.id,
+        deliveryPhotoUrl: photoUrl,
+      );
 
       // Close loading dialog
       if (mounted) Navigator.pop(context);
