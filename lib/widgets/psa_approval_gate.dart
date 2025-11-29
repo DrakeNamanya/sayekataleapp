@@ -78,6 +78,9 @@ class PSAApprovalGate extends StatelessWidget {
 
     switch (status) {
       case VerificationStatus.pending:
+        iconData = Icons.pending_actions;
+        iconColor = Colors.blue;
+        break;
       case VerificationStatus.inReview:
         iconData = Icons.hourglass_empty;
         iconColor = Colors.orange;
@@ -140,9 +143,9 @@ class PSAApprovalGate extends StatelessWidget {
     String message;
     switch (status) {
       case VerificationStatus.pending:
-        message = 'Your PSA account is awaiting admin approval. '
-            'This process usually takes 1-2 business days. '
-            'You will be notified once your account is verified.';
+        message = 'To access the PSA dashboard and start selling, you need to complete your business verification. '
+            'This includes providing your business information, tax details, bank account, and uploading required documents. '
+            'Click the button below to get started.';
         break;
       case VerificationStatus.inReview:
         message = 'Our admin team is currently reviewing your account details. '
@@ -205,8 +208,27 @@ class PSAApprovalGate extends StatelessWidget {
       );
     }
 
+    // For pending status, show button to submit verification
     return Column(
       children: [
+        // 🔧 NEW: Submit Verification Button for pending PSAs
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // Navigate to verification form
+              Navigator.of(context).pushReplacementNamed('/psa-verification-form');
+            },
+            icon: const Icon(Icons.verified_user),
+            label: const Text('Submit Business Verification'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -220,7 +242,7 @@ class PSAApprovalGate extends StatelessWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'You will receive a notification once your account is approved.',
+                  'Complete your business verification to access the dashboard.',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppTheme.textPrimary,
