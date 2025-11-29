@@ -38,7 +38,10 @@ class Farmer {
   /// Get formatted distance string
   String getDistanceText(Location? otherLocation) {
     final distance = getDistanceFrom(otherLocation);
-    if (distance == null) return 'Distance unknown';
+    // If distance is null, 0, or invalid, show location instead
+    if (distance == null || distance == 0) {
+      return location?.district ?? 'Location not set';
+    }
 
     if (distance < 1) {
       return '${(distance * 1000).toStringAsFixed(0)}m away';

@@ -99,23 +99,60 @@ class _AppLoaderScreenState extends State<AppLoaderScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+        // App Logo/Icon
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.agriculture, // Farm/agriculture icon for app
+            size: 64,
+            color: Colors.white,
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 40),
+        
+        // App Name
         Text(
-          'Loading SayeKatale...',
+          'SAYE KATALE',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textPrimary,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryColor,
+            letterSpacing: 1.5,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Connecting to services',
+          'Connecting Farmers & Buyers',
           style: TextStyle(
             fontSize: 14,
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 40),
+        
+        // Loading Indicator
+        CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+          strokeWidth: 3,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Preparing your experience...',
+          style: TextStyle(
+            fontSize: 13,
             color: AppTheme.textSecondary,
           ),
         ),

@@ -349,6 +349,11 @@ class Location {
   /// Get formatted distance string
   String distanceTextTo(Location other) {
     final distance = distanceTo(other);
+    // If distance is 0, it means locations are invalid or not set
+    if (distance == 0) {
+      final district = other.district ?? '';
+      return district.isNotEmpty ? district : 'Location not set';
+    }
     if (distance < 1) {
       return '${(distance * 1000).toStringAsFixed(0)}m away';
     } else {

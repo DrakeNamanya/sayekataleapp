@@ -15,7 +15,11 @@ class ProductWithFarmer {
 
   /// Get formatted distance string
   String get distanceText {
-    if (distanceKm == null) return 'Distance unknown';
+    // If distance is null or 0, show location instead of misleading distance
+    if (distanceKm == null || distanceKm == 0) {
+      // Return farmer's district/location instead
+      return farmer.location?.district ?? 'Location not set';
+    }
     if (distanceKm! < 1) {
       return '${(distanceKm! * 1000).toStringAsFixed(0)}m away';
     } else {
