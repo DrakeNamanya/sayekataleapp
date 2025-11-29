@@ -18,6 +18,7 @@ class ImageStorageService {
     required String userId,
     String? customName,
     bool compress = true,
+    bool useUserSubfolder = true, // NEW: Control userId subfolder
   }) async {
     try {
       if (kDebugMode) {
@@ -84,9 +85,13 @@ class ImageStorageService {
       }
 
       // Create storage path
-      final storagePath = '$folder/$userId/$filename';
+      // For PSA verifications, upload directly to folder without userId subfolder
+      final storagePath = useUserSubfolder 
+          ? '$folder/$userId/$filename'
+          : '$folder/$filename';
       if (kDebugMode) {
         debugPrint('📁 Storage path: $storagePath');
+        debugPrint('   Use user subfolder: $useUserSubfolder');
       }
       final storageRef = _storage.ref().child(storagePath);
 

@@ -332,8 +332,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           imageFile: _nationalIdFile!,
           folder: 'psa_verifications',
           userId: psaId,
-          customName: 'national_id_${DateTime.now().millisecondsSinceEpoch}',
+          customName: 'national_id_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
+          useUserSubfolder: false, // Upload directly to psa_verifications/
         );
       }
 
@@ -342,8 +343,9 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
           imageFile: _tradeLicenseFile!,
           folder: 'psa_verifications',
           userId: psaId,
-          customName: 'trade_license_${DateTime.now().millisecondsSinceEpoch}',
+          customName: 'trade_license_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
+          useUserSubfolder: false, // Upload directly to psa_verifications/
         );
       }
 
