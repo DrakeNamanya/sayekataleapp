@@ -41,6 +41,12 @@ class PSAVerificationService {
         _logger.i('✅ Verification submitted successfully to Firestore');
       }
 
+      // 🔧 UPDATE USER'S VERIFICATION STATUS to inReview
+      await _updateUserVerificationStatus(
+        verification.psaId,
+        'inReview', // Change from 'pending' to 'inReview'
+      );
+
       // 🔔 SEND NOTIFICATION TO ALL ADMINS
       await _notifyAdmins(verification);
     } catch (e, st) {
@@ -210,6 +216,34 @@ class PSAVerificationService {
         stackTrace: st,
       );
       return false;
+    }
+  }
+
+  /// Update user's verification status in users collection
+  Future<void> _updateUserVerificationStatus(
+    String psaId,
+    String status,
+  ) async {
+    try {
+      if (kDebugMode) {
+        _logger.i('🔄 Updating user verification status to: $status');
+      }
+
+      await _firestore.collection('users').doc(psaId).update({
+        'verification_status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      if (kDebugMode) {
+        _logger.i('✅ User verification status updated successfully');
+      }
+    } catch (e, st) {
+      _logger.e(
+        '❌ Failed to update user verification status: $e',
+        error: e,
+        stackTrace: st,
+      );
+      // Don't throw - this shouldn't block verification submission
     }
   }
 }
