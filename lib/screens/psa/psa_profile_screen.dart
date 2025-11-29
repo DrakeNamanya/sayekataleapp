@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
@@ -500,6 +501,30 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
 
                         try {
                           await authProvider.logout();
+                          
+                          // 🔧 FIX: Wait for AuthProvider to update authentication state
+                          if (kDebugMode) {
+                            debugPrint('⏳ PSA PROFILE - Waiting for AuthProvider to clear user...');
+                          }
+
+                          // Poll until user is cleared (max 5 seconds)
+                          int attempts = 0;
+                          while (authProvider.isAuthenticated && attempts < 10) {
+                            await Future.delayed(const Duration(milliseconds: 500));
+                            attempts++;
+
+                            if (kDebugMode) {
+                              debugPrint(
+                                '⏳ PSA PROFILE - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}',
+                              );
+                            }
+                          }
+
+                          if (kDebugMode) {
+                            debugPrint(
+                              '✅ PSA PROFILE - AuthProvider cleared user: isAuthenticated = ${authProvider.isAuthenticated}',
+                            );
+                          }
                           
                           if (context.mounted) {
                             Navigator.pop(context);

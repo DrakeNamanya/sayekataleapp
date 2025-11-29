@@ -349,6 +349,30 @@ class SHGProfileScreen extends StatelessWidget {
                         try {
                           await authProvider.logout();
                           
+                          // 🔧 FIX: Wait for AuthProvider to update authentication state
+                          if (kDebugMode) {
+                            debugPrint('⏳ SHG PROFILE - Waiting for AuthProvider to clear user...');
+                          }
+
+                          // Poll until user is cleared (max 5 seconds)
+                          int attempts = 0;
+                          while (authProvider.isAuthenticated && attempts < 10) {
+                            await Future.delayed(const Duration(milliseconds: 500));
+                            attempts++;
+
+                            if (kDebugMode) {
+                              debugPrint(
+                                '⏳ SHG PROFILE - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}',
+                              );
+                            }
+                          }
+
+                          if (kDebugMode) {
+                            debugPrint(
+                              '✅ SHG PROFILE - AuthProvider cleared user: isAuthenticated = ${authProvider.isAuthenticated}',
+                            );
+                          }
+                          
                           if (context.mounted) {
                             // Close loading dialog
                             Navigator.pop(context);
