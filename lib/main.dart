@@ -171,8 +171,9 @@ class MyApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode
             .light, // Default to light mode, user can change in settings
-        home: const AppLoaderScreen(), // Mobile app starts with loader/splash
+        home: const SplashScreen(), // Mobile app starts with animated splash screen
         routes: {
+          '/splash': (context) => const SplashScreen(),
           '/app-loader': (context) => const AppLoaderScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/shg-dashboard': (context) =>
