@@ -2,12 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:logger/logger.dart';
 import '../models/psa_verification.dart';
+import '../models/notification.dart';
+import 'notification_service.dart';
 
 final _logger = Logger();
 
 class PSAVerificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'psa_verifications';
+  final NotificationService _notificationService = NotificationService();
 
   /// Submit a new PSA verification request
   Future<void> submitVerification(PsaVerification verification) async {
@@ -37,6 +40,9 @@ class PSAVerificationService {
       if (kDebugMode) {
         _logger.i('✅ Verification submitted successfully to Firestore');
       }
+
+      // 🔔 SEND NOTIFICATION TO ALL ADMINS
+      await _notifyAdmins(verification);
     } catch (e, st) {
       // Always log errors (include stack trace)
       _logger.e(
@@ -45,6 +51,65 @@ class PSAVerificationService {
         stackTrace: st,
       );
       throw Exception('Failed to submit verification: $e');
+    }
+  }
+
+  /// Send notification to all admins about new PSA verification submission
+  Future<void> _notifyAdmins(PsaVerification verification) async {
+    try {
+      if (kDebugMode) {
+        _logger.i('🔔 Sending notifications to admins...');
+      }
+
+      // Get all admin users
+      final adminSnapshot = await _firestore
+          .collection('admin_users')
+          .where('is_active', isEqualTo: true)
+          .get();
+
+      if (adminSnapshot.docs.isEmpty) {
+        if (kDebugMode) {
+          _logger.w('⚠️ No active admin users found to notify');
+        }
+        return;
+      }
+
+      // Send notification to each admin
+      int notificationsSent = 0;
+      for (final adminDoc in adminSnapshot.docs) {
+        try {
+          await _notificationService.createNotification(
+            userId: adminDoc.id,
+            type: NotificationType.general,
+            title: '🔔 New PSA Verification Submitted',
+            message:
+                '${verification.contactPersonName} from ${verification.businessName} has submitted verification documents for review.',
+            actionUrl: '/admin/psa-verifications/${verification.id}',
+            relatedId: verification.id,
+          );
+          notificationsSent++;
+        } catch (e) {
+          if (kDebugMode) {
+            _logger.w('⚠️ Failed to notify admin ${adminDoc.id}: $e');
+          }
+          // Continue notifying other admins even if one fails
+        }
+      }
+
+      if (kDebugMode) {
+        _logger.i(
+          '✅ Sent $notificationsSent notification(s) to admin(s)',
+        );
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        _logger.e(
+          '❌ Error notifying admins: $e',
+          error: e,
+          stackTrace: st,
+        );
+      }
+      // Don't throw - notification failure shouldn't block verification submission
     }
   }
 
