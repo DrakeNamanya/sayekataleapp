@@ -109,18 +109,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
         // Poll until user is loaded (max 10 seconds)
         int attempts = 0;
-        while (!authProvider.isAuthenticated && attempts < 20) {
+        while ((!authProvider.isAuthenticated || authProvider.currentUser == null) && attempts < 20) {
           await Future.delayed(const Duration(milliseconds: 500));
           attempts++;
 
           if (kDebugMode) {
             debugPrint(
-              '⏳ ONBOARDING - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}',
+              '⏳ ONBOARDING - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}, currentUser = ${authProvider.currentUser != null ? "loaded" : "null"}',
             );
           }
         }
 
-        if (!authProvider.isAuthenticated) {
+        if (!authProvider.isAuthenticated || authProvider.currentUser == null) {
           if (kDebugMode) {
             debugPrint(
               '⚠️ ONBOARDING - AuthProvider did not load user after 10 seconds',
