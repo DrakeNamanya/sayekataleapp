@@ -188,7 +188,8 @@ class MyApp extends StatelessWidget {
           '/admin': (context) => const AdminWebPortal(), // Admin Web Portal (Desktop)
           
           // Web Portal Landing Pages
-          '/': (context) => const WebLandingPage(), // Public landing page
+          '/': (context) => const AppLoaderScreen(), // Android app (testing on web)
+          '/web': (context) => const WebLandingPage(), // Public landing page (moved to /web)
           '/sme': (context) => const SMEPortalPage(), // SME portal landing
           '/shg': (context) => const SHGPortalPage(), // SHG portal landing
           '/psa': (context) => const PSAPortalPage(), // PSA portal landing
