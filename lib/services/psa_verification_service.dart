@@ -83,7 +83,7 @@ class PSAVerificationService {
             type: NotificationType.general,
             title: '🔔 New PSA Verification Submitted',
             message:
-                '${verification.contactPersonName} from ${verification.businessName} has submitted verification documents for review.',
+                '${verification.contactPerson} from ${verification.businessName} has submitted verification documents for review.',
             actionUrl: '/admin/psa-verifications/${verification.id}',
             relatedId: verification.id,
           );
