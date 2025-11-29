@@ -305,26 +305,45 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
       }
 
       // Upload new documents to Firebase Storage
+      // PSA verifications go to: gs://sayekataleapp.firebasestorage.app/psa_verifications/
+      if (kDebugMode) {
+        debugPrint('📤 Starting document uploads...');
+      }
+
       if (_businessLicenseFile != null && _businessLicenseUrl == null) {
+        if (kDebugMode) {
+          debugPrint('📤 Uploading business license...');
+        }
         _businessLicenseUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _businessLicenseFile!,
           folder: 'psa_verifications',
           userId: psaId,
           customName:
-              'business_license_${DateTime.now().millisecondsSinceEpoch}',
+              'business_license_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
+          useUserSubfolder: false, // Upload directly to psa_verifications/
         );
+        if (kDebugMode) {
+          debugPrint('✅ Business license uploaded: $_businessLicenseUrl');
+        }
       }
 
       if (_taxIdDocumentFile != null && _taxIdDocumentUrl == null) {
+        if (kDebugMode) {
+          debugPrint('📤 Uploading tax ID document...');
+        }
         _taxIdDocumentUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _taxIdDocumentFile!,
           folder: 'psa_verifications',
           userId: psaId,
           customName:
-              'tax_id_document_${DateTime.now().millisecondsSinceEpoch}',
+              'tax_id_document_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
+          useUserSubfolder: false, // Upload directly to psa_verifications/
         );
+        if (kDebugMode) {
+          debugPrint('✅ Tax ID document uploaded: $_taxIdDocumentUrl');
+        }
       }
 
       if (_nationalIdFile != null && _nationalIdUrl == null) {
@@ -413,12 +432,31 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         );
         Navigator.pop(context, true); // Return true to indicate success
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ SUBMISSION ERROR: $e');
+        debugPrint('Stack trace: $stackTrace');
+      }
+      
       if (mounted) {
+        // Show detailed error message
+        String errorMessage = 'Failed to submit verification';
+        
+        if (e.toString().contains('upload')) {
+          errorMessage = 'Failed to upload documents. Please check your internet connection and try again.';
+        } else if (e.toString().contains('auth')) {
+          errorMessage = 'Authentication error. Please logout and login again.';
+        } else if (e.toString().contains('permission')) {
+          errorMessage = 'Permission denied. Please contact support.';
+        } else {
+          errorMessage = 'Failed to submit: ${e.toString()}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
