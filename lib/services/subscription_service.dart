@@ -399,4 +399,124 @@ class SubscriptionService {
       }
     }
   }
+
+  // ============================================================================
+  // FARMER DIRECTORY METHODS (for SME buyers)
+  // ============================================================================
+
+  /// Check if SME user has active farmer directory subscription
+  Future<bool> hasActiveFarmerDirectorySubscription(String userId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('subscriptions')
+          .where('user_id', isEqualTo: userId)
+          .where('type', isEqualTo: 'farmerDirectory')
+          .where('status', isEqualTo: 'active')
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        final subscription = Subscription.fromFirestore(doc.data(), doc.id);
+        if (subscription.isActive) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error checking farmer directory subscription: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get all farmer contacts (for premium SME users)
+  Future<List<FarmerContact>> getAllFarmerContacts() async {
+    try {
+      // Query uses 'role' field for farmers (SHG/PSA with products)
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', whereIn: ['shg', 'psa'])
+          .get();
+
+      final contacts = <FarmerContact>[];
+      
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final userId = doc.id;
+        
+        // Get products for this farmer
+        final productsSnapshot = await _firestore
+            .collection('products')
+            .where('farmer_id', isEqualTo: userId)
+            .get();
+        
+        if (productsSnapshot.docs.isNotEmpty) {
+          // Extract unique product categories
+          final productCategories = productsSnapshot.docs
+              .map((p) => p.data()['category'] as String? ?? 'Other')
+              .toSet()
+              .toList();
+          
+          contacts.add(FarmerContact(
+            id: userId,
+            businessName: data['business_name'] ?? data['name'] ?? 'Unknown',
+            phoneNumber: data['phone'] ?? data['phone_number'] ?? '',
+            district: data['district'] ?? '',
+            primaryProducts: productCategories,
+            isVerified: data['is_verified'] ?? false,
+          ));
+        }
+      }
+
+      // Sort by business name in memory
+      contacts.sort(
+        (a, b) => a.businessName.toLowerCase().compareTo(b.businessName.toLowerCase()),
+      );
+
+      if (kDebugMode) {
+        debugPrint('✅ Fetched ${contacts.length} farmer contacts');
+      }
+
+      return contacts;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error fetching farmer contacts: $e');
+      }
+      throw Exception('Failed to fetch farmer contacts: $e');
+    }
+  }
+}
+
+/// Farmer contact model for premium directory
+class FarmerContact {
+  final String id;
+  final String businessName;
+  final String phoneNumber;
+  final String district;
+  final List<String> primaryProducts;
+  final bool isVerified;
+
+  FarmerContact({
+    required this.id,
+    required this.businessName,
+    required this.phoneNumber,
+    required this.district,
+    required this.primaryProducts,
+    this.isVerified = false,
+  });
+
+  factory FarmerContact.fromFirestore(Map<String, dynamic> data, String id) {
+    return FarmerContact(
+      id: id,
+      businessName: data['business_name'] ?? data['name'] ?? 'Unknown',
+      phoneNumber: data['phone'] ?? data['phone_number'] ?? '',
+      district: data['district'] ?? '',
+      primaryProducts: (data['primary_products'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      isVerified: data['is_verified'] ?? false,
+    );
+  }
 }
