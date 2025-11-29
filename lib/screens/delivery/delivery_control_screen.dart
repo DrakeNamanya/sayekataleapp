@@ -5,6 +5,10 @@ import '../../services/delivery_tracking_service.dart';
 import '../../providers/auth_provider.dart';
 import 'live_tracking_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Delivery control screen for delivery persons (SHG farmers and PSA suppliers)
 /// Allows starting, updating, completing, and cancelling deliveries
@@ -169,16 +173,75 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
     }
   }
 
-  /// Complete delivery
+  /// Complete delivery with photo proof
   Future<void> _completeDelivery(DeliveryTracking tracking) async {
     try {
-      // Show confirmation dialog
+      // Show photo capture dialog
+      final shouldTakePhoto = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('📸 Delivery Photo'),
+          content: const Text(
+            'Would you like to take a photo as proof of delivery?\n\n'
+            'This helps confirm successful delivery to the recipient.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Skip Photo'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Take Photo'),
+            ),
+          ],
+        ),
+      );
+
+      String? photoUrl;
+
+      // Capture photo if user chose to
+      if (shouldTakePhoto == true) {
+        photoUrl = await _captureDeliveryPhoto(tracking.id);
+        if (photoUrl == null) {
+          // User cancelled photo capture
+          if (mounted) {
+            final continueWithoutPhoto = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Complete Without Photo?'),
+                content: const Text(
+                  'Do you want to complete the delivery without a photo?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Complete Anyway'),
+                  ),
+                ],
+              ),
+            );
+            if (continueWithoutPhoto != true) return;
+          }
+        }
+      }
+
+      // Show final confirmation
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Complete Delivery'),
-          content: const Text(
+          title: const Text('✅ Complete Delivery'),
+          content: Text(
             'Mark this delivery as completed?\n\n'
+            '${photoUrl != null ? "✓ Photo captured\n" : ""}'
             'GPS tracking will stop and the recipient will be notified.',
           ),
           actions: [
@@ -200,13 +263,31 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
 
       if (confirmed != true) return;
 
-      // Complete delivery
-      await _trackingService.completeDelivery(tracking.id);
+      // Show loading
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      // Complete delivery with photo URL
+      await _trackingService.completeDelivery(tracking.id, photoUrl: photoUrl);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Delivery completed successfully!'),
+          SnackBar(
+            content: Text(
+              photoUrl != null
+                  ? '✅ Delivery completed with photo proof!'
+                  : '✅ Delivery completed successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -215,6 +296,9 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
       // Reload deliveries
       await _loadDeliveries();
     } catch (e) {
+      // Close loading dialog if open
+      if (mounted) Navigator.pop(context);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -223,6 +307,121 @@ class _DeliveryControlScreenState extends State<DeliveryControlScreen>
           ),
         );
       }
+    }
+  }
+
+  /// Capture delivery photo and upload to Firebase Storage
+  Future<String?> _captureDeliveryPhoto(String trackingId) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+
+      // Show photo source selection
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Select Photo Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Camera'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (source == null) return null;
+
+      // Pick image
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image == null) return null;
+
+      // Show uploading dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Uploading photo...'),
+              ],
+            ),
+          ),
+        );
+      }
+
+      // Upload to Firebase Storage
+      final String fileName =
+          'delivery_photos/$trackingId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final Reference storageRef =
+          FirebaseStorage.instance.ref().child(fileName);
+
+      UploadTask uploadTask;
+      if (kIsWeb) {
+        // Web: upload bytes
+        final bytes = await image.readAsBytes();
+        uploadTask = storageRef.putData(
+          bytes,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
+      } else {
+        // Mobile: upload file
+        final File file = File(image.path);
+        uploadTask = storageRef.putFile(
+          file,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
+      }
+
+      // Wait for upload to complete
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Close uploading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📸 Photo uploaded successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      return downloadUrl;
+    } catch (e) {
+      // Close uploading dialog if open
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error capturing photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
     }
   }
 
