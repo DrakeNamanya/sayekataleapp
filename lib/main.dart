@@ -20,6 +20,10 @@ import 'screens/psa/psa_dashboard_screen.dart';
 import 'screens/test/validation_test_screen.dart';
 import 'screens/auth/admin_login_screen.dart';
 import 'screens/admin/admin_web_portal.dart';
+import 'screens/web/web_landing_page.dart';
+import 'screens/web/sme_portal_page.dart';
+import 'screens/web/shg_portal_page.dart';
+import 'screens/web/psa_portal_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'services/firebase_test.dart';
@@ -167,7 +171,7 @@ class MyApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode
             .light, // Default to light mode, user can change in settings
-        home: const SplashScreen(),
+        home: const WebLandingPage(), // Web landing page as default
         routes: {
           '/app-loader': (context) => const AppLoaderScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
@@ -181,6 +185,12 @@ class MyApp extends StatelessWidget {
               const ValidationTestScreen(), // Validation Test Screen
           '/admin-login': (context) => const AdminLoginScreen(), // Admin Login
           '/admin': (context) => const AdminWebPortal(), // Admin Web Portal (Desktop)
+          
+          // Web Portal Landing Pages
+          '/': (context) => const WebLandingPage(), // Public landing page
+          '/sme': (context) => const SMEPortalPage(), // SME portal landing
+          '/shg': (context) => const SHGPortalPage(), // SHG portal landing
+          '/psa': (context) => const PSAPortalPage(), // PSA portal landing
         },
       ),
     );
