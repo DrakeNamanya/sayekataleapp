@@ -96,6 +96,26 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
+    // PSA Verifications collection
+    match /psa_verifications/{verificationId} {
+      // PSA users can read their own verification
+      allow read: if isAuthenticated() && (resource.data.psa_id == request.auth.uid || isAdmin());
+      
+      // PSA users can create and update their own verification (for initial submission)
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+                       (resource.data.psa_id == request.auth.uid || isAdmin());
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // User complaints collection
+    match /user_complaints/{complaintId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
     // Allow all other collections (for development)
     match /{document=**} {
       allow read, write: if isAuthenticated();
