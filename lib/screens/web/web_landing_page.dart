@@ -667,27 +667,26 @@ class WebLandingPage extends StatelessWidget {
           const SizedBox(height: 40),
           const Divider(color: Colors.white24),
           const SizedBox(height: 20),
-          Text(
-            Column(
-              children: [
-                Text(
-                  'Developed and Powered by DATACOLLECTORS LTD',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white70,
-                  ),
+          Column(
+            children: [
+              const Text(
+                'Developed and Powered by DATACOLLECTORS LTD',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white70,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '© ${DateTime.now().year} SAYE KATALE. All rights reserved.',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white54,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '© ${DateTime.now().year} SAYE KATALE. All rights reserved.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white54,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
     );
