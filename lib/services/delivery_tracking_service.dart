@@ -99,16 +99,23 @@ class DeliveryTrackingService {
   }
 
   /// Complete delivery
-  Future<void> completeDelivery(String trackingId) async {
+  Future<void> completeDelivery(String trackingId, {String? deliveryPhotoUrl}) async {
     try {
       // Get tracking to access order ID
       final tracking = await getDeliveryTracking(trackingId);
 
-      await _firestore.collection('delivery_tracking').doc(trackingId).update({
+      final updateData = {
         'status': DeliveryStatus.completed.toString().split('.').last,
         'completed_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // Add delivery photo URL if provided
+      if (deliveryPhotoUrl != null) {
+        updateData['delivery_photo_url'] = deliveryPhotoUrl;
+      }
+
+      await _firestore.collection('delivery_tracking').doc(trackingId).update(updateData);
 
       // Stop location tracking
       stopLocationTracking();

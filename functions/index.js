@@ -588,6 +588,159 @@ exports.onReceiptGenerated = onDocumentCreated("receipts/{receiptId}", async (ev
 });
 
 // ============================================================================
+// CLOUD FUNCTIONS - DELIVERY TRACKING NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Trigger: Delivery tracking created
+ * Action: Notify buyer that tracking is available
+ */
+exports.onDeliveryTrackingCreated = onDocumentCreated("delivery_tracking/{trackingId}", async (event) => {
+  const tracking = event.data.data();
+  const trackingId = event.params.trackingId;
+
+  logger.info(`📦 Delivery tracking created: ${trackingId}`);
+  logger.info(`   Order ID: ${tracking.order_id}`);
+  logger.info(`   Recipient: ${tracking.recipient_id}`);
+
+  try {
+    // Get recipient's FCM token
+    const recipientFCMToken = await getUserFCMToken(tracking.recipient_id);
+
+    if (recipientFCMToken) {
+      // Send FCM push notification
+      await sendFCMNotification(
+          recipientFCMToken,
+          "📦 Delivery Tracking Available",
+          `Track your order from ${tracking.delivery_person_name}`,
+          {
+            type: "delivery_tracking",
+            tracking_id: trackingId,
+            order_id: tracking.order_id,
+            action_url: `/track-delivery/${trackingId}`,
+          },
+      );
+    }
+
+    // Create in-app notification
+    await createInAppNotification(
+        tracking.recipient_id,
+        "delivery",
+        "📦 Delivery Tracking Available",
+        `Track your order from ${tracking.delivery_person_name}`,
+        `/track-delivery/${trackingId}`,
+        {tracking_id: trackingId, order_id: tracking.order_id},
+    );
+
+    logger.info(`✅ Delivery tracking notification sent to recipient: ${tracking.recipient_id}`);
+  } catch (error) {
+    logger.error("❌ Error sending delivery tracking notification:", error);
+  }
+});
+
+/**
+ * Trigger: Delivery status updated
+ * Action: Notify buyer on delivery progress (started, in progress, completed)
+ */
+exports.onDeliveryStatusUpdate = onDocumentUpdated("delivery_tracking/{trackingId}", async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  const trackingId = event.params.trackingId;
+
+  // Check if status changed
+  if (beforeData.status === afterData.status) {
+    logger.info(`Delivery ${trackingId}: status unchanged, skipping notification`);
+    return;
+  }
+
+  logger.info(`🚚 Delivery status changed: ${beforeData.status} → ${afterData.status}`);
+  logger.info(`   Tracking ID: ${trackingId}`);
+  logger.info(`   Recipient: ${afterData.recipient_id}`);
+
+  try {
+    let notificationTitle = "";
+    let notificationBody = "";
+    let notificationType = "delivery";
+
+    // Determine notification content based on status
+    switch (afterData.status) {
+      case "confirmed":
+        notificationTitle = "✅ Delivery Confirmed";
+        notificationBody = `${afterData.delivery_person_name} confirmed your delivery`;
+        break;
+
+      case "inProgress":
+        notificationTitle = "🚚 Delivery Started";
+        notificationBody = `${afterData.delivery_person_name} is on the way with your order`;
+        break;
+
+      case "completed":
+        notificationTitle = "✅ Delivery Completed";
+        notificationBody = `Your order from ${afterData.delivery_person_name} has been delivered`;
+        notificationType = "success";
+        break;
+
+      case "cancelled":
+        notificationTitle = "❌ Delivery Cancelled";
+        notificationBody = `Delivery from ${afterData.delivery_person_name} was cancelled`;
+        notificationType = "alert";
+        break;
+
+      case "failed":
+        notificationTitle = "⚠️ Delivery Failed";
+        notificationBody = `Delivery from ${afterData.delivery_person_name} could not be completed`;
+        notificationType = "alert";
+        break;
+
+      default:
+        logger.info(`Unknown delivery status: ${afterData.status}, skipping notification`);
+        return;
+    }
+
+    // Get recipient's FCM token
+    const recipientFCMToken = await getUserFCMToken(afterData.recipient_id);
+
+    if (recipientFCMToken) {
+      // Send FCM push notification
+      await sendFCMNotification(
+          recipientFCMToken,
+          notificationTitle,
+          notificationBody,
+          {
+            type: notificationType,
+            tracking_id: trackingId,
+            order_id: afterData.order_id,
+            delivery_status: afterData.status,
+            action_url: afterData.status === "inProgress" ?
+              `/track-delivery/${trackingId}` :
+              `/orders/${afterData.order_id}`,
+          },
+      );
+    }
+
+    // Create in-app notification
+    await createInAppNotification(
+        afterData.recipient_id,
+        notificationType,
+        notificationTitle,
+        notificationBody,
+        afterData.status === "inProgress" ?
+          `/track-delivery/${trackingId}` :
+          `/orders/${afterData.order_id}`,
+        {
+          tracking_id: trackingId,
+          order_id: afterData.order_id,
+          delivery_status: afterData.status,
+        },
+    );
+
+    logger.info(`✅ Delivery status notification sent to recipient: ${afterData.recipient_id}`);
+  } catch (error) {
+    logger.error("❌ Error sending delivery status notification:", error);
+  }
+});
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -600,3 +753,5 @@ logger.info("   - onPSAVerificationSubmitted");
 logger.info("   - onPSAVerificationStatusUpdate");
 logger.info("   - onLowStockAlert");
 logger.info("   - onReceiptGenerated");
+logger.info("   - onDeliveryTrackingCreated");
+logger.info("   - onDeliveryStatusUpdate");

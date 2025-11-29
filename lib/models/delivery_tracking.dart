@@ -30,6 +30,7 @@ class DeliveryTracking {
   final int? estimatedDuration; // in minutes
   final String? notes; // Special instructions
   final List<LocationHistory> locationHistory; // GPS breadcrumb trail
+  final String? deliveryPhotoUrl; // Photo proof of delivery completion
 
   DeliveryTracking({
     required this.id,
@@ -53,6 +54,7 @@ class DeliveryTracking {
     this.estimatedDuration,
     this.notes,
     this.locationHistory = const [],
+    this.deliveryPhotoUrl,
   });
 
   /// Check if delivery is in progress
@@ -151,6 +153,7 @@ class DeliveryTracking {
               ?.map((e) => LocationHistory.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      deliveryPhotoUrl: data['delivery_photo_url'],
     );
   }
 
@@ -176,6 +179,7 @@ class DeliveryTracking {
       'estimated_duration': estimatedDuration,
       'notes': notes,
       'location_history': locationHistory.map((e) => e.toMap()).toList(),
+      'delivery_photo_url': deliveryPhotoUrl,
     };
   }
 }
