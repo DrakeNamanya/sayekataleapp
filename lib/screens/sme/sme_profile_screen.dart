@@ -386,10 +386,15 @@ class SMEProfileScreen extends StatelessWidget {
                           }
                           
                           if (context.mounted) {
+                            // Close the confirmation dialog
                             Navigator.pop(context);
-                            Navigator.pushReplacementNamed(
+                            
+                            // Navigate to onboarding and remove all previous routes
+                            // This prevents black screen by clearing the entire navigation stack
+                            Navigator.pushNamedAndRemoveUntil(
                               context,
                               '/onboarding',
+                              (route) => false, // Remove all previous routes
                             );
                           }
                         } catch (e) {
