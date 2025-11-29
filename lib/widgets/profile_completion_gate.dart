@@ -24,8 +24,17 @@ class ProfileCompletionGate extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
 
+    // If user is null, show loading with timeout fallback
     if (user == null) {
-      return const Center(child: CircularProgressIndicator());
+      // Navigate to onboarding if still null after brief wait
+      Future.delayed(const Duration(seconds: 2), () {
+        if (authProvider.currentUser == null && context.mounted) {
+          Navigator.of(context).pushReplacementNamed('/onboarding');
+        }
+      });
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     // Check if profile is complete

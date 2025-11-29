@@ -152,6 +152,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         }
       }
 
+      // 🔧 FIX: Wait for Firestore document to be fully written and AuthProvider to load
+      // This prevents the "black screen with loading" issue when PSA registers
+      if (kDebugMode) {
+        debugPrint('⏳ Waiting for user document to be fully synced...');
+      }
+      await Future.delayed(const Duration(seconds: 2));
+      
+      if (kDebugMode) {
+        debugPrint('✅ User document should be synced now, navigating to dashboard');
+      }
+
       if (mounted) {
         String route;
         switch (_selectedRole) {
