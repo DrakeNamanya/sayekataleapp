@@ -27,13 +27,26 @@ class ProfileCompletionGate extends StatelessWidget {
     // If user is null, show loading with timeout fallback
     if (user == null) {
       // Navigate to onboarding if still null after brief wait
-      Future.delayed(const Duration(seconds: 2), () {
-        if (authProvider.currentUser == null && context.mounted) {
-          Navigator.of(context).pushReplacementNamed('/onboarding');
+      Future.delayed(const Duration(seconds: 3), () {
+        if (context.mounted && authProvider.currentUser == null) {
+          // Only navigate if we're still on this screen
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/onboarding',
+            (route) => false, // Remove all previous routes
+          );
         }
       });
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading your profile...'),
+            ],
+          ),
+        ),
       );
     }
 

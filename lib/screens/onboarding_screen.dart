@@ -173,7 +173,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             route = '/sme-dashboard';
             break;
           case UserRole.psa:
-            route = '/psa-dashboard';
+            // 🔧 NEW FIX: For NEW PSA registrations, go to verification form first
+            // For existing PSA logins, go to dashboard (which has PSAApprovalGate)
+            if (_isSignUpMode) {
+              route = '/psa-verification-form'; // NEW PSA → Verification Form
+            } else {
+              route = '/psa-dashboard'; // EXISTING PSA → Dashboard (with gate)
+            }
             break;
           default:
             route = '/shg-dashboard';

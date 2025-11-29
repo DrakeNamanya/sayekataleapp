@@ -36,7 +36,7 @@ class PSAApprovalGate extends StatelessWidget {
       return child;
     }
 
-    // Block access with appropriate message
+    // Block access with appropriate message for pending/rejected/inReview
     return _buildBlockedScreen(context, verificationStatus);
   }
 

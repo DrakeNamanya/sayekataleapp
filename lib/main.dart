@@ -17,6 +17,7 @@ import 'screens/app_loader_screen.dart';
 import 'screens/shg/shg_dashboard_screen.dart';
 import 'screens/sme/sme_dashboard_screen.dart';
 import 'screens/psa/psa_dashboard_screen.dart';
+import 'screens/psa/psa_verification_form_screen.dart';
 import 'screens/test/validation_test_screen.dart';
 import 'screens/auth/admin_login_screen.dart';
 import 'screens/admin/admin_web_portal.dart';
@@ -182,6 +183,8 @@ class MyApp extends StatelessWidget {
               const SMEDashboardScreen(), // Buyer (SME)
           '/psa-dashboard': (context) =>
               const PSADashboardScreen(), // Supplier (PSA)
+          '/psa-verification-form': (context) =>
+              const PSAVerificationFormScreen(), // PSA Verification Form
           '/validation-test': (context) =>
               const ValidationTestScreen(), // Validation Test Screen
           '/admin-login': (context) => const AdminLoginScreen(), // Admin Login
