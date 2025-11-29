@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
-import '../../models/subscription.dart';
 import '../../services/subscription_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
@@ -1006,39 +1005,6 @@ class _PremiumFarmerDirectoryScreenState
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Farmer contact model for directory
-class FarmerContact {
-  final String id;
-  final String businessName;
-  final String phoneNumber;
-  final String district;
-  final List<String> primaryProducts;
-  final bool isVerified;
-
-  FarmerContact({
-    required this.id,
-    required this.businessName,
-    required this.phoneNumber,
-    required this.district,
-    required this.primaryProducts,
-    this.isVerified = false,
-  });
-
-  factory FarmerContact.fromFirestore(Map<String, dynamic> data, String id) {
-    return FarmerContact(
-      id: id,
-      businessName: data['business_name'] ?? data['name'] ?? 'Unknown',
-      phoneNumber: data['phone'] ?? data['phone_number'] ?? '',
-      district: data['district'] ?? '',
-      primaryProducts: (data['primary_products'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      isVerified: data['is_verified'] ?? false,
     );
   }
 }
