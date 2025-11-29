@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'firebase_options.dart';
 import 'config/environment.dart';
@@ -22,6 +23,7 @@ import 'screens/admin/admin_web_portal.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'services/firebase_test.dart';
+import 'services/fcm_service.dart';
 
 void main() async {
   // Wrap initialization in try-catch to prevent white screen
@@ -83,6 +85,12 @@ void main() async {
     final app = Firebase.app();
     if (kDebugMode) {
       debugPrint('✅ Firebase app verified: ${app.name}');
+    }
+
+    // Register FCM background message handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (kDebugMode) {
+      debugPrint('✅ FCM background handler registered');
     }
 
     // Test Firebase connection (only in debug mode)

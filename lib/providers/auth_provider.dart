@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/user.dart';
 import '../services/firebase_email_auth_service.dart';
 import '../services/image_storage_service.dart';
+import '../services/fcm_service.dart';
 
 class AuthProvider with ChangeNotifier {
   AppUser? _currentUser;
@@ -15,6 +16,7 @@ class AuthProvider with ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   final _imageStorage = ImageStorageService();
+  final _fcmService = FCMService();
 
   AppUser? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
@@ -69,6 +71,19 @@ class AuthProvider with ChangeNotifier {
             '   - National ID Photo URL: ${user.nationalIdPhoto ?? "NULL"}',
           );
           debugPrint('   - Profile Complete: ${user.isProfileComplete}');
+        }
+
+        // 🔔 Initialize FCM after user is loaded (Issue #1)
+        try {
+          await _fcmService.initialize(user.id);
+          if (kDebugMode) {
+            debugPrint('✅ AUTH PROVIDER - FCM initialized for user ${user.id}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ AUTH PROVIDER - FCM initialization failed: $e');
+            debugPrint('   This will not block login - user can still use app');
+          }
         }
       } else {
         if (kDebugMode) {
