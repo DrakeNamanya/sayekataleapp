@@ -271,6 +271,42 @@ class FirebaseEmailAuthService {
           debugPrint('✅ User profile created: $uid');
         }
 
+        // 🔧 FIX: Auto-create PSA verification placeholder for new PSA users
+        if (role == UserRole.psa) {
+          try {
+            if (kDebugMode) {
+              debugPrint('🔄 Creating PSA verification placeholder...');
+            }
+
+            // Create placeholder verification record
+            await _firestore.collection('psa_verifications').add({
+              'psa_id': uid,
+              'business_name': 'Pending Business Information',
+              'contact_person': name,
+              'email': email,
+              'phone_number': phone,
+              'business_address': '',
+              'business_type': '',
+              'status': 'pending',
+              'submitted_at': DateTime.now().toIso8601String(),
+              'created_at': DateTime.now().toIso8601String(),
+              'updated_at': DateTime.now().toIso8601String(),
+            });
+
+            if (kDebugMode) {
+              debugPrint(
+                '✅ PSA verification placeholder created for admin review',
+              );
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ Failed to create PSA verification placeholder: $e');
+              debugPrint('   PSA user can still submit verification manually');
+            }
+            // Don't throw - user creation succeeded, verification is optional
+          }
+        }
+
         return newUser;
       }
     } catch (e) {
