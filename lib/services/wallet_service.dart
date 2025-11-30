@@ -6,6 +6,7 @@ import 'pawapay_service.dart';
 /// Wallet Service for managing user wallets and transactions
 class WalletService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // ignore: unused_field
   final PawaPayService _pawaPayService;
 
   WalletService({required PawaPayService pawaPayService})
