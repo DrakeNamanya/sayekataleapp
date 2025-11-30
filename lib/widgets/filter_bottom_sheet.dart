@@ -15,6 +15,7 @@ class FilterBottomSheet extends StatefulWidget {
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late Set<String> _selectedCategories;
+  late Set<String> _selectedDistricts;
   late double _minPrice;
   late double _maxPrice;
   late double _selectedDistance;
@@ -32,6 +33,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void initState() {
     super.initState();
     _selectedCategories = Set.from(widget.initialFilter.selectedCategories);
+    _selectedDistricts = Set.from(widget.initialFilter.selectedDistricts);
     _minPrice = widget.initialFilter.minPrice ?? minPriceLimit;
     _maxPrice = widget.initialFilter.maxPrice ?? maxPriceLimit;
     _selectedDistance = widget.initialFilter.maxDistance ?? 50;
@@ -416,8 +418,5 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
 
     Navigator.pop(context, filter);
-  }
-}
-p(context, filter);
   }
 }
