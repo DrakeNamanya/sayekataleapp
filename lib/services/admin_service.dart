@@ -103,7 +103,7 @@ class AdminService {
       final userRef = _firestore.collection('users').doc(verification.psaId);
       batch.update(userRef, {
         'is_verified': true,
-        'verification_status': 'approved',
+        'verification_status': 'verified',  // ✅ FIXED: Must match enum value
         'verified_at': DateTime.now().toIso8601String(),
       });
 

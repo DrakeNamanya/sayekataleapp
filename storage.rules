@@ -154,6 +154,24 @@ service firebase.storage {
     }
     
     // ========================================
+    // PSA Verification Documents (CRITICAL FIX)
+    // ========================================
+    
+    match /psa_verifications/{documentName} {
+      // PSA users can read verification documents
+      allow read: if isAuthenticated();
+      
+      // PSA users can upload verification documents
+      // Must be authenticated and reasonable file size (5MB max)
+      allow write: if isAuthenticated() && 
+                      isReasonableSize();
+      
+      // No deletion by PSAs (admin review evidence)
+      // Only admins can delete (if needed)
+      allow delete: if false;
+    }
+    
+    // ========================================
     // Admin-Only Files
     // ========================================
     

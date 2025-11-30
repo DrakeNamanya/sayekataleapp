@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../providers/auth_provider.dart';
@@ -299,8 +300,20 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final psaId = authProvider.currentUser?.id;
+      
+      // ✅ CRITICAL FIX: Use Firebase Auth UID for Storage uploads
+      final firebaseAuthUid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
 
-      if (psaId == null) {
+      // 🔍 DEBUG: Log authentication state
+      if (kDebugMode) {
+        debugPrint('🔐 AUTHENTICATION STATE:');
+        debugPrint('   PSA ID (custom): $psaId');
+        debugPrint('   Firebase Auth UID: $firebaseAuthUid');
+        debugPrint('   AuthProvider user: ${authProvider.currentUser?.name}');
+        debugPrint('   AuthProvider firebaseUser UID: ${authProvider.firebaseUser?.uid}');
+      }
+
+      if (psaId == null || firebaseAuthUid == null) {
         throw Exception('User not authenticated');
       }
 
@@ -317,7 +330,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         _businessLicenseUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _businessLicenseFile!,
           folder: 'psa_verifications',
-          userId: psaId,
+          userId: firebaseAuthUid,
           customName:
               'business_license_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
@@ -335,7 +348,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         _taxIdDocumentUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _taxIdDocumentFile!,
           folder: 'psa_verifications',
-          userId: psaId,
+          userId: firebaseAuthUid,
           customName:
               'tax_id_document_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
@@ -350,7 +363,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         _nationalIdUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _nationalIdFile!,
           folder: 'psa_verifications',
-          userId: psaId,
+          userId: firebaseAuthUid,
           customName: 'national_id_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
           useUserSubfolder: false, // Upload directly to psa_verifications/
@@ -361,7 +374,7 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         _tradeLicenseUrl = await _imageStorageService.uploadImageFromXFile(
           imageFile: _tradeLicenseFile!,
           folder: 'psa_verifications',
-          userId: psaId,
+          userId: firebaseAuthUid,
           customName: 'trade_license_${psaId}_${DateTime.now().millisecondsSinceEpoch}',
           compress: false, // Don't compress documents
           useUserSubfolder: false, // Upload directly to psa_verifications/
@@ -1941,3 +1954,4 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
     );
   }
 }
+

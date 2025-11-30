@@ -49,9 +49,18 @@ class ImageStorageService {
         );
       }
 
+      // 🔍 DEBUG: Log UID comparison
+      if (kDebugMode) {
+        debugPrint('🔍 UID COMPARISON:');
+        debugPrint('   Firebase Auth UID: ${currentUser.uid}');
+        debugPrint('   Provided userId: $userId');
+        debugPrint('   Match: ${currentUser.uid == userId}');
+      }
+
       if (currentUser.uid != userId) {
         throw Exception(
-          'User ID mismatch. Cannot upload to another user\'s folder.',
+          'User ID mismatch. Cannot upload to another user\'s folder. '
+          'Current UID: ${currentUser.uid}, Provided: $userId',
         );
       }
 
