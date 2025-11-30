@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       if (_isSignUpMode) {
         // Sign Up with Email
-        final userCredential = await _authService.signUpWithEmail(
+        await _authService.signUpWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           name: _nameController.text.trim(),

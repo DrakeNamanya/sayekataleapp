@@ -181,7 +181,7 @@ class PawaPayService {
       // Handle response from backend
       if (response['success'] == true) {
         final depositId = response['depositId'] as String;
-        final message = response['message'] as String;
+        // final message = response['message'] as String; // Unused variable
         
         if (kDebugMode) {
           debugPrint('✅ Payment initiated: $depositId');

@@ -436,6 +436,7 @@ class WalletService {
   }
 
   /// Create transaction record
+  // ignore: unused_element
   Future<String> _createTransaction({
     required String userId,
     required wallet_model.TransactionType type,
