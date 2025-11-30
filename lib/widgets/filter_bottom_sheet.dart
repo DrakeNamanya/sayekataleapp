@@ -157,7 +157,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             Icon(Icons.location_city, size: 20, color: AppTheme.primaryColor),
             SizedBox(width: 8),
             Text(
-              'Districts',
+              'Districts (12 Official Districts)',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
@@ -166,10 +166,13 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: UgandaDistricts.popularDistricts.map((district) {
+          children: UgandaDistricts.allDistricts.map((district) {
             final isSelected = _selectedDistricts.contains(district);
             return FilterChip(
-              label: Text(district),
+              label: Text(
+                district,
+                style: const TextStyle(fontSize: 12),
+              ),
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
