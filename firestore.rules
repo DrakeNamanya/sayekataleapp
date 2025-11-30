@@ -9,9 +9,10 @@ service cloud.firestore {
     }
     
     // Helper function to check if user is admin
+    // ✅ FIXED: Check users collection for admin role instead of admin_users
     function isAdmin() {
       return isAuthenticated() && 
-             exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
     // Admin users collection - allow authenticated users to read their own admin doc
@@ -24,10 +25,13 @@ service cloud.firestore {
     }
     
     // Users collection
+    // ✅ FIXED: Separate create, update, delete with proper permissions
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && 
-                      (request.auth.uid == userId || isAdmin());
+      allow update: if isAuthenticated() && 
+                       (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAdmin();
     }
     
     // Products collection
@@ -97,26 +101,24 @@ service cloud.firestore {
     }
     
     // PSA Verifications collection
+    // ✅ FIXED: Admins have full access for approve/reject operations
     match /psa_verifications/{verificationId} {
-      // Admins can read all verification requests
-      allow read: if isAdmin();
+      // Admins have full read/write access
+      allow read, write: if isAdmin();
       
       // PSA users can read their own verification status
       allow get: if isAuthenticated() && resource.data.psa_id == request.auth.uid;
       
-      // PSA users can query their own verifications
-      allow list: if isAuthenticated() && request.auth.uid != null;
+      // PSA users can query verifications (will be filtered by their own)
+      allow list: if isAuthenticated();
       
-      // PSA users can create verification requests with their own psa_id
+      // PSA users can create verification requests
       allow create: if isAuthenticated() && request.resource.data.psa_id == request.auth.uid;
       
-      // PSA users can update their own unsubmitted verifications
-      // Admins can update any verification (for approve/reject)
+      // PSA users can update their own pending verifications
       allow update: if isAuthenticated() && 
-                       (resource.data.psa_id == request.auth.uid || isAdmin());
-      
-      // Only admins can delete verifications
-      allow delete: if isAdmin();
+                       resource.data.psa_id == request.auth.uid &&
+                       resource.data.status == 'pending';
     }
     
     // User complaints collection

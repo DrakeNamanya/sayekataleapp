@@ -86,9 +86,11 @@ class Product {
       price: (data['price'] ?? 0.0).toDouble(),
       stockQuantity: data['stock_quantity'] ?? 0,
       lowStockThreshold: data['low_stock_threshold'] ?? 10,
-      images: data['image_url'] != null
+      images: data['image_url'] != null && (data['image_url'] as String).isNotEmpty
           ? [data['image_url']]
-          : (data['images'] != null ? List<String>.from(data['images']) : []),
+          : (data['images'] != null && (data['images'] as List).isNotEmpty
+              ? List<String>.from(data['images'])
+              : []), // Empty array - UI will handle placeholder
       createdAt: parseDateTime(data['created_at']),
       updatedAt: parseDateTime(data['updated_at']),
       isFeatured: data['is_featured'] ?? false,
