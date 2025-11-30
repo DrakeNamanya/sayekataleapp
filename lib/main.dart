@@ -172,7 +172,7 @@ class MyApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode
             .light, // Default to light mode, user can change in settings
-        home: const SplashScreen(), // Mobile app starts with animated splash screen
+        initialRoute: '/', // Mobile app starts with SplashScreen via '/' route
         routes: {
           '/splash': (context) => const SplashScreen(),
           '/app-loader': (context) => const AppLoaderScreen(),
@@ -191,7 +191,7 @@ class MyApp extends StatelessWidget {
           '/admin': (context) => const AdminWebPortal(), // Admin Web Portal (Desktop)
           
           // Web Portal Landing Pages
-          '/': (context) => const AppLoaderScreen(), // Android app (testing on web)
+          '/': (context) => const SplashScreen(), // Mobile app starts with animated splash screen
           '/web': (context) => const WebLandingPage(), // Public landing page (moved to /web)
           '/sme': (context) => const SMEPortalPage(), // SME portal landing
           '/shg': (context) => const SHGPortalPage(), // SHG portal landing
