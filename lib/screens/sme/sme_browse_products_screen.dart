@@ -826,7 +826,29 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                             width: double.infinity,
                             height: double.infinity,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              if (kDebugMode) {
+                                debugPrint('🖼️ Loading image: ${product.images.first}');
+                              }
+                              return Container(
+                                color: Colors.grey[100],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) {
+                              if (kDebugMode) {
+                                debugPrint('❌ Failed to load image: ${product.images.first}');
+                                debugPrint('Error: $error');
+                              }
                               return Container(
                                 color: Colors.grey[200],
                                 child: Column(
@@ -1300,7 +1322,25 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                         width: 120,
                         height: 120,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          if (kDebugMode) {
+                            debugPrint('🖼️ [ListView] Loading image: ${product.images[0]}');
+                          }
+                          return Container(
+                            width: 120,
+                            height: 120,
+                            color: Colors.grey[100],
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
                         errorBuilder: (context, error, stackTrace) {
+                          if (kDebugMode) {
+                            debugPrint('❌ [ListView] Failed to load image: ${product.images[0]}');
+                            debugPrint('Error: $error');
+                          }
                           return Container(
                             width: 120,
                             height: 120,
