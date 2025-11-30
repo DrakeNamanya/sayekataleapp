@@ -1819,6 +1819,15 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
       }).toList();
     }
 
+    // District filter
+    if (_activeFilter.selectedDistricts.isNotEmpty) {
+      filtered = filtered.where((p) {
+        final farmerDistrict = p.productWithFarmer.farmer.location?.district;
+        return farmerDistrict != null &&
+            _activeFilter.selectedDistricts.contains(farmerDistrict);
+      }).toList();
+    }
+
     // Price filter
     if (_activeFilter.minPrice != null) {
       filtered = filtered.where((p) {

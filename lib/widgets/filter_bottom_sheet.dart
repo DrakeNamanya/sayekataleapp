@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/browse_filter.dart';
 import '../models/product.dart';
 import '../utils/app_theme.dart';
+import '../constants/uganda_districts.dart';
 
 class FilterBottomSheet extends StatefulWidget {
   final BrowseFilter initialFilter;
@@ -59,6 +60,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildCategoryFilter(),
+                  const SizedBox(height: 24),
+                  _buildDistrictFilter(),
                   const SizedBox(height: 24),
                   _buildPriceFilter(),
                   const SizedBox(height: 24),
@@ -131,6 +134,47 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     _selectedCategories.add(category.name);
                   } else {
                     _selectedCategories.remove(category.name);
+                  }
+                });
+              },
+              selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+              checkmarkColor: AppTheme.primaryColor,
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistrictFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.location_city, size: 20, color: AppTheme.primaryColor),
+            SizedBox(width: 8),
+            Text(
+              'Districts',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: UgandaDistricts.popularDistricts.map((district) {
+            final isSelected = _selectedDistricts.contains(district);
+            return FilterChip(
+              label: Text(district),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedDistricts.add(district);
+                  } else {
+                    _selectedDistricts.remove(district);
                   }
                 });
               },
@@ -351,6 +395,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void _clearAllFilters() {
     setState(() {
       _selectedCategories.clear();
+      _selectedDistricts.clear();
       _minPrice = minPriceLimit;
       _maxPrice = maxPriceLimit;
       _selectedDistance = 50;
@@ -362,6 +407,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void _applyFilters() {
     final filter = BrowseFilter(
       selectedCategories: _selectedCategories,
+      selectedDistricts: _selectedDistricts,
       minPrice: _minPrice > minPriceLimit ? _minPrice : null,
       maxPrice: _maxPrice < maxPriceLimit ? _maxPrice : null,
       maxDistance: _selectedDistance,
@@ -370,5 +416,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
 
     Navigator.pop(context, filter);
+  }
+}
+p(context, filter);
   }
 }

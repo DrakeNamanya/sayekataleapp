@@ -28,11 +28,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final FirebaseUserService _userService = FirebaseUserService();
   List<Review> _reviews = [];
   bool _loadingReviews = true;
+  int _ordersSold = 0;
+  bool _loadingOrders = true;
 
   @override
   void initState() {
     super.initState();
     _loadProductReviews();
+    _loadOrdersSold();
   }
 
   @override
@@ -59,6 +62,44 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } catch (e) {
       setState(() {
         _loadingReviews = false;
+      });
+    }
+  }
+
+  Future<void> _loadOrdersSold() async {
+    try {
+      // Count completed orders for this product
+      final ordersSnapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('items', arrayContains: {'productId': widget.product.id})
+          .get();
+
+      // Count only completed/delivered orders
+      int completedOrders = 0;
+      for (var doc in ordersSnapshot.docs) {
+        final data = doc.data();
+        final status = data['status'] as String?;
+        // Count delivered and completed orders
+        if (status == 'delivered' || status == 'completed') {
+          // Count how many of this product was in the order
+          final items = data['items'] as List<dynamic>?;
+          if (items != null) {
+            for (var item in items) {
+              if (item['productId'] == widget.product.id) {
+                completedOrders += (item['quantity'] as int?) ?? 1;
+              }
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _ordersSold = completedOrders;
+        _loadingOrders = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loadingOrders = false;
       });
     }
   }
@@ -283,6 +324,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Orders Sold Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.shopping_bag,
+                                  color: AppTheme.primaryColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _loadingOrders
+                                      ? 'Loading...'
+                                      : '$_ordersSold ${_ordersSold == 1 ? 'order' : 'orders'} sold',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                                if (_ordersSold > 50) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.successColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Popular',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 24),
                           // Description

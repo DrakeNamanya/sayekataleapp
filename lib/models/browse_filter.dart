@@ -7,6 +7,7 @@ class BrowseFilter {
   final double? maxDistance; // in kilometers
   final double? minRating; // minimum rating filter (e.g., 4.0 for 4+ stars)
   final bool inStockOnly;
+  final Set<String> selectedDistricts; // Filter by district
 
   const BrowseFilter({
     this.selectedCategories = const {},
@@ -15,6 +16,7 @@ class BrowseFilter {
     this.maxDistance,
     this.minRating,
     this.inStockOnly = false,
+    this.selectedDistricts = const {},
   });
 
   /// Check if any filters are active
@@ -24,7 +26,8 @@ class BrowseFilter {
         maxPrice != null ||
         maxDistance != null ||
         minRating != null ||
-        inStockOnly;
+        inStockOnly ||
+        selectedDistricts.isNotEmpty;
   }
 
   /// Count of active filters
@@ -35,6 +38,7 @@ class BrowseFilter {
     if (maxDistance != null) count++;
     if (minRating != null) count++;
     if (inStockOnly) count++;
+    if (selectedDistricts.isNotEmpty) count++;
     return count;
   }
 
@@ -46,6 +50,7 @@ class BrowseFilter {
     double? maxDistance,
     double? minRating,
     bool? inStockOnly,
+    Set<String>? selectedDistricts,
     bool clearMinPrice = false,
     bool clearMaxPrice = false,
     bool clearMaxDistance = false,
@@ -58,6 +63,7 @@ class BrowseFilter {
       maxDistance: clearMaxDistance ? null : (maxDistance ?? this.maxDistance),
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       inStockOnly: inStockOnly ?? this.inStockOnly,
+      selectedDistricts: selectedDistricts ?? this.selectedDistricts,
     );
   }
 
@@ -72,6 +78,10 @@ class BrowseFilter {
 
     if (selectedCategories.isNotEmpty) {
       descriptions.add('${selectedCategories.length} categories');
+    }
+
+    if (selectedDistricts.isNotEmpty) {
+      descriptions.add('${selectedDistricts.length} districts');
     }
 
     if (minPrice != null || maxPrice != null) {
@@ -101,7 +111,7 @@ class BrowseFilter {
 
   @override
   String toString() {
-    return 'BrowseFilter(categories: $selectedCategories, price: $minPrice-$maxPrice, '
-        'distance: $maxDistance, rating: $minRating, inStock: $inStockOnly)';
+    return 'BrowseFilter(categories: $selectedCategories, districts: $selectedDistricts, '
+        'price: $minPrice-$maxPrice, distance: $maxDistance, rating: $minRating, inStock: $inStockOnly)';
   }
 }
