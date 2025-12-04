@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
 import '../../utils/app_theme.dart';
@@ -46,6 +47,7 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
   String? _selectedVillage;
   double? _latitude;
   double? _longitude;
+  bool _isLoadingLocation = false;
 
   bool _isLoading = false;
 
@@ -100,6 +102,72 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
     _unbsRegistrationController.dispose();
     _mobileMoneyController.dispose();
     super.dispose();
+  }
+
+  /// Capture current GPS location
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      // Check location services
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled. Please enable GPS.');
+      }
+
+      // Check permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied. Please enable in settings.');
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+        _isLoadingLocation = false;
+      });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Location captured: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingLocation = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get location: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _pickImage(String imageType) async {
@@ -720,38 +788,92 @@ class _PSAEditProfileScreenState extends State<PSAEditProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // GPS Coordinates (if available)
-            if (_latitude != null && _longitude != null)
-              Card(
-                color: AppTheme.successColor.withValues(alpha: 0.1),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Icon(Icons.gps_fixed, color: AppTheme.successColor),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'GPS Coordinates',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              'Lat: ${_latitude!.toStringAsFixed(6)}, Long: ${_longitude!.toStringAsFixed(6)}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+            // ✅ GPS Coordinates with Capture Button
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: (_latitude != null && _longitude != null)
+                    ? Colors.green.shade50
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (_latitude != null && _longitude != null)
+                      ? Colors.green.shade300
+                      : Colors.grey.shade300,
                 ),
               ),
+              child: Row(
+                children: [
+                  Icon(
+                    (_latitude != null && _longitude != null)
+                        ? Icons.location_on
+                        : Icons.location_off,
+                    color: (_latitude != null && _longitude != null)
+                        ? Colors.green
+                        : Colors.grey,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'GPS Coordinates',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          (_latitude != null && _longitude != null)
+                              ? 'Lat: ${_latitude!.toStringAsFixed(6)}, Long: ${_longitude!.toStringAsFixed(6)}'
+                              : 'Tap button to capture your location',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: (_latitude != null && _longitude != null)
+                                ? Colors.black87
+                                : Colors.grey.shade600,
+                            fontWeight: (_latitude != null && _longitude != null)
+                                ? FontWeight.w500
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _isLoadingLocation ? null : _getCurrentLocation,
+                    icon: _isLoadingLocation
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.my_location, size: 18),
+                    label: Text(
+                      _isLoadingLocation ? 'Getting...' : 'Capture GPS',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      minimumSize: Size.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 32),
 
             // Save Button

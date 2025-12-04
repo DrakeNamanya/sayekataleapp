@@ -65,10 +65,15 @@ service cloud.firestore {
       // PSA users can create verification requests with their own psa_id
       allow create: if isAuthenticated() && request.resource.data.psa_id == request.auth.uid;
       
-      // PSA users can update their own verifications
-      // Admins can update any verification (for approve/reject)
+      // ✅ CRITICAL FIX: Separate update rules to prevent permission conflicts
+      // PSA users can update their own pending/rejected verifications
       allow update: if isAuthenticated() && 
-                       (resource.data.psa_id == request.auth.uid || isAdmin());
+                       resource.data.psa_id == request.auth.uid &&
+                       resource.data.status in ['pending', 'rejected', 'moreInfoRequired'];
+      
+      // ✅ CRITICAL FIX: Admin can update ANY verification (approve/reject)
+      // This separate rule prevents batch write conflicts
+      allow update: if isAdmin();
       
       // Only admins can delete verifications
       allow delete: if isAdmin();

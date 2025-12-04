@@ -50,12 +50,25 @@ class ProfileCompletionGate extends StatelessWidget {
       );
     }
 
-    // Check if profile is complete
+    // ✅ CRITICAL FIX: Check PSA verification status FIRST
+    // PSAs who are verified should NEVER be blocked by profile completion gate
+    if (user.role == UserRole.psa) {
+      // For PSAs, verification status takes priority over profile completion
+      if (user.verificationStatus == VerificationStatus.verified) {
+        // PSA is approved by admin - allow full access regardless of profile fields
+        return child;
+      }
+      // For pending/rejected PSAs, PSAApprovalGate will handle the blocking
+      // Don't show profile completion screen for PSAs
+      return child;
+    }
+
+    // For non-PSA users (SHG, SME, Farmer), check profile completion
     if (user.isProfileComplete) {
       return child; // Allow access
     }
 
-    // Check if deadline has passed
+    // Check if deadline has passed for non-PSA users
     final deadline = user.profileCompletionDeadline;
     if (deadline != null && DateTime.now().isAfter(deadline)) {
       // Deadline passed - block access
