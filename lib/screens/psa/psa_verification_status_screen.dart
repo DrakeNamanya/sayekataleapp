@@ -174,7 +174,7 @@ class _PendingVerificationScreen extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      authProvider.signOut();
+                      authProvider.logout();
                       Navigator.of(context).pushReplacementNamed('/onboarding');
                     },
                     icon: const Icon(Icons.logout),
@@ -342,7 +342,7 @@ class _RejectedVerificationScreen extends StatelessWidget {
                   width: double.infinity,
                   child: TextButton.icon(
                     onPressed: () {
-                      authProvider.signOut();
+                      authProvider.logout();
                       Navigator.of(context).pushReplacementNamed('/onboarding');
                     },
                     icon: const Icon(Icons.logout),
@@ -450,7 +450,7 @@ class _SuspendedAccountScreen extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      authProvider.signOut();
+                      authProvider.logout();
                       Navigator.of(context).pushReplacementNamed('/onboarding');
                     },
                     icon: const Icon(Icons.logout),
