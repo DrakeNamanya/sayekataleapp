@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
@@ -25,6 +26,49 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final userId = authProvider.currentUser?.id ?? '';
+    final userName = authProvider.currentUser?.name ?? 'Unknown';
+    final userRole = authProvider.currentUser?.role ?? 'Unknown';
+
+    // 🔍 Debug logging
+    if (kDebugMode) {
+      debugPrint('🔍 ReceiptsListScreen Debug Info:');
+      debugPrint('   User ID: $userId');
+      debugPrint('   User Name: $userName');
+      debugPrint('   User Role: $userRole');
+      debugPrint('   Is Seller View: ${widget.isSellerView}');
+      debugPrint('   Query Type: ${widget.isSellerView ? "streamSellerReceipts" : "streamBuyerReceipts"}');
+    }
+
+    // ⚠️ Show error if user ID is empty
+    if (userId.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.isSellerView ? 'Sales Receipts' : 'Purchase Receipts',
+          ),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.orange),
+              const SizedBox(height: 16),
+              Text(
+                'User not logged in',
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please log in to view receipts',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -32,34 +76,88 @@ class _ReceiptsListScreenState extends State<ReceiptsListScreen> {
           widget.isSellerView ? 'Sales Receipts' : 'Purchase Receipts',
         ),
         elevation: 0,
+        actions: [
+          // Debug info button
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Debug Info'),
+                    content: SingleChildScrollView(
+                      child: Text(
+                        'User ID: $userId\n'
+                        'User Name: $userName\n'
+                        'Role: $userRole\n'
+                        'Is Seller View: ${widget.isSellerView}\n'
+                        'Query: ${widget.isSellerView ? "seller_id" : "buyer_id"} = $userId',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: StreamBuilder<List<Receipt>>(
         stream: widget.isSellerView
             ? _receiptService.streamSellerReceipts(userId)
             : _receiptService.streamBuyerReceipts(userId),
         builder: (context, snapshot) {
+          // 🔍 Debug snapshot state
+          if (kDebugMode) {
+            debugPrint('📊 Stream State: ${snapshot.connectionState}');
+            debugPrint('   Has Error: ${snapshot.hasError}');
+            debugPrint('   Has Data: ${snapshot.hasData}');
+            if (snapshot.hasData) {
+              debugPrint('   Receipts Count: ${snapshot.data?.length ?? 0}');
+            }
+            if (snapshot.hasError) {
+              debugPrint('   Error: ${snapshot.error}');
+            }
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading receipts',
-                    style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    snapshot.error.toString(),
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading receipts',
+                      style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      snapshot.error.toString(),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {}); // Trigger rebuild
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             );
           }

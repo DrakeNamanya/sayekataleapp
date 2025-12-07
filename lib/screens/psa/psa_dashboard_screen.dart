@@ -9,8 +9,6 @@ import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/admob_banner_widget.dart';
 import '../../widgets/verified_badge.dart';
-import '../../models/user.dart';
-import 'psa_verification_status_screen.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
@@ -80,11 +78,9 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
 
     final supplierId = currentUser.id;
 
-    // Check verification status - redirect if not verified
-    if (currentUser.verificationStatus != VerificationStatus.verified) {
-      return const PSAVerificationStatusScreen();
-    }
-
+    // SIMPLIFIED FLOW: Admin logs in as PSA directly
+    // No verification check needed - admin is always verified
+    
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: FutureBuilder<int>(
@@ -696,8 +692,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         );
                       }
 
-                      return Column(
-                        children: recentOrders.take(3).map((order) {
+                      return Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: recentOrders.take(3).map((order) {
                           return _OrderCard(
                             orderId: '#${order.id.substring(0, 8)}',
                             customerName: order.buyerName,
@@ -710,6 +709,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
                             statusColor: _getStatusColor(order.status),
                           );
                         }).toList(),
+                        ),
                       );
                     },
                   ),
@@ -1032,7 +1032,7 @@ class _OrderCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
+                    color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

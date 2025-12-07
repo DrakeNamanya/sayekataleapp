@@ -68,6 +68,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
+    // Block PSA registration
+    if (_isSignUpMode && _selectedRole == UserRole.psa) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '📞 PSA registration is not available.\n\nContact admin@sayekatale.com to add your product on PSA products.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
     // Auth provider available if needed
     // final authProvider = Provider.of<app_auth.AuthProvider>(
     //   context,
@@ -531,13 +545,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 12),
                       _RoleCard(
                         title: 'Supplier (PSA)',
-                        subtitle: 'Supply seeds, fertilizers, equipment',
+                        subtitle: 'Contact admin to add your product',
                         icon: Icons.store_outlined,
                         isSelected: _selectedRole == UserRole.psa,
+                        isDisabled: true,  // Disable PSA registration
                         onTap: () {
-                          setState(() {
-                            _selectedRole = UserRole.psa;
-                          });
+                          // Show message instead of allowing selection
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                '📞 Contact admin to add your product on PSA products\n\nEmail: admin@sayekatale.com',
+                              ),
+                              backgroundColor: AppTheme.primaryColor,
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -623,6 +645,7 @@ class _RoleCard extends StatelessWidget {
   final String? subtitle;
   final IconData icon;
   final bool isSelected;
+  final bool isDisabled;
   final VoidCallback onTap;
 
   const _RoleCard({
@@ -630,6 +653,7 @@ class _RoleCard extends StatelessWidget {
     this.subtitle,
     required this.icon,
     required this.isSelected,
+    this.isDisabled = false,
     required this.onTap,
   });
 
@@ -641,11 +665,17 @@ class _RoleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryColor.withValues(alpha: 0.1)
-              : Colors.white,
+          color: isDisabled
+              ? Colors.grey.shade100
+              : isSelected
+                  ? AppTheme.primaryColor.withValues(alpha: 0.1)
+                  : Colors.white,
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
+            color: isDisabled
+                ? Colors.grey.shade300
+                : isSelected
+                    ? AppTheme.primaryColor
+                    : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -655,9 +685,11 @@ class _RoleCard extends StatelessWidget {
             Icon(
               icon,
               size: 36,
-              color: isSelected
-                  ? AppTheme.primaryColor
-                  : AppTheme.textSecondary,
+              color: isDisabled
+                  ? Colors.grey.shade400
+                  : isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.textSecondary,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -669,9 +701,11 @@ class _RoleCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? AppTheme.primaryColor
-                          : AppTheme.textPrimary,
+                      color: isDisabled
+                          ? Colors.grey.shade500
+                          : isSelected
+                              ? AppTheme.primaryColor
+                              : AppTheme.textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -680,15 +714,23 @@ class _RoleCard extends StatelessWidget {
                       subtitle!,
                       style: TextStyle(
                         fontSize: 13,
-                        color: isSelected
-                            ? AppTheme.primaryColor.withValues(alpha: 0.8)
-                            : AppTheme.textSecondary,
+                        color: isDisabled
+                            ? Colors.grey.shade500
+                            : isSelected
+                                ? AppTheme.primaryColor.withValues(alpha: 0.8)
+                                : AppTheme.textSecondary,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
+            if (isDisabled)
+              Icon(
+                Icons.info_outline,
+                size: 20,
+                color: Colors.grey.shade500,
+              ),
           ],
         ),
       ),

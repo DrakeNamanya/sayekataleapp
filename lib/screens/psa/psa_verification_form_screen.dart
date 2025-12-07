@@ -390,10 +390,11 @@ class _PSAVerificationFormScreenState extends State<PSAVerificationFormScreen> {
         debugPrint('   Trade License: ${_tradeLicenseUrl ?? "NULL"}');
       }
 
-      // Create verification request
+      // Create verification request with BOTH psaId and Firebase UID
       final verification = PsaVerification(
         id: widget.existingVerification?.id ?? '',
         psaId: psaId,
+        userId: firebaseAuthUid, // 🔧 ADD: Firebase Auth UID for Firestore rules
         businessName: _businessNameController.text.trim(),
         contactPerson: _contactPersonController.text.trim(),
         email: _emailController.text.trim(),

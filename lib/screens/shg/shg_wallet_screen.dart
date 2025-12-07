@@ -90,6 +90,120 @@ class _SHGWalletScreenState extends State<SHGWalletScreen> {
       );
     }
 
+    // ✅ WALLET FEATURE: Coming Soon
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Wallet'),
+        backgroundColor: AppTheme.primaryColor,
+        elevation: 0,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Wallet icon
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 64,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Coming Soon title
+              const Text(
+                'Wallet Feature',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              
+              // Coming Soon subtitle
+              const Text(
+                'Coming Soon',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              
+              // Description
+              Text(
+                'We are working on bringing you a secure wallet feature for managing your transactions and payments.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              
+              // Information card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade700,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Upcoming Features',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '• Mobile money integration\n'
+                      '• Secure transactions\n'
+                      '• Transaction history\n'
+                      '• Balance management\n'
+                      '• Payment processing',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        height: 1.6,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    
+    // OLD CODE - Keep for future reference when wallet feature is implemented
+    /*
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Wallet'),
@@ -675,5 +789,6 @@ class _TransactionHistoryScreen extends StatelessWidget {
         },
       ),
     );
+    */ // End of old wallet code
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
@@ -27,6 +28,31 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
     _addressController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  /// ✅ FIX: Fetch actual seller name from Firestore
+  Future<String> _getSellerName(String sellerId) async {
+    try {
+      final sellerDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(sellerId)
+          .get();
+      
+      if (sellerDoc.exists) {
+        final data = sellerDoc.data();
+        return data?['name'] ?? 
+               data?['shg_name'] ?? 
+               data?['full_name'] ?? 
+               'Farmer';
+      }
+      
+      return 'Farmer';
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error fetching seller name: $e');
+      }
+      return 'Farmer';
+    }
   }
 
   Future<void> _placeOrder() async {
@@ -186,9 +212,8 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
 
                   // Items grouped by farmer
                   ...itemsByFarmer.entries.map((entry) {
-                    // farmerId available from entry.key if needed
+                    final farmerId = entry.key;  // ✅ Get actual farmer ID
                     final items = entry.value;
-                    final farmerName = items[0].farmerName;
                     final farmerTotal = items.fold(
                       0.0,
                       (acc, item) => acc + (item.price * item.quantity),
@@ -201,24 +226,31 @@ class _SMECheckoutScreenState extends State<SMECheckoutScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.storefront,
-                                  color: AppTheme.primaryColor,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    farmerName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                            // ✅ FIX: Fetch actual seller name from Firestore
+                            FutureBuilder<String>(
+                              future: _getSellerName(farmerId),
+                              builder: (context, snapshot) {
+                                final sellerName = snapshot.data ?? items[0].farmerName;
+                                return Row(
+                                  children: [
+                                    Icon(
+                                      Icons.storefront,
+                                      color: AppTheme.primaryColor,
+                                      size: 20,
                                     ),
-                                  ),
-                                ),
-                              ],
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        sellerName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             const Divider(height: 24),
                             ...items.map(

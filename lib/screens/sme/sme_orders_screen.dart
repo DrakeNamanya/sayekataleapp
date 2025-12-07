@@ -8,7 +8,6 @@ import '../../services/message_service.dart';
 import '../../services/delivery_tracking_service.dart';
 import '../../services/receipt_service.dart';
 import '../../models/order.dart' as app_order;
-import '../../models/delivery_tracking.dart';
 import '../common/chat_screen.dart';
 import '../delivery/live_tracking_screen.dart';
 import '../common/receipt_detail_screen.dart';
@@ -558,45 +557,19 @@ class _SMEOrdersScreenState extends State<SMEOrdersScreen>
                 'Delivery tracking not available yet.\n\n'
                 'This could be because:\n'
                 '• The farmer hasn\'t confirmed your order yet\n'
-                '• GPS coordinates are missing from your profile or the farmer\'s profile\n\n'
-                '📍 To enable tracking: Go to Profile → Edit Profile → Add your GPS location\n\n'
-                'Please check back after the order is confirmed.',
+                '• Tracking creation failed\n\n'
+                'Please contact the seller or wait for order confirmation.',
               ),
-              duration: const Duration(seconds: 6),
-              action: SnackBarAction(label: 'Got it', onPressed: () {}),
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(label: 'OK', onPressed: () {}),
             ),
           );
         }
         return;
       }
 
-      // Check if tracking is pending GPS
-      if (tracking.status == DeliveryStatus.pending) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                '⚠️ Tracking Created - GPS Required\n\n'
-                'Your order tracking has been created, but GPS coordinates are needed to start live tracking.\n\n'
-                '📍 Please add your GPS location:\n'
-                'Go to Profile → Edit Profile → Add GPS Location\n\n'
-                'The farmer also needs to add GPS coordinates.\n\n'
-                'Live tracking will activate automatically once both GPS locations are added.',
-              ),
-              duration: const Duration(seconds: 8),
-              backgroundColor: Colors.orange,
-              action: SnackBarAction(
-                label: 'Got it', 
-                textColor: Colors.white,
-                onPressed: () {},
-              ),
-            ),
-          );
-        }
-        return;
-      }
-
-      // Navigate to live tracking
+      // Navigate to live tracking regardless of status
+      // The tracking screen will show appropriate messages for different statuses
       if (mounted) {
         Navigator.push(
           context,

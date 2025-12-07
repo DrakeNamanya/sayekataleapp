@@ -1,7 +1,8 @@
 /// PSA (Private Service Aggregator) verification request model
 class PsaVerification {
   final String id;
-  final String psaId; // User ID of PSA
+  final String psaId; // Custom PSA ID (e.g., PSA-12345)
+  final String? userId; // Firebase Auth UID (for Firestore rules)
   final String businessName;
   final String contactPerson;
   final String email;
@@ -52,6 +53,7 @@ class PsaVerification {
   PsaVerification({
     required this.id,
     required this.psaId,
+    this.userId,
     required this.businessName,
     required this.contactPerson,
     required this.email,
@@ -98,6 +100,7 @@ class PsaVerification {
     return PsaVerification(
       id: id,
       psaId: data['psa_id'] ?? '',
+      userId: data['userId'], // Firebase Auth UID
       businessName: data['business_name'] ?? '',
       contactPerson: data['contact_person'] ?? '',
       email: data['email'] ?? '',
@@ -143,6 +146,7 @@ class PsaVerification {
   Map<String, dynamic> toFirestore() {
     return {
       'psa_id': psaId,
+      'userId': userId, // Firebase Auth UID for Firestore rules
       'business_name': businessName,
       'contact_person': contactPerson,
       'email': email,

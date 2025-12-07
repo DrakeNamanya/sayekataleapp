@@ -202,7 +202,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                      color: const Color(0xFF2E7D32).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

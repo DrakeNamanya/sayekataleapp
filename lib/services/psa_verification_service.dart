@@ -227,15 +227,34 @@ class PSAVerificationService {
     try {
       if (kDebugMode) {
         _logger.i('🔄 Updating user verification status to: $status');
+        _logger.i('   Searching for user with PSA ID: $psaId');
       }
 
-      await _firestore.collection('users').doc(psaId).update({
+      // 🔧 FIX: Find user by custom PSA ID field, not document ID
+      final userQuery = await _firestore
+          .collection('users')
+          .where('id', isEqualTo: psaId)
+          .limit(1)
+          .get();
+
+      if (userQuery.docs.isEmpty) {
+        if (kDebugMode) {
+          _logger.w('⚠️ User with PSA ID $psaId not found');
+        }
+        return;
+      }
+
+      // Update using Firebase Auth UID (document ID), not custom PSA ID
+      final userDocId = userQuery.docs.first.id;
+      
+      await _firestore.collection('users').doc(userDocId).update({
         'verification_status': status,
         'updated_at': DateTime.now().toIso8601String(),
       });
 
       if (kDebugMode) {
         _logger.i('✅ User verification status updated successfully');
+        _logger.i('   User document ID: $userDocId');
       }
     } catch (e, st) {
       _logger.e(

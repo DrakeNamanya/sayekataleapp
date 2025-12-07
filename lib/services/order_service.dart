@@ -140,9 +140,9 @@ class OrderService {
       for (final entry in itemsByFarmer.entries) {
         final farmerId = entry.key;
         final farmerItems = entry.value;
-        final farmerName = farmerItems.first.farmerName;
+        String farmerName = farmerItems.first.farmerName;  // ✅ Changed to mutable
 
-        // Fetch farmer profile for phone number
+        // Fetch farmer profile for phone number and actual name
         String farmerPhone = '';
 
         try {
@@ -162,6 +162,19 @@ class OrderService {
           if (farmerDoc.exists) {
             // farmerSystemId = farmerDoc.data()?['national_id'];  // Not currently used
             farmerPhone = farmerDoc.data()?['phone'] ?? '';
+            
+            // ✅ FIX: Fetch actual seller name if currently "Unknown Farmer"
+            if (farmerName == 'Unknown Farmer') {
+              final sellerData = farmerDoc.data();
+              farmerName = sellerData?['name'] ?? 
+                          sellerData?['shg_name'] ?? 
+                          sellerData?['full_name'] ?? 
+                          'Unknown Farmer';
+              
+              if (kDebugMode) {
+                debugPrint('✅ Fetched seller name: $farmerName for $farmerId');
+              }
+            }
           }
         } catch (e) {
           if (kDebugMode) {

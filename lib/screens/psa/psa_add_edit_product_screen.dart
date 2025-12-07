@@ -8,8 +8,8 @@ import '../../utils/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/product_service.dart';
 import '../../services/image_storage_service.dart';
-import '../../widgets/psa_approval_gate.dart';
-import '../../widgets/psa_subscription_gate.dart';
+// SIMPLIFIED FLOW: No approval gate needed for admin PSA
+// SIMPLIFIED FLOW: No subscription gate needed for admin PSA
 
 class PSAAddEditProductScreen extends StatefulWidget {
   final Product? product; // null for add, non-null for edit
@@ -263,11 +263,8 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
   Widget build(BuildContext context) {
     final isEditMode = widget.product != null;
 
-    return PSAApprovalGate(
-      blockedFeatureName: isEditMode ? 'Edit Product' : 'Add Product',
-      child: PSASubscriptionGate(
-        blockedFeatureName: isEditMode ? 'Edit Product' : 'Add Product',
-        child: Scaffold(
+    // SIMPLIFIED FLOW: Admin PSA has direct access - no gates needed
+    return Scaffold(
           appBar: AppBar(
         title: Text(isEditMode ? 'Edit Product' : 'Add New Product'),
         actions: [
@@ -437,10 +434,10 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                         width: 110,
                         height: 110,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          color: AppTheme.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                            color: AppTheme.primaryColor.withOpacity(0.5),
                             width: 2,
                           ),
                         ),
@@ -675,8 +672,6 @@ class _PSAAddEditProductScreenState extends State<PSAAddEditProductScreen> {
                   : Text(isEditMode ? 'Update Product' : 'Add Product'),
             ),
           ],
-        ),
-      ),
         ),
       ),
     );

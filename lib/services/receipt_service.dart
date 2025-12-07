@@ -166,12 +166,27 @@ class ReceiptService {
 
   /// Stream receipts for a buyer
   Stream<List<Receipt>> streamBuyerReceipts(String buyerId) {
+    if (kDebugMode) {
+      debugPrint('🔍 Streaming buyer receipts for buyer_id: $buyerId');
+    }
+
     return _firestore
         .collection('receipts')
         .where('buyer_id', isEqualTo: buyerId)
         .orderBy('created_at', descending: true)
         .snapshots()
+        .handleError((error) {
+          if (kDebugMode) {
+            debugPrint('❌ Error in streamBuyerReceipts: $error');
+          }
+        })
         .map((snapshot) {
+          if (kDebugMode) {
+            debugPrint('📊 Buyer receipts snapshot: ${snapshot.docs.length} documents');
+            for (var doc in snapshot.docs) {
+              debugPrint('   Receipt: ${doc.id} - ${doc.data()}');
+            }
+          }
           return snapshot.docs
               .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
               .toList();
@@ -180,12 +195,27 @@ class ReceiptService {
 
   /// Stream receipts for a seller
   Stream<List<Receipt>> streamSellerReceipts(String sellerId) {
+    if (kDebugMode) {
+      debugPrint('🔍 Streaming seller receipts for seller_id: $sellerId');
+    }
+
     return _firestore
         .collection('receipts')
         .where('seller_id', isEqualTo: sellerId)
         .orderBy('created_at', descending: true)
         .snapshots()
+        .handleError((error) {
+          if (kDebugMode) {
+            debugPrint('❌ Error in streamSellerReceipts: $error');
+          }
+        })
         .map((snapshot) {
+          if (kDebugMode) {
+            debugPrint('📊 Seller receipts snapshot: ${snapshot.docs.length} documents');
+            for (var doc in snapshot.docs) {
+              debugPrint('   Receipt: ${doc.id} - ${doc.data()}');
+            }
+          }
           return snapshot.docs
               .map((doc) => Receipt.fromFirestore(doc.data(), doc.id))
               .toList();

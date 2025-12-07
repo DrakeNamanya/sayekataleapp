@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
-import '../../models/psa_verification.dart';
-import '../../services/psa_verification_service.dart';
-import 'psa_verification_form_screen.dart';
 import 'psa_business_info_screen.dart';
 import '../common/help_support_screen.dart';
 import '../../widgets/account_deletion_dialog.dart';
@@ -18,13 +16,250 @@ class PSAProfileScreen extends StatefulWidget {
 }
 
 class _PSAProfileScreenState extends State<PSAProfileScreen> {
-  final PSAVerificationService _verificationService = PSAVerificationService();
+  // Password change dialog
+  Future<void> _showChangePasswordDialog(BuildContext context) async {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isCurrentPasswordVisible = false;
+    bool isNewPasswordVisible = false;
+    bool isConfirmPasswordVisible = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Change Password'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Current Password
+                  TextFormField(
+                    controller: currentPasswordController,
+                    obscureText: !isCurrentPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Current Password',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isCurrentPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isCurrentPasswordVisible = !isCurrentPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter current password';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // New Password
+                  TextFormField(
+                    controller: newPasswordController,
+                    obscureText: !isNewPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isNewPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isNewPasswordVisible = !isNewPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter new password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Confirm Password
+                  TextFormField(
+                    controller: confirmPasswordController,
+                    obscureText: !isConfirmPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm New Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isConfirmPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please confirm new password';
+                      }
+                      if (value != newPasswordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(context);
+                  await _changePassword(
+                    currentPasswordController.text,
+                    newPasswordController.text,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              child: const Text('Change Password'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Change password method
+  Future<void> _changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      // Show loading dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Changing password...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Get current user
+      final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Re-authenticate with current password
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Password changed successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      String errorMessage;
+      if (e.code == 'wrong-password') {
+        errorMessage = 'Current password is incorrect';
+      } else if (e.code == 'weak-password') {
+        errorMessage = 'New password is too weak';
+      } else if (e.code == 'requires-recent-login') {
+        errorMessage = 'Please logout and login again to change password';
+      } else {
+        errorMessage = 'Failed to change password: ${e.message}';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.pop(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
-    final userId = user?.id ?? '';
 
     return Scaffold(
       body: CustomScrollView(
@@ -129,91 +364,10 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 8),
-
-                // Verification Status Banner
-                StreamBuilder<PsaVerification?>(
-                  stream: _verificationService.streamPsaVerification(userId),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final verification = snapshot.data;
-
-                    if (verification == null) {
-                      // No verification submitted - prompt to complete
-                      return _VerificationBanner(
-                        status: 'incomplete',
-                        title: 'Complete Your Business Verification',
-                        subtitle:
-                            'Submit your business documents to start selling',
-                        icon: Icons.warning_amber,
-                        color: Colors.orange,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const PSAVerificationFormScreen(),
-                            ),
-                          ).then((_) => setState(() {}));
-                        },
-                      );
-                    }
-
-                    // Show verification status
-                    if (verification.status == PsaVerificationStatus.pending ||
-                        verification.status ==
-                            PsaVerificationStatus.underReview) {
-                      return _VerificationBanner(
-                        status: 'pending',
-                        title: 'Verification Under Review',
-                        subtitle: 'Your documents are being reviewed by admin',
-                        icon: Icons.hourglass_empty,
-                        color: Colors.blue,
-                        onTap: null,
-                      );
-                    }
-
-                    if (verification.status == PsaVerificationStatus.approved) {
-                      return _VerificationBanner(
-                        status: 'approved',
-                        title: 'Verified Business',
-                        subtitle: 'Your business is verified and active',
-                        icon: Icons.verified,
-                        color: Colors.green,
-                        onTap: null,
-                      );
-                    }
-
-                    if (verification.status == PsaVerificationStatus.rejected) {
-                      return _VerificationBanner(
-                        status: 'rejected',
-                        title: 'Verification Rejected',
-                        subtitle:
-                            verification.rejectionReason ??
-                            'Please update your documents',
-                        icon: Icons.cancel,
-                        color: Colors.red,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PSAVerificationFormScreen(
-                                existingVerification: verification,
-                              ),
-                            ),
-                          ).then((_) => setState(() {}));
-                        },
-                      );
-                    }
-
-                    return const SizedBox.shrink();
-                  },
-                ),
-
                 const SizedBox(height: 16),
+
+                // SIMPLIFIED FLOW: Admin PSA - no verification banner needed
+                // Admin is already verified and can add products directly
 
                 // Business Section
                 const Text(
@@ -254,25 +408,9 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                     // TODO: Navigate to location settings
                   },
                 ),
-                _ProfileOption(
-                  icon: Icons.verified,
-                  title: 'Verification Documents',
-                  subtitle: 'Business license and certifications',
-                  onTap: () async {
-                    final verification = await _verificationService
-                        .getPsaVerification(userId);
-                    if (context.mounted) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PSAVerificationFormScreen(
-                            existingVerification: verification,
-                          ),
-                        ),
-                      ).then((_) => setState(() {}));
-                    }
-                  },
-                ),
+                
+                // SIMPLIFIED FLOW: Verification documents removed
+                // Admin PSA doesn't need verification documents
 
                 const SizedBox(height: 24),
 
@@ -323,6 +461,14 @@ class _PSAProfileScreenState extends State<PSAProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                _ProfileOption(
+                  icon: Icons.lock_outline,
+                  title: 'Change Password',
+                  subtitle: 'Update your account password',
+                  onTap: () {
+                    _showChangePasswordDialog(context);
+                  },
+                ),
                 _ProfileOption(
                   icon: Icons.notifications,
                   title: 'Notification Settings',
@@ -614,75 +760,5 @@ class _ProfileOption extends StatelessWidget {
   }
 }
 
-class _VerificationBanner extends StatelessWidget {
-  final String status;
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _VerificationBanner({
-    required this.status,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color, width: 2),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onTap != null) Icon(Icons.arrow_forward, color: color),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// SIMPLIFIED FLOW: _VerificationBanner removed
+// Admin PSA doesn't need verification banner

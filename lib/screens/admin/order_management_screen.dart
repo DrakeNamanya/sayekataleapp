@@ -443,19 +443,28 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
         foregroundColor: Colors.white,
         actions: [
           if (kIsWeb)
-            IconButton(
-              icon: _isExporting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.download),
-              onPressed: _isExporting ? null : _exportToCSV,
-              tooltip: 'Export to CSV',
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: ElevatedButton.icon(
+                onPressed: _isExporting ? null : _exportToCSV,
+                icon: _isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.file_download, size: 18),
+                label: Text(_isExporting ? 'Exporting...' : 'Export Excel'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF2E7D32),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
             ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadOrders),
         ],
@@ -657,7 +666,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                               ),
                               DataColumn(
                                 label: Text(
-                                  'User Name',
+                                  'Buyer Name',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -711,8 +720,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                                 if (items.isNotEmpty) {
                                   productNames = items
                                       .map(
-                                        (item) =>
-                                            item['product_name'] ?? 'Unknown',
+                                        (item) {
+                                          final productName = item['product_name'] ?? item['productName'];
+                                          return productName?.toString() ?? 'Product';
+                                        },
                                       )
                                       .join(', ');
                                   for (var item in items) {
@@ -793,9 +804,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                        color: statusColor.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(color: statusColor),
                                       ),

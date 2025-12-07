@@ -973,6 +973,58 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                           ),
                         ),
                       ),
+                    // District Tag (centered at top)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.7),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.location_city,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                productWithFarmer.farmerDistrict,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black,
+                                      blurRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     // Favorite Heart Button (adjust position if PSA)
                     Positioned(
                       top: farmer.role == UserRole.psa ? 44 : 8,
@@ -1314,56 +1366,112 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Image
+              // Product Image with District Tag
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: product.images.isNotEmpty
-                    ? Image.network(
-                        product.images[0],
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          if (kDebugMode) {
-                            debugPrint('🖼️ [ListView] Loading image: ${product.images[0]}');
-                          }
-                          return Container(
+                child: Stack(
+                  children: [
+                    product.images.isNotEmpty
+                        ? Image.network(
+                            product.images[0],
                             width: 120,
                             height: 120,
-                            color: Colors.grey[100],
-                            child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          if (kDebugMode) {
-                            debugPrint('❌ [ListView] Failed to load image: ${product.images[0]}');
-                            debugPrint('Error: $error');
-                          }
-                          return Container(
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              if (kDebugMode) {
+                                debugPrint('🖼️ [ListView] Loading image: ${product.images[0]}');
+                              }
+                              return Container(
+                                width: 120,
+                                height: 120,
+                                color: Colors.grey[100],
+                                child: Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              if (kDebugMode) {
+                                debugPrint('❌ [ListView] Failed to load image: ${product.images[0]}');
+                                debugPrint('Error: $error');
+                              }
+                              return Container(
+                                width: 120,
+                                height: 120,
+                                color: Colors.grey[200],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
                             width: 120,
                             height: 120,
                             color: Colors.grey[200],
                             child: const Icon(
-                              Icons.image_not_supported,
+                              Icons.image,
                               size: 40,
                               color: Colors.grey,
                             ),
-                          );
-                        },
-                      )
-                    : Container(
-                        width: 120,
-                        height: 120,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image,
-                          size: 40,
-                          color: Colors.grey,
+                          ),
+                    // District Tag (centered at top of image)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.7),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.location_city,
+                              size: 10,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 3),
+                            Flexible(
+                              child: Text(
+                                productWithFarmer.farmerDistrict,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black,
+                                      blurRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 12),
 
