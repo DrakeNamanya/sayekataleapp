@@ -50,29 +50,30 @@ service cloud.firestore {
     }
     
     // ========================================
-    // PSA Verifications Collection (FIXED)
+    // PSA Verifications Collection (SIMPLIFIED FLOW)
     // ========================================
     match /psa_verifications/{verificationId} {
       // Admins can read all verification requests
       allow read: if isAdmin();
       
       // PSA users can read their own verification status
-      allow get: if isAuthenticated() && resource.data.psa_id == request.auth.uid;
+      allow get: if isAuthenticated() && resource.data.userId == request.auth.uid;
       
       // PSA users can query their own verifications
-      allow list: if isAuthenticated() && request.auth.uid != null;
+      allow list: if isAuthenticated();
       
-      // PSA users can create verification requests with their own psa_id
-      allow create: if isAuthenticated() && request.resource.data.psa_id == request.auth.uid;
+      // ✅ NEW FLOW: PSA users can create verification submission with their userId
+      // This happens right after registration when they submit the 6-step form
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending';
       
-      // ✅ CRITICAL FIX: Separate update rules to prevent permission conflicts
-      // PSA users can update their own pending/rejected verifications
+      // ✅ PSA users can update their own pending/rejected verifications (resubmit)
       allow update: if isAuthenticated() && 
-                       resource.data.psa_id == request.auth.uid &&
-                       resource.data.status in ['pending', 'rejected', 'moreInfoRequired'];
+                       resource.data.userId == request.auth.uid &&
+                       resource.data.status in ['pending', 'rejected'];
       
-      // ✅ CRITICAL FIX: Admin can update ANY verification (approve/reject)
-      // This separate rule prevents batch write conflicts
+      // ✅ Admin can update ANY verification to approve/reject
       allow update: if isAdmin();
       
       // Only admins can delete verifications
@@ -90,24 +91,25 @@ service cloud.firestore {
 
 
     // ========================================
-    // Users Collection
+    // Users Collection (SIMPLIFIED PSA FLOW)
     // ========================================
     
     match /users/{userId} {
       // Anyone authenticated can read user profiles (for marketplace)
       allow read: if isAuthenticated();
       
-      // ✅ CRITICAL FIX: Combined create/update rule to handle both scenarios
-      // This allows both initial profile creation AND updates without "not-found" errors
-      // Users can create/update their own profile (userId MUST match Firebase Auth UID)
-      // Cannot change role or critical fields during update
-      allow create, update: if isOwner(userId) &&
-                               (!('role' in request.resource.data) || 
-                                !('role' in resource.data) || 
-                                request.resource.data.role == resource.data.role) &&
-                               (!('uid' in request.resource.data) || 
-                                !('uid' in resource.data) || 
-                                request.resource.data.uid == resource.data.uid);
+      // ✅ Users can create their own profile (userId MUST match Firebase Auth UID)
+      allow create: if isOwner(userId);
+      
+      // ✅ Users can update their own profile
+      // Cannot change role or verificationStatus (only admin can change these)
+      allow update: if isOwner(userId) &&
+                       (!('role' in request.resource.data.diff(resource.data).affectedKeys()) &&
+                        !('verificationStatus' in request.resource.data.diff(resource.data).affectedKeys()));
+      
+      // ✅ Only admins can update verificationStatus (when approving/rejecting PSA)
+      allow update: if isAdmin() &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verificationStatus', 'isVerified', 'verifiedAt']);
       
       // ✅ ACCOUNT DELETION: Allow users to delete their own account OR admins can delete any
       allow delete: if isOwner(userId) || isAdmin();

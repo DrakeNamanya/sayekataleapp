@@ -8,9 +8,9 @@ import '../../services/product_service.dart';
 import '../../utils/app_theme.dart';
 import '../../models/order.dart' as app_order;
 import '../../widgets/admob_banner_widget.dart';
-import '../../widgets/profile_completion_gate.dart';
-import '../../widgets/psa_approval_gate.dart';
-import '../../widgets/psa_subscription_gate.dart';
+import '../../widgets/verified_badge.dart';
+import '../../models/user.dart';
+import 'psa_verification_status_screen.dart';
 import 'psa_products_screen.dart';
 import 'psa_orders_screen.dart';
 import 'psa_customers_screen.dart';
@@ -50,16 +50,16 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final supplierId = authProvider.currentUser?.id ?? '';
+    final currentUser = authProvider.currentUser;
+    final supplierId = currentUser?.id ?? '';
     final orderService = OrderService();
 
-    return ProfileCompletionGate(
-      blockedFeatureName: 'PSA Dashboard',
-      child: PSAApprovalGate(
-        blockedFeatureName: 'PSA Dashboard',
-        child: PSASubscriptionGate(
-          blockedFeatureName: 'PSA Dashboard',
-          child: Scaffold(
+    // Check verification status - redirect if not verified
+    if (currentUser != null && currentUser.verificationStatus != VerificationStatus.verified) {
+      return const PSAVerificationStatusScreen();
+    }
+
+    return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: FutureBuilder<int>(
         future: orderService.getFarmerPendingOrdersCount(supplierId),
@@ -116,9 +116,6 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
             ],
           );
         },
-      ),
-      ),
-      ),
       ),
     );
   }
@@ -236,26 +233,38 @@ class _DashboardHomeState extends State<_DashboardHome> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Supplier Dashboard',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Supplier Dashboard',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Show verified badge
+                                      const VerifiedBadge(
+                                        fontSize: 11,
+                                        iconSize: 14,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  user?.name ?? 'Supplier',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user?.name ?? 'Supplier',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             Row(
                               children: [
