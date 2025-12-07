@@ -51,11 +51,37 @@ class _PSADashboardScreenState extends State<PSADashboardScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final currentUser = authProvider.currentUser;
-    final supplierId = currentUser?.id ?? '';
     final orderService = OrderService();
 
+    // Show loading indicator if user data not loaded yet
+    if (currentUser == null) {
+      return Scaffold(
+        backgroundColor: AppTheme.lightBackground,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading your profile...',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final supplierId = currentUser.id;
+
     // Check verification status - redirect if not verified
-    if (currentUser != null && currentUser.verificationStatus != VerificationStatus.verified) {
+    if (currentUser.verificationStatus != VerificationStatus.verified) {
       return const PSAVerificationStatusScreen();
     }
 
