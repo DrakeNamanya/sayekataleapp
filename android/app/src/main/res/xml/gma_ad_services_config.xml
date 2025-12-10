@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AdMob Ad Services Configuration -->
+<!-- This file declares that the app uses advertising ID for AdMob monetization -->
+<ad-services-config>
+    <attribution>
+        <!-- Enable attribution tracking for ad performance -->
+        <attribution-enabled>true</attribution-enabled>
+    </attribution>
+</ad-services-config>

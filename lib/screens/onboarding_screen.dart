@@ -90,6 +90,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     try {
       if (_isSignUpMode) {
+        // Show loading indicator
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Text('Creating your account...'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 30),
+            ),
+          );
+        }
+
         // Sign Up with Email
         await _authService.signUpWithEmail(
           email: _emailController.text.trim(),
@@ -100,52 +126,124 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           district: _selectedDistrict,
         );
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sign up successful! Please verify your email.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 5),
-            ),
-          );
-        }
-
-        // 🔧 FIX: Wait for AuthProvider to load user profile before navigating
         if (kDebugMode) {
-          debugPrint('⏳ ONBOARDING - Waiting for AuthProvider to load user...');
+          debugPrint('✅ ONBOARDING - Sign up completed, account and profile created');
         }
 
-        // Wait for AuthProvider to detect the new user and load profile
+        // 🔧 IMPROVED: Wait for AuthProvider with better UX
+        if (kDebugMode) {
+          debugPrint('⏳ ONBOARDING - Waiting for AuthProvider to sync...');
+        }
+
         final authProvider = Provider.of<app_auth.AuthProvider>(
           context,
           listen: false,
         );
 
-        // Poll until user is loaded (max 10 seconds)
+        // Poll until user is loaded (max 10 seconds - reduced from 30s)
         int attempts = 0;
-        while ((!authProvider.isAuthenticated || authProvider.currentUser == null) && attempts < 20) {
+        const maxAttempts = 20; // 20 × 500ms = 10 seconds
+        bool showedSlowNetworkWarning = false;
+        
+        while ((!authProvider.isAuthenticated || authProvider.currentUser == null) && attempts < maxAttempts) {
           await Future.delayed(const Duration(milliseconds: 500));
           attempts++;
 
-          if (kDebugMode) {
+          // Show "still loading" message after 3 seconds
+          if (attempts == 6 && !showedSlowNetworkWarning && mounted) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Text('Still loading your profile...'),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 10),
+              ),
+            );
+            showedSlowNetworkWarning = true;
+          }
+
+          if (kDebugMode && attempts % 4 == 0) {
             debugPrint(
-              '⏳ ONBOARDING - Attempt $attempts: isAuthenticated = ${authProvider.isAuthenticated}, currentUser = ${authProvider.currentUser != null ? "loaded" : "null"}',
+              '⏳ ONBOARDING - Attempt $attempts/$maxAttempts: Auth=${authProvider.isAuthenticated}, User=${authProvider.currentUser != null ? "loaded" : "null"}',
             );
           }
         }
 
+        // Clear any loading snackbars
+        if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        }
+
+        // Check if profile loaded successfully
         if (!authProvider.isAuthenticated || authProvider.currentUser == null) {
           if (kDebugMode) {
             debugPrint(
-              '⚠️ ONBOARDING - AuthProvider did not load user after 10 seconds',
+              '❌ ONBOARDING - Profile not loaded after ${maxAttempts * 500}ms',
             );
           }
-        } else {
-          if (kDebugMode) {
-            debugPrint(
-              '✅ ONBOARDING - AuthProvider loaded user: ${authProvider.currentUser?.name}',
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  '✅ Account created successfully!\n\n⚠️ Slow network detected. Please sign in to continue.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 6),
+                action: SnackBarAction(
+                  label: 'Sign In',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isSignUpMode = false;
+                    });
+                  },
+                ),
+              ),
             );
+            
+            // Auto-switch to sign-in mode
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                setState(() {
+                  _isSignUpMode = false;
+                });
+              }
+            });
           }
+          return;
+        }
+
+        // Success! Show completion message
+        if (kDebugMode) {
+          debugPrint(
+            '✅ ONBOARDING - Profile loaded: ${authProvider.currentUser?.name}',
+          );
+        }
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Account created successfully! Redirecting...'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
       } else {
         // Sign In with Email
@@ -201,21 +299,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (e.code == 'weak-password') {
         errorMessage = 'Password is too weak (min 6 characters)';
       } else if (e.code == 'email-already-in-use') {
-        errorMessage = 'Email already registered. Please sign in.';
+        errorMessage = '⚠️ This email is already registered.\n\nPlease sign in instead or use a different email.';
         
-        // Switch to sign-in mode
+        // Clear any loading snackbars first
         if (mounted) {
-          setState(() {
-            _isSignUpMode = false;
-          });
+          ScaffoldMessenger.of(context).clearSnackBars();
           
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(errorMessage),
               backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 5),
+              duration: const Duration(seconds: 6),
+              action: SnackBarAction(
+                label: 'Sign In',
+                textColor: Colors.white,
+                onPressed: () {
+                  setState(() {
+                    _isSignUpMode = false;
+                  });
+                },
+              ),
             ),
           );
+          
+          // Auto-switch to sign-in mode after short delay
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (mounted) {
+              setState(() {
+                _isSignUpMode = false;
+              });
+            }
+          });
         }
         return; // IMPORTANT: Stop execution after error
       } else if (e.code == 'user-not-found') {
@@ -229,9 +343,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
 
       if (mounted) {
+        // Clear any loading snackbars
+        ScaffoldMessenger.of(context).clearSnackBars();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text('❌ $errorMessage'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -245,9 +362,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
 
       if (mounted) {
+        // Clear any loading snackbars
+        ScaffoldMessenger.of(context).clearSnackBars();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unexpected Error:\n${e.toString()}'),
+            content: Text('❌ Unexpected Error:\n${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 8),
           ),

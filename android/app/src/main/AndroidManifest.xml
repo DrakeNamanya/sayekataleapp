@@ -21,6 +21,10 @@
     <!-- Photo picker for Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     
+    <!-- Advertising ID declaration for Google Play (Required for Android 13+) -->
+    <!-- This app uses AdMob for advertising -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+    
     <application
         android:label="SAYE KATALE"
         android:name="${applicationName}"
