@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedDistrict;
   final _authService = FirebaseEmailAuthService();
 
-  // Official districts from districtinformation.xlsx
+  // Official districts - 13 districts including Kiboga
   final List<String> _districts = [
     'BUGIRI',
     'BUGWERI',
@@ -38,6 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'JINJA CITY',
     'KALIRO',
     'KAMULI',
+    'KIBOGA',  // Added: 14 subcounties, 53 parishes, 264 villages
     'LUUKA',
     'MAYUGE',
     'NAMAYINGO',
