@@ -30,6 +30,7 @@ analyzer:
     unnecessary_to_list_in_spreads: info
     invalid_null_aware_operator: info
     unnecessary_non_null_assertion: info
+    unnecessary_null_comparison: info
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -138,7 +138,7 @@ class OrderExportService {
           'Total Amount': 'UGX ${order.totalAmount.toStringAsFixed(0)}',
           'Status': _getStatusDisplayName(order.status),
           'Payment Status': order.transactionId != null ? 'Paid' : 'Pending',
-          'Delivery Address': order.deliveryAddress != null && order.deliveryAddress.isNotEmpty 
+          'Delivery Address': order.deliveryAddress.isNotEmpty 
               ? order.deliveryAddress 
               : 'N/A',
         });
