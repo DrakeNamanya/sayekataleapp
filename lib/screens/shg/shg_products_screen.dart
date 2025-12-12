@@ -317,9 +317,11 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
     String selectedUnit = 'KGs';
     List<XFile> selectedImages = []; // Store up to 3 images
     final imagePickerService = ImagePickerService();
+    bool isSubmitting = false; // Prevent duplicate submissions
 
     showDialog(
       context: context,
+      barrierDismissible: false, // Prevent dismissing during submission
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Add Product'),
@@ -557,107 +559,130 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: isSubmitting ? null : () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.trim().isEmpty ||
-                    priceController.text.trim().isEmpty ||
-                    stockController.text.trim().isEmpty ||
-                    selectedMainCategory == null ||
-                    selectedSubcategory == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please fill all required fields'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      // Prevent duplicate submissions
+                      if (isSubmitting) return;
 
-                try {
-                  final authProvider = Provider.of<app_auth.AuthProvider>(
-                    context,
-                    listen: false,
-                  );
-                  final user = authProvider.currentUser!;
+                      if (nameController.text.trim().isEmpty ||
+                          priceController.text.trim().isEmpty ||
+                          stockController.text.trim().isEmpty ||
+                          selectedMainCategory == null ||
+                          selectedSubcategory == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all required fields'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
-                  // Upload product images to Firebase Storage
-                  List<String>? imageUrls;
-                  if (selectedImages.isNotEmpty) {
-                    if (kDebugMode) {
-                      debugPrint(
-                        '📤 Uploading ${selectedImages.length} product images...',
-                      );
-                    }
+                      // Set submitting state
+                      setDialogState(() {
+                        isSubmitting = true;
+                      });
 
-                    final imageStorageService = ImageStorageService();
-                    final firebaseUid =
-                        firebase_auth.FirebaseAuth.instance.currentUser!.uid;
-                    imageUrls = await imageStorageService
-                        .uploadMultipleImagesFromXFiles(
-                          images: selectedImages,
-                          folder: 'products',
-                          userId:
-                              firebaseUid, // Use Firebase Auth UID, not user.id
-                          compress: true,
-                        )
-                        .timeout(
-                          const Duration(seconds: 60),
-                          onTimeout: () {
-                            throw Exception(
-                              'Image upload timeout - please check your internet connection',
+                      try {
+                        final authProvider = Provider.of<app_auth.AuthProvider>(
+                          context,
+                          listen: false,
+                        );
+                        final user = authProvider.currentUser!;
+
+                        // Upload product images to Firebase Storage
+                        List<String>? imageUrls;
+                        if (selectedImages.isNotEmpty) {
+                          if (kDebugMode) {
+                            debugPrint(
+                              '📤 Uploading ${selectedImages.length} product images...',
                             );
-                          },
+                          }
+
+                          final imageStorageService = ImageStorageService();
+                          final firebaseUid = firebase_auth
+                              .FirebaseAuth.instance.currentUser!.uid;
+                          imageUrls = await imageStorageService
+                              .uploadMultipleImagesFromXFiles(
+                                images: selectedImages,
+                                folder: 'products',
+                                userId:
+                                    firebaseUid, // Use Firebase Auth UID, not user.id
+                                compress: true,
+                              )
+                              .timeout(
+                                const Duration(seconds: 60),
+                                onTimeout: () {
+                                  throw Exception(
+                                    'Image upload timeout - please check your internet connection',
+                                  );
+                                },
+                              );
+
+                          if (kDebugMode) {
+                            debugPrint(
+                              '✅ Uploaded ${imageUrls.length} product images',
+                            );
+                          }
+                        }
+
+                        // Create product with all uploaded images
+                        await _productService.createProduct(
+                          farmerId: user.id,
+                          farmerName: user.name,
+                          name: nameController.text.trim(),
+                          description: descController.text.trim(),
+                          category: selectedCategory,
+                          mainCategory: selectedMainCategory,
+                          subcategory: selectedSubcategory,
+                          price: double.parse(priceController.text.trim()),
+                          unit: selectedUnit,
+                          stockQuantity: int.parse(stockController.text.trim()),
+                          imageUrls: imageUrls, // Pass all images
                         );
 
-                    if (kDebugMode) {
-                      debugPrint(
-                        '✅ Uploaded ${imageUrls.length} product images',
-                      );
-                    }
-                  }
-
-                  // Create product with all uploaded images
-                  await _productService.createProduct(
-                    farmerId: user.id,
-                    farmerName: user.name,
-                    name: nameController.text.trim(),
-                    description: descController.text.trim(),
-                    category: selectedCategory,
-                    mainCategory: selectedMainCategory,
-                    subcategory: selectedSubcategory,
-                    price: double.parse(priceController.text.trim()),
-                    unit: selectedUnit,
-                    stockQuantity: int.parse(stockController.text.trim()),
-                    imageUrls: imageUrls, // Pass all images
-                  );
-
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('✅ Product added successfully!'),
-                        backgroundColor: Colors.green,
+                        if (mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ Product added successfully!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (kDebugMode) {
+                          debugPrint('❌ Error adding product: $e');
+                        }
+                        // Reset submitting state on error
+                        if (mounted) {
+                          setDialogState(() {
+                            isSubmitting = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
-                    );
-                  }
-                } catch (e) {
-                  if (kDebugMode) {
-                    debugPrint('❌ Error adding product: $e');
-                  }
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('Add'),
+                    )
+                  : const Text('Add'),
             ),
           ],
         ),

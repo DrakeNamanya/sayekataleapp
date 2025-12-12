@@ -9,6 +9,8 @@ import 'order_management_screen.dart';
 import 'admin_analytics_dashboard.dart';
 import 'complaints_screen.dart';
 import 'team_management_screen.dart';
+import 'send_notification_screen.dart';
+import 'call_analytics_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final AdminUser adminUser;
@@ -561,7 +563,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
         },
       });
+      
+      // Call Analytics (track SME interactions)
+      actions.add({
+        'title': 'Call Analytics',
+        'icon': Icons.phone_in_talk,
+        'color': Colors.deepOrange,
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CallAnalyticsScreen(),
+            ),
+          );
+        },
+      });
     }
+
+    // Send Notifications (all admins can send notifications)
+    actions.add({
+      'title': 'Send Notification',
+      'icon': Icons.notifications_active,
+      'color': Colors.amber,
+      'onTap': () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SendNotificationScreen(),
+          ),
+        );
+      },
+    });
 
     if (widget.adminUser.hasPermission(AdminPermissions.manageAdmins)) {
       actions.add({

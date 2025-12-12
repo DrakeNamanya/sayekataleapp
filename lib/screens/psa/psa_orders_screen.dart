@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
+import '../../utils/download_helper.dart' as download_helper;
 import '../../providers/auth_provider.dart';
 import '../../services/order_service.dart';
+import '../../services/order_export_service.dart';
 import '../../models/order.dart' as app_order;
 
 class PSAOrdersScreen extends StatefulWidget {
@@ -16,6 +19,7 @@ class PSAOrdersScreen extends StatefulWidget {
 class _PSAOrdersScreenState extends State<PSAOrdersScreen>
     with SingleTickerProviderStateMixin {
   final OrderService _orderService = OrderService();
+  final OrderExportService _exportService = OrderExportService();
   late TabController _tabController;
 
   final List<String> _statusFilters = [
@@ -28,6 +32,7 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen>
     'Completed',
   ];
   String _selectedFilter = 'All';
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -52,6 +57,50 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen>
         title: const Text('My Orders'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.download),
+            enabled: !_isExporting,
+            onSelected: (value) async {
+              if (value == 'csv') {
+                await _exportOrdersToCSV(psaId);
+              } else if (value == 'pdf') {
+                await _exportOrdersToPDF(psaId);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'csv',
+                child: Row(
+                  children: [
+                    Icon(Icons.table_chart, size: 20),
+                    SizedBox(width: 12),
+                    Text('Download Excel (CSV)'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'pdf',
+                child: Row(
+                  children: [
+                    Icon(Icons.picture_as_pdf, size: 20),
+                    SizedBox(width: 12),
+                    Text('Download PDF'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -996,6 +1045,115 @@ class _PSAOrdersScreenState extends State<PSAOrdersScreen>
         return 'Airtel Money';
       case app_order.PaymentMethod.bankTransfer:
         return 'Bank Transfer';
+    }
+  }
+
+  Future<void> _exportOrdersToCSV(String psaId) async {
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final csvString = await _exportService.exportToCSV(psaId);
+
+      if (csvString == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No orders found to export'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // For web platform, trigger download
+      if (kIsWeb) {
+        final bytes = utf8.encode(csvString);
+        final fileName = 'PSA_Orders_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+        download_helper.downloadFile(bytes, fileName);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ CSV file downloaded successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error exporting CSV: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _exportOrdersToPDF(String psaId) async {
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final pdfBase64 = await _exportService.exportToPDF(psaId);
+
+      if (pdfBase64 == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No orders found to export'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // For web platform, trigger download
+      if (kIsWeb) {
+        // Decode base64 string to bytes
+        final bytes = base64Decode(pdfBase64);
+        final fileName = 'PSA_Orders_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+        download_helper.downloadPdf(bytes, fileName);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ PDF file downloaded successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error exporting PDF: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
     }
   }
 }

@@ -68,6 +68,7 @@ dependencies:
   image_picker: ^1.0.7
   image: ^4.1.7  # Image compression and manipulation
   path: ^1.9.0  # File path operations
+  path_provider: ^2.1.1  # Access app directories for file storage
   url_launcher: ^6.2.4
   shimmer: ^3.0.0
   carousel_slider: ^5.0.0

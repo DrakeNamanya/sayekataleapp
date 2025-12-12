@@ -408,4 +408,185 @@ class NotificationService {
       }
     }
   }
+
+  // ============================================================================
+  // ADMIN BROADCAST METHODS
+  // ============================================================================
+
+  /// Send notification to all users (admin broadcast)
+  Future<void> sendNotificationToAllUsers({
+    required String title,
+    required String message,
+    NotificationType? notificationType,
+    String? imageUrl,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      // Get all users
+      final usersSnapshot = await _firestore.collection('users').get();
+
+      // Create batch for better performance
+      final batch = _firestore.batch();
+      int batchCount = 0;
+
+      for (var userDoc in usersSnapshot.docs) {
+        final notificationRef = _firestore.collection('notifications').doc();
+        final now = DateTime.now().toIso8601String();
+        batch.set(notificationRef, {
+          'user_id': userDoc.id,
+          'title': title,
+          'message': message,
+          'type': notificationType != null
+              ? notificationType.toString().split('.').last
+              : 'message',
+          'image_url': imageUrl,
+          'data': data,
+          'is_read': false,
+          'created_at': now,
+        });
+
+        batchCount++;
+
+        // Firestore batch limit is 500 operations
+        if (batchCount >= 500) {
+          await batch.commit();
+          batchCount = 0;
+        }
+      }
+
+      // Commit remaining operations
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      if (kDebugMode) {
+        debugPrint(
+          '✅ Notification sent to ${usersSnapshot.docs.length} users',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error sending notifications to all users: $e');
+        debugPrint('   Error type: ${e.runtimeType}');
+        debugPrint('   Error details: ${e.toString()}');
+        
+        // Check for specific permission errors
+        if (e.toString().contains('permission') || 
+            e.toString().contains('PERMISSION_DENIED')) {
+          debugPrint('');
+          debugPrint('🚨 FIREBASE PERMISSION DENIED!');
+          debugPrint('   This means Firebase Security Rules are blocking notification creation.');
+          debugPrint('');
+          debugPrint('📋 QUICK FIXES:');
+          debugPrint('   1. Check isAdmin() function in Firebase Rules');
+          debugPrint('   2. Verify your user role is "admin" in Firestore');
+          debugPrint('   3. Ensure notifications create rule includes: if isAdmin() ||');
+          debugPrint('');
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Send notification to users by role (admin targeted broadcast)
+  Future<void> sendNotificationByRole({
+    required String role, // 'SHG', 'SME', 'PSA', 'ADMIN'
+    required String title,
+    required String message,
+    NotificationType? notificationType,
+    String? imageUrl,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      // Get users with specific role
+      final usersSnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: role)
+          .get();
+
+      // Create batch for better performance
+      final batch = _firestore.batch();
+      int batchCount = 0;
+
+      for (var userDoc in usersSnapshot.docs) {
+        final notificationRef = _firestore.collection('notifications').doc();
+        final now = DateTime.now().toIso8601String();
+        batch.set(notificationRef, {
+          'user_id': userDoc.id,
+          'title': title,
+          'message': message,
+          'type': notificationType != null
+              ? notificationType.toString().split('.').last
+              : 'message',
+          'image_url': imageUrl,
+          'data': data,
+          'is_read': false,
+          'created_at': now,
+        });
+
+        batchCount++;
+
+        // Firestore batch limit is 500 operations
+        if (batchCount >= 500) {
+          await batch.commit();
+          batchCount = 0;
+        }
+      }
+
+      // Commit remaining operations
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      if (kDebugMode) {
+        debugPrint(
+          '✅ Notification sent to ${usersSnapshot.docs.length} $role users',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error sending notifications by role: $e');
+        debugPrint('   Error type: ${e.runtimeType}');
+        if (e.toString().contains('permission')) {
+          debugPrint('🚨 FIREBASE PERMISSION DENIED - Check Security Rules!');
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Send notification to a single user (admin direct message)
+  Future<void> sendNotificationToUser({
+    required String userId,
+    required String title,
+    required String message,
+    NotificationType? notificationType,
+    String? imageUrl,
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final now = DateTime.now().toIso8601String();
+      await _firestore.collection('notifications').add({
+        'user_id': userId,
+        'title': title,
+        'message': message,
+        'type': notificationType != null
+            ? notificationType.toString().split('.').last
+            : 'message',
+        'image_url': imageUrl,
+        'data': data,
+        'is_read': false,
+        'created_at': now,
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Notification sent to user: $userId');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error sending notification: $e');
+      }
+      rethrow;
+    }
+  }
 }

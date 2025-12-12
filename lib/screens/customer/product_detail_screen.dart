@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/product.dart';
@@ -140,6 +141,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           );
         }
         return;
+      }
+
+      // Track call button click for analytics (admin dashboard)
+      try {
+        await FirebaseFirestore.instance.collection('call_analytics').add({
+          'product_id': widget.product.id,
+          'product_name': widget.product.name,
+          'seller_id': seller.id,
+          'seller_name': seller.name,
+          'buyer_id': currentUser.id,
+          'buyer_name': currentUser.name,
+          'buyer_type': currentUser.role, // SME, SHG, PSA, etc.
+          'clicked_at': FieldValue.serverTimestamp(),
+          'product_price': widget.product.price,
+          'product_category': widget.product.category.name,
+        });
+      } catch (analyticsError) {
+        // Don't block user flow if analytics fails
+        if (kDebugMode) {
+          debugPrint('⚠️ Failed to track call analytics: $analyticsError');
+        }
       }
 
       // Create or get conversation
@@ -457,94 +479,124 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
             ),
-            // Bottom Bar
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Price and Add to Cart Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'Total Price',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
+            // Bottom Bar - Fixed for small screens (Tecno phones)
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  16, 
+                  16, 
+                  16, 
+                  16 + MediaQuery.of(context).padding.bottom,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Price and Add to Cart Row
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Total Price',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'UGX ${(widget.product.price * _quantity).toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 4,
+                          child: ElevatedButton.icon(
+                            onPressed: widget.product.isOutOfStock
+                                ? null
+                                : () {
+                                    cartProvider.addItem(
+                                      widget.product,
+                                      quantity: _quantity,
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Added $_quantity x ${widget.product.name} to cart',
+                                        ),
+                                        action: SnackBarAction(
+                                          label: 'View Cart',
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            icon: const Icon(Icons.shopping_cart_outlined, size: 18),
+                            label: const Text(
+                              'Add to Cart',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
                               ),
                             ),
-                            Text(
-                              'UGX ${(widget.product.price * _quantity).toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: widget.product.isOutOfStock
-                              ? null
-                              : () {
-                                  cartProvider.addItem(
-                                    widget.product,
-                                    quantity: _quantity,
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Added $_quantity x ${widget.product.name} to cart',
-                                      ),
-                                      action: SnackBarAction(
-                                        label: 'View Cart',
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                          icon: const Icon(Icons.shopping_cart_outlined),
-                          label: const Text('Add to Cart'),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Message Seller Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _handleContactSeller,
+                        icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                        label: const Text(
+                          'Message Seller',
+                          style: TextStyle(fontSize: 14),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Message Seller Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _handleContactSeller,
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: const Text('Message Seller'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        foregroundColor: AppTheme.primaryColor,
-                        side: BorderSide(color: AppTheme.primaryColor),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          foregroundColor: AppTheme.primaryColor,
+                          side: const BorderSide(
+                            color: AppTheme.primaryColor,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
