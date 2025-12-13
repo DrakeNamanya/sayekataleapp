@@ -36,8 +36,8 @@ class ProductWithFarmer {
   /// Get farmer contact phone
   String get farmerPhone => farmer.phone;
 
-  /// Get farmer district
-  String get farmerDistrict => farmer.location?.district ?? 'Unknown district';
+  /// Get farmer district (returns empty string if not set - don't show "Unknown")
+  String get farmerDistrict => farmer.location?.district ?? '';
 
   /// Get farmer address
   String get farmerAddress =>

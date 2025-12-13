@@ -439,7 +439,7 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                 const SizedBox(height: 16),
                 // Product Photos Section
                 const Text(
-                  'Product Photos (Up to 3)',
+                  'Product Photos (At least 1 required) *',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
@@ -578,6 +578,18 @@ class _SHGProductsScreenState extends State<SHGProductsScreen> {
                           const SnackBar(
                             content: Text('Please fill all required fields'),
                             backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // ✅ CRITICAL: Validate that at least one photo is selected
+                      if (selectedImages.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('⚠️ Please add at least one product photo'),
+                            backgroundColor: Colors.orange,
+                            duration: Duration(seconds: 3),
                           ),
                         );
                         return;

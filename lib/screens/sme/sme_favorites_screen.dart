@@ -433,28 +433,31 @@ class _SMEFavoritesScreenState extends State<SMEFavoritesScreen> {
                   const SizedBox(height: 2),
 
                   // District
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_city,
-                        size: 12,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          productWithFarmer.farmerDistrict,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  // Only show district row if district is set
+                  if (productWithFarmer.farmerDistrict.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_city,
+                          size: 12,
+                          color: Colors.grey,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            productWithFarmer.farmerDistrict,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
 
                   // Stock Info
                   Row(

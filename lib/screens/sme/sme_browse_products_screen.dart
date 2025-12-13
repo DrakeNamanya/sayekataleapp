@@ -973,47 +973,48 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                           ),
                         ),
                       ),
-                    // District Tag (centered at top)
-                    Positioned(
-                      top: 8,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.75),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  productWithFarmer.farmerDistrict,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                    // District Tag (centered at top) - Only show if district is set
+                    if (productWithFarmer.farmerDistrict.isNotEmpty)
+                      Positioned(
+                        top: 8,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 14,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    productWithFarmer.farmerDistrict,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     // Favorite Heart Button (adjust position if PSA)
                     Positioned(
                       top: farmer.role == UserRole.psa ? 44 : 8,
@@ -1216,28 +1217,31 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                       const SizedBox(height: 2),
 
                     // District
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_city,
-                          size: 12,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            productWithFarmer.farmerDistrict,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    // Only show district row if district is set
+                    if (productWithFarmer.farmerDistrict.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_city,
+                            size: 12,
+                            color: Colors.grey,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              productWithFarmer.farmerDistrict,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
 
                     // Stock Info
                     Row(
@@ -1408,46 +1412,48 @@ class _SMEBrowseProductsScreenState extends State<SMEBrowseProductsScreen> {
                             ),
                           ),
                     // District Tag (centered at top of image)
-                    Positioned(
-                      top: 6,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.75),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                size: 11,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 3),
-                              Flexible(
-                                child: Text(
-                                  productWithFarmer.farmerDistrict,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                    // Only show district badge if district is set
+                    if (productWithFarmer.farmerDistrict.isNotEmpty)
+                      Positioned(
+                        top: 6,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 11,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    productWithFarmer.farmerDistrict,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
