@@ -27,75 +27,118 @@ class AuthProvider with ChangeNotifier {
     _initializeAuth();
   }
 
-  /// Initialize Firebase Auth listener
+  /// Initialize Firebase Auth listener with proper loading state
   Future<void> _initializeAuth() async {
     _isLoading = true;
     notifyListeners();
 
-    // Listen to Firebase Auth state changes
-    _auth.authStateChanges().listen((User? firebaseUser) {
-      if (firebaseUser != null) {
-        _loadUserFromFirestore(firebaseUser.uid);
-      } else {
-        _currentUser = null;
-        _isAuthenticated = false;
-        notifyListeners();
-      }
-    });
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  /// Load user data from Firestore
-  Future<void> _loadUserFromFirestore(String uid) async {
     try {
-      if (kDebugMode) {
-        debugPrint(
-          '🔄 AUTH PROVIDER - Loading user from Firestore for UID: $uid',
-        );
+      // Check if user is already signed in
+      final currentFirebaseUser = _auth.currentUser;
+      
+      if (currentFirebaseUser != null) {
+        // User is signed in, load their profile and wait for it
+        await _loadUserFromFirestore(currentFirebaseUser.uid);
       }
 
-      final user = await _authService.getUserProfile(uid);
-
-      if (user != null) {
-        _currentUser = user;
-        _isAuthenticated = true;
-
-        if (kDebugMode) {
-          debugPrint('✅ AUTH PROVIDER - User loaded successfully:');
-          debugPrint('   - User ID: ${user.id}');
-          debugPrint('   - User Name: ${user.name}');
-          debugPrint('   - Profile Image URL: ${user.profileImage ?? "NULL"}');
-          debugPrint(
-            '   - National ID Photo URL: ${user.nationalIdPhoto ?? "NULL"}',
-          );
-          debugPrint('   - Profile Complete: ${user.isProfileComplete}');
+      // Listen to future auth state changes
+      _auth.authStateChanges().listen((User? firebaseUser) async {
+        if (firebaseUser != null) {
+          await _loadUserFromFirestore(firebaseUser.uid);
+        } else {
+          _currentUser = null;
+          _isAuthenticated = false;
+          notifyListeners();
         }
-
-        // 🔔 Initialize FCM after user is loaded (Issue #1)
-        try {
-          await _fcmService.initialize(user.id);
-          if (kDebugMode) {
-            debugPrint('✅ AUTH PROVIDER - FCM initialized for user ${user.id}');
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            debugPrint('⚠️ AUTH PROVIDER - FCM initialization failed: $e');
-            debugPrint('   This will not block login - user can still use app');
-          }
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('❌ AUTH PROVIDER - User is NULL from getUserProfile()');
-        }
-      }
+      });
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ AUTH PROVIDER - Error loading user from Firestore: $e');
+        debugPrint('❌ AUTH PROVIDER - Initialization error: $e');
       }
     } finally {
+      _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Load user data from Firestore with retry logic
+  Future<void> _loadUserFromFirestore(String uid) async {
+    int retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = Duration(seconds: 2);
+
+    while (retryCount < maxRetries) {
+      try {
+        if (kDebugMode) {
+          debugPrint(
+            '🔄 AUTH PROVIDER - Loading user from Firestore for UID: $uid (attempt ${retryCount + 1}/$maxRetries)',
+          );
+        }
+
+        final user = await _authService.getUserProfile(uid);
+
+        if (user != null) {
+          _currentUser = user;
+          _isAuthenticated = true;
+
+          if (kDebugMode) {
+            debugPrint('✅ AUTH PROVIDER - User loaded successfully:');
+            debugPrint('   - User ID: ${user.id}');
+            debugPrint('   - User Name: ${user.name}');
+            debugPrint('   - Profile Image URL: ${user.profileImage ?? "NULL"}');
+            debugPrint(
+              '   - National ID Photo URL: ${user.nationalIdPhoto ?? "NULL"}',
+            );
+            debugPrint('   - Profile Complete: ${user.isProfileComplete}');
+          }
+
+          // 🔔 Initialize FCM after user is loaded
+          try {
+            await _fcmService.initialize(user.id);
+            if (kDebugMode) {
+              debugPrint('✅ AUTH PROVIDER - FCM initialized for user ${user.id}');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ AUTH PROVIDER - FCM initialization failed: $e');
+              debugPrint('   This will not block login - user can still use app');
+            }
+          }
+
+          notifyListeners();
+          return; // Success, exit retry loop
+        } else {
+          // User profile doesn't exist yet
+          if (kDebugMode) {
+            debugPrint('⚠️ AUTH PROVIDER - User profile not found. Retrying...');
+          }
+          
+          if (retryCount < maxRetries - 1) {
+            await Future.delayed(retryDelay);
+            retryCount++;
+          } else {
+            throw Exception('User profile not found after $maxRetries attempts');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('❌ AUTH PROVIDER - Error loading user (attempt ${retryCount + 1}): $e');
+        }
+
+        if (retryCount < maxRetries - 1) {
+          await Future.delayed(retryDelay);
+          retryCount++;
+        } else {
+          // Max retries reached
+          if (kDebugMode) {
+            debugPrint('❌ AUTH PROVIDER - Max retries reached. Profile load failed.');
+          }
+          _currentUser = null;
+          _isAuthenticated = false;
+          notifyListeners();
+          rethrow;
+        }
+      }
     }
   }
 

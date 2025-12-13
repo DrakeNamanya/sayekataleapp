@@ -73,6 +73,26 @@ class FirebaseEmailAuthService {
         if (kDebugMode) {
           debugPrint('✅ Firestore profile created successfully');
         }
+
+        // Verify profile was actually created
+        try {
+          final verifyProfile = await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+          if (!verifyProfile.exists) {
+            throw Exception('Profile verification failed - document not created');
+          }
+          if (kDebugMode) {
+            debugPrint('✅ Profile verified in Firestore');
+          }
+        } catch (verifyError) {
+          if (kDebugMode) {
+            debugPrint('⚠️ Profile verification failed: $verifyError');
+          }
+          // Continue - profile creation may have been delayed
+          // AuthProvider retry logic will handle loading the profile
+        }
       } catch (firestoreError) {
         if (kDebugMode) {
           debugPrint('❌ Firestore profile creation failed: $firestoreError');
