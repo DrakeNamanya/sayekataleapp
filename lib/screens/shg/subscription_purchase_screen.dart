@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/subscription.dart';
 import '../../services/subscription_service.dart';
-import '../../services/pawapay_service.dart';
+import '../../services/yo_payments_service.dart';
 import 'premium_sme_directory_screen.dart';
 
 class SubscriptionPurchaseScreen extends StatefulWidget {
@@ -20,8 +20,8 @@ class _SubscriptionPurchaseScreenState
   final SubscriptionService _subscriptionService = SubscriptionService();
   final TextEditingController _phoneController = TextEditingController();
   
-  // PawaPay service (no API key needed - handled by backend)
-  late final PawaPayService _pawaPayService;
+  // YO Payments service - Uganda's mobile money payment gateway
+  late final YOPaymentsService _yoPaymentsService;
 
   bool _isProcessing = false;
   bool _agreedToTerms = false;
@@ -30,8 +30,8 @@ class _SubscriptionPurchaseScreenState
   @override
   void initState() {
     super.initState();
-    // Initialize PawaPay service (backend handles API calls)
-    _pawaPayService = PawaPayService();
+    // Initialize YO Payments service
+    _yoPaymentsService = YOPaymentsService();
 
     // Listen to phone number changes to detect operator
     _phoneController.addListener(_onPhoneNumberChanged);
@@ -47,7 +47,7 @@ class _SubscriptionPurchaseScreenState
     final phone = _phoneController.text.trim();
     if (phone.length >= 4) {
       setState(() {
-        _detectedOperator = _pawaPayService.detectOperator(phone);
+        _detectedOperator = _yoPaymentsService.detectOperator(phone);
       });
     } else {
       setState(() {
@@ -79,7 +79,7 @@ class _SubscriptionPurchaseScreenState
     }
 
     // Validate phone number
-    if (!_pawaPayService.isValidPhoneNumber(phoneNumber)) {
+    if (!_yoPaymentsService.isValidPhoneNumber(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid Uganda phone number (e.g., 0772123456)'),
@@ -117,8 +117,8 @@ class _SubscriptionPurchaseScreenState
         );
       }
 
-      // Initiate PawaPay payment
-      final paymentResult = await _pawaPayService.initiatePremiumPayment(
+      // Initiate YO Payments payment
+      final paymentResult = await _yoPaymentsService.initiatePremiumPayment(
         userId: userId,
         phoneNumber: phoneNumber,
         userName: userName,
@@ -129,16 +129,16 @@ class _SubscriptionPurchaseScreenState
         Navigator.pop(context);
       }
 
-      // ✅ For web/testing: Always create pending subscription
-      // In production, PawaPay will send webhook to activate
+      // ✅ YO Payments: Create pending subscription
+      // Payment will be confirmed via YO Payments webhook
       if (kDebugMode) {
-        debugPrint('💳 Payment Result - Status: ${paymentResult.status}');
-        debugPrint('💳 Payment Result - DepositId: ${paymentResult.depositId}');
-        debugPrint('💳 Payment Result - Error: ${paymentResult.errorMessage}');
+        debugPrint('💳 YO Payments Result - Status: ${paymentResult.status}');
+        debugPrint('💳 Payment Reference: ${paymentResult.paymentReference}');
+        debugPrint('💳 Error: ${paymentResult.errorMessage}');
       }
 
-      // Create PENDING subscription regardless of payment status
-      // This allows testing the flow even when PawaPay API is unavailable (web environment)
+      // Create PENDING subscription
+      // YO Payments will send webhook to activate subscription upon successful payment
       try {
         await _subscriptionService.createPendingSubscription(
           userId: userId,
@@ -146,7 +146,7 @@ class _SubscriptionPurchaseScreenState
           paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
               ? 'MTN Mobile Money'
               : 'Airtel Money',
-          paymentReference: paymentResult.depositId ?? 'TEST-${DateTime.now().millisecondsSinceEpoch}',
+          paymentReference: paymentResult.paymentReference ?? 'YO-${DateTime.now().millisecondsSinceEpoch}',
         );
 
         if (mounted) {
@@ -155,18 +155,16 @@ class _SubscriptionPurchaseScreenState
           });
 
           if (paymentResult.isSuccess) {
-            // Show success dialog for successful payment
-            _showSuccessDialog();
+            // Show payment instructions dialog
+            _showPaymentInstructionsDialog(paymentResult.paymentReference!);
           } else {
-            // Show pending status for web testing
+            // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  kDebugMode
-                      ? 'Subscription created in PENDING status for testing. ${paymentResult.errorMessage ?? ""}'
-                      : 'Payment initiated. Please approve on your phone.',
+                  paymentResult.errorMessage ?? 'Payment initiation failed. Please try again.',
                 ),
-                backgroundColor: paymentResult.isSuccess ? Colors.green : Colors.orange,
+                backgroundColor: Colors.red,
                 duration: const Duration(seconds: 5),
               ),
             );
@@ -227,12 +225,12 @@ class _SubscriptionPurchaseScreenState
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
           const Text(
-            'Processing Payment',
+            'Initiating Payment',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Text(
-            'Please enter your PIN on your phone to approve the payment',
+            'Setting up your payment with YO Payments...',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
@@ -250,12 +248,113 @@ class _SubscriptionPurchaseScreenState
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    'Check your phone for payment prompt',
+                    'You will receive a payment prompt on your phone',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentInstructionsDialog(String paymentReference) {
+    final operator = _detectedOperator;
+    String instructions = '';
+    
+    if (operator == MobileMoneyOperator.mtn) {
+      instructions = 
+          '1. You will receive an MTN Mobile Money prompt on your phone\n'
+          '2. Enter your MTN Mobile Money PIN\n'
+          '3. Approve the payment of UGX 50,000\n'
+          '4. Your subscription will be activated automatically';
+    } else if (operator == MobileMoneyOperator.airtel) {
+      instructions = 
+          '1. You will receive an Airtel Money prompt on your phone\n'
+          '2. Enter your Airtel Money PIN\n'
+          '3. Approve the payment of UGX 50,000\n'
+          '4. Your subscription will be activated automatically';
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.payment, color: Colors.blue, size: 32),
+            SizedBox(width: 12),
+            Text('Complete Payment'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Payment Reference: $paymentReference',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Next Steps:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(instructions, style: const TextStyle(fontSize: 14, height: 1.5)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.timer, color: Colors.orange[700], size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Your subscription will activate within 5 minutes after successful payment',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to dashboard
+            },
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -547,7 +646,7 @@ class _SubscriptionPurchaseScreenState
               Icon(Icons.payment, color: Colors.purple),
               SizedBox(width: 8),
               Text(
-                'Mobile Money Payment',
+                'YO Payments - Mobile Money',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
