@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/subscription.dart';
 import '../../services/subscription_service.dart';
 import '../../services/yo_payments_service.dart';
+import '../../services/yo_payments_webview_service.dart';
 import 'premium_sme_directory_screen.dart';
 
 class SubscriptionPurchaseScreen extends StatefulWidget {
@@ -20,8 +22,9 @@ class _SubscriptionPurchaseScreenState
   final SubscriptionService _subscriptionService = SubscriptionService();
   final TextEditingController _phoneController = TextEditingController();
   
-  // YO Payments service - Uganda's mobile money payment gateway
+  // YO Payments services - Uganda's mobile money payment gateway
   late final YOPaymentsService _yoPaymentsService;
+  late final YOPaymentsWebViewService _yoPaymentsWebService;
 
   bool _isProcessing = false;
   bool _agreedToTerms = false;
@@ -30,8 +33,9 @@ class _SubscriptionPurchaseScreenState
   @override
   void initState() {
     super.initState();
-    // Initialize YO Payments service
+    // Initialize YO Payments services
     _yoPaymentsService = YOPaymentsService();
+    _yoPaymentsWebService = YOPaymentsWebViewService();
 
     // Listen to phone number changes to detect operator
     _phoneController.addListener(_onPhoneNumberChanged);
@@ -108,45 +112,46 @@ class _SubscriptionPurchaseScreenState
     });
 
     try {
-      // Show processing dialog
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _buildProcessingDialog(),
-        );
-      }
+      // Generate transaction reference
+      final transactionRef = _yoPaymentsWebService.generateTransactionReference();
 
-      // Initiate YO Payments payment
-      final paymentResult = await _yoPaymentsService.initiatePremiumPayment(
+      // Create payment record in Firestore
+      await _yoPaymentsWebService.createPaymentRecord(
         userId: userId,
         phoneNumber: phoneNumber,
-        userName: userName,
+        transactionRef: transactionRef,
       );
 
-      // Close processing dialog
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      // ✅ YO Payments: Create pending subscription
-      // Payment will be confirmed via YO Payments webhook
-      if (kDebugMode) {
-        debugPrint('💳 YO Payments Result - Status: ${paymentResult.status}');
-        debugPrint('💳 Payment Reference: ${paymentResult.paymentReference}');
-        debugPrint('💳 Error: ${paymentResult.errorMessage}');
-      }
-
       // Create PENDING subscription
-      // YO Payments will send webhook to activate subscription upon successful payment
-      try {
-        await _subscriptionService.createPendingSubscription(
-          userId: userId,
-          type: SubscriptionType.smeDirectory,
-          paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
-              ? 'MTN Mobile Money'
-              : 'Airtel Money',
-          paymentReference: paymentResult.paymentReference ?? 'YO-${DateTime.now().millisecondsSinceEpoch}',
+      await _subscriptionService.createPendingSubscription(
+        userId: userId,
+        type: SubscriptionType.smeDirectory,
+        paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
+            ? 'YO Payments - MTN Mobile Money'
+            : 'YO Payments - Airtel Money',
+        paymentReference: transactionRef,
+      );
+
+      // Build YO Payments redirect URL
+      final paymentUrl = Uri.parse(
+        'https://sayekataleapp.web.app/yo_payments_redirect.html?'
+        'ref=$transactionRef&'
+        'phone=${Uri.encodeComponent(phoneNumber)}&'
+        'name=${Uri.encodeComponent(userName)}&'
+        'email=${Uri.encodeComponent('')}'
+      );
+
+      if (kDebugMode) {
+        debugPrint('🌐 Launching YO Payments redirect page');
+        debugPrint('📄 Transaction Ref: $transactionRef');
+        debugPrint('🔗 URL: $paymentUrl');
+      }
+
+      // Launch payment URL in external browser
+      if (await canLaunchUrl(paymentUrl)) {
+        await launchUrl(
+          paymentUrl,
+          mode: LaunchMode.externalApplication,
         );
 
         if (mounted) {
@@ -154,46 +159,14 @@ class _SubscriptionPurchaseScreenState
             _isProcessing = false;
           });
 
-          if (paymentResult.isSuccess) {
-            // Show payment instructions dialog
-            _showPaymentInstructionsDialog(paymentResult.paymentReference!);
-          } else {
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  paymentResult.errorMessage ?? 'Payment initiation failed. Please try again.',
-                ),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 5),
-              ),
-            );
-          }
+          // Show confirmation dialog
+          _showPaymentLaunchedDialog(transactionRef);
         }
-      } catch (subscriptionError) {
-        if (kDebugMode) {
-          debugPrint('❌ Failed to create subscription: $subscriptionError');
-        }
-        
-        if (mounted) {
-          setState(() {
-            _isProcessing = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to create subscription: ${subscriptionError.toString()}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        }
+      } else {
+        throw Exception('Could not launch payment URL');
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        // Close processing dialog if open
-        Navigator.pop(context);
-
         setState(() {
           _isProcessing = false;
         });
@@ -208,7 +181,7 @@ class _SubscriptionPurchaseScreenState
       }
 
       if (kDebugMode) {
-        debugPrint('❌ Error creating subscription: $e');
+        debugPrint('❌ Error launching payment: $e');
         debugPrint('Stack trace: $stackTrace');
       }
     }
@@ -260,22 +233,24 @@ class _SubscriptionPurchaseScreenState
     );
   }
 
-  void _showPaymentInstructionsDialog(String paymentReference) {
+  void _showPaymentLaunchedDialog(String transactionRef) {
     final operator = _detectedOperator;
     String instructions = '';
     
     if (operator == MobileMoneyOperator.mtn) {
       instructions = 
-          '1. You will receive an MTN Mobile Money prompt on your phone\n'
-          '2. Enter your MTN Mobile Money PIN\n'
-          '3. Approve the payment of UGX 50,000\n'
-          '4. Your subscription will be activated automatically';
+          '1. Complete payment on the YO Payments page\n'
+          '2. Select MTN Mobile Money\n'
+          '3. Enter your phone number and PIN\n'
+          '4. Approve payment of UGX 50,000\n'
+          '5. You\'ll be redirected back automatically';
     } else if (operator == MobileMoneyOperator.airtel) {
       instructions = 
-          '1. You will receive an Airtel Money prompt on your phone\n'
-          '2. Enter your Airtel Money PIN\n'
-          '3. Approve the payment of UGX 50,000\n'
-          '4. Your subscription will be activated automatically';
+          '1. Complete payment on the YO Payments page\n'
+          '2. Select Airtel Money\n'
+          '3. Enter your phone number and PIN\n'
+          '4. Approve payment of UGX 50,000\n'
+          '5. You\'ll be redirected back automatically';
     }
 
     showDialog(
@@ -287,9 +262,9 @@ class _SubscriptionPurchaseScreenState
         ),
         title: const Row(
           children: [
-            Icon(Icons.payment, color: Colors.blue, size: 32),
+            Icon(Icons.open_in_browser, color: Colors.blue, size: 32),
             SizedBox(width: 12),
-            Text('Complete Payment'),
+            Text('Payment Page Opened'),
           ],
         ),
         content: SingleChildScrollView(
@@ -318,6 +293,35 @@ class _SubscriptionPurchaseScreenState
                 ),
               ),
               const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Transaction Reference:',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      transactionRef,
+                      style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               const Text(
                 'Next Steps:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -328,17 +332,17 @@ class _SubscriptionPurchaseScreenState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange[50],
+                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(color: Colors.green[200]!),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.timer, color: Colors.orange[700], size: 20),
+                    Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'Your subscription will activate within 5 minutes after successful payment',
+                        'After payment, you\'ll be redirected back automatically. Your subscription will activate instantly!',
                         style: TextStyle(fontSize: 12),
                       ),
                     ),

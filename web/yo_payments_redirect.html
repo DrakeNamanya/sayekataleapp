@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YO Payments - SAYE KATALE</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 50px 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+      max-width: 450px;
+      width: 90%;
+    }
+
+    .logo {
+      font-size: 36px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+    }
+
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #667eea;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 30px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .message {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .sub-message {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .details {
+      font-size: 14px;
+      color: #555;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+      text-align: left;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .detail-value {
+      color: #667eea;
+      font-weight: 500;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .secure-badge {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .secure-badge::before {
+      content: "🔒 ";
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">SAYE KATALE</div>
+    
+    <div class="spinner"></div>
+    
+    <div class="message">Redirecting to YO Payments...</div>
+    <div class="sub-message">Please wait while we connect to the payment gateway</div>
+    
+    <div class="details">
+      <div class="detail-row">
+        <span class="detail-label">Transaction:</span>
+        <span class="detail-value" id="transactionRef">Loading...</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Amount:</span>
+        <span class="detail-value">UGX 50,000</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Service:</span>
+        <span class="detail-value">Premium Subscription</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Duration:</span>
+        <span class="detail-value">1 Year</span>
+      </div>
+    </div>
+
+    <div class="secure-badge">Secure Payment</div>
+    
+    <div class="footer">
+      Powered by YO Payments Uganda<br>
+      MTN Mobile Money & Airtel Money supported
+    </div>
+  </div>
+
+  <!-- YO Payments Form (Hidden) -->
+  <div align="center" style="display: none;">
+    <form id="paymentForm" method="post" action="https://payments.yo.co.ug/webexpress/">
+      <input type="hidden" name="bid" value="390" />
+      <input type="hidden" name="currency" value="UGX" />
+      <input type="hidden" name="amount" value="50000" />
+      <input type="hidden" name="narrative" value="shg subscription" />
+      <input type="hidden" name="reference" value="SAYE KATALE Premium Subscription" />
+      <input type="hidden" name="provider_reference_text" value="Your payment for the SAYE Katale Premium Subscription has been received. Transaction completed successfully." />
+      <input type="hidden" name="account" value="100356616098" />
+      <input type="hidden" name="return" value="" id="returnUrl" />
+      <input type="hidden" name="prefilled_payer_email_address" value="" id="payerEmail" />
+      <input type="hidden" name="prefilled_payer_mobile_payment_msisdn" value="" id="payerPhone" />
+      <input type="hidden" name="prefilled_payer_names" value="" id="payerName" />
+      <input type="hidden" name="abort_payment_url" value="" />
+    </form>
+  </div>
+
+  <script>
+    // Parse URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      const results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Get parameters from URL
+    const transactionRef = getUrlParameter('ref') || 'SHG-SUB-' + Date.now();
+    const phoneNumber = getUrlParameter('phone') || '';
+    const userName = getUrlParameter('name') || '';
+    const userEmail = getUrlParameter('email') || '';
+
+    // Display transaction reference
+    document.getElementById('transactionRef').textContent = transactionRef;
+
+    // Set form values
+    document.getElementById('returnUrl').value = 
+      `https://sayekataleapp.web.app/payment-success?unique_transaction_id=0&transaction_reference=${transactionRef}`;
+    document.getElementById('payerPhone').value = phoneNumber;
+    document.getElementById('payerName').value = userName;
+    document.getElementById('payerEmail').value = userEmail;
+
+    // Auto-submit form after 3 seconds
+    setTimeout(function() {
+      console.log('🚀 Submitting payment form to YO Payments...');
+      console.log('📄 Transaction Reference:', transactionRef);
+      console.log('📱 Phone:', phoneNumber);
+      console.log('👤 Name:', userName);
+      document.getElementById('paymentForm').submit();
+    }, 3000);
+
+    // Show message if form doesn't submit
+    setTimeout(function() {
+      console.warn('⚠️ Form submission may have been blocked. Trying again...');
+      document.getElementById('paymentForm').submit();
+    }, 6000);
+  </script>
+</body>
+</html>
