@@ -82,7 +82,7 @@ class _SubscriptionPurchaseScreenState
       return;
     }
 
-    // Validate phone number
+    // Validate phone number format
     if (!_yoPaymentsService.isValidPhoneNumber(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -92,6 +92,9 @@ class _SubscriptionPurchaseScreenState
       );
       return;
     }
+
+    // Note: We don't validate operator here as YO Payments supports all Uganda mobile money
+    // MTN, Airtel, and other operators are handled by YO Payments gateway
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userId = authProvider.currentUser?.id;
@@ -123,12 +126,17 @@ class _SubscriptionPurchaseScreenState
       );
 
       // Create PENDING subscription
+      String paymentMethod = 'YO Payments - Mobile Money';
+      if (_detectedOperator == MobileMoneyOperator.mtn) {
+        paymentMethod = 'YO Payments - MTN Mobile Money';
+      } else if (_detectedOperator == MobileMoneyOperator.airtel) {
+        paymentMethod = 'YO Payments - Airtel Money';
+      }
+      
       await _subscriptionService.createPendingSubscription(
         userId: userId,
         type: SubscriptionType.smeDirectory,
-        paymentMethod: _detectedOperator == MobileMoneyOperator.mtn
-            ? 'YO Payments - MTN Mobile Money'
-            : 'YO Payments - Airtel Money',
+        paymentMethod: paymentMethod,
         paymentReference: transactionRef,
       );
 
@@ -248,6 +256,14 @@ class _SubscriptionPurchaseScreenState
       instructions = 
           '1. Complete payment on the YO Payments page\n'
           '2. Select Airtel Money\n'
+          '3. Enter your phone number and PIN\n'
+          '4. Approve payment of UGX 50,000\n'
+          '5. You\'ll be redirected back automatically';
+    } else {
+      // Default instructions for any mobile money operator
+      instructions = 
+          '1. Complete payment on the YO Payments page\n'
+          '2. Select your mobile money provider\n'
           '3. Enter your phone number and PIN\n'
           '4. Approve payment of UGX 50,000\n'
           '5. You\'ll be redirected back automatically';
