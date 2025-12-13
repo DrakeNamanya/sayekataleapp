@@ -361,62 +361,6 @@ class _SubscriptionPurchaseScreenState
     );
   }
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 32),
-            SizedBox(width: 12),
-            Text('Payment Successful!'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your premium subscription has been activated successfully.',
-            ),
-            SizedBox(height: 12),
-            Text('You now have access to:'),
-            SizedBox(height: 8),
-            Text('✅ Full SME contact directory'),
-            Text('✅ Advanced search and filters'),
-            Text('✅ Direct contact information'),
-            Text('✅ 1 year unlimited access'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back
-            },
-            child: const Text('Go Back'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PremiumSMEDirectoryScreen(),
-                ),
-              );
-            },
-            child: const Text('Access Directory'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

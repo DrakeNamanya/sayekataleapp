@@ -24,6 +24,7 @@ import 'screens/web/web_landing_page.dart';
 import 'screens/web/sme_portal_page.dart';
 import 'screens/web/shg_portal_page.dart';
 import 'screens/web/psa_portal_page.dart';
+import 'screens/payment/payment_return_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'services/firebase_test.dart';
@@ -157,6 +158,28 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  /// Generate route with URL parameter support
+  /// Handles payment return URL: /payment-success?transaction_id=XXX&transaction_reference=YYY
+  static Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    final uri = Uri.parse(settings.name ?? '');
+    
+    // Handle payment return URL with query parameters
+    if (uri.path == '/payment-success') {
+      final transactionId = uri.queryParameters['transaction_id'];
+      final transactionReference = uri.queryParameters['transaction_reference'];
+      
+      return MaterialPageRoute(
+        builder: (context) => PaymentReturnScreen(
+          transactionId: transactionId,
+          transactionReference: transactionReference,
+        ),
+      );
+    }
+    
+    // Return null to use default route matching
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -172,6 +195,7 @@ class MyApp extends StatelessWidget {
         themeMode: ThemeMode
             .light, // Default to light mode, user can change in settings
         initialRoute: '/', // Mobile app starts with SplashScreen via '/' route
+        onGenerateRoute: _onGenerateRoute,
         routes: {
           '/splash': (context) => const SplashScreen(),
           '/app-loader': (context) => const AppLoaderScreen(),
@@ -193,6 +217,9 @@ class MyApp extends StatelessWidget {
           '/sme': (context) => const SMEPortalPage(), // SME portal landing
           '/shg': (context) => const SHGPortalPage(), // SHG portal landing
           '/psa': (context) => const PSAPortalPage(), // PSA portal landing
+          
+          // Payment Return URL for YO Payments
+          '/payment-success': (context) => const PaymentReturnScreen(), // YO Payments return URL
         },
       ),
     );
